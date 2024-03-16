@@ -1,34 +1,44 @@
 use dep::std;
 
-struct BlockHeader {
-    block_hash: [u8; 32],
-    version: u32,
-    prev_block_hash: [u8; 32],
-    merkle_root: [u8; 32],
-    timestamp: u32,
-    bits: u32,
-    nonce: u32,
+// convert bits to target
+fn bits_to_target(bits: u32) -> Field {
+    let exponent = (bits as u32) >> 24;
+    let coefficient = (bits as u32) & 0xffffff;
+    let target = (coefficient as Field) * 2.pow_32(8 * ((exponent as Field) - 3));
+    target
+}
+
+fn calculate_retarget(start_block_height: u32, end_block_height: u32, bits: u32) -> Field {
+    // calculate the actual target based on the proposed block height and last retarget block height
+    println(start_block_height);
+    start_block_height as Field
 }
 
 fn main() {
-    // let block_hash = 0x000000000000000000015b945641c0bc048dba1ac50151879a7871e9c4966e79;
-    let block_hash = [
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x79, 0x22, 0x62, 0x69, 0xfe, 0xaa, 0xcf, 0xf7, 0x77, 0xd4, 0x2f, 0x3f, 0xa0, 0xd5, 0xb9, 0x2d, 0xbc, 0xed, 0xdf, 0xe1, 0x56, 0xbe
-    ];
-    let version = 536887296;
-    let prev_block_hash = 0x0000000000000000000179226269feaacff777d42f3fa0d5b92dbceddfe156be;
-    let prev_block_hash: [u8; 32] = [
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x79, 0x22, 0x62, 0x69, 0xfe, 0xaa, 0xcf, 0xf7, 0x77, 0xd4, 0x2f, 0x3f, 0xa0, 0xd5, 0xb9, 0x2d, 0xbc, 0xed, 0xdf, 0xe1, 0x56, 0xbe
-    ];
-    // let merkle_root = 0x32c3aee57709882eaff5a047dc443915af1e42874df898dba76c57f530b2ed7b;
-    let merkle_root: [u8; 32] = [
-        0x32, 0xc3, 0xae, 0xe5, 0x77, 0x09, 0x88, 0x2e, 0xaf, 0xf5, 0xa0, 0x47, 0xdc, 0x44, 0x39, 0x15, 0xaf, 0x1e, 0x42, 0x87, 0x4d, 0xf8, 0x98, 0xdb, 0xa7, 0x6c, 0x57, 0xf5, 0x30, 0xb2, 0xed, 0x7b
-    ];
-    let timestamp = 1710453557;
-    let bits = 386095705;
-    let nonce = 623717702;
+    // PUBLIC WITNESS INPUTS (TESTING)
+    let bits_proposed = 386095705;
+    let current_block_height_proposed = 4032;
 
-    let block_header = BlockHeader { block_hash, version, prev_block_hash, merkle_root, timestamp, bits, nonce };
+    let TARGET_PERIOD = 2016;
+    let TARGET_TIMESPAN = TARGET_PERIOD * 600; // 2 weeks
 
-    println(block_header)
+    let real_target_from_contract = 0x35a590000000000000000000000000000000000000000;
+    let last_retarget_block_height_from_contract = 2016;
+
+    // CIRCUIT BEGINS
+    let proposed_target = bits_to_target(bits_proposed);
+    if (current_block_height_proposed == last_retarget_block_height_from_contract + TARGET_PERIOD) {
+        // time to retarget
+        let updated_target = calculate_retarget(
+            last_retarget_block_height_from_contract,
+            current_block_height_proposed - 1,
+            bits_proposed
+        );
+        println(proposed_target);
+        println(updated_target);
+
+        // verify that the proposed target matches the real target
+        assert(proposed_target == updated_target);
+    }
+    // assert that input bits matches the true target based on the last retarget block height
 }

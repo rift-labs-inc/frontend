@@ -20,6 +20,9 @@ def bits_to_target(bits):
     exponent = bits >> 24
     coefficient = bits & 0xffffff
     target = coefficient * (2**(8*(exponent - 3)))
+    print("Exponent:", exponent)
+    print("Coefficient:", coefficient)
+    print("Target:", target)
     return target
 
 serialized_block_header = (
