@@ -48,14 +48,19 @@ fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlo
 
     println("Actual timespan: ");
     println(actual_timespan);
+	println("Target Timespam:");
+    println(TARGET_TIMESPAN);
     println("Old target: ");
     println(old_target);
-
+    println(old_target as u32);
+	
     // TODO: multiply by inverse modulo instead of division 
-    let new_target = (old_target as u32) * ((actual_timespan) / (TARGET_TIMESPAN));
+    let new_target = (U128::from_hex(
+		old_target.to_le_bytes * actual_timespan as Field)/TARGET_TIMESPAN as Field;
+
 
     println("New target: ");
-    println(new_target);
+    println((new_target));
 
     new_target as Field
 }
