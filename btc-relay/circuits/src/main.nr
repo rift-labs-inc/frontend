@@ -81,10 +81,82 @@ fn main(
 
     // check if we need to retarget
     if (proposed_block.height as u32 >= retarget_block.height as u32 + TARGET_PERIOD) {
-        println("\nRETARGETING!");
+        println("\nRetargeting...");
         let new_target = calculate_retarget(retarget_block, proposed_block);
         // verify that the proposed target matches the real target
         // assert(proposed_target == new_target);
     }
+
     // verify PoW with double sha256 
+    verify_PoW(proposed_block);
+}
+
+fn verify_PoW(proposed_block: ProposedBlock) {
+    println("\nVerifying PoW...");
+
+    // generate serialized header array from proposed block data
+    let mut serialized_header_array: [u8; 80] = [0; 80];
+    let mut i = 0;
+
+    // version
+    let version_bytes = proposed_block.version.to_le_bytes(4);
+    for j in 0..4 {
+        serialized_header_array[i] = version_bytes[j];
+        i += 1;
+    }
+
+    // previous block hash
+    let len = proposed_block.prev_block_hash.len();
+    for j in 0..len {
+        serialized_header_array[i] = proposed_block.prev_block_hash[len - 1 - j];
+        i += 1;
+    }
+
+    // merkle root
+    let len = proposed_block.merkle_root.len();
+    for j in 0..len {
+        serialized_header_array[i] = proposed_block.merkle_root[len - 1 - j];
+        i += 1;
+    }
+
+    // timestamp
+    let timestamp_bytes = proposed_block.timestamp.to_le_bytes(4);
+    for j in 0..4 {
+        serialized_header_array[i] = timestamp_bytes[j];
+        i += 1;
+    }
+
+    // bits
+    let bits_bytes = proposed_block.bits.to_le_bytes(4);
+    for j in 0..4 {
+        serialized_header_array[i] = bits_bytes[j];
+        i += 1;
+    }
+
+    // nonce
+    let nonce_bytes = proposed_block.nonce.to_le_bytes(4);
+    for j in 0..4 {
+        serialized_header_array[i] = nonce_bytes[j];
+        i += 1;
+    }
+
+    println(" ");
+    let pre_hash = std::hash::sha256(serialized_header_array);
+    let block_hash_big_endian = std::hash::sha256(pre_hash);
+    let mut block_hash: [Field; 32] = [0; 32];
+
+    // convert to little-endian
+    let len = block_hash_big_endian.len();
+    for i in 0..len {
+        block_hash[i] = (block_hash_big_endian[len - 1 - i] as u8) as Field;
+    }
+    // print block hash
+    for i in 0..32 {
+        println(block_hash[i]);
+    }
+    // verify PoW
+    for i in 0..32 {
+        assert(block_hash[i] == proposed_block.block_hash[i] as Field);
+    }
+    println("\nPoW verified!");
 }
