@@ -132,7 +132,7 @@ fn verify_PoW(proposed_block: ProposedBlock, proposed_target: Field) {
         proposed_target_array[i] = proposed_target_bytes[i];
     }
 
-    // assert that the block hash is less than or equal to the proposed target
+    // extract the first byte that differs between the block hash and proposed target
     let mut first_block_hash_different_byte = -1;
     let mut first_proposed_target_different_byte = -1;
     for i in 0..32 {
