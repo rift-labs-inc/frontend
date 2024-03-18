@@ -50,27 +50,26 @@ fn main(
     previous_block_height: pub u32,
     retarget_block: pub RetargetBlock,
     // Passed straight from indexer (indexer → sol contract → verification contract)
-    proposed_block: pub ProposedBlock,
-    // Passed by indexer but NOT as public witness:
-    txns: [Txn; 4000]
+    proposed_block: pub ProposedBlock// Passed by indexer but NOT as public witness:
+    // txns: [Txn; 4000]
 ) {
     let TARGET_PERIOD = 2016;
     let TARGET_TIMESPAN = TARGET_PERIOD * 600; // 2 weeks
 
     println(retarget_block.bits);
     // CIRCUIT BEGINS
-    // let proposed_target = bits_to_target(proposed_block.bits);
-    // if (proposed_block.height == retarget_block.height + TARGET_PERIOD) {
-    //     // time to retarget
-    //     let updated_target = calculate_retarget(
-    //         retarget_block.height,
-    //         proposed_block.height - 1,
-    //         retarget_block.bits
-    //     );
-    //     println(proposed_target);
-    //     println(updated_target);
-    //     // verify that the proposed target matches the real target
-    //     assert(proposed_target == updated_target);
-    // }
+    let proposed_target = bits_to_target(proposed_block.bits);
+    if (proposed_block.height == retarget_block.height + TARGET_PERIOD) {
+        // time to retarget
+        let updated_target = calculate_retarget(
+            retarget_block.height,
+            proposed_block.height - 1,
+            retarget_block.bits
+        );
+        println(proposed_target);
+        println(updated_target);
+        // verify that the proposed target matches the real target
+        // assert(proposed_target == updated_target);
+    }
     // assert that input bits matches the true target based on the last retarget block height
 }

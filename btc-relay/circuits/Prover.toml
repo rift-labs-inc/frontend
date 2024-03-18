@@ -1,11 +1,17 @@
+previous_block_hash = "0000000000000000000179226269feaacff777d42f3fa0d5b92dbceddfe156be"
+previous_block_height = 834718
+
 [retarget_block]
 timestamp = 1598521387
 bits = 386926570
-height = 2547798672
+height = 832703
 
 [proposed_block]
-timestamp = 1598521387
+block_hash = "000000000000000000015b945641c0bc048dba1ac50151879a7871e9c4966e79"
+height = 834719
+version = 536887296
+prev_block_hash = "0000000000000000000179226269feaacff777d42f3fa0d5b92dbceddfe156be"
+merkle_root = "32c3aee57709882eaff5a047dc443915af1e42874df898dba76c57f530b2ed7b"
+timestamp = 1710453557
 bits = 386926570
-height = 2547798672
-
-[txn]
+nonce = 623717702
