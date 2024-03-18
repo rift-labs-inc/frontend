@@ -140,7 +140,6 @@ fn verify_PoW(proposed_block: ProposedBlock) {
         i += 1;
     }
 
-    println(" ");
     let pre_hash = std::hash::sha256(serialized_header_array);
     let block_hash_big_endian = std::hash::sha256(pre_hash);
     let mut block_hash: [Field; 32] = [0; 32];
@@ -150,10 +149,12 @@ fn verify_PoW(proposed_block: ProposedBlock) {
     for i in 0..len {
         block_hash[i] = (block_hash_big_endian[len - 1 - i] as u8) as Field;
     }
+
     // print block hash
     for i in 0..32 {
         println(block_hash[i]);
     }
+
     // verify PoW
     for i in 0..32 {
         assert(block_hash[i] == proposed_block.block_hash[i] as Field);
