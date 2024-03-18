@@ -28,21 +28,47 @@ fn bits_to_target(bits: u32) -> Field {
     target
 }
 
-fn calculate_retarget(start_block_height: u32, end_block_height: u32, bits: u32) -> Field {
-    let old_target = bits_to_target(bits);
+fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlock) -> Field {
+    println("Retarget block bits: ");
+    println(retarget_block.bits);
 
-    // let actual_timespan = end_block_height - start_block_height;
+    let old_target = bits_to_target(retarget_block.bits) as Field;
 
-    // if actual_timespan < TARGET_TIMESPAN / 4 {
-    //     actual_timespan = TARGET_TIMESPAN / 4;
-    // } else if actual_timespan > TARGET_TIMESPAN * 4 {
-    //     actual_timespan = TARGET_TIMESPAN * 4;
-    // }
+    let mut actual_timespan = if proposed_block.timestamp > retarget_block.timestamp {
+        proposed_block.timestamp - retarget_block.timestamp
+    } else {
+        retarget_block.timestamp - proposed_block.timestamp
+    };
 
-    // let new_target = (old_target * adjusted_timespan) / target_timespan;
+    if actual_timespan < TARGET_TIMESPAN / 4 {
+        actual_timespan = TARGET_TIMESPAN / 4;
+    } else if actual_timespan > TARGET_TIMESPAN * 4 {
+        actual_timespan = TARGET_TIMESPAN * 4;
+    }
 
-    old_target
+    println("Actual timespan: ");
+    println(actual_timespan as Field);
+    println("Target timespan: ");
+    println(TARGET_TIMESPAN as Field);
+
+    // TODO: multiply by inverse modulo for division
+    let ratio = ((actual_timespan) / (TARGET_TIMESPAN as u32));
+
+    println("Ratio: ");
+    println(ratio);
+
+    let new_target = (old_target * ratio as Field) as Field;
+
+    println("Old target: ");
+    println(old_target);
+    println("New target: ");
+    println(new_target);
+
+    new_target as Field
 }
+
+global TARGET_PERIOD: u32 = 2016;
+global TARGET_TIMESPAN: u32 = 1209600; // 2 weeks
 
 fn main(
     // From contract, must be passed by indexer when creating proof. However, in contract verify: // contract passes this data directly:
@@ -53,23 +79,18 @@ fn main(
     proposed_block: pub ProposedBlock// Passed by indexer but NOT as public witness:
     // txns: [Txn; 4000]
 ) {
-    let TARGET_PERIOD = 2016;
-    let TARGET_TIMESPAN = TARGET_PERIOD * 600; // 2 weeks
-
-    println(retarget_block.bits);
     // CIRCUIT BEGINS
     let proposed_target = bits_to_target(proposed_block.bits);
-    if (proposed_block.height == retarget_block.height + TARGET_PERIOD) {
+    println("Bits: ");
+    println(proposed_block.bits);
+    println("Proposed target: ");
+    println(proposed_target);
+    if (proposed_block.height >= retarget_block.height + TARGET_PERIOD) {
         // time to retarget
-        let updated_target = calculate_retarget(
-            retarget_block.height,
-            proposed_block.height - 1,
-            retarget_block.bits
-        );
-        println(proposed_target);
-        println(updated_target);
+        println("\nRETARGETING!");
+        let new_target = calculate_retarget(retarget_block, proposed_block);
         // verify that the proposed target matches the real target
-        // assert(proposed_target == updated_target);
+        // assert(proposed_target == new_target);
     }
     // assert that input bits matches the true target based on the last retarget block height
 }
