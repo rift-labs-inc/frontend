@@ -83,15 +83,17 @@ class BitcoinBlockDataHandler:
         return f"[{array_str[:-1]}]"
 
     @staticmethod
-    def dump_header_to_toml(data: BlockHeader, toml_path: str):
+    def dump_block_header_to_toml(data: BlockHeader, height: int):
         struct_data = ""
         for key in data:
             if key == "block_hash" or key == "prev_block_hash" or key == "merkle_root":
                 struct_data += f"{key} = {BitcoinBlockDataHandler.encode_to_noir_byte_array(data[key])}\n" 
             else:
                 struct_data += f"{key} = {data[key]}\n"
-        with open(toml_path, "w+") as f:
-            f.write(struct_data)
+        struct_data += f"height = {height}"
+
+    @staticmethod
+    # todo a function to build the new prover data style
 
 
     @staticmethod
@@ -119,8 +121,11 @@ def build_circuit_input():
     handler = BitcoinBlockDataHandler()
     block = handler.get_block_at_height(height)
     header = BitcoinBlockDataHandler.extract_block_header(block)
-    BitcoinBlockDataHandler.dump_header_to_toml(header, out)
+    BitcoinBlockDataHandler.dump_block_header_to_toml(header, height)
     BitcoinBlockDataHandler.dump_header_to_noir_struct(header, out_data)
+
+    with open(toml_path, "w+") as f:
+        f.write(struct_data)
      
 
 if __name__ == "__main__":
