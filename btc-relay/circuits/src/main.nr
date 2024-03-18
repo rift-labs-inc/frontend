@@ -135,12 +135,13 @@ global TARGET_PERIOD: u32 = 2016;
 global TARGET_TIMESPAN: u32 = 1209600; // 2 weeks
 
 fn main(
-    // From contract, must be passed by indexer when creating proof. However, in contract verify: // contract passes this data directly:
+    // From contract, must be passed by indexer when creating proof.
     previous_block_hash: pub [u8; 32],
     previous_block_height: pub u32,
     retarget_block: pub RetargetBlock,
     // Passed straight from indexer (indexer → sol contract → verification contract)
-    proposed_block: pub ProposedBlock// Passed by indexer but NOT as public witness:
+    proposed_block: pub ProposedBlock
+	// Passed by indexer but NOT as public witness:
     // txns: [Txn; 4000]
 ) {
     // CIRCUIT BEGINS
