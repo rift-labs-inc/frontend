@@ -171,11 +171,19 @@ fn main(
     println("Proposed target: ");
     println(proposed_target);
 
-    // check if we need to retarget
+    // verify proposed target is equal to real target
     if (proposed_block.height as u32 == retarget_block.height as u32 + TARGET_PERIOD) {
         println("\nRetargeting...");
         // verify that the proposed target matches the real target
         // assert(proposed_target == potential_new_target);
+    }
+
+    // verify the proposed block height is one greater than previous_block_height
+    assert(proposed_block.height as u32 == previous_block_height + 1);
+
+    // verify the proposed block's previous block hash matches the previous block hash
+    for i in 0..32 {
+        assert(proposed_block.prev_block_hash[i] == previous_block_hash[i]);
     }
 
     // verify PoW with double sha256 
