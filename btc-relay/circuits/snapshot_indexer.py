@@ -162,7 +162,7 @@ def test():
 
 async def build_circuit_input():
     # Edit:
-    HEIGHT = 835267 
+    HEIGHT = 834623 
     OUT = "Prover.toml"
 
     # Shouldn't need to touch:
