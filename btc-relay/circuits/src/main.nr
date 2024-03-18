@@ -48,7 +48,8 @@ fn main(
     // From contract, must be passed by indexer when creating proof. However, in contract verify: // contract passes this data directly:
     previous_block_hash: pub [u8; 32],
     previous_block_height: pub u32,
-    retarget_block: pub RetargetBlock// Passed straight from indexer (indexer → sol contract → verification contract)
+    retarget_block: pub RetargetBlock,
+    // Passed straight from indexer (indexer → sol contract → verification contract)
     proposed_block: pub ProposedBlock,
     // Passed by indexer but NOT as public witness:
     txns: [Txn; 4000]
