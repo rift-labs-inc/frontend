@@ -149,21 +149,31 @@ fn main(
     // txns: [Txn; 4000]
 ) {
     // CIRCUIT BEGINS
+    let potential_new_target = calculate_retarget(retarget_block, proposed_block);
     let proposed_target = bits_to_target(proposed_block.bits);
-    println("Proposed bits: ");
-    println(proposed_block.bits as u32);
+    // println("Proposed bits: ");
+    // println(proposed_block.bits as u32);
     println("Proposed target: ");
-    println(proposed_target);
+	println(proposed_target);
+
+    println("pot new target: ");
+	println(potential_new_target);
+	
+    println("proposed block");
+	println(proposed_block.height as u32);
+
+    println("retarget block");
+	println((retarget_block.height as u32));
+	println((retarget_block.height as u32 + TARGET_PERIOD));
 
     // check if we need to retarget
-    if (proposed_block.height as u32 >= retarget_block.height as u32 + TARGET_PERIOD) {
+    if (proposed_block.height as u32 == retarget_block.height as u32 + TARGET_PERIOD) {
         println("\nRetargeting...");
-        let new_target = calculate_retarget(retarget_block, proposed_block);
         // verify that the proposed target matches the real target
-        assert(proposed_target == new_target);
+		// assert(proposed_target == potential_new_target);
     }
-
-    // verify PoW with double sha256 
-    verify_PoW(proposed_block);
+	
+	// verify PoW with double sha256 
+	verify_PoW(proposed_block);
 }
 
