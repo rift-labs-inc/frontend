@@ -78,7 +78,7 @@ class BitcoinBlockDataHandler:
         # returns array str
         window_size = 2
         array_str = ""
-        for i in range(len(hexstr) - window_size + 1):
+        for i in range(0, len(hexstr), window_size):  # Change made here
             array_str += f"0x{hexstr[i: i + window_size]},"
         return f"[{array_str[:-1]}]"
 
