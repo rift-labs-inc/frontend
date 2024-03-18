@@ -60,37 +60,6 @@ fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlo
     new_target as Field
 }
 
-global TARGET_PERIOD: u32 = 2016;
-global TARGET_TIMESPAN: u32 = 1209600; // 2 weeks
-
-fn main(
-    // From contract, must be passed by indexer when creating proof. However, in contract verify: // contract passes this data directly:
-    previous_block_hash: pub [u8; 32],
-    previous_block_height: pub u32,
-    retarget_block: pub RetargetBlock,
-    // Passed straight from indexer (indexer → sol contract → verification contract)
-    proposed_block: pub ProposedBlock// Passed by indexer but NOT as public witness:
-    // txns: [Txn; 4000]
-) {
-    // CIRCUIT BEGINS
-    let proposed_target = bits_to_target(proposed_block.bits);
-    println("Proposed bits: ");
-    println(proposed_block.bits as u32);
-    println("Proposed target: ");
-    println(proposed_target);
-
-    // check if we need to retarget
-    if (proposed_block.height as u32 >= retarget_block.height as u32 + TARGET_PERIOD) {
-        println("\nRetargeting...");
-        let new_target = calculate_retarget(retarget_block, proposed_block);
-        // verify that the proposed target matches the real target
-        // assert(proposed_target == new_target);
-    }
-
-    // verify PoW with double sha256 
-    verify_PoW(proposed_block);
-}
-
 fn verify_PoW(proposed_block: ProposedBlock) {
     println("\nVerifying PoW...");
 
@@ -161,3 +130,35 @@ fn verify_PoW(proposed_block: ProposedBlock) {
     }
     println("\nPoW verified!");
 }
+
+global TARGET_PERIOD: u32 = 2016;
+global TARGET_TIMESPAN: u32 = 1209600; // 2 weeks
+
+fn main(
+    // From contract, must be passed by indexer when creating proof. However, in contract verify: // contract passes this data directly:
+    previous_block_hash: pub [u8; 32],
+    previous_block_height: pub u32,
+    retarget_block: pub RetargetBlock,
+    // Passed straight from indexer (indexer → sol contract → verification contract)
+    proposed_block: pub ProposedBlock// Passed by indexer but NOT as public witness:
+    // txns: [Txn; 4000]
+) {
+    // CIRCUIT BEGINS
+    let proposed_target = bits_to_target(proposed_block.bits);
+    println("Proposed bits: ");
+    println(proposed_block.bits as u32);
+    println("Proposed target: ");
+    println(proposed_target);
+
+    // check if we need to retarget
+    if (proposed_block.height as u32 >= retarget_block.height as u32 + TARGET_PERIOD) {
+        println("\nRetargeting...");
+        let new_target = calculate_retarget(retarget_block, proposed_block);
+        // verify that the proposed target matches the real target
+        // assert(proposed_target == new_target);
+    }
+
+    // verify PoW with double sha256 
+    verify_PoW(proposed_block);
+}
+
