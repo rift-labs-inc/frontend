@@ -5,7 +5,7 @@ version = 536887296
 prev_block_hash = "0000000000000000000179226269feaacff777d42f3fa0d5b92dbceddfe156be"
 merkle_root = "32c3aee57709882eaff5a047dc443915af1e42874df898dba76c57f530b2ed7b"
 timestamp = 1710453557
-bits = 386095705
+bits = 386926570
 nonce = 623717702
 block_height = 0
 
