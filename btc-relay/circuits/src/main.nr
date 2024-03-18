@@ -60,7 +60,7 @@ fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlo
     new_target as Field
 }
 
-fn verify_PoW(proposed_block: ProposedBlock) {
+fn verify_PoW(proposed_block: ProposedBlock, proposed_target: Field) {
     println("\nVerifying PoW...");
 
     // generate serialized header array from proposed block data
@@ -109,19 +109,15 @@ fn verify_PoW(proposed_block: ProposedBlock) {
         i += 1;
     }
 
+    // double sha256
     let pre_hash = std::hash::sha256(serialized_header_array);
     let block_hash_big_endian = std::hash::sha256(pre_hash);
     let mut block_hash: [Field; 32] = [0; 32];
 
-    // convert to little-endian
+    // convert block hash to little-endian
     let len = block_hash_big_endian.len();
     for i in 0..len {
         block_hash[i] = (block_hash_big_endian[len - 1 - i] as u8) as Field;
-    }
-
-    // print block hash
-    for i in 0..32 {
-        println(block_hash[i]);
     }
 
     // verify proposed block hash matches calculated block hash
@@ -129,9 +125,29 @@ fn verify_PoW(proposed_block: ProposedBlock) {
         assert(block_hash[i] == proposed_block.block_hash[i] as Field);
     }
 
-    // verify PoW
-    // assert(block_hash <= proposed_target);
+    // convert proposed target to a u8 array
+    let mut proposed_target_array: [u8; 32] = [0; 32];
+    let proposed_target_bytes = proposed_target.to_be_bytes(32);
+    for i in 0..32 {
+        proposed_target_array[i] = proposed_target_bytes[i];
+    }
 
+    // assert that the block hash is less than or equal to the proposed target
+    let mut first_block_hash_different_byte = -1;
+    let mut first_proposed_target_different_byte = -1;
+    for i in 0..32 {
+        if block_hash[i] != (proposed_target_array[i] as Field) {
+            if first_block_hash_different_byte == -1 {
+                if first_proposed_target_different_byte == -1 {
+                    first_block_hash_different_byte = block_hash[i];
+                    first_proposed_target_different_byte = proposed_target_array[i] as Field;
+                }
+            }
+        }
+    }
+
+    // verify PoW if block hash <= proposed target
+    assert(first_block_hash_different_byte as u8 <= first_proposed_target_different_byte as u8);
     println("\nPoW verified!");
 }
 
@@ -144,36 +160,25 @@ fn main(
     previous_block_height: pub u32,
     retarget_block: pub RetargetBlock,
     // Passed straight from indexer (indexer → sol contract → verification contract)
-    proposed_block: pub ProposedBlock
-	// Passed by indexer but NOT as public witness:
+    proposed_block: pub ProposedBlock// Passed by indexer but NOT as public witness:
     // txns: [Txn; 4000]
 ) {
     // CIRCUIT BEGINS
     let potential_new_target = calculate_retarget(retarget_block, proposed_block);
     let proposed_target = bits_to_target(proposed_block.bits);
-    // println("Proposed bits: ");
-    // println(proposed_block.bits as u32);
+    println("Proposed bits: ");
+    println(proposed_block.bits as u32);
     println("Proposed target: ");
-	println(proposed_target);
-
-    println("pot new target: ");
-	println(potential_new_target);
-	
-    println("proposed block");
-	println(proposed_block.height as u32);
-
-    println("retarget block");
-	println((retarget_block.height as u32));
-	println((retarget_block.height as u32 + TARGET_PERIOD));
+    println(proposed_target);
 
     // check if we need to retarget
     if (proposed_block.height as u32 == retarget_block.height as u32 + TARGET_PERIOD) {
         println("\nRetargeting...");
         // verify that the proposed target matches the real target
-		// assert(proposed_target == potential_new_target);
+        // assert(proposed_target == potential_new_target);
     }
-	
-	// verify PoW with double sha256 
-	verify_PoW(proposed_block);
+
+    // verify PoW with double sha256 
+    verify_PoW(proposed_block, proposed_target);
 }
 
