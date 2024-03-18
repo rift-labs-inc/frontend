@@ -31,7 +31,8 @@ fn bits_to_target(bits: u32) -> Field {
 fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlock) -> Field {
     println("Retarget block bits: ");
     println(retarget_block.bits);
-
+    println("Proposed block bits: ");
+    println(proposed_block.bits);
     let old_target = bits_to_target(retarget_block.bits) as Field;
 
     let mut actual_timespan = if proposed_block.timestamp > retarget_block.timestamp {
@@ -47,17 +48,15 @@ fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlo
     }
 
     println("Actual timespan: ");
+    println(actual_timespan);
+    println("Actual timespan as field: ");
     println(actual_timespan as Field);
-    println("Target timespan: ");
-    println(TARGET_TIMESPAN as Field);
+    println("Old target: ");
+    println(old_target);
+    println("Old target as field: ");
 
-    // TODO: multiply by inverse modulo for division
-    let ratio = ((actual_timespan) / (TARGET_TIMESPAN as u32));
-
-    println("Ratio: ");
-    println(ratio);
-
-    let new_target = (old_target * ratio as Field) as Field;
+    // TODO: multiply by inverse modulo instead of division 
+    let new_target = (old_target as u32) * ((actual_timespan) / (TARGET_TIMESPAN));
 
     println("Old target: ");
     println(old_target);
