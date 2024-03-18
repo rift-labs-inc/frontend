@@ -124,10 +124,14 @@ fn verify_PoW(proposed_block: ProposedBlock) {
         println(block_hash[i]);
     }
 
-    // verify PoW
+    // verify proposed block hash matches calculated block hash
     for i in 0..32 {
         assert(block_hash[i] == proposed_block.block_hash[i] as Field);
     }
+
+    // verify PoW
+    // assert(block_hash <= proposed_target);
+
     println("\nPoW verified!");
 }
 
@@ -156,7 +160,7 @@ fn main(
         println("\nRetargeting...");
         let new_target = calculate_retarget(retarget_block, proposed_block);
         // verify that the proposed target matches the real target
-        // assert(proposed_target == new_target);
+        assert(proposed_target == new_target);
     }
 
     // verify PoW with double sha256 
