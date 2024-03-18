@@ -27,7 +27,7 @@ class BitcoinBlockDataHandler:
          
     async def get_block_at_height(self, height: int) -> dict:
         async with aiohttp.ClientSession() as session:
-            async with session.get(self._block_height_url(height)) as raw_resp:
+            async with session.get(self._block_height_url(height), ssl=False) as raw_resp:
                 data = await raw_resp.json()
 
                 if "blocks" not in data:
