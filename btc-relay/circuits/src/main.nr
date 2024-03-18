@@ -181,7 +181,7 @@ fn main(
     // verify the proposed block height is one greater than previous_block_height
     assert(proposed_block.height as u32 == previous_block_height + 1);
 
-    // verify the proposed block's previous block hash matches the previous block hash
+    // verify the proposed block's previous block hash matches previous_block_hash
     for i in 0..32 {
         assert(proposed_block.prev_block_hash[i] == previous_block_hash[i]);
     }
