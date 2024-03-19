@@ -28,6 +28,8 @@ fn bits_to_target(bits: Field) -> Field {
     target
 }
 
+
+
 fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlock) -> Field {
     println("Retarget block bits: ");
     println(retarget_block.bits as u32);
@@ -53,10 +55,13 @@ fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlo
     println("Old target: ");
     println(old_target);
     println(old_target as u32);
+    let old_target_bytes = old_target.to_be_bytes(32);
+	for i in 0..32 {
+		println(old_target_bytes[i] as Field);
+	}
 	
     // TODO: multiply by inverse modulo instead of division 
-    let new_target = (U128::from_hex(
-		old_target.to_le_bytes * actual_timespan as Field)/TARGET_TIMESPAN as Field;
+    let new_target = (old_target * actual_timespan as Field)/TARGET_TIMESPAN as Field;
 
 
     println("New target: ");
@@ -115,8 +120,8 @@ fn verify_PoW(proposed_block: ProposedBlock, proposed_target: Field) {
     }
 
     // double sha256
-    let pre_hash = std::hash::sha256(serialized_header_array);
-    let block_hash_big_endian = std::hash::sha256(pre_hash);
+    let first_hash = std::hash::sha256(serialized_header_array);
+    let block_hash_big_endian = std::hash::sha256(first_hash);
     let mut block_hash: [Field; 32] = [0; 32];
 
     // convert block hash to little-endian
@@ -176,11 +181,19 @@ fn main(
     println("Proposed target: ");
     println(proposed_target);
 
-    // check if we need to retarget
+    // verify proposed target is equal to real target
     if (proposed_block.height as u32 == retarget_block.height as u32 + TARGET_PERIOD) {
         println("\nRetargeting...");
         // verify that the proposed target matches the real target
         // assert(proposed_target == potential_new_target);
+    }
+
+    // verify the proposed block height is one greater than previous_block_height
+    assert(proposed_block.height as u32 == previous_block_height + 1);
+
+    // verify the proposed block's previous block hash matches previous_block_hash
+    for i in 0..32 {
+        assert(proposed_block.prev_block_hash[i] == previous_block_hash[i]);
     }
 
     // verify PoW with double sha256 
