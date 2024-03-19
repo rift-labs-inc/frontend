@@ -92,7 +92,7 @@ fn mulFloats(x: Float, y: Float) -> Float {
 
 // Dividing of Float numbers
 fn divFloats(x: Float, y: Float) -> Float {
-    assert(y.mantissa > 0);
+    assert(y.mantissa as u64 > 0);
 
     let mut exp1: Field = x.exponent;
     let mut mant1: u64 = x.mantissa as u64;
