@@ -110,8 +110,8 @@ fn verify_PoW(proposed_block: ProposedBlock, proposed_target: Field) {
     }
 
     // double sha256
-    let pre_hash = std::hash::sha256(serialized_header_array);
-    let block_hash_big_endian = std::hash::sha256(pre_hash);
+    let first_hash = std::hash::sha256(serialized_header_array);
+    let block_hash_big_endian = std::hash::sha256(first_hash);
     let mut block_hash: [Field; 32] = [0; 32];
 
     // convert block hash to little-endian
