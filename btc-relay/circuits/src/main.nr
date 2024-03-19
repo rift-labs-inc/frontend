@@ -11,12 +11,6 @@ struct ProposedBlock {
     nonce: Field,
 }
 
-struct RetargetBlock {
-    bits: Field,
-    height: Field,
-    timestamp: Field
-}
-
 struct Txn {
     hash: [u8; 32]
 }
@@ -26,48 +20,6 @@ fn bits_to_target(bits: Field) -> Field {
     let coefficient = (bits as u32) & 0xffffff;
     let target = (coefficient as Field) * 2.pow_32(8 * ((exponent as Field) - 3));
     target
-}
-
-
-
-fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlock) -> Field {
-    println("Retarget block bits: ");
-    println(retarget_block.bits as u32);
-
-    let old_target = bits_to_target(retarget_block.bits) as Field;
-
-    let mut actual_timespan = if proposed_block.timestamp as u32 > retarget_block.timestamp as u32 {
-        (proposed_block.timestamp - retarget_block.timestamp) as u32
-    } else {
-        (retarget_block.timestamp - proposed_block.timestamp) as u32
-    };
-
-    if actual_timespan < TARGET_TIMESPAN / 4 {
-        actual_timespan = TARGET_TIMESPAN / 4;
-    } else if actual_timespan > TARGET_TIMESPAN * 4 {
-        actual_timespan = TARGET_TIMESPAN * 4;
-    }
-
-    println("Actual timespan: ");
-    println(actual_timespan);
-	println("Target Timespam:");
-    println(TARGET_TIMESPAN);
-    println("Old target: ");
-    println(old_target);
-    println(old_target as u32);
-    let old_target_bytes = old_target.to_be_bytes(32);
-	for i in 0..32 {
-		println(old_target_bytes[i] as Field);
-	}
-	
-    // TODO: multiply by inverse modulo instead of division 
-    let new_target = (old_target * actual_timespan as Field)/TARGET_TIMESPAN as Field;
-
-
-    println("New target: ");
-    println((new_target));
-
-    new_target as Field
 }
 
 fn verify_PoW(proposed_block: ProposedBlock, proposed_target: Field) {
@@ -149,6 +101,7 @@ fn verify_PoW(proposed_block: ProposedBlock, proposed_target: Field) {
         if block_hash[i] != (proposed_target_array[i] as Field) {
             if first_block_hash_different_byte == -1 {
                 if first_proposed_target_different_byte == -1 {
+                    // exit if byte differs
                     first_block_hash_different_byte = block_hash[i];
                     first_proposed_target_different_byte = proposed_target_array[i] as Field;
                 }
@@ -165,38 +118,29 @@ global TARGET_PERIOD: u32 = 2016;
 global TARGET_TIMESPAN: u32 = 1209600; // 2 weeks
 
 fn main(
-    // From contract, must be passed by indexer when creating proof.
+    // From contract, must be passed by indexer when creating proof:
     previous_block_hash: pub [u8; 32],
     previous_block_height: pub u32,
-    retarget_block: pub RetargetBlock,
+    real_bitcoin_target: pub Field,
     // Passed straight from indexer (indexer → sol contract → verification contract)
     proposed_block: pub ProposedBlock// Passed by indexer but NOT as public witness:
-    // txns: [Txn; 4000]
+    // txns: [Txn; vec<Txn>]
 ) {
     // CIRCUIT BEGINS
-    let potential_new_target = calculate_retarget(retarget_block, proposed_block);
+
+    // [1] verify proposed target is equal to real target
     let proposed_target = bits_to_target(proposed_block.bits);
-    println("Proposed bits: ");
-    println(proposed_block.bits as u32);
-    println("Proposed target: ");
-    println(proposed_target);
+    assert(proposed_target == real_bitcoin_target);
 
-    // verify proposed target is equal to real target
-    if (proposed_block.height as u32 == retarget_block.height as u32 + TARGET_PERIOD) {
-        println("\nRetargeting...");
-        // verify that the proposed target matches the real target
-        // assert(proposed_target == potential_new_target);
-    }
-
-    // verify the proposed block height is one greater than previous_block_height
+    // [2] verify the proposed block height is one greater than previous_block_height
     assert(proposed_block.height as u32 == previous_block_height + 1);
 
-    // verify the proposed block's previous block hash matches previous_block_hash
+    // [3] verify the proposed prev_block_hash matches real previous_block_hash
     for i in 0..32 {
         assert(proposed_block.prev_block_hash[i] == previous_block_hash[i]);
     }
 
-    // verify PoW with double sha256 
+    // [4] verify PoW (double sha256 + block_hash <= target)
     verify_PoW(proposed_block, proposed_target);
 }
 
