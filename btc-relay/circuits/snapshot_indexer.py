@@ -179,6 +179,7 @@ async def build_circuit_input():
         handler.get_block_at_height(PREVIOUS_HEIGHT),
         handler.get_block_at_height(HEIGHT)
     ])
+    
 
     last_retarget_header = BitcoinBlockDataHandler.extract_block_header(last_retarget_block)
     last_block_header = BitcoinBlockDataHandler.extract_block_header(last_block)
