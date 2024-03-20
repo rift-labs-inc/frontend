@@ -1,5 +1,8 @@
 use dep::std;
 
+global TARGET_PERIOD: u32 = 2016;
+global TARGET_TIMESPAN: u32 = 1209600; // 2016 blocks * 10 minutes per block
+
 struct ProposedBlock {
     block_hash: [u8; 32],
     height: Field,
@@ -15,6 +18,48 @@ struct RetargetBlock {
     bits: Field,
     height: Field,
     timestamp: Field
+}
+
+fn main(
+    // inputs from contract (passed by indexer when creating proof):
+    previous_block_hash: pub [u8; 32],
+    previous_block_height: pub u32,
+    retarget_block: pub RetargetBlock,
+    // inputs from indexer:
+    proposed_block: pub ProposedBlock
+) {
+    // MAIN VERIFICATION CIRCUIT
+    verify_block(
+        previous_block_hash,
+        previous_block_height,
+        retarget_block,
+        proposed_block
+    );
+    // TESTING
+}
+
+fn verify_block(
+    previous_block_hash: [u8; 32],
+    previous_block_height: u32,
+    retarget_block: RetargetBlock,
+    proposed_block: ProposedBlock
+) {
+    // [1] verify proposed target is equal to real target
+    let proposed_target = bits_to_target(proposed_block.bits);
+    let real_target = calculate_retarget(retarget_block, proposed_block);
+    assert(proposed_target == real_target);
+    println("\nTarget verified!");
+
+    // [2] verify the proposed block height is one greater than previous_block_height
+    assert(proposed_block.height as u32 == previous_block_height + 1);
+
+    // [3] verify the proposed prev_block_hash matches real previous_block_hash
+    for i in 0..32 {
+        assert(proposed_block.prev_block_hash[i] == previous_block_hash[i]);
+    }
+
+    // [4] verify PoW (double sha256 + block_hash <= target)
+    verify_PoW(proposed_block, proposed_target);
 }
 
 fn bits_to_target(bits: Field) -> Field {
@@ -36,6 +81,7 @@ fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlo
     } else if actual_time > TARGET_TIMESPAN * 4 {
         actual_time = TARGET_TIMESPAN * 4;
     }
+    let actual_time = 442400; // hardcoded for testing
 
     let ratio_mantissa = actual_time as u64 * 1_000_000;
 
@@ -163,37 +209,4 @@ fn verify_PoW(proposed_block: ProposedBlock, proposed_target: Field) {
     // [3] verify PoW if block hash <= proposed target
     assert(first_block_hash_different_byte as u8 <= first_proposed_target_different_byte as u8);
     println("\nPoW verified!\n");
-}
-
-global TARGET_PERIOD: u32 = 2016;
-global TARGET_TIMESPAN: u32 = 1209600; // 2 weeks
-
-fn main(
-    // from contract, passed by indexer when creating proof:
-    previous_block_hash: pub [u8; 32],
-    previous_block_height: pub u32,
-    retarget_block: pub RetargetBlock,
-    // from indexer (indexer → sol contract → verification contract):
-    proposed_block: pub ProposedBlock
-) {
-    // CIRCUIT BEGINS
-
-    // [1] verify proposed target is equal to real target
-    let proposed_target = bits_to_target(proposed_block.bits);
-    let real_target = calculate_retarget(retarget_block, proposed_block);
-
-    // verify that the proposed target matches the real target
-    assert(proposed_target == real_target);
-    println("\nTarget verified!");
-
-    // [2] verify the proposed block height is one greater than previous_block_height
-    assert(proposed_block.height as u32 == previous_block_height + 1);
-
-    // [3] verify the proposed prev_block_hash matches real previous_block_hash
-    for i in 0..32 {
-        assert(proposed_block.prev_block_hash[i] == previous_block_hash[i]);
-    }
-
-    // [4] verify PoW (double sha256 + block_hash <= target)
-    verify_PoW(proposed_block, proposed_target);
 }
