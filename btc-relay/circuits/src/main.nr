@@ -25,10 +25,11 @@ fn bits_to_target(bits: Field) -> Field {
     target
 }
 
-fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlock) -> Float {
+fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlock) -> Field {
     // calculate the new target based on the retarget block and the proposed block
-
     let mut actual_time = proposed_block.timestamp as u32 - retarget_block.timestamp as u32;
+    println("\nActual time before clamping: ");
+    println(actual_time as u64);
 
     if actual_time < TARGET_TIMESPAN / 4 {
         actual_time = TARGET_TIMESPAN / 4;
@@ -36,43 +37,40 @@ fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlo
         actual_time = TARGET_TIMESPAN * 4;
     }
 
-    let actual_time = 1343368;
+    let ratio_mantissa = actual_time as u64 * 1_000_000;
 
+    // decode the old bits
+    let old_exponent = retarget_block.bits as u32 >> 24;
+    let old_coefficient = retarget_block.bits as u32 & 0x00ffffff;
+
+    // adjust the coefficient based on the ratio 
+    let new_coefficient_temp = old_coefficient as u64 * ratio_mantissa / (TARGET_TIMESPAN as u64 * 1_000_000);
+    let new_coefficient = if new_coefficient_temp > 0x00ffffff {
+        0x00ffffff // clamp to max if overflow
+    } else {
+        new_coefficient_temp as u32
+    };
+
+    let new_bits = (old_exponent << 24) | new_coefficient;
+    let new_target = bits_to_target(new_bits as Field);
     let old_target = bits_to_target(retarget_block.bits) as Field;
-    let old_target_float = Float { sign: 0, mantissa: old_target, exponent: 100 };
-    let actual_time_float = Float { sign: 0, mantissa: actual_time as Field, exponent: 100 };
-    let expected_time_float = Float { sign: 0, mantissa: TARGET_TIMESPAN as Field, exponent: 100 };
-    let mut ratio = divFloats(actual_time_float, expected_time_float);
-    let target = ratio.mantissa as Field * old_target as Field;
-    let mut real_target = mulFloats(old_target_float, ratio);
-    let mut target = real_target.mantissa as Field;
-    let target = target / (16.pow_32(99 - ratio.exponent) as Field);
 
     println("Proposed bits: ");
     println(proposed_block.bits as u32);
     println("Proposed target: ");
     println(old_target);
-    println("Target: ");
-    println(target);
-    println("actual_time: ");
+    println("Actual_time: ");
     println(actual_time as u64);
-    println("actual_time float: ");
-    println(actual_time_float);
-    println("expected_time: ");
-    println(TARGET_TIMESPAN);
-    println("Expected time float: ");
-    println(expected_time_float);
-    println("Ratio: ");
-    println(ratio);
-    println("Ratio in float: ");
-    println(ratio.mantissa as u64);
-    println("expected target: ");
-    println("0x03f07e0000000000000000000000000000000000000000");
-    println("Real target: ");
-    println(target);
+    println("New target: ");
+    println(new_target);
 
-    // real_target
-    old_target_float
+    if (proposed_block.height as u32 == retarget_block.height as u32 + TARGET_PERIOD) {
+        println("\nRetargeting...");
+        new_target
+    } else {
+        println("\nNo retargeting...");
+        old_target
+    }
 }
 
 fn verify_PoW(proposed_block: ProposedBlock, proposed_target: Field) {
@@ -184,15 +182,9 @@ fn main(
     let proposed_target = bits_to_target(proposed_block.bits);
     let real_target = calculate_retarget(retarget_block, proposed_block);
 
-    // println("Real target: ");
-    // println(real_target);
-
-    if (proposed_block.height as u32 == retarget_block.height as u32 + TARGET_PERIOD) {
-        println("\nRetargeting...");
-    }
-
     // verify that the proposed target matches the real target
-    // assert(proposed_target == real_target);
+    assert(proposed_target == real_target);
+    println("\nTarget verified!");
 
     // [2] verify the proposed block height is one greater than previous_block_height
     assert(proposed_block.height as u32 == previous_block_height + 1);
@@ -204,134 +196,4 @@ fn main(
 
     // [4] verify PoW (double sha256 + block_hash <= target)
     verify_PoW(proposed_block, proposed_target);
-}
-
-// LIBRARIES
-
-struct Float {
-    sign: Field,
-    mantissa: Field,
-    exponent: Field,
-}
-
-// Float number precision of mantissa
-global precision : Field = 10;
-global divPrecision : Field = 7;
-
-// Truncate Float to "precision" number of digits, 5 in the example
-fn truncate(num: Float) -> Float {
-    let lookup : [Field; 25] = [
-        1,
-        10,
-        100,
-        1000,
-        10000,
-        100000,
-        1000000,
-        10000000,
-        100000000,
-        1000000000,
-        10000000000,
-        100000000000,
-        1000000000000,
-        10000000000000,
-        100000000000000,
-        1000000000000000,
-        10000000000000000,
-        100000000000000000,
-        1000000000000000000,
-        10000000000000000000,
-        100000000000000000000,
-        1000000000000000000000,
-        10000000000000000000000,
-        100000000000000000000000,
-        1000000000000000000000000
-    ];
-
-    let maxValue : Field = 10.pow_32(precision);
-    let mut decValue : Field = 1;
-    let mut logValue : Field = 0;
-
-    for i in 0..25 {
-        if num.mantissa as u64 >= lookup[i] as u64 {
-            decValue = lookup[i];
-            logValue = i;
-        }
-    }
-
-    decValue *= 10;
-    logValue += 1;
-
-    let mut res : Float = Float { sign: num.sign, mantissa: num.mantissa, exponent: num.exponent };
-
-    if logValue as u64 > precision as u64 {
-        let diff = (decValue / maxValue) as u64;
-        res = Float { sign: num.sign, mantissa: (num.mantissa as u64 / diff) as Field, exponent: num.exponent + (logValue - precision)}; // 
-    }
-
-    if res.mantissa == 0 {
-        res = Float { sign: res.sign, mantissa: 0, exponent: 100 };
-    }
-
-    res
-}
-
-// Multiplication of Float numbers
-fn mulFloats(x: Float, y: Float) -> Float {
-    let mant = (x.mantissa) * (y.mantissa);
-
-    println("Mantissa x: ");
-    println(x.mantissa);
-    println("Mantissa y: ");
-    println(y.mantissa);
-    println("Mantissa: ");
-    println(mant);
-
-    let exp = x.exponent + y.exponent - 100;
-    let mut sign : Field = 0;
-
-    if x.sign != y.sign {
-        sign = 1;
-    }
-
-    truncate(Float { sign, mantissa: mant, exponent: exp })
-}
-
-// Dividing of Float numbers
-fn divFloats(x: Float, y: Float) -> Float {
-    assert(y.mantissa as u64 > 0);
-
-    let mut exp1: Field = x.exponent;
-    let mut mant1: u64 = x.mantissa as u64;
-
-    let exp2: Field = y.exponent;
-    let mant2: Field = y.mantissa;
-
-    // Can't divide lower by higher number with same precision, result will be 0
-    // The lower must be multiplied by 10, it means at the same time exponent must be reduced by 1
-    if mant1 < mant2 as u64 {
-        mant1 *= 10;
-        exp1 -= 1;
-    }
-
-    let mut new_mant: u64 = 0;
-    for i in 0..7 {
-        let div = mant1 / mant2 as u64;
-        mant1 = (mant1 - mant2 as u64 * div) * 10;
-
-        // For precision N, the highest exponent is 10^(N-1)
-        let exp = divPrecision - i - 1;
-        let pow = 10.pow_32(exp) as u64;
-        new_mant += div * pow;
-    }
-
-    let new_exp = 100 + exp1 - exp2 - divPrecision + 1;
-
-    let mut new_sign : Field = 0;
-
-    if x.sign as u64 != y.sign as u64 {
-        new_sign = 1;
-    }
-
-    Float { sign: new_sign, mantissa: new_mant as Field, exponent: new_exp }
 }
