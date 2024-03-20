@@ -37,7 +37,7 @@ serialized_block_header = (
 hash_result = double_sha256(serialized_block_header)
 hash_result_reversed = hash_result[::-1]
 target = bits_to_target(bits)
-actual_time= 1143368
+actual_time= 1343368
 expected_time= 1209600
 ratio = actual_time/expected_time
 

@@ -42,9 +42,15 @@ fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlo
     let old_target_float = Float { sign: 0, mantissa: old_target, exponent: 100 };
     let actual_time_float = Float { sign: 0, mantissa: actual_time as Field, exponent: 100 };
     let expected_time_float = Float { sign: 0, mantissa: TARGET_TIMESPAN as Field, exponent: 100 };
-    let ratio = divFloats(actual_time_float, expected_time_float);
-    let real_target = mulFloats(old_target_float, ratio);
+    let mut ratio = divFloats(actual_time_float, expected_time_float);
+    let target = ratio.mantissa as Field * old_target as Field;
+    let mut real_target = mulFloats(old_target_float, ratio);
+    let mut target = real_target.mantissa as Field;
+    // divide by 10^100-ratio.exponent
+    let target = target / (16.pow_32(99 - ratio.exponent) as Field);
 
+    println("Target: ");
+    println(target);
     println("actual_time: ");
     println(actual_time as u64);
     println("actual_time float: ");
@@ -55,10 +61,12 @@ fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlo
     println(expected_time_float);
     println("Ratio: ");
     println(ratio);
+    println("Ratio in float: ");
+    println(ratio.mantissa as u64);
     println("expected target: ");
-    println("0x3f07e0000000000000000000000000000000000000000");
+    println("0x03f07e0000000000000000000000000000000000000000");
     println("Real target: ");
-    println(real_target);
+    println(target);
 
     // real_target
     old_target_float
@@ -173,10 +181,10 @@ fn main(
     let proposed_target = bits_to_target(proposed_block.bits);
     let real_target = calculate_retarget(retarget_block, proposed_block);
 
-    // println("Proposed bits: ");
-    // println(proposed_block.bits as u32);
-    // println("Proposed target: ");
-    // println(proposed_target);
+    println("Proposed bits: ");
+    println(proposed_block.bits as u32);
+    println("Proposed target: ");
+    println(proposed_target);
     // println("Real target: ");
     // println(real_target);
 
@@ -201,8 +209,6 @@ fn main(
 
 // LIBRARIES
 
-// Struct representing float numbers using sign, mantissa and exponent.
-// When Noir language gets the update to support signed integers, the sign field will be removed
 struct Float {
     sign: Field,
     mantissa: Field,
@@ -210,17 +216,8 @@ struct Float {
 }
 
 // Float number precision of mantissa
-global precision : Field = 20;
-
-// ReLU activation function used for neural network ML models
-fn relu(x: Float) -> Float {
-    let mut res = x;
-    if x.sign as u64 == 1 {
-        res = Float { sign: 0, mantissa: 0, exponent: 100 };
-    }
-
-    res
-}
+global precision : Field = 10;
+global divPrecision : Field = 7;
 
 // Truncate Float to "precision" number of digits, 5 in the example
 fn truncate(num: Float) -> Float {
@@ -282,7 +279,15 @@ fn truncate(num: Float) -> Float {
 
 // Multiplication of Float numbers
 fn mulFloats(x: Float, y: Float) -> Float {
-    let mant = x.mantissa * y.mantissa;
+    let mant = (x.mantissa) * (y.mantissa);
+
+    println("Mantissa x: ");
+    println(x.mantissa);
+    println("Mantissa y: ");
+    println(y.mantissa);
+    println("Mantissa: ");
+    println(mant);
+
     let exp = x.exponent + y.exponent - 100;
     let mut sign : Field = 0;
 
@@ -316,12 +321,12 @@ fn divFloats(x: Float, y: Float) -> Float {
         mant1 = (mant1 - mant2 as u64 * div) * 10;
 
         // For precision N, the highest exponent is 10^(N-1)
-        let exp = precision - i - 1;
+        let exp = divPrecision - i - 1;
         let pow = 10.pow_32(exp) as u64;
         new_mant += div * pow;
     }
 
-    let new_exp = 100 + exp1 - exp2 - precision + 1;
+    let new_exp = 100 + exp1 - exp2 - divPrecision + 1;
 
     let mut new_sign : Field = 0;
 
@@ -330,53 +335,4 @@ fn divFloats(x: Float, y: Float) -> Float {
     }
 
     Float { sign: new_sign, mantissa: new_mant as Field, exponent: new_exp }
-}
-
-// Sumation of Float numbers
-fn addFloats(x: Float, y: Float) -> Float {
-    let mut mant_1 = x.mantissa;
-    let mut mant_2 = y.mantissa;
-
-    let mut exp_1 = x.exponent;
-    let mut exp_2 = y.exponent;
-
-    let mut diff : Field = 0;
-
-    if exp_1 as u64 > exp_2 as u64 {
-        diff = exp_1 - exp_2;
-    } else {
-        diff = exp_2 - exp_1;
-    }
-
-    let mut pow10 : Field = 10.pow_32(diff);
-
-    if x.exponent as u64 < y.exponent as u64 {
-        mant_2 *= pow10;
-        exp_1 = x.exponent;
-    } else {
-        mant_1 *= pow10;
-        exp_1 = y.exponent;
-    }
-
-    let mut sum_mant = mant_1 + mant_2;
-    let mut sign = x.sign;
-
-    if x.sign != y.sign {
-        if mant_1 as u64 > mant_2 as u64 {
-            sum_mant = mant_1 - mant_2;
-        } else {
-            sum_mant = mant_2 - mant_1;
-            sign = y.sign;
-        }
-    }
-
-    truncate(Float { sign, mantissa: sum_mant, exponent: exp_1 })
-}
-
-// Subtraction of float numbers
-fn subFloats(x: Float, y: Float) -> Float {
-    addFloats(
-        x,
-        Float { sign: 1 - y.sign, mantissa: y.mantissa, exponent: y.exponent }
-    )
 }
