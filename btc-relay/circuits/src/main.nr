@@ -46,9 +46,12 @@ fn calculate_retarget(retarget_block: RetargetBlock, proposed_block: ProposedBlo
     let target = ratio.mantissa as Field * old_target as Field;
     let mut real_target = mulFloats(old_target_float, ratio);
     let mut target = real_target.mantissa as Field;
-    // divide by 10^100-ratio.exponent
     let target = target / (16.pow_32(99 - ratio.exponent) as Field);
 
+    println("Proposed bits: ");
+    println(proposed_block.bits as u32);
+    println("Proposed target: ");
+    println(old_target);
     println("Target: ");
     println(target);
     println("actual_time: ");
@@ -181,10 +184,6 @@ fn main(
     let proposed_target = bits_to_target(proposed_block.bits);
     let real_target = calculate_retarget(retarget_block, proposed_block);
 
-    println("Proposed bits: ");
-    println(proposed_block.bits as u32);
-    println("Proposed target: ");
-    println(proposed_target);
     // println("Real target: ");
     // println(real_target);
 
