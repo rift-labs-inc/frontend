@@ -1,210 +1,129 @@
 use dep::std;
 
-global TARGET_PERIOD: u32 = 2016; // blocks between difficulty retargets
-global TARGET_TIMESPAN: u32 = 1209600; // goal time of 10 minutes per block * 2016 blocks
-
-struct ProposedBlock {
-    block_hash: [u8; 32],
-    height: Field,
-    version: Field,
-    prev_block_hash: [u8; 32],
-    merkle_root: [u8; 32],
-    timestamp: Field,
-    bits: Field,
-    nonce: Field,
-}
-
-struct RetargetBlock {
-    bits: Field,
-    height: Field,
-    timestamp: Field
+struct TXN {
+    hash: [u8; 32],
 }
 
 fn main(
-    previous_block_hash: pub [u8; 32], // from contract
-    previous_block_height: pub u32, // from contract
-    retarget_block: pub RetargetBlock, // from contract
-    proposed_block: pub ProposedBlock // from indexer
+    merkle_root: [u8; 32], // from contract
+    proposed_txn: [u8; 32], // from indexer
+    txn_hashes: [TXN; 5000], // from indexer
 ) {
     //------------------ MAIN CIRCUIT ------------------
+    println("Starting main circuit");
 
-    // [1] verify proposed target is equal to real target
-    let proposed_target = bits_to_target(proposed_block.bits);
-    let real_target = calculate_real_target(retarget_block, proposed_block);
-    assert(proposed_target == real_target);
+    // hash_pairs(merkle_root, proposed_txn);
+    // [0] generate_merkle_proof with txn_hashes
+    let proof = generate_merkle_proof(txn_hashes, proposed_txn);
 
-    // [2] verify the proposed block height is one greater than previous_block_height
-    assert(proposed_block.height as u32 == previous_block_height + 1);
+    // [1] verify merkle root matches
 
-    // [3] verify the proposed prev_block_hash matches real previous_block_hash
-    for i in 0..32 {
-        assert(proposed_block.prev_block_hash[i] == previous_block_hash[i]);
-    }
-
-    // [4] verify PoW (double sha256(block_hash) <= target)
-    verify_PoW(proposed_block, proposed_target);
 }
 
-fn bits_to_target(bits: Field) -> Field {
-    // [0] convert the given bits to target
-    let exponent = (bits as u32) >> 24;
-    let coefficient = (bits as u32) & 0xffffff;
-    let mut target = (coefficient as Field) * 2.pow_32(8 * ((exponent as Field) - 3));
 
-    // [1] convert new target to byte array
-    let mut target_array: [u8; 32] = [0; 32];
-    let target_bytes = target.to_be_bytes(32);
-    for i in 0..32 {
-        target_array[i] = target_bytes[i];
+fn generate_merkle_proof(txn_hashes: [TXN; 5000], target_hash: [u8; 32]) -> Vec<([Field; 32], [u8; 5])> {
+    let mut proof: Vec<([Field; 32], [u8; 5])> = Vec::new();
+    let zero_hash = [0; 32];
+    let mut current_hashes: Vec<[Field; 32]> = Vec::new();
+
+    for i in 0..5000 {
+        let mut hash = [0; 32];
+        for j in 0..32 {
+            hash[j] = txn_hashes[i * 32 + j].hash as Field;
+        }
+        current_hashes.push(hash);
     }
 
-    // [2] convert maximum possible target to byte array
-    let max_target = 0xFFFF0000000000000000000000000000000000000000000000000000;
-    let mut max_target_array: [u8; 32] = [0; 32];
-    let max_target_bytes = max_target.to_be_bytes(32);
-    for i in 0..32 {
-        max_target_array[i] = max_target_bytes[i];
-    }
-
-    // [3] clamp target if above max 
-    let comparison = larger_byte_array(target_array, max_target_array);
-    if (comparison == 1) { // target > max_target
-        println("\nProposed target > max, clamping...");
-        target = max_target;
-    }
-    target
-}
-
-fn calculate_real_target(retarget_block: RetargetBlock, proposed_block: ProposedBlock) -> Field {
-    // [0] calculate the actual time between blocks
-    let mut actual_time = proposed_block.timestamp as i64 - retarget_block.timestamp as i64;
-    if actual_time < (TARGET_TIMESPAN / 4) as i64 {
-        actual_time = (TARGET_TIMESPAN / 4) as i64;
-    } else if actual_time > (TARGET_TIMESPAN * 4) as i64 {
-        actual_time = (TARGET_TIMESPAN * 4) as i64;
-    }
-
-    // [1] decode old bits
-    let old_exponent = retarget_block.bits as u32 >> 24;
-    let old_coefficient = retarget_block.bits as u32 & 0x00ffffff;
-
-    // [2] calculate new coefficient based on time ratio 
-    let scale = 1_000_000;
-    let mut new_coefficient = old_coefficient as u64 * (actual_time as u64 * scale) / (TARGET_TIMESPAN as u64 * scale);
-    if new_coefficient > 0x00ffffff {
-        new_coefficient = 0x00ffffff; // clamp to max if overflow
-    }
-
-    // [3] calculate new bits
-    let new_bits = (old_exponent << 24) | new_coefficient as u32; // combine exponent and coefficient
-    let new_target = bits_to_target(new_bits as Field);
-    let old_target = bits_to_target(retarget_block.bits) as Field;
-
-    // [4] return new target if 2016 blocks have passed since last retarget
-    if (proposed_block.height as u32 >= retarget_block.height as u32 + TARGET_PERIOD) {
-        new_target
-    } else {
-        old_target
-    }
-}
-
-fn verify_PoW(proposed_block: ProposedBlock, proposed_target: Field) {
-    println("\nVerifying PoW...");
-
-    // [0] build serialized header from proposed block data
-    let mut serialized_header_array: [u8; 80] = [0; 80];
-    let mut i = 0;
-
-    // version
-    let version_bytes = proposed_block.version.to_le_bytes(4);
-    for j in 0..4 {
-        serialized_header_array[i] = version_bytes[j];
-        i += 1;
-    }
-
-    // previous block hash
-    let len = proposed_block.prev_block_hash.len();
-    for j in 0..len {
-        serialized_header_array[i] = proposed_block.prev_block_hash[len - 1 - j];
-        i += 1;
-    }
-
-    // merkle root
-    let len = proposed_block.merkle_root.len();
-    for j in 0..len {
-        serialized_header_array[i] = proposed_block.merkle_root[len - 1 - j];
-        i += 1;
-    }
-
-    // timestamp
-    let timestamp_bytes = proposed_block.timestamp.to_le_bytes(4);
-    for j in 0..4 {
-        serialized_header_array[i] = timestamp_bytes[j];
-        i += 1;
-    }
-
-    // bits
-    let bits_bytes = proposed_block.bits.to_le_bytes(4);
-    for j in 0..4 {
-        serialized_header_array[i] = bits_bytes[j];
-        i += 1;
-    }
-
-    // nonce
-    let nonce_bytes = proposed_block.nonce.to_le_bytes(4);
-    for j in 0..4 {
-        serialized_header_array[i] = nonce_bytes[j];
-        i += 1;
-    }
-
-    // [1] double sha256 the serialized block header
-    let first_hash = std::hash::sha256(serialized_header_array);
-    let second_hash = std::hash::sha256(first_hash);
-
-    // convert block hash to little-endian
-    let len = second_hash.len();
-    let mut block_hash: [Field; 32] = [0; 32];
-    for i in 0..len {
-        block_hash[i] = (second_hash[len - 1 - i] as u8) as Field;
-    }
-
-    // [2] verify proposed block hash matches calculated block hash
-    for i in 0..32 {
-        assert(block_hash[i] == proposed_block.block_hash[i] as Field);
-    }
-
-    // convert proposed target to array of bytes
-    let mut proposed_target_array: [u8; 32] = [0; 32];
-    let proposed_target_bytes = proposed_target.to_be_bytes(32);
-    for i in 0..32 {
-        proposed_target_array[i] = proposed_target_bytes[i];
-    }
-
-    // convert block hash to array of bytes
-    let mut block_hash_bytes: [u8; 32] = [0; 32];
-    for i in 0..32 {
-        block_hash_bytes[i] = block_hash[i] as u8;
-    }
-
-    // [3] verify PoW if block hash <= proposed target
-    let PoW = larger_byte_array(block_hash_bytes, proposed_target_array);
-    assert(PoW != 1);
-    println("\nPoW verified!\n");
-}
-
-fn larger_byte_array(a: [u8; 32], b: [u8; 32]) -> u32 {
-    // returns larger byte array (1: a > b, 2: a < b, 0: a == b)
-    let mut result = 0;
-    for i in 0..32 {
-        if (a[i] != b[i]) {
-            if (result == 0) {
-                if a[i] > b[i] {
-                    result = 1; // a > b
-                } else {
-                    result = 2; // a < b
-                }
-            }
+    let mut target_index = -1;
+    for i in 0..current_hashes.len() {
+        if current_hashes.get(i) == target_hash {
+            target_index = i as i32;
+            break;
         }
     }
-    result // a == b
+
+    if target_index != -1 {
+        while current_hashes.len() > 1 {
+            let mut new_level: Vec<[Field; 32]> = Vec::new();
+
+            if current_hashes.len() % 2 == 1 {
+                current_hashes.push(current_hashes.get(current_hashes.len() - 1));
+            }
+
+            let mut i = 0;
+            while i < current_hashes.len() {
+                let left = current_hashes.get(i);
+                let right = current_hashes.get(i + 1);
+
+                if left != zero_hash && right != zero_hash {
+                    if i <= target_index as u32 && target_index < i as i32 + 2 {
+                        if target_index == i as i32 {
+                            proof.push((right, "right".to_owned().try_into().unwrap()));
+                        } else {
+                            proof.push((left, "left".to_owned().try_into().unwrap()));
+                        }
+                        target_hash = hash_pairs(left, right);
+                    }
+
+                    new_level.push(hash_pairs(left, right));
+                }
+
+                i += 2;
+            }
+
+            current_hashes = new_level;
+            target_index /= 2;
+        }
+    }
+
+    proof
 }
+
+fn hash_pairs(hash_1: [u8; 32], hash_2: [u8; 32]) -> [Field; 32] {
+    // [0] convert hashes to little-endian
+    let mut hash1: [u8; 32] = [0; 32];
+    let mut hash2: [u8; 32] = [0; 32];
+    for i in 0..32 {
+        hash1[i] = (hash_1[31 - i] as u8);
+        hash2[i] = (hash_2[31 - i] as u8);
+    }
+    
+    // print input hashes
+    println("\nhash1: ");
+    for i in 0..32 {
+        print(hash1[i] as Field);
+        print(", ");
+    }
+    println("\nhash2: ");
+    for i in 0..32 {
+        print(hash2[i] as Field);
+        print(", ");
+    }
+    
+    // [1] combine hashes into one 64 byte array
+    let mut combined_hashes: [u8; 64] = [0; 64];
+    for i in 0..32 {
+        combined_hashes[i] = hash1[i];
+        combined_hashes[i+32] = hash2[i];
+    }
+
+    // [2] double sha256 combined hashes
+    let first_hash = std::hash::sha256(combined_hashes);
+    let new_hash_be = std::hash::sha256(first_hash);
+
+    // [3] convert new hash to little-endian
+    let mut new_hash: [Field; 32] = [0; 32];
+    for i in 0..32 {
+        new_hash[i] = (new_hash_be[31 - i] as u8) as Field;
+    }
+
+    // print new hash
+    println("\nnew_hash: ");
+    for i in 0..32 {
+        print(new_hash[i] as Field);
+        print(", ");
+    }
+
+    new_hash
+}
+
