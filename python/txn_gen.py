@@ -31,7 +31,7 @@ def fetch_block_data(block_hash, proposed_txn_hash):
     
     # Locate local directory and save to txns.txt
     output_location = os.path.dirname(os.path.realpath(__file__))
-    with open(f"{output_location}/../circuits/Prover.toml", "w") as f:
+    with open(f"{output_location}/../circuits/txn_verification/Prover.toml", "w") as f:
         # Write Merkle root and proposed transaction in the specified format
         f.write(f"merkle_root = {merkle_root}\n")
         f.write(f"proposed_txn = {proposed_txn}\n")
