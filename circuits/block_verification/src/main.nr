@@ -77,11 +77,11 @@ fn bits_to_target(bits: Field) -> Field {
 
 fn calculate_real_target(retarget_block: RetargetBlock, proposed_block: ProposedBlock) -> Field {
     // [0] calculate the actual time between blocks
-    let mut actual_time = proposed_block.timestamp as i64 - retarget_block.timestamp as i64;
-    if actual_time < (TARGET_TIMESPAN / 4) as i64 {
-        actual_time = (TARGET_TIMESPAN / 4) as i64;
-    } else if actual_time > (TARGET_TIMESPAN * 4) as i64 {
-        actual_time = (TARGET_TIMESPAN * 4) as i64;
+    let mut actual_time = proposed_block.timestamp as u64 - retarget_block.timestamp as u64;
+    if actual_time < (TARGET_TIMESPAN / 4) as u64 {
+        actual_time = (TARGET_TIMESPAN / 4) as u64;
+    } else if actual_time > (TARGET_TIMESPAN * 4) as u64 {
+        actual_time = (TARGET_TIMESPAN * 4) as u64;
     }
 
     // [1] decode old bits
