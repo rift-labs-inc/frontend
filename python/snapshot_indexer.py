@@ -5,6 +5,7 @@ import math
 import aiohttp
 import hashlib
 from typing import TypedDict
+import os
 
 class StaleBlockDetected(Exception):
     pass
@@ -163,7 +164,8 @@ def test():
 async def build_circuit_input():
     # Edit:
     HEIGHT =  835568
-    OUT = "Prover.toml"
+    output_location = os.path.dirname(os.path.realpath(__file__)) + "/../circuits/Prover.toml"
+    OUT = output_location
 
     # Shouldn't need to touch:
     PREVIOUS_HEIGHT = HEIGHT - 1
