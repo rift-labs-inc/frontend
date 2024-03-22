@@ -163,7 +163,7 @@ def test():
 
 async def build_circuit_input():
     # Edit:
-    HEIGHT =  835568
+    HEIGHT = 834625
     output_location = os.path.dirname(os.path.realpath(__file__)) + "/../circuits/block_verification/Prover.toml"
     OUT = output_location
 
