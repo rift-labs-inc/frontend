@@ -8,18 +8,18 @@ struct MerkleProofStep {
 fn main(
     merkle_root: [u8; 32], // from contract
     proposed_txn_hash: [u8; 32], // from indexer
-    merkle_proof: [MerkleProofStep; 20] // from indexer
+    proposed_merkle_proof: [MerkleProofStep; 20] // from indexer
 ) {
     //------------------ MAIN CIRCUIT ------------------
-    println("\n\nMerkle proof verification started...");
+    println("\nMerkle proof verification started...");
 
     // [0] verify merkle proof
     let mut current_hash = proposed_txn_hash;
     let zero_hash = [0; 32];
     let mut count = 0;
     for i in 0..20 {
-        if merkle_proof[i].hash != zero_hash {
-            let proof_step = merkle_proof[count];
+        if proposed_merkle_proof[i].hash != zero_hash {
+            let proof_step = proposed_merkle_proof[count];
             if proof_step.direction == true {
                 current_hash = hash_pairs(current_hash, proof_step.hash);
             } else {
@@ -29,19 +29,17 @@ fn main(
         }
     }
 
-    // [2] compare computed root hash with real merkle root
+    // [1] verify computed merkle root == expected merkle root
     for i in 0..32 {
         assert(current_hash[i] == merkle_root[i]);
     }
 
-    //print expexted merkle root
     print("\nExpected merkle root: ");
     for i in 0..32 {
         print(merkle_root[i] as Field);
         print(", ");
     }
 
-    //print computed merkle root
     print("\nComputed merkle root: ");
     for i in 0..32 {
         print(current_hash[i] as Field);

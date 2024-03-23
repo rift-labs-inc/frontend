@@ -91,14 +91,14 @@ def generate_merkle_proof(txn_hashes, target_hash):
     with open(f"{output_location}/../circuits/txn_verification/Prover.toml", "a") as f:
         for i, (hash, direction) in enumerate(proof):
             flag = "true" if direction == 'right' else "false"
-            f.write(f"[[merkle_proof]] # {i+1}\nhash = {hex_to_u8_array(hash)}\ndirection = {flag}\n\n")
+            f.write(f"[[proposed_merkle_proof]] # {i+1}\nhash = {hex_to_u8_array(hash)}\ndirection = {flag}\n\n")
         
         # Determine how many padding entries are needed
         num_padding_entries = 20 - len(proof)
         
         # Padding with 0 u8 32-byte arrays if needed
         for j in range(num_padding_entries):
-            f.write(f"[[merkle_proof]] # {len(proof) + j + 1}\nhash = {hex_to_u8_array('00'*32)}\ndirection = false\n\n")
+            f.write(f"[[proposed_merkle_proof]] # {len(proof) + j + 1}\nhash = {hex_to_u8_array('00'*32)}\ndirection = false\n\n")
 
     return proof
 
@@ -116,8 +116,8 @@ def verify_merkle_proof(target_hash, proof, merkle_root):
     return current_hash == merkle_root
 
 # Example usage
-block_hash = "0000000000000bae09a7a393a8acded75aa67e46cb81f7acaa5ad94f9eacd103"
-proposed_txn_hash = "2c92fc4875abcceea6ebacea45ede9203b873cc2d9a05d3b4ca00e518e25ef60"
+block_hash = "0000000000000000000314bd6f3ffc1281b0258b20444a9627b22ddaebe90112"
+proposed_txn_hash = "9599579a0fe69353dd4b72c7c969bead1ccb8389b6db57498285b79cd956f2df"
 # Fetch data
 txn_hashes, merkle_root = fetch_block_data(block_hash, proposed_txn_hash)
 
