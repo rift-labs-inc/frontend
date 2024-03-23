@@ -30,7 +30,7 @@ contract TestBitcoinBlockData is Test {
         assert(blockData.getBlock(first_block.checkpoint_height).block_hash == first_block.block_hash);
     }
 
-    function testAddNewBlock() public {
+    function testAddBlockToGenesis() public {
         TestLib.ProposedBlock memory second_block = TestLib.getTestBlocks()[1];
         blockData.proposeNewBlock({
             block_hash: second_block.block_hash,
@@ -41,6 +41,32 @@ contract TestBitcoinBlockData is Test {
             bits: second_block.bits,
             nonce: second_block.nonce,
             proof: second_block.proof
+        });
+    }
+
+    function testAddBlockToFirstBlock() public {
+		TestLib.ProposedBlock memory second_block = TestLib.getTestBlocks()[1];
+        blockData.proposeNewBlock({
+            block_hash: second_block.block_hash,
+            version: second_block.version,
+            prev_block_hash: second_block.prev_block_hash,
+            merkle_root: second_block.merkle_root,
+            timestamp: second_block.timestamp,
+            bits: second_block.bits,
+            nonce: second_block.nonce,
+            proof: second_block.proof
+        });
+		
+        TestLib.ProposedBlock memory third_block = TestLib.getTestBlocks()[2];
+        blockData.proposeNewBlock({
+            block_hash: third_block.block_hash,
+            version: third_block.version,
+            prev_block_hash: third_block.prev_block_hash,
+            merkle_root: third_block.merkle_root,
+            timestamp: third_block.timestamp,
+            bits: third_block.bits,
+            nonce: third_block.nonce,
+            proof: third_block.proof
         });
     }
 }

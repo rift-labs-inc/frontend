@@ -119,11 +119,12 @@ library BitcoinBlockchainLib {
         publicInputs[135] = bytes32(uint256(input.proposed_block_bits));
         publicInputs[136] = bytes32(uint256(input.proposed_block_nonce));
 
-		/* Debugging the output
+		// Debugging the output
+		/*
 		for (uint i; i < publicInputs.length; i++){
 			console.logBytes(abi.encodePacked(publicInputs[i]));
 		}
-	   */
+		*/
         return publicInputs;
     }
 }

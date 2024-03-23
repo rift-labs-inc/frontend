@@ -151,8 +151,6 @@ contract BitcoinBlockData {
         BitcoinBlockchainLib.Block memory last_block = blockchain[data._current_height];
         BitcoinBlockchainLib.Block memory retarget_block =
             blockchain[data._current_height - (data._current_height % TARGET_PERIOD)];
-
-
         if (
             !verifier.verify(
                 data.proof,
@@ -179,7 +177,7 @@ contract BitcoinBlockData {
         }
 
         // add newly proposed block to blockchain
-        blockchain[data._current_height] = BitcoinBlockchainLib.Block({
+        blockchain[data._current_height + 1] = BitcoinBlockchainLib.Block({
             block_hash: data._block_hash,
             version: data._version,
             prev_block_hash: data._prev_block_hash,
