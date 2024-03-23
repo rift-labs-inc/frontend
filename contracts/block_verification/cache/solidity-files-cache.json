@@ -13,8 +13,8 @@
   },
   "files": {
     "contracts/BitcoinBlockData.sol": {
-      "lastModificationDate": 1711138994049,
-      "contentHash": "22097f444c51b1c4c925f589f8014003",
+      "lastModificationDate": 1711155666075,
+      "contentHash": "60ae942b617fd94a048bb3a8b938bdb5",
       "sourceName": "contracts/BitcoinBlockData.sol",
       "solcConfig": {
         "settings": {
@@ -62,8 +62,8 @@
       }
     },
     "contracts/BitcoinBlockchainLib.sol": {
-      "lastModificationDate": 1711141093477,
-      "contentHash": "88eca5a95b6cae6a6757ea9ed3d9728e",
+      "lastModificationDate": 1711155671995,
+      "contentHash": "fcab153a039ec313bbce7c26634d8122",
       "sourceName": "contracts/BitcoinBlockchainLib.sol",
       "solcConfig": {
         "settings": {
@@ -1278,54 +1278,9 @@
         }
       }
     },
-    "tests/EncodingLib.sol": {
-      "lastModificationDate": 1711074358000,
-      "contentHash": "abd71625a90e89e7bb54762ce01186b2",
-      "sourceName": "tests/EncodingLib.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "useLiteralContent": false,
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata",
-                "storageLayout"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "debug": {
-            "revertStrings": "default"
-          },
-          "libraries": {}
-        }
-      },
-      "imports": [],
-      "versionRequirement": "^0.8.0",
-      "artifacts": {
-        "Codec": {
-          "0.8.19+commit.7dd6d404.Darwin.appleclang": "EncodingLib.sol/Codec.json"
-        }
-      }
-    },
     "tests/TestBitcoinBlockData.t.sol": {
-      "lastModificationDate": 1711138207708,
-      "contentHash": "eb06b47303a04f0267c2d95c5922e5e8",
+      "lastModificationDate": 1711155650984,
+      "contentHash": "380a79855335f1be083ca84e1d5cef74",
       "sourceName": "tests/TestBitcoinBlockData.t.sol",
       "solcConfig": {
         "settings": {
@@ -1397,8 +1352,8 @@
       }
     },
     "tests/TestLib.sol": {
-      "lastModificationDate": 1711132762077,
-      "contentHash": "a6d3e4465dd0c691ebad803fdb5e610e",
+      "lastModificationDate": 1711154781378,
+      "contentHash": "207db3acfa393cee943b3fb2e5d01b65",
       "sourceName": "tests/TestLib.sol",
       "solcConfig": {
         "settings": {
