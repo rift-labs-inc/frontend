@@ -15,19 +15,19 @@ contract TestBitcoinBlockData is Test {
 
     function setUp() public {
         blockData = new BitcoinBlockData({
-			checkpoint_height: first_block.checkpoint_height,
-			block_hash: first_block.block_hash,
-			version: first_block.version,
-			prev_block_hash: first_block.prev_block_hash,
-			merkle_root: first_block.merkle_root,
-			timestamp: first_block.timestamp,
-			bits: first_block.bits,
-			nonce: first_block.bits
-		});
+    checkpoint_height: first_block.proposed_height,
+    block_hash: first_block.block_hash,
+    version: first_block.version,
+    prev_block_hash: first_block.prev_block_hash,
+    merkle_root: first_block.merkle_root,
+    timestamp: first_block.timestamp,
+    bits: first_block.bits,
+    nonce: first_block.nonce
+    });
     }
 
     function testFirstBlockIsSet() public {
-        assert(blockData.getBlock(first_block.checkpoint_height).block_hash == first_block.block_hash);
+        assert(blockData.getBlockUnsafe(first_block.proposed_height).block_hash == first_block.block_hash);
     }
 
     function testAddBlockToGenesis() public {
@@ -42,10 +42,11 @@ contract TestBitcoinBlockData is Test {
             nonce: second_block.nonce,
             proof: second_block.proof
         });
+        // If this doesn't fail the proof succeeded
     }
 
     function testAddBlockToFirstBlock() public {
-		TestLib.ProposedBlock memory second_block = TestLib.getTestBlocks()[1];
+        TestLib.ProposedBlock memory second_block = TestLib.getTestBlocks()[1];
         blockData.proposeNewBlock({
             block_hash: second_block.block_hash,
             version: second_block.version,
@@ -56,7 +57,6 @@ contract TestBitcoinBlockData is Test {
             nonce: second_block.nonce,
             proof: second_block.proof
         });
-		
         TestLib.ProposedBlock memory third_block = TestLib.getTestBlocks()[2];
         blockData.proposeNewBlock({
             block_hash: third_block.block_hash,
@@ -68,5 +68,6 @@ contract TestBitcoinBlockData is Test {
             nonce: third_block.nonce,
             proof: third_block.proof
         });
+        // If this doesn't fail the proof succeeded
     }
 }
