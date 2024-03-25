@@ -40,7 +40,7 @@ contract BitcoinBlockData {
 
         verifier = new UltraVerifier();
         btc_checkpoint_height = checkpoint_height;
-		current_height = checkpoint_height;
+        current_height = checkpoint_height;
         blockchain[checkpoint_height] = BitcoinBlockchainLib.Block({
             block_hash: block_hash,
             version: version,
@@ -52,30 +52,7 @@ contract BitcoinBlockData {
         });
     }
 
-    // PRIVLEGED TEMP FUNCTION FOR TESTS:
-
-    function forTest_SetBlockPrivleged(
-        uint256 index,
-        bytes32 _block_hash,
-        uint32 _version,
-        bytes32 _prev_block_hash,
-        bytes32 _merkle_root,
-        uint32 _timestamp,
-        uint32 _bits,
-        uint32 _nonce
-    ) public {
-        blockchain[index] = BitcoinBlockchainLib.Block({
-            block_hash: _block_hash,
-            version: _version,
-            prev_block_hash: _prev_block_hash,
-            merkle_root: _merkle_root,
-            timestamp: _timestamp,
-            bits: _bits,
-            nonce: _nonce
-        });
-    }
-
-    function setBlocksToLongestChain(
+    function proposeBlocksToLongestChain(
         // Checkpoint block that is VALID between the divergent chains
         uint256 checkpoint_height,
         bytes32[] memory _block_hashes,
@@ -104,7 +81,7 @@ contract BitcoinBlockData {
         for (uint256 i = 0; i < _block_hashes.length; i++) {
             setBlock(
                 BitcoinBlockchainLib.ProposedBlock({
-                    _current_height: checkpoint_height + (i + 1),
+                    _current_height: checkpoint_height + i,
                     _block_hash: _block_hashes[i],
                     _version: _versions[i],
                     _prev_block_hash: _prev_block_hashes[i],
@@ -115,6 +92,7 @@ contract BitcoinBlockData {
                     proof: proof[i]
                 })
             );
+
         }
 
         current_height = checkpoint_height + _block_hashes.length;
@@ -151,30 +129,28 @@ contract BitcoinBlockData {
         BitcoinBlockchainLib.Block memory last_block = blockchain[data._current_height];
         BitcoinBlockchainLib.Block memory retarget_block =
             blockchain[data._current_height - (data._current_height % TARGET_PERIOD)];
-        if (
-            !verifier.verify(
-                data.proof,
-                BitcoinBlockchainLib.generatePublicInput(
-                    BitcoinBlockchainLib.PublicInput({
-                        previous_block_hash: last_block.block_hash,
-                        last_block_height: data._current_height,
-                        retarget_block_bits: retarget_block.bits,
-                        retarget_block_height: data._current_height - (data._current_height % TARGET_PERIOD),
-                        retarget_block_timestamp: retarget_block.timestamp,
-                        proposed_block_hash: data._block_hash,
-                        proposed_block_height: data._current_height + 1,
-                        proposed_block_version: data._version,
-                        proposed_block_prev_hash: data._prev_block_hash,
-                        proposed_block_merkle_root: data._merkle_root,
-                        proposed_block_timestamp: data._timestamp,
-                        proposed_block_bits: data._bits,
-                        proposed_block_nonce: data._nonce
-                    })
-                )
+
+        // reverts on proof failure
+        verifier.verify(
+            data.proof,
+            BitcoinBlockchainLib.generatePublicInput(
+                BitcoinBlockchainLib.PublicInput({
+                    previous_block_hash: last_block.block_hash,
+                    last_block_height: data._current_height,
+                    retarget_block_bits: retarget_block.bits,
+                    retarget_block_height: data._current_height - (data._current_height % TARGET_PERIOD),
+                    retarget_block_timestamp: retarget_block.timestamp,
+                    proposed_block_hash: data._block_hash,
+                    proposed_block_height: data._current_height + 1,
+                    proposed_block_version: data._version,
+                    proposed_block_prev_hash: data._prev_block_hash,
+                    proposed_block_merkle_root: data._merkle_root,
+                    proposed_block_timestamp: data._timestamp,
+                    proposed_block_bits: data._bits,
+                    proposed_block_nonce: data._nonce
+                })
             )
-        ) {
-            revert ProofVerificationFailed();
-        }
+        );
 
         // add newly proposed block to blockchain
         blockchain[data._current_height + 1] = BitcoinBlockchainLib.Block({
@@ -188,11 +164,11 @@ contract BitcoinBlockData {
         });
     }
 
-    function getBlock(uint256 height) public view returns (BitcoinBlockchainLib.Block memory) {
+    function getBlockUnsafe(uint256 height) public view returns (BitcoinBlockchainLib.Block memory) {
         return blockchain[height];
     }
 
-    function getSafeBlock(uint256 height) public view returns (BitcoinBlockchainLib.Block memory) {
+    function getBlockSafe(uint256 height) public view returns (BitcoinBlockchainLib.Block memory) {
         if (height > current_height || height < btc_checkpoint_height || height > current_height - 6) {
             revert BlockDoesntExist(height);
         }

@@ -13,8 +13,8 @@
   },
   "files": {
     "contracts/BitcoinBlockData.sol": {
-      "lastModificationDate": 1711155666075,
-      "contentHash": "60ae942b617fd94a048bb3a8b938bdb5",
+      "lastModificationDate": 1711380760087,
+      "contentHash": "d2bbacce64f308b42939ef55175bda8f",
       "sourceName": "contracts/BitcoinBlockData.sol",
       "solcConfig": {
         "settings": {
@@ -62,8 +62,8 @@
       }
     },
     "contracts/BitcoinBlockchainLib.sol": {
-      "lastModificationDate": 1711155671995,
-      "contentHash": "fcab153a039ec313bbce7c26634d8122",
+      "lastModificationDate": 1711381137649,
+      "contentHash": "70fef40540155d812b689e4ff9cc5dc3",
       "sourceName": "contracts/BitcoinBlockchainLib.sol",
       "solcConfig": {
         "settings": {
@@ -1279,8 +1279,8 @@
       }
     },
     "tests/TestBitcoinBlockData.t.sol": {
-      "lastModificationDate": 1711155650984,
-      "contentHash": "380a79855335f1be083ca84e1d5cef74",
+      "lastModificationDate": 1711380877463,
+      "contentHash": "5f95d6400ab5bbd2c0a4c94f95644728",
       "sourceName": "tests/TestBitcoinBlockData.t.sol",
       "solcConfig": {
         "settings": {
@@ -1352,8 +1352,8 @@
       }
     },
     "tests/TestLib.sol": {
-      "lastModificationDate": 1711154781378,
-      "contentHash": "207db3acfa393cee943b3fb2e5d01b65",
+      "lastModificationDate": 1711380942150,
+      "contentHash": "8bfe3a991f5e2b0a9da3a22112f37f50",
       "sourceName": "tests/TestLib.sol",
       "solcConfig": {
         "settings": {
@@ -1389,10 +1389,128 @@
         }
       },
       "imports": [],
-      "versionRequirement": null,
+      "versionRequirement": "^0.8.19",
       "artifacts": {
         "TestLib": {
           "0.8.19+commit.7dd6d404.Darwin.appleclang": "TestLib.sol/TestLib.json"
+        }
+      }
+    },
+    "tests/TestLibOmmer.sol": {
+      "lastModificationDate": 1711380935962,
+      "contentHash": "3c4c527bd161c0bdbfdac1c3c21ba736",
+      "sourceName": "tests/TestLibOmmer.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "useLiteralContent": false,
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "debug": {
+            "revertStrings": "default"
+          },
+          "libraries": {}
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.19",
+      "artifacts": {
+        "TestLib": {
+          "0.8.19+commit.7dd6d404.Darwin.appleclang": "TestLibOmmer.sol/TestLib.json"
+        }
+      }
+    },
+    "tests/TestOmmerBitcoinBlockData.t.sol": {
+      "lastModificationDate": 1711381065583,
+      "contentHash": "c0268d2b7429bf6a46401ae3a7c25114",
+      "sourceName": "tests/TestOmmerBitcoinBlockData.t.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "useLiteralContent": false,
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "debug": {
+            "revertStrings": "default"
+          },
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "contracts/BitcoinBlockData.sol",
+        "contracts/BitcoinBlockchainLib.sol",
+        "contracts/Plonk_vk.sol",
+        "lib/forge-std/src/Base.sol",
+        "lib/forge-std/src/StdAssertions.sol",
+        "lib/forge-std/src/StdChains.sol",
+        "lib/forge-std/src/StdCheats.sol",
+        "lib/forge-std/src/StdError.sol",
+        "lib/forge-std/src/StdInvariant.sol",
+        "lib/forge-std/src/StdJson.sol",
+        "lib/forge-std/src/StdMath.sol",
+        "lib/forge-std/src/StdStorage.sol",
+        "lib/forge-std/src/StdStyle.sol",
+        "lib/forge-std/src/StdToml.sol",
+        "lib/forge-std/src/StdUtils.sol",
+        "lib/forge-std/src/Test.sol",
+        "lib/forge-std/src/Vm.sol",
+        "lib/forge-std/src/console.sol",
+        "lib/forge-std/src/console2.sol",
+        "lib/forge-std/src/interfaces/IERC165.sol",
+        "lib/forge-std/src/interfaces/IERC20.sol",
+        "lib/forge-std/src/interfaces/IERC721.sol",
+        "lib/forge-std/src/interfaces/IMulticall3.sol",
+        "lib/forge-std/src/mocks/MockERC20.sol",
+        "lib/forge-std/src/mocks/MockERC721.sol",
+        "lib/forge-std/src/safeconsole.sol",
+        "tests/TestLibOmmer.sol"
+      ],
+      "versionRequirement": "^0.8.19",
+      "artifacts": {
+        "TestOmmerBitcoinBlockData": {
+          "0.8.19+commit.7dd6d404.Darwin.appleclang": "TestOmmerBitcoinBlockData.t.sol/TestOmmerBitcoinBlockData.json"
         }
       }
     }
