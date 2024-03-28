@@ -3,9 +3,9 @@ pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
-import {BitcoinBlockData} from "../src/BitcoinBlockData.sol";
+import {HeaderStorage} from "../src/HeaderStorage.sol";
 import "forge-std/console.sol";
-import {BitcoinBlockchainLib} from "../src/BitcoinBlockchainLib.sol";
+import {HeaderLib} from "../src/HeaderLib.sol";
 import {TestLib} from "./data/TestLibOmmer.sol";
 
 // Test ensuring we handle ommer/stale blocks
