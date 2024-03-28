@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/console.sol";
 
-library BitcoinBlockchainLib {
+library HeaderLib {
     struct Block {
         uint32 bits;
         bytes32 block_hash;

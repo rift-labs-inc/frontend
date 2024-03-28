@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.8.19;
 
-import {BitcoinBlockchainLib} from "./BitcoinBlockchainLib.sol";
-import {UltraVerifier} from "./BitcoinHeaderPlonk_vk.sol";
+import {HeaderLib} from "./HeaderLib.sol";
+import {UltraVerifier} from "./HeaderStoragePlonkVerification.sol";
 import "forge-std/console.sol";
 
-contract BitcoinBlockData {
+contract HeaderStorage {
     error InvalidTarget(uint256 provided, uint256 expected);
     error BlockDoesntExist(uint256 height);
     error InvalidBlockList();
@@ -16,7 +16,7 @@ contract BitcoinBlockData {
     UltraVerifier public verifier;
 
     // height => block
-    mapping(uint256 => BitcoinBlockchainLib.Block) blockchain;
+    mapping(uint256 => HeaderLib.Block) blockchain;
 
     uint256 public btc_checkpoint_height;
     uint256 public current_height;
@@ -124,7 +124,7 @@ contract BitcoinBlockData {
         current_height++;
     }
 
-    function setBlock(BitcoinBlockchainLib.ProposedBlock memory data) internal {
+    function setBlock(HeaderLib.ProposedBlock memory data) internal {
         // validate block data before setting
         BitcoinBlockchainLib.Block memory last_block = blockchain[data._current_height];
         BitcoinBlockchainLib.Block memory retarget_block =
