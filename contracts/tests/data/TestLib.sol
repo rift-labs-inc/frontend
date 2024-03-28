@@ -1,4 +1,5 @@
 pragma solidity ^0.8.19;
+
 library TestLib {
     struct ProposedBlock {
         uint256 proposed_height;

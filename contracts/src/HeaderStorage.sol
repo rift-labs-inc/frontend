@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.8.19;
 
-import {HeaderLib} from "./HeaderLib.sol";
-import {UltraVerifier} from "./HeaderStoragePlonkVerification.sol";
+import { HeaderLib } from "./HeaderLib.sol";
+import { UltraVerifier as HeaderStoragePlonkVerifier } from "./verifiers/HeaderStoragePlonkVerification.sol";
 import "forge-std/console.sol";
 
 contract HeaderStorage {
@@ -13,7 +13,7 @@ contract HeaderStorage {
     error ProofVerificationFailed();
     error BlockIsNotRetarget(uint256 invalid_height);
 
-    UltraVerifier public verifier;
+    HeaderStoragePlonkVerifier public verifier;
 
     // height => block
     mapping(uint256 => HeaderLib.Block) blockchain;
@@ -38,10 +38,10 @@ contract HeaderStorage {
             revert BlockIsNotRetarget(checkpoint_height);
         }
 
-        verifier = new UltraVerifier();
+        verifier = new HeaderStoragePlonkVerifier();
         btc_checkpoint_height = checkpoint_height;
         current_height = checkpoint_height;
-        blockchain[checkpoint_height] = BitcoinBlockchainLib.Block({
+        blockchain[checkpoint_height] = HeaderLib.Block({
             block_hash: block_hash,
             version: version,
             prev_block_hash: prev_block_hash,
@@ -80,7 +80,7 @@ contract HeaderStorage {
 
         for (uint256 i = 0; i < _block_hashes.length; i++) {
             setBlock(
-                BitcoinBlockchainLib.ProposedBlock({
+                HeaderLib.ProposedBlock({
                     _current_height: checkpoint_height + i,
                     _block_hash: _block_hashes[i],
                     _version: _versions[i],
@@ -92,7 +92,6 @@ contract HeaderStorage {
                     proof: proof[i]
                 })
             );
-
         }
 
         current_height = checkpoint_height + _block_hashes.length;
@@ -109,7 +108,7 @@ contract HeaderStorage {
         bytes memory proof
     ) public {
         setBlock(
-            BitcoinBlockchainLib.ProposedBlock({
+            HeaderLib.ProposedBlock({
                 _current_height: current_height,
                 _block_hash: block_hash,
                 _version: version,
@@ -126,15 +125,15 @@ contract HeaderStorage {
 
     function setBlock(HeaderLib.ProposedBlock memory data) internal {
         // validate block data before setting
-        BitcoinBlockchainLib.Block memory last_block = blockchain[data._current_height];
-        BitcoinBlockchainLib.Block memory retarget_block =
+        HeaderLib.Block memory last_block = blockchain[data._current_height];
+        HeaderLib.Block memory retarget_block =
             blockchain[data._current_height - (data._current_height % TARGET_PERIOD)];
 
         // reverts on proof failure
         verifier.verify(
             data.proof,
-            BitcoinBlockchainLib.generatePublicInput(
-                BitcoinBlockchainLib.PublicInput({
+            HeaderLib.generatePublicInput(
+                HeaderLib.PublicInput({
                     previous_block_hash: last_block.block_hash,
                     last_block_height: data._current_height,
                     retarget_block_bits: retarget_block.bits,
@@ -153,7 +152,7 @@ contract HeaderStorage {
         );
 
         // add newly proposed block to blockchain
-        blockchain[data._current_height + 1] = BitcoinBlockchainLib.Block({
+        blockchain[data._current_height + 1] = HeaderLib.Block({
             block_hash: data._block_hash,
             version: data._version,
             prev_block_hash: data._prev_block_hash,
@@ -164,11 +163,11 @@ contract HeaderStorage {
         });
     }
 
-    function getBlockUnsafe(uint256 height) public view returns (BitcoinBlockchainLib.Block memory) {
+    function getBlockUnsafe(uint256 height) public view returns (HeaderLib.Block memory) {
         return blockchain[height];
     }
 
-    function getBlockSafe(uint256 height) public view returns (BitcoinBlockchainLib.Block memory) {
+    function getBlockSafe(uint256 height) public view returns (HeaderLib.Block memory) {
         if (height > current_height || height < btc_checkpoint_height || height > current_height - 6) {
             revert BlockDoesntExist(height);
         }

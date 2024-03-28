@@ -1,5 +1,6 @@
 pragma solidity ^0.8.19;
-library TestLib {
+
+library TestLibOmmer {
     struct ProposedBlock {
         uint256 proposed_height;
         bytes32 block_hash;
