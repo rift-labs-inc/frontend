@@ -24,7 +24,7 @@ include_storage = true
 include_push_bytes = true
 
 [profile.default]
-src = "contracts"
+src = "src"
 test = "tests"
 script = "scripts"
 out = "out"
