@@ -12,7 +12,7 @@ library TestLib {
         bytes proof;
     }
 
-    function getTestBlocks() internal returns (ProposedBlock[] memory blocks) {
+    function getTestBlocks() internal pure returns (ProposedBlock[] memory blocks) {
         blocks = new ProposedBlock[](3);
 
         blocks[0] = ProposedBlock({
