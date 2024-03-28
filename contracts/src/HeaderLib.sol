@@ -121,9 +121,9 @@ library HeaderLib {
 
         // Debugging the output
         /*
-		for (uint i; i < publicInputs.length; i++){
-			console.logBytes(abi.encodePacked(publicInputs[i]));
-		}
+    for (uint i; i < publicInputs.length; i++){
+    console.logBytes(abi.encodePacked(publicInputs[i]));
+    }
         */
         return publicInputs;
     }
