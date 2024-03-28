@@ -6,7 +6,7 @@ import {Vm} from "forge-std/Vm.sol";
 import {BitcoinBlockData} from "../src/BitcoinBlockData.sol";
 import "forge-std/console.sol";
 import {BitcoinBlockchainLib} from "../src/BitcoinBlockchainLib.sol";
-import {TestLib} from "./TestLibOmmer.sol";
+import {TestLib} from "./data/TestLibOmmer.sol";
 
 // Test ensuring we handle ommer/stale blocks
 // Block 449695 with known stale block: 0000000000000000001a5db47750928e1cfb94ee03ed88b0343c7d1cf6387f9a

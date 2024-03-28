@@ -6,7 +6,7 @@ import {Vm} from "forge-std/Vm.sol";
 import {BitcoinBlockData} from "../src/BitcoinBlockData.sol";
 import "forge-std/console.sol";
 import {BitcoinBlockchainLib} from "../src/BitcoinBlockchainLib.sol";
-import {TestLib} from "./TestLib.sol";
+import {TestLib} from "./data/TestLib.sol";
 
 contract TestBitcoinBlockData is Test {
     BitcoinBlockData public blockData;
