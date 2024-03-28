@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {BitcoinBlockchainLib} from "./BitcoinBlockchainLib.sol";
-import {UltraVerifier} from "./Plonk_vk.sol";
+import {UltraVerifier} from "./BitcoinHeaderPlonk_vk.sol";
 import "forge-std/console.sol";
 
 contract BitcoinBlockData {
