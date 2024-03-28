@@ -3,9 +3,9 @@ pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
-import {BitcoinBlockData} from "../contracts/BitcoinBlockData.sol";
+import {BitcoinBlockData} from "../src/BitcoinBlockData.sol";
 import "forge-std/console.sol";
-import {BitcoinBlockchainLib} from "../contracts/BitcoinBlockchainLib.sol";
+import {BitcoinBlockchainLib} from "../src/BitcoinBlockchainLib.sol";
 import {TestLib} from "./TestLib.sol";
 
 contract TestBitcoinBlockData is Test {
