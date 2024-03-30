@@ -68,9 +68,7 @@ library HeaderLib {
     retarget_block: pub RetargetBlock, // from contract
     proposed_block: pub ProposedBlock // from indexer
     )
-    */
 
-    /*
     byte slots in public input:
     0 -> 32 : prev block hash;
     32: last_block_height;
