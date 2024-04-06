@@ -14,37 +14,64 @@ export const Navbar = ({}) => {
     router.push(route);
   };
 
+  const navItem = (text: string, route: string) => {
+    return (
+      <Flex
+        _hover={
+          router.pathname !== route
+            ? { background: "rgba(200, 200, 200, 0.1)" }
+            : {}
+        }
+        cursor="pointer"
+        borderRadius="6px"
+        mr="15px"
+        onClick={() => handleNavigation(route)}
+        px="10px"
+        py="2px"
+        position="relative"
+        alignItems="center"
+      >
+        <Text
+          color={router.pathname == route ? colors.offWhite : colors.textGray}
+          fontSize="18px"
+        >
+          {text}
+        </Text>
+        {router.pathname === route && (
+          <Flex
+            position={"absolute"}
+            top="29px"
+            w={
+              router.pathname === "/liquidity"
+                ? "100px"
+                : router.pathname === "/activity"
+                ? "94px"
+                : "59px"
+            }
+            height="2px"
+            bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
+          ></Flex>
+        )}
+      </Flex>
+    );
+  };
+
   return (
     <Flex
       width="100%"
       direction={"column"}
-      // backdropFilter="blur(10px)" // Apply blur for glass effect
       position="fixed"
-      pb="20px"
       top={0}
       left={0}
       right={0}
-      zIndex={1000} // Ensure it's above other content
+      zIndex={1000}
     >
-      <Flex direction="row" w="100%" px={"14px"} pt="12px">
-        <Flex>
-          <Text color={colors.offWhite} fontSize={"15px"} mb="-10px">
-            Rift
-          </Text>
-        </Flex>
+      <Flex direction="row" w="100%" px={"30px"} pt="25px">
+        {navItem("Home", "/")}
+        {navItem("Activity", "/activity")}
+        {navItem("Liquidity", "/liquidity")}
         <Spacer />
-        <Flex>
-          <Text
-            color={colors.offWhite}
-            fontFamily={"Nostromo Regular"}
-            fontWeight={"bold"}
-            fontSize={"15px"}
-            letterSpacing={"-15%"}
-            mb="-10px"
-          >
-            Connect Wallet
-          </Text>
-        </Flex>
+        <Flex>{/* CONNECT WALLET BUTTON */}</Flex>
       </Flex>
     </Flex>
   );
