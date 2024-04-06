@@ -1,17 +1,23 @@
 use dep::std;
+mod decoder;
+mod byte_lib;
 
 struct MerkleProofStep {
     hash: [u8; 32],
     direction: bool, // false = left, true = right
 }
 
+fn decode() {}
+
 fn main(
     merkle_root: [u8; 32], // from contract
     proposed_txn_hash: [u8; 32], // from indexer
-    proposed_merkle_proof: [MerkleProofStep; 20] // from indexer
+    proposed_merkle_proof: [MerkleProofStep; 20], // from indexer
+	txn_data: BoundedVec<u8, decoder::MAX_TXN_BYTES>
 ) {
     //------------------ MAIN CIRCUIT ------------------
     println("\nMerkle proof verification started...");
+	decoder::decode_txn(txn_data);
 
     // [0] verify merkle proof
     let mut current_hash = proposed_txn_hash;
