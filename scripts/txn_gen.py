@@ -29,6 +29,14 @@ def fetch_block_data(block_hash, proposed_txn_hash):
     # find proposed txn index
     txn_hashes = [txn['hash'] for txn in block_data['tx']]
     
+    txn_data = None  # Default to None if no transaction matches
+    for txn in block_data['tx']:
+        if txn['hash'].lower() == proposed_txn_hash.lower():
+            txn_data = txn
+            break  # Exit the loop as soon as the matching transaction is found
+    if txn_data is None:
+        raise Exception("Txn hash could not be found in the given block")
+    
     # Locate local directory and save to txns.txt
     output_location = os.path.dirname(os.path.realpath(__file__))
     with open(f"{output_location}/../circuits/txn_verification/Prover.toml", "w") as f:
@@ -37,9 +45,9 @@ def fetch_block_data(block_hash, proposed_txn_hash):
         f.write(f"proposed_txn_hash = {proposed_txn}\n")
         
     merkle_root = (block_data['mrkl_root'])
-
-
-    return txn_hashes, merkle_root
+    
+    
+    return txn_hashes, merkle_root, txn_data
 
 def hash_pairs(hex_str1, hex_str2):
     """Hash two hex strings together using double SHA-256 and return the hex result."""
@@ -119,7 +127,9 @@ def verify_merkle_proof(target_hash, proof, merkle_root):
 block_hash = "0000000000000000000314bd6f3ffc1281b0258b20444a9627b22ddaebe90112"
 proposed_txn_hash = "9599579a0fe69353dd4b72c7c969bead1ccb8389b6db57498285b79cd956f2df"
 # Fetch data
-txn_hashes, merkle_root = fetch_block_data(block_hash, proposed_txn_hash)
+txn_hashes, merkle_root, txn_data = fetch_block_data(block_hash, proposed_txn_hash)
+
+print("TXN_DATA", txn_data)
 
 # [0] generate merkle proof from txn_hashes
 proof = generate_merkle_proof(txn_hashes, proposed_txn_hash)

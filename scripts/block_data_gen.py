@@ -1,4 +1,5 @@
 # Grabs blocks from btc block data api
+import json
 from textwrap import dedent
 import asyncio
 import math
@@ -8,9 +9,11 @@ from typing import TypedDict
 import os
 import subprocess
 
+
 def output_data_library(proposed_block_data_structs):
     print("GENERATED DATA LIBRARY:")
-    print(f"""
+    print(
+        f"""
 library TestLib {{
     struct ProposedBlock {{
         uint256 proposed_height;
@@ -26,9 +29,10 @@ library TestLib {{
 
     function getTestBlocks() internal returns (ProposedBlock[] memory blocks) {{
         blocks = new ProposedBlock[]({len(proposed_block_data_structs)});
-        """)
+        """
+    )
 
-    for i,data in enumerate(proposed_block_data_structs):
+    for i, data in enumerate(proposed_block_data_structs):
         print(f"blocks[{i}] = ", data)
 
     print("\t}\n}")
@@ -196,7 +200,14 @@ def test():
     print(api.get_block_at_height(1))
 
 
-async def build_circuit_input(HEIGHT, PROPOSED_BLOCK_HEADER: BlockHeader | None = None, OUTPUT_TEST_DATA: bool = False, PROOF_IN_OUTPUT_DATA=True):
+async def build_circuit_input(
+    HEIGHT,
+    PROPOSED_BLOCK_HEADER: BlockHeader | None = None,
+    OUTPUT_TEST_DATA: bool = False,
+    PROOF_IN_OUTPUT_DATA=True,
+    OUTPUT_FULL_PROPOSED_BLOCK=False,
+    OUTPUT_LOCATION="./block_data.json",
+):
     # Edit:
     output_location = (
         os.path.dirname(os.path.realpath(__file__))
@@ -214,14 +225,14 @@ async def build_circuit_input(HEIGHT, PROPOSED_BLOCK_HEADER: BlockHeader | None 
     handler = BitcoinBlockDataHandler()
 
     if PROPOSED_BLOCK_HEADER is not None:
-        # just pass the proposed block data provided in args, get the retarget and previous block 
+        # just pass the proposed block data provided in args, get the retarget and previous block
         last_retarget_block, last_block = await asyncio.gather(
             *[
                 handler.get_block_at_height(LAST_RETARGET_BLOCK_HEIGHT),
                 handler.get_block_at_height(PREVIOUS_HEIGHT),
             ]
         )
-        proposed_block_header = PROPOSED_BLOCK_HEADER 
+        proposed_block_header = PROPOSED_BLOCK_HEADER
     else:
         last_retarget_block, last_block, proposed_block = await asyncio.gather(
             *[
@@ -230,7 +241,11 @@ async def build_circuit_input(HEIGHT, PROPOSED_BLOCK_HEADER: BlockHeader | None 
                 handler.get_block_at_height(HEIGHT),
             ]
         )
-        proposed_block_header = BitcoinBlockDataHandler.extract_block_header(proposed_block)
+        if OUTPUT_FULL_PROPOSED_BLOCK:
+            json.dump(proposed_block, open(OUTPUT_LOCATION, "w+"), indent=2)
+        proposed_block_header = BitcoinBlockDataHandler.extract_block_header(
+            proposed_block
+        )
 
     last_retarget_header = BitcoinBlockDataHandler.extract_block_header(
         last_retarget_block
@@ -325,19 +340,20 @@ async def build_circuit_input(HEIGHT, PROPOSED_BLOCK_HEADER: BlockHeader | None 
     proof: hex"{proof}"
 }});
                 """
+
             if not PROOF_IN_OUTPUT_DATA:
                 proof = "00"
             return build_test_str(
-                    proposed_height=HEIGHT,
-                    block_hash=proposed_block_header["block_hash"],
-                    version=proposed_block_header["version"],
-                    prev_block_hash=proposed_block_header["prev_block_hash"],
-                    merkle_root=proposed_block_header["merkle_root"],
-                    timestamp=proposed_block_header["timestamp"],
-                    bits=proposed_block_header["bits"],
-                    nonce=proposed_block_header["nonce"],
-                    proof=proof,
-                )
+                proposed_height=HEIGHT,
+                block_hash=proposed_block_header["block_hash"],
+                version=proposed_block_header["version"],
+                prev_block_hash=proposed_block_header["prev_block_hash"],
+                merkle_root=proposed_block_header["merkle_root"],
+                timestamp=proposed_block_header["timestamp"],
+                bits=proposed_block_header["bits"],
+                nonce=proposed_block_header["nonce"],
+                proof=proof,
+            )
 
         else:
             print(
@@ -345,27 +361,41 @@ async def build_circuit_input(HEIGHT, PROPOSED_BLOCK_HEADER: BlockHeader | None 
             )
 
 
-
 def build_single_block_input_from_main_chain():
-    HEIGHT = 449696
-    OUTPUT_TEST_DATA = True
-    proposed_block_test_struct = asyncio.run(build_circuit_input(HEIGHT, OUTPUT_TEST_DATA=OUTPUT_TEST_DATA))
-    print("TEST DATA:\n",proposed_block_test_struct)
+    HEIGHT = 836715
+    OUTPUT_TEST_DATA = False
+    OUTPUT_FULL_PROPOSED_BLOCK = True
+    proposed_block_test_struct = asyncio.run(
+        build_circuit_input(
+            HEIGHT,
+            OUTPUT_TEST_DATA=OUTPUT_TEST_DATA,
+            OUTPUT_FULL_PROPOSED_BLOCK=OUTPUT_FULL_PROPOSED_BLOCK,
+        )
+    )
+    print("TEST DATA:\n", proposed_block_test_struct)
+
 
 def build_single_block_input_from_known_header():
     POT_HEIGHT = 449695
     PROPOSED_BLOCK_HEADER: BlockHeader = {
-        "block_hash": "0000000000000000001a5db47750928e1cfb94ee03ed88b0343c7d1cf6387f9a", # hexstr
+        "block_hash": "0000000000000000001a5db47750928e1cfb94ee03ed88b0343c7d1cf6387f9a",  # hexstr
         "version": 536870912,
         "prev_block_hash": "0000000000000000021140322d6f3bbc783c2fe45dca64d73847e3cd1644c389",  # hexstr
         "merkle_root": "81d0e09b909103d71004ee240c083627dde262a88d8eb494dce57b4c2dfab1a4",  # hexstr
         "timestamp": 1485203925,
         "bits": 402836551,
-        "nonce": 2178712530
-    } 
+        "nonce": 2178712530,
+    }
     OUTPUT_TEST_DATA = True
-    proposed_block_test_struct = asyncio.run(build_circuit_input(POT_HEIGHT, PROPOSED_BLOCK_HEADER=PROPOSED_BLOCK_HEADER, OUTPUT_TEST_DATA=OUTPUT_TEST_DATA))
-    print("TEST DATA:\n",proposed_block_test_struct)
+    proposed_block_test_struct = asyncio.run(
+        build_circuit_input(
+            POT_HEIGHT,
+            PROPOSED_BLOCK_HEADER=PROPOSED_BLOCK_HEADER,
+            OUTPUT_TEST_DATA=OUTPUT_TEST_DATA,
+        )
+    )
+    print("TEST DATA:\n", proposed_block_test_struct)
+
 
 def build_sequential_blocks_from_main_chain():
     # FOR OMMER TEST:
@@ -376,13 +406,19 @@ def build_sequential_blocks_from_main_chain():
     # START_HEIGHT = 834624
     # END_HEIGHT = 834626 + 1
     proposed_block_data_structs = []
-    for i in range(END_HEIGHT-START_HEIGHT):
+    for i in range(END_HEIGHT - START_HEIGHT):
         block_num = START_HEIGHT + i
         # we dont want proof for first block b/c it's used in constructor
-        proposed_block_data_structs.append(asyncio.run(build_circuit_input(block_num, OUTPUT_TEST_DATA=True, PROOF_IN_OUTPUT_DATA=i!=0)))
-        print("Finished block", i + 1, "of", END_HEIGHT-START_HEIGHT)
+        proposed_block_data_structs.append(
+            asyncio.run(
+                build_circuit_input(
+                    block_num, OUTPUT_TEST_DATA=True, PROOF_IN_OUTPUT_DATA=i != 0
+                )
+            )
+        )
+        print("Finished block", i + 1, "of", END_HEIGHT - START_HEIGHT)
     output_data_library(proposed_block_data_structs)
 
-if __name__ == "__main__":
-    build_single_block_input_from_main_chain() 
 
+if __name__ == "__main__":
+    build_single_block_input_from_main_chain()
