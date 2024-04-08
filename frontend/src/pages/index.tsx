@@ -13,8 +13,6 @@ const Home = () => {
     router.push(route);
   };
 
-  //lmao
-
   const RiftSVG = () => {
     return (
       <svg
