@@ -12,7 +12,6 @@ import {
 } from "@chakra-ui/react";
 import { Navbar } from "../../components/Navbar";
 import colors from "../../styles/colors";
-import { CategoryTag } from "../../components/CategoryTag";
 
 const ProjectPage = () => {
   const router = useRouter();

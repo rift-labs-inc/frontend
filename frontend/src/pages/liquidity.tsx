@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import { Flex, Spacer } from "@chakra-ui/react";
 import { Navbar } from "../components/Navbar";
 import colors from "../styles/colors";
-import { CategoryTag } from "../components/CategoryTag";
 
 const Liquidity = () => {
   const { height, width } = useWindowSize();
