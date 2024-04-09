@@ -1,9 +1,9 @@
 import useWindowSize from "../hooks/useWindowSize";
 import { useRouter } from "next/router";
-import { Flex, Spacer, Text } from "@chakra-ui/react";
+import { Flex, Spacer, Text, Box } from "@chakra-ui/react";
 import { Navbar } from "../components/Navbar";
 import colors from "../styles/colors";
-import { CategoryTag } from "../components/CategoryTag";
+import { SwapUI } from "../components/SwapUI";
 
 const Home = () => {
   const { height, width } = useWindowSize();
@@ -42,7 +42,7 @@ const Home = () => {
       backgroundPosition="center"
     >
       <Navbar />
-      <Flex direction={"column"} align="center" w="100%" mt="21vh">
+      <Flex direction={"column"} align="center" w="100%" mt="19vh">
         {/* LOGOS & TEXT */}
         <RiftSVG />
         <Flex
@@ -53,9 +53,10 @@ const Home = () => {
           }}
           bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
           letterSpacing={"2px"}
-          mt="-20px"
+          mt="-25px"
         >
           <Text
+            userSelect={"none"}
             fontSize="94px"
             fontFamily={"Klein"}
             fontWeight="bold"
@@ -64,6 +65,7 @@ const Home = () => {
             HyperBrid
           </Text>
           <Text
+            userSelect={"none"}
             fontSize="94px"
             fontFamily={"Klein"}
             ml="-20px"
@@ -77,18 +79,30 @@ const Home = () => {
             ge
           </Text>
         </Flex>
-        <Text fontSize="12px" fontFamily={"Aux"} color={"#c3c3c3"} mt="5px">
+        <Text
+          userSelect={"none"}
+          fontSize="12px"
+          fontFamily={"Aux"}
+          color={"#c3c3c3"}
+          mt="5px"
+          fontWeight={"normal"}
+        >
           Trustless, peer-to-peer bridging using zk-proofs. See{" "}
-          <span
+          <Box
+            as="span"
+            onClick={() => handleNavigation("/whitepaper")}
+            _hover={{
+              cursor: "pointer",
+            }}
             style={{
               textDecoration: "underline",
             }}
+            fontWeight={"bold"}
           >
             how it works
-          </span>
+          </Box>
         </Text>
-        {/* SWAP INTERFACE */}
-        <Flex></Flex>
+        <SwapUI />
       </Flex>
     </Flex>
   );

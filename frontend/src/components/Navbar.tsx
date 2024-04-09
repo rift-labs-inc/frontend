@@ -19,7 +19,7 @@ export const Navbar = ({}) => {
       <Flex
         _hover={
           router.pathname !== route
-            ? { background: "rgba(200, 200, 200, 0.1)" }
+            ? { background: "rgba(150, 150, 150, 0.1)" }
             : {}
         }
         cursor="pointer"
@@ -32,7 +32,7 @@ export const Navbar = ({}) => {
         alignItems="center"
       >
         <Text
-          color={router.pathname == route ? colors.offWhite : colors.textGray}
+          color={router.pathname == route ? colors.offWhite : colors.offWhite}
           fontSize="18px"
         >
           {text}
