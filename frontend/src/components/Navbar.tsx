@@ -32,7 +32,7 @@ export const Navbar = ({}) => {
         alignItems="center"
       >
         <Text
-          color={router.pathname == route ? colors.offWhite : colors.offWhite}
+          color={router.pathname == route ? colors.offWhite : "#ccc"}
           fontSize="18px"
         >
           {text}
@@ -46,6 +46,8 @@ export const Navbar = ({}) => {
                 ? "100px"
                 : router.pathname === "/activity"
                 ? "94px"
+                : router.pathname === "/whitepaper"
+                ? "136px"
                 : "59px"
             }
             height="2px"
@@ -70,6 +72,7 @@ export const Navbar = ({}) => {
         {navItem("Home", "/")}
         {navItem("Activity", "/activity")}
         {navItem("Liquidity", "/liquidity")}
+        {navItem("Whitepaper", "/whitepaper")}
         <Spacer />
         <Flex>{/* CONNECT WALLET BUTTON */}</Flex>
       </Flex>

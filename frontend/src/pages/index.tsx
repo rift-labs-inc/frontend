@@ -81,7 +81,7 @@ const Home = () => {
         </Flex>
         <Text
           userSelect={"none"}
-          fontSize="12px"
+          fontSize="13px"
           fontFamily={"Aux"}
           color={"#c3c3c3"}
           mt="5px"
