@@ -25,9 +25,9 @@ export const SwapUI = ({}) => {
   const [activeTab, setActiveTab] = useState("swap");
   const [btcSwapAmount, setBtcSwapAmount] = useState("");
   const [ethSwapAmount, setEthSwapAmount] = useState("");
-  const [btcToEthRate, setBtcToEthRate] = useState(0);
+  const [btcToEthRate, setBtcToEthRate] = useState();
   const [ethDepositAmount, setEthDepositAmount] = useState("");
-  const [lpFee, setLpFee] = useState("0.05%");
+  const [lpFee, setLpFee] = useState("");
   const [payoutETHAddress, setPayoutETHAddress] = useState("");
   const [payoutBTCAddress, setPayoutBTCAddress] = useState("");
   const [currentETHLiquidity, setCurrentETHLiquidity] = useState(1184.24);
@@ -229,6 +229,53 @@ export const SwapUI = ({}) => {
     );
   };
 
+  const ETHLogoSVG = () => {
+    return (
+      <Flex borderRadius={"190px"} overflow={"hidden"}>
+        <svg
+          width="38"
+          height="15"
+          viewBox="0 0 1 60"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M35.6948 9.3313V28.0687L51.5318 35.1453L35.6948 9.3313Z"
+            fill="white"
+            fill-opacity="0.602"
+          />
+          <path
+            d="M35.695 9.3313L19.856 35.1453L35.695 28.0687V9.3313Z"
+            fill="white"
+          />
+          <path
+            d="M35.6948 47.2881V60.0198L51.5424 38.0947L35.6948 47.2881Z"
+            fill="white"
+            fill-opacity="0.602"
+          />
+          <path
+            d="M35.695 60.0198V47.286L19.856 38.0947L35.695 60.0198Z"
+            fill="white"
+          />
+          <path
+            d="M35.6948 44.3412L51.5318 35.1457L35.6948 28.0732V44.3412Z"
+            fill="white"
+            fill-opacity="0.2"
+          />
+          <path
+            d="M19.856 35.1457L35.695 44.3412V28.0732L19.856 35.1457Z"
+            fill="white"
+            fill-opacity="0.602"
+          />
+          <path
+            d="M89.7783 47.5549V22.1897H106.196V26.0042H94.3135V32.842H105.546V36.5159H94.3135V43.7405H106.196V47.5549H89.7783ZM117.419 47.5549V26.0042H109.825V22.1897H129.513V26.0042H121.936V47.5549H117.419ZM133.704 47.5549V22.1897H138.239V32.7366H150.579V22.1897H155.097V47.5549H150.579V36.551H138.239V47.5549H133.704Z"
+            fill="white"
+          />
+        </svg>
+      </Flex>
+    );
+  };
+
   const validateSwapInput = (value) => {
     if (value === "") return true;
     const regex = /^\d*\.?\d*$/;
@@ -298,7 +345,7 @@ export const SwapUI = ({}) => {
   return (
     <Flex
       width="580px"
-      h={activeTab === "swap" ? "325px" : "478px"}
+      h={activeTab === "swap" ? "332px" : "478px"}
       bg="rgba(20, 20, 20, 0.55)"
       mt="30px"
       direction={"column"}
@@ -381,6 +428,7 @@ export const SwapUI = ({}) => {
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="38px"
                   placeholder="0.0"
+                  _placeholder={{ color: colors.textGray }}
                 />
               </Flex>
               <Spacer />
@@ -453,33 +501,56 @@ export const SwapUI = ({}) => {
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="38px"
                   placeholder="0.0"
+                  _placeholder={{ color: colors.textGray }}
                 />
               </Flex>
               <Spacer />
               <ETHSVG />
             </Flex>
             {/* Rate/Liquidity Details */}
-            <Flex mt="7px">
+            <Flex mt="9px">
               <Text
                 color={colors.textGray}
                 fontSize={"13px"}
                 ml="3px"
-                letterSpacing={"-1px"}
+                letterSpacing={"-1.5px"}
                 fontWeight={"normal"}
                 fontFamily={"Aux"}
               >
-                1 BTC ≈ {btcToEthRate} ETH
+                1 BTC ≈ {btcToEthRate} ETH{" "}
+                <Box
+                  as="span"
+                  color={colors.textGray}
+                  _hover={{
+                    cursor: "pointer",
+                    //open popup about fee info
+                  }}
+                  letterSpacing={"-1.5px"}
+                  style={{
+                    textDecoration: "underline",
+                    textUnderlineOffset: "6px",
+                  }}
+                >
+                  Including Fees
+                </Box>
               </Text>
               <Spacer />
+              <Flex mt="0.5px">
+                <ETHLogoSVG />
+              </Flex>
               <Text
+                ml="-3px"
                 color={colors.textGray}
                 fontSize={"13px"}
                 mr="3px"
-                letterSpacing={"-1px"}
+                letterSpacing={"-1.5px"}
                 fontWeight={"normal"}
                 fontFamily={"Aux"}
               >
-                Ξ{currentETHLiquidity} LIQ
+                <Box as="span" fontWeight={"bold"}>
+                  {currentETHLiquidity}{" "}
+                </Box>
+                Avalible
               </Text>
             </Flex>
             {/* Exchange Button */}
@@ -487,10 +558,10 @@ export const SwapUI = ({}) => {
               bg="rgba(50, 66, 168, 0.3)"
               _hover={{ bg: "rgba(50, 66, 168, 0.65)" }}
               w="100%"
-              mt="14px"
+              mt="18px"
               transition={"0.2s"}
               h="42px"
-              fontSize={"14px"}
+              fontSize={"15px"}
               align={"center"}
               borderRadius={"10px"}
               cursor={"pointer"}
@@ -515,9 +586,10 @@ export const SwapUI = ({}) => {
                 fontWeight={"normal"}
                 fontFamily={"Aux"}
               >
-                Set your own fees, withdraw anytime. Automatically swap from ETH
-                to BTC when your order is filled. Orders are filled by fee,
-                lowest to highest.
+                Set your own fees, withdraw anytime.
+                <br />
+                Automatically swap from ETH to BTC when your order is filled.
+                Orders are filled by fee, lowest to highest.
               </Text>
             </Flex>
             {/* ETH Input */}
@@ -551,12 +623,13 @@ export const SwapUI = ({}) => {
                   mr="-150px"
                   p="0px"
                   letterSpacing={"-6px"}
-                  color={colors.offWhite}
+                  color={colors.offWhite} // This sets the text color of the input content
                   _active={{ border: "none", boxShadow: "none" }}
                   _focus={{ border: "none", boxShadow: "none" }}
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="38px"
                   placeholder="0.0"
+                  _placeholder={{ color: colors.textGray }}
                 />
               </Flex>
               <Spacer />
@@ -601,6 +674,7 @@ export const SwapUI = ({}) => {
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="38px"
                   placeholder="0.05%"
+                  _placeholder={{ color: colors.textGray }}
                 />
               </Flex>
               <Text
@@ -649,13 +723,14 @@ export const SwapUI = ({}) => {
                   mt="1px"
                   mr="110px"
                   p="0px"
-                  letterSpacing={"-6px"}
+                  letterSpacing={"-5px"}
                   color={colors.offWhite}
                   _active={{ border: "none", boxShadow: "none" }}
                   _focus={{ border: "none", boxShadow: "none" }}
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="26px"
-                  placeholder="Enter your BTC payout address"
+                  placeholder="Your BTC payout address"
+                  _placeholder={{ color: colors.textGray }}
                 />
               </Flex>
               {/* TODO: ADD LOADING INDICATOR AND ADDRESS VALIDATION CHECK CIRCLE HERE */}
