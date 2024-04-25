@@ -308,7 +308,10 @@ export const SwapUI = ({}) => {
 
   const validateDepositInput = (value) => {
     if (value === "") return true;
-    const regex = /^-?\d*\.?\d*$/;
+
+    // Updated regex to allow optional negative sign, numbers, optionally followed by a decimal and up to two decimal places
+    const regex = /^-?\d*(\.\d{0,2})?$/;
+
     return regex.test(value);
   };
 

@@ -17,11 +17,7 @@ export const Navbar = ({}) => {
   const navItem = (text: string, route: string) => {
     return (
       <Flex
-        _hover={
-          router.pathname !== route
-            ? { background: "rgba(150, 150, 150, 0.1)" }
-            : {}
-        }
+        _hover={{ background: "rgba(150, 150, 150, 0.2)" }}
         cursor="pointer"
         borderRadius="6px"
         mr="15px"
