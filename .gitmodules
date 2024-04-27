@@ -7,3 +7,6 @@
 [submodule "contracts/lib/token-types"]
 	path = contracts/lib/token-types
 	url = https://github.com/jtriley-eth/token-types
+[submodule "contracts/lib/forge-std"]
+	path = contracts/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
