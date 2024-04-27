@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Unlicensed
-pragma solidity ^0.8.19;
+pragma solidity =0.8.25;
 
-import { HeaderLib } from "./HeaderLib.sol";
-import { UltraVerifier as HeaderStoragePlonkVerifier } from "./verifiers/HeaderStoragePlonkVerification.sol";
+import {HeaderLib} from "./HeaderLib.sol";
+import {UltraVerifier as HeaderStoragePlonkVerifier} from "./verifiers/HeaderStoragePlonkVerification.sol";
 import "forge-std/console.sol";
 
 contract HeaderStorage {
@@ -18,11 +18,13 @@ contract HeaderStorage {
     // height => block
     mapping(uint256 => HeaderLib.Block) blockchain;
 
+    uint256 public immutable first_block;
     uint256 public btc_checkpoint_height;
     uint256 public current_height;
 
     uint32 constant TARGET_PERIOD = 2016; // Number of blocks expected in TARGET_TIMESPAN
     uint32 constant TARGET_TIMESPAN = TARGET_PERIOD * 600; // ~ 2 weeks at 1 block per 10 minutes
+    uint8 public constant SAFE_BLOCKS = 6;
 
     constructor(
         uint256 checkpoint_height,
@@ -37,6 +39,8 @@ contract HeaderStorage {
         if (!(checkpoint_height % TARGET_PERIOD == 0)) {
             revert BlockIsNotRetarget(checkpoint_height);
         }
+
+        first_block = checkpoint_height;
 
         verifier = new HeaderStoragePlonkVerifier();
         btc_checkpoint_height = checkpoint_height;
@@ -65,10 +69,13 @@ contract HeaderStorage {
         bytes[] memory proof
     ) public {
         if (
-            _block_hashes.length != _versions.length || _block_hashes.length != _prev_block_hashes.length
-                || _block_hashes.length != _merkle_roots.length || _block_hashes.length != _timestamps.length
-                || _block_hashes.length != _bits.length || _block_hashes.length != _nonces.length
-                || _block_hashes.length != proof.length
+            _block_hashes.length != _versions.length ||
+            _block_hashes.length != _prev_block_hashes.length ||
+            _block_hashes.length != _merkle_roots.length ||
+            _block_hashes.length != _timestamps.length ||
+            _block_hashes.length != _bits.length ||
+            _block_hashes.length != _nonces.length ||
+            _block_hashes.length != proof.length
         ) {
             revert InvalidBlockList();
         }
@@ -126,8 +133,9 @@ contract HeaderStorage {
     function setBlock(HeaderLib.ProposedBlock memory data) internal {
         // validate block data before setting
         HeaderLib.Block memory last_block = blockchain[data._current_height];
-        HeaderLib.Block memory retarget_block =
-            blockchain[data._current_height - (data._current_height % TARGET_PERIOD)];
+        HeaderLib.Block memory retarget_block = blockchain[
+            data._current_height - (data._current_height % TARGET_PERIOD)
+        ];
 
         // reverts on proof failure
         verifier.verify(
@@ -137,7 +145,8 @@ contract HeaderStorage {
                     previous_block_hash: last_block.block_hash,
                     last_block_height: data._current_height,
                     retarget_block_bits: retarget_block.bits,
-                    retarget_block_height: data._current_height - (data._current_height % TARGET_PERIOD),
+                    retarget_block_height: data._current_height -
+                        (data._current_height % TARGET_PERIOD),
                     retarget_block_timestamp: retarget_block.timestamp,
                     proposed_block_hash: data._block_hash,
                     proposed_block_height: data._current_height + 1,
@@ -163,15 +172,33 @@ contract HeaderStorage {
         });
     }
 
-    function getBlockUnsafe(uint256 height) public view returns (HeaderLib.Block memory) {
+    function assertSafeHeight(uint256 height) internal view {
+        if (
+            (height != first_block) &&
+            (height > current_height ||
+                height < btc_checkpoint_height ||
+                height > current_height - SAFE_BLOCKS)
+        ) {
+            revert BlockDoesntExist(height);
+        }
+    }
+
+    function getBlockUnsafe(
+        uint256 height
+    ) public view returns (HeaderLib.Block memory) {
         return blockchain[height];
     }
 
-    function getBlockSafe(uint256 height) public view returns (HeaderLib.Block memory) {
-        if (height > current_height || height < btc_checkpoint_height || height > current_height - 6) {
-            revert BlockDoesntExist(height);
-        }
-
+    function getBlockSafe(
+        uint256 height
+    ) public view returns (HeaderLib.Block memory) {
+        assertSafeHeight(height);
         return blockchain[height];
+    }
+
+    // Get a part of a block (saves gas by not doing unneccessary sloads)
+    function getMerkleRootSafe(uint256 height) public view returns (bytes32) {
+        assertSafeHeight(height);
+        return blockchain[height].merkle_root;
     }
 }

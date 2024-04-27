@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.8.19;
 
-import { Test } from "forge-std/Test.sol";
-import { Vm } from "forge-std/Vm.sol";
-import { HeaderStorage } from "../src/HeaderStorage.sol";
+import {Test} from "forge-std/Test.sol";
+
+import {Vm} from "forge-std/Vm.sol";
+import {HeaderStorage} from "../src/HeaderStorage.sol";
 import "forge-std/console.sol";
-import { HeaderLib } from "../src/HeaderLib.sol";
-import { TestLib } from "./data/TestLib.sol";
-import { TestLibOmmer } from "./data/TestLibOmmer.sol";
+import {HeaderLib} from "../src/HeaderLib.sol";
+import {TestLib} from "./data/TestLib.sol";
+import {TestLibOmmer} from "./data/TestLibOmmer.sol";
 
 contract TestHeaderStorageDefault is Test {
     HeaderStorage public blockData;
@@ -16,19 +17,34 @@ contract TestHeaderStorageDefault is Test {
 
     function setUp() public {
         blockData = new HeaderStorage({
-    checkpoint_height: first_block.proposed_height,
-    block_hash: first_block.block_hash,
-    version: first_block.version,
-    prev_block_hash: first_block.prev_block_hash,
-    merkle_root: first_block.merkle_root,
-    timestamp: first_block.timestamp,
-    bits: first_block.bits,
-    nonce: first_block.nonce
-    });
+            checkpoint_height: first_block.proposed_height,
+            block_hash: first_block.block_hash,
+            version: first_block.version,
+            prev_block_hash: first_block.prev_block_hash,
+            merkle_root: first_block.merkle_root,
+            timestamp: first_block.timestamp,
+            bits: first_block.bits,
+            nonce: first_block.nonce
+        });
+    }
+
+    function testGetSafeBlock() public {
+        blockData.getBlockSafe(first_block.proposed_height);
+    }
+
+    function testGetUnsafeBlock() public {
+        blockData.getBlockUnsafe(first_block.proposed_height);
+    }
+
+    function testGetSafeMerkleRoot() public {
+        blockData.getMerkleRootSafe(first_block.proposed_height);
     }
 
     function testFirstBlockIsSet() public {
-        assert(blockData.getBlockUnsafe(first_block.proposed_height).block_hash == first_block.block_hash);
+        assert(
+            blockData.getBlockUnsafe(first_block.proposed_height).block_hash ==
+                first_block.block_hash
+        );
     }
 
     function testAddBlockToGenesis() public {
@@ -89,24 +105,28 @@ contract TestOmmerHeaderStorage is Test {
 
     function setUp() public {
         // Set test blocks in storage
-        TestLibOmmer.ProposedBlock[] memory test_blocks_mem = TestLibOmmer.getTestBlocks();
+        TestLibOmmer.ProposedBlock[] memory test_blocks_mem = TestLibOmmer
+            .getTestBlocks();
 
         for (uint256 i = 0; i < test_blocks_mem.length; i++) {
             sync_blocks.push(test_blocks_mem[i]);
         }
 
-        assert(sync_blocks[sync_blocks.length - 1].block_hash == test_blocks_mem[test_blocks_mem.length - 1].block_hash);
+        assert(
+            sync_blocks[sync_blocks.length - 1].block_hash ==
+                test_blocks_mem[test_blocks_mem.length - 1].block_hash
+        );
 
         blockHeaderStorage = new HeaderStorage({
-    checkpoint_height: sync_blocks[0].proposed_height,
-    block_hash: sync_blocks[0].block_hash,
-    version: sync_blocks[0].version,
-    prev_block_hash: sync_blocks[0].prev_block_hash,
-    merkle_root: sync_blocks[0].merkle_root,
-    timestamp: sync_blocks[0].timestamp,
-    bits: sync_blocks[0].bits,
-    nonce: sync_blocks[0].nonce
-    });
+            checkpoint_height: sync_blocks[0].proposed_height,
+            block_hash: sync_blocks[0].block_hash,
+            version: sync_blocks[0].version,
+            prev_block_hash: sync_blocks[0].prev_block_hash,
+            merkle_root: sync_blocks[0].merkle_root,
+            timestamp: sync_blocks[0].timestamp,
+            bits: sync_blocks[0].bits,
+            nonce: sync_blocks[0].nonce
+        });
     }
 
     function syncToDivergentBlock() public {
@@ -126,7 +146,9 @@ contract TestOmmerHeaderStorage is Test {
 
     function testFirstBlockIsSet() public {
         assert(
-            blockHeaderStorage.getBlockUnsafe(sync_blocks[0].proposed_height).block_hash == sync_blocks[0].block_hash
+            blockHeaderStorage
+                .getBlockUnsafe(sync_blocks[0].proposed_height)
+                .block_hash == sync_blocks[0].block_hash
         );
     }
 
@@ -138,7 +160,8 @@ contract TestOmmerHeaderStorage is Test {
 
     function testMainBlocksAreValidWithNoDivergence() public {
         syncToDivergentBlock();
-        TestLibOmmer.ProposedBlock memory main_block = TestLibOmmer.getMainBlockHeader();
+        TestLibOmmer.ProposedBlock memory main_block = TestLibOmmer
+            .getMainBlockHeader();
         blockHeaderStorage.proposeNewBlock({
             block_hash: main_block.block_hash,
             version: main_block.version,
@@ -150,7 +173,8 @@ contract TestOmmerHeaderStorage is Test {
             proof: main_block.proof
         });
 
-        TestLibOmmer.ProposedBlock memory second_main_block = TestLibOmmer.getBlockHeaderAfterMainHeader();
+        TestLibOmmer.ProposedBlock memory second_main_block = TestLibOmmer
+            .getBlockHeaderAfterMainHeader();
         blockHeaderStorage.proposeNewBlock({
             block_hash: second_main_block.block_hash,
             version: second_main_block.version,
@@ -167,7 +191,8 @@ contract TestOmmerHeaderStorage is Test {
     function testProposeMethodsAreResilientToFaultyOverwrites() public {
         syncToDivergentBlock();
         // now we set the known stale block
-        TestLibOmmer.ProposedBlock memory stale_block = TestLibOmmer.getDivergentBlockHeader();
+        TestLibOmmer.ProposedBlock memory stale_block = TestLibOmmer
+            .getDivergentBlockHeader();
         blockHeaderStorage.proposeNewBlock({
             block_hash: stale_block.block_hash,
             version: stale_block.version,
@@ -179,7 +204,8 @@ contract TestOmmerHeaderStorage is Test {
             proof: stale_block.proof
         });
 
-        TestLibOmmer.ProposedBlock memory main_block = TestLibOmmer.getMainBlockHeader();
+        TestLibOmmer.ProposedBlock memory main_block = TestLibOmmer
+            .getMainBlockHeader();
         // now let's try to propose the known main block at the same height (this should fail) using proposeNewBlock
         vm.expectRevert(PROOF_FAILURE_SELECTOR);
         blockHeaderStorage.proposeNewBlock({
@@ -230,7 +256,8 @@ contract TestOmmerHeaderStorage is Test {
     function testSuccessfullyOverwriteDivergentChain() public {
         syncToDivergentBlock();
         // now we set the known stale block
-        TestLibOmmer.ProposedBlock memory stale_block = TestLibOmmer.getDivergentBlockHeader();
+        TestLibOmmer.ProposedBlock memory stale_block = TestLibOmmer
+            .getDivergentBlockHeader();
         blockHeaderStorage.proposeNewBlock({
             block_hash: stale_block.block_hash,
             version: stale_block.version,
@@ -242,8 +269,10 @@ contract TestOmmerHeaderStorage is Test {
             proof: stale_block.proof
         });
 
-        TestLibOmmer.ProposedBlock memory main_block = TestLibOmmer.getMainBlockHeader();
-        TestLibOmmer.ProposedBlock memory second_main_block = TestLibOmmer.getBlockHeaderAfterMainHeader();
+        TestLibOmmer.ProposedBlock memory main_block = TestLibOmmer
+            .getMainBlockHeader();
+        TestLibOmmer.ProposedBlock memory second_main_block = TestLibOmmer
+            .getBlockHeaderAfterMainHeader();
 
         bytes32[] memory proposed_block_hashes = new bytes32[](2);
         uint32[] memory proposed_versions = new uint32[](2);

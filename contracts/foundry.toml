@@ -28,8 +28,8 @@ src = "src"
 test = "tests"
 script = "scripts"
 out = "out"
-libs = [ "lib", "node_modules",]
-remappings = [ "forge-std/=lib/forge-std/src/",]
+libs = [ "lib" ]
+remappings = [ "forge-std/=lib/forge-std/src/", "token-types/=lib/token-types/src/"]
 auto_detect_remappings = true
 libraries = []
 cache = true
