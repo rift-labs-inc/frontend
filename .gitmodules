@@ -4,3 +4,6 @@
 [submodule "contracts/lib/solmate"]
 	path = contracts/lib/solmate
 	url = https://github.com/transmissions11/solmate
+[submodule "contracts/lib/token-types"]
+	path = contracts/lib/token-types
+	url = https://github.com/jtriley-eth/token-types
