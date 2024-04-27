@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicensed
-pragma solidity ^0.8.0;
+pragma solidity =0.8.25;
 // TODO: Potentially reorg elements to be more storage efficient?
 
 import "forge-std/console.sol";
@@ -88,30 +88,42 @@ library HeaderLib {
     function toLittleEndian(bytes32 data) internal pure returns (bytes32) {
         bytes32 result;
         for (uint256 i = 0; i < 32; i++) {
-            result |= ((data >> (i * 8)) & bytes32(uint256(0xFF))) << ((31 - i) * 8);
+            result |=
+                ((data >> (i * 8)) & bytes32(uint256(0xFF))) <<
+                ((31 - i) * 8);
         }
         return result;
     }
 
-    function generatePublicInput(PublicInput memory input) internal pure returns (bytes32[] memory) {
+    function generatePublicInput(
+        PublicInput memory input
+    ) internal pure returns (bytes32[] memory) {
         bytes32[] memory publicInputs = new bytes32[](137);
         for (uint256 i; i < 32; i++) {
-            publicInputs[i] = toLittleEndian(bytes32(input.previous_block_hash[i]));
+            publicInputs[i] = toLittleEndian(
+                bytes32(input.previous_block_hash[i])
+            );
         }
         publicInputs[32] = bytes32(input.last_block_height);
         publicInputs[33] = bytes32(input.retarget_block_bits);
         publicInputs[34] = bytes32(input.retarget_block_height);
         publicInputs[35] = bytes32(input.retarget_block_timestamp);
         for (uint256 i; i < 32; i++) {
-            publicInputs[36 + i] = toLittleEndian(bytes32(input.proposed_block_hash[i]));
+            publicInputs[36 + i] = toLittleEndian(
+                bytes32(input.proposed_block_hash[i])
+            );
         }
         publicInputs[68] = bytes32(input.proposed_block_height);
         publicInputs[69] = bytes32(uint256(input.proposed_block_version));
         for (uint256 i; i < 32; i++) {
-            publicInputs[70 + i] = toLittleEndian(bytes32(input.proposed_block_prev_hash[i]));
+            publicInputs[70 + i] = toLittleEndian(
+                bytes32(input.proposed_block_prev_hash[i])
+            );
         }
         for (uint256 i; i < 32; i++) {
-            publicInputs[102 + i] = toLittleEndian(bytes32(input.proposed_block_merkle_root[i]));
+            publicInputs[102 + i] = toLittleEndian(
+                bytes32(input.proposed_block_merkle_root[i])
+            );
         }
         publicInputs[134] = bytes32(uint256(input.proposed_block_timestamp));
         publicInputs[135] = bytes32(uint256(input.proposed_block_bits));

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicensed
-pragma solidity ^0.8.19;
+pragma solidity =0.8.25;
 
 library SwapLib {
 }
