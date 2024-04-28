@@ -7,7 +7,7 @@ const theme = extendTheme({
   styles: {
     global: {
       "html, body": {
-        backgroundColor: "#0e0e0e",
+        backgroundColor: "#020202",
         fontFamily: "Nostromo Regular",
         fontWeight: "bold",
         letterSpacing: "-15%",
