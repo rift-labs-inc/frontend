@@ -30,7 +30,7 @@ export const SwapUI = ({}) => {
   const [lpFee, setLpFee] = useState("");
   const [payoutETHAddress, setPayoutETHAddress] = useState("");
   const [payoutBTCAddress, setPayoutBTCAddress] = useState("");
-  const [currentETHLiquidity, setCurrentETHLiquidity] = useState();
+  const [currentETHLiquidity, setCurrentETHLiquidity] = useState(1184.24);
 
   // Fetch current exchange rate
   useEffect(() => {
@@ -42,7 +42,6 @@ export const SwapUI = ({}) => {
         const data = await response.json();
         if (data.bitcoin && data.bitcoin.eth) {
           setBtcToEthRate(data.bitcoin.eth);
-          console.log("Exchange rate fetched:", data.bitcoin.eth);
         }
       } catch (error) {
         console.error("Failed to fetch exchange rate:", error);
@@ -432,7 +431,7 @@ export const SwapUI = ({}) => {
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="38px"
                   placeholder="0.0"
-                  _placeholder={{ color: colors.offerWhite }}
+                  _placeholder={{ color: colors.textGray }}
                 />
               </Flex>
               <Spacer />
@@ -491,21 +490,21 @@ export const SwapUI = ({}) => {
                   You Receive
                 </Text>
                 <Input
-                  value={ethSwapAmount ? ethSwapAmount : "Estimating rate..."}
+                  value={ethSwapAmount}
                   onChange={handleEthSwapChange}
                   fontFamily={"Aux"}
                   border="none"
                   mt="1px"
-                  mr={ethSwapAmount ? "-150px" : "-10px"}
+                  mr="-150px"
                   p="0px"
-                  letterSpacing={ethSwapAmount ? "-6px" : "-3px"}
+                  letterSpacing={"-6px"}
                   color={colors.offWhite}
                   _active={{ border: "none", boxShadow: "none" }}
                   _focus={{ border: "none", boxShadow: "none" }}
                   _selected={{ border: "none", boxShadow: "none" }}
-                  fontSize={ethSwapAmount ? "38px" : "24px"}
+                  fontSize="38px"
                   placeholder="0.0"
-                  _placeholder={{ color: colors.offerWhite }}
+                  _placeholder={{ color: colors.textGray }}
                 />
               </Flex>
               <Spacer />
@@ -633,7 +632,7 @@ export const SwapUI = ({}) => {
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="38px"
                   placeholder="0.0"
-                  _placeholder={{ color: colors.offerWhite }}
+                  _placeholder={{ color: colors.textGray }}
                 />
               </Flex>
               <Spacer />
@@ -678,7 +677,7 @@ export const SwapUI = ({}) => {
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="38px"
                   placeholder="0.05%"
-                  _placeholder={{ color: colors.offerWhite }}
+                  _placeholder={{ color: colors.textGray }}
                 />
               </Flex>
               <Text
@@ -734,7 +733,7 @@ export const SwapUI = ({}) => {
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="26px"
                   placeholder="Your BTC payout address"
-                  _placeholder={{ color: colors.offerWhite }}
+                  _placeholder={{ color: colors.textGray }}
                 />
               </Flex>
               {/* TODO: ADD LOADING INDICATOR AND ADDRESS VALIDATION CHECK CIRCLE HERE */}
