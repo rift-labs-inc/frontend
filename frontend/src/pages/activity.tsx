@@ -243,7 +243,7 @@ const Activity = () => {
                   {activityData.map((order, index) => (
                     <Flex
                       align="start"
-                      py="16px"
+                      py="10px"
                       w="100%"
                       textAlign={"left"}
                       fontSize={"14px"}
@@ -254,75 +254,22 @@ const Activity = () => {
                           {timeAgo(order.timestamp)}
                         </Text>
                       </Flex>
-                      <Flex
-                        w="180px"
-                        textAlign="left"
-                        cursor={"pointer"}
-                        userSelect={"none"}
-                        color={colors.textGray}
-                        onClick={() =>
-                          copyToClipboard(order.txn_hash, "TXN Hash copied")
-                        }
-                      >
-                        <Tooltip
-                          fontFamily={"Aux"}
-                          letterSpacing={"-0.5px"}
-                          color={colors.textGray}
-                          bg={"#121212"}
-                          fontSize={"12px"}
-                          label="Copy TXN Hash"
-                          aria-label="A tooltip"
-                        >
+                      <Flex w="180px" textAlign="left">
+                        <Text color={colors.textGray}>
                           {formatAddress(order.txn_hash)}
-                        </Tooltip>
+                        </Text>
                       </Flex>
-                      <Flex
-                        w="200px"
-                        textAlign="left"
-                        cursor={"pointer"}
-                        userSelect={"none"}
-                        color={colors.offerWhite}
-                        onClick={() =>
-                          copyToClipboard(order.from_address, "Address copied")
-                        }
-                      >
-                        <Tooltip
-                          fontFamily={"Aux"}
-                          letterSpacing={"-0.5px"}
-                          color={colors.textGray}
-                          bg={"#121212"}
-                          fontSize={"12px"}
-                          label="Copy address"
-                          aria-label="A tooltip"
-                        >
+                      <Flex w="200px" textAlign="left">
+                        <Text color={colors.offerWhite} mr="19px">
                           {formatAddress(order.from_address)}
-                        </Tooltip>
-                        <Flex ml="19px">
-                          {order.asset == "BTC" && <BTCArrow />}
-                          {order.asset == "ETH" && <ETHArrow />}
-                        </Flex>
+                        </Text>
+                        {order.asset == "BTC" && <BTCArrow />}
+                        {order.asset == "ETH" && <ETHArrow />}
                       </Flex>
-                      <Flex
-                        w="180px"
-                        textAlign="left"
-                        cursor={"pointer"}
-                        userSelect={"none"}
-                        color={colors.offerWhite}
-                        onClick={() =>
-                          copyToClipboard(order.to_address, "Address copied")
-                        }
-                      >
-                        <Tooltip
-                          fontFamily={"Aux"}
-                          letterSpacing={"-0.5px"}
-                          color={colors.textGray}
-                          bg={"#121212"}
-                          fontSize={"12px"}
-                          label="Copy address"
-                          aria-label="A tooltip"
-                        >
+                      <Flex w="180px" textAlign="left">
+                        <Text color={colors.offerWhite}>
                           {formatAddress(order.to_address)}
-                        </Tooltip>
+                        </Text>
                       </Flex>
                       <Flex
                         w="85px"
@@ -423,7 +370,7 @@ function formatAmount(amount) {
 }
 
 const formatAddress = (address) => {
-  return `${address.slice(0, 7)}...${address.slice(-5)}`;
+  return `0x${address.slice(2, 7)}...${address.slice(-5)}`;
 };
 
 const timeAgo = (unixTimestamp) => {
