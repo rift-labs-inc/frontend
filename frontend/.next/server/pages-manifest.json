@@ -2,5 +2,8 @@
   "/_error": "pages/_error.js",
   "/_app": "pages/_app.js",
   "/_document": "pages/_document.js",
-  "/activity": "pages/activity.js"
+  "/liquidity": "pages/liquidity.js",
+  "/": "pages/index.js",
+  "/activity": "pages/activity.js",
+  "/whitepaper": "pages/whitepaper.js"
 }
