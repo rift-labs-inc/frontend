@@ -61,7 +61,7 @@ const Home = () => {
             fontFamily={"Klein"}
             fontWeight="bold"
             px="12px"
-            // dropShadow={"10px 10px 10px rgba(122, 90, 212)"} TODO: Add drop shadow to all gradient text using effect
+            // dropShadow={"10px 10px 10px rgba(122, 90, 212)"} TODO: Add drop shadow to all gradient text
           >
             HyperBrid
           </Text>
