@@ -30,7 +30,7 @@ export const SwapUI = ({}) => {
   const [lpFee, setLpFee] = useState("");
   const [payoutETHAddress, setPayoutETHAddress] = useState("");
   const [payoutBTCAddress, setPayoutBTCAddress] = useState("");
-  const [currentETHLiquidity, setCurrentETHLiquidity] = useState(1184.24);
+  const [currentETHLiquidity, setCurrentETHLiquidity] = useState();
 
   // Fetch current exchange rate
   useEffect(() => {
@@ -41,7 +41,7 @@ export const SwapUI = ({}) => {
         );
         const data = await response.json();
         if (data.bitcoin && data.bitcoin.eth) {
-          setBtcToEthRate(data.bitcoin.eth);
+          // setBtcToEthRate(data.bitcoin.eth);
         }
       } catch (error) {
         console.error("Failed to fetch exchange rate:", error);
@@ -431,7 +431,7 @@ export const SwapUI = ({}) => {
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="38px"
                   placeholder="0.0"
-                  _placeholder={{ color: colors.textGray }}
+                  _placeholder={{ color: colors.offWhite }}
                 />
               </Flex>
               <Spacer />
@@ -504,7 +504,7 @@ export const SwapUI = ({}) => {
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="38px"
                   placeholder="0.0"
-                  _placeholder={{ color: colors.textGray }}
+                  _placeholder={{ color: colors.offWhite }}
                 />
               </Flex>
               <Spacer />
@@ -632,7 +632,7 @@ export const SwapUI = ({}) => {
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="38px"
                   placeholder="0.0"
-                  _placeholder={{ color: colors.textGray }}
+                  _placeholder={{ color: colors.offWhite }}
                 />
               </Flex>
               <Spacer />
@@ -677,7 +677,7 @@ export const SwapUI = ({}) => {
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="38px"
                   placeholder="0.05%"
-                  _placeholder={{ color: colors.textGray }}
+                  _placeholder={{ color: colors.offWhite }}
                 />
               </Flex>
               <Text
@@ -733,7 +733,7 @@ export const SwapUI = ({}) => {
                   _selected={{ border: "none", boxShadow: "none" }}
                   fontSize="26px"
                   placeholder="Your BTC payout address"
-                  _placeholder={{ color: colors.textGray }}
+                  _placeholder={{ color: colors.offWhite }}
                 />
               </Flex>
               {/* TODO: ADD LOADING INDICATOR AND ADDRESS VALIDATION CHECK CIRCLE HERE */}
