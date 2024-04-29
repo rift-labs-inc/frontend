@@ -1,5 +1,6 @@
 import { ChakraProvider, Flex, Text } from "@chakra-ui/react";
 import theme from "../theme";
+import Head from "next/head";
 import { useEffect } from "react";
 import { useStore } from "../store";
 import { AppProps } from "next/app";
@@ -19,6 +20,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <ChakraProvider theme={theme}>
+      <title>Rift Hyperbridge - </title>
       <Component {...pageProps} />
       <Toaster
         toastOptions={{
