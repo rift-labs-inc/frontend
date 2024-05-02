@@ -13,7 +13,6 @@ def generate_random_timestamp():
     return int(random_date.timestamp())
 
 def generate_ethereum_transaction(amount_min, amount_max):
-    """Generate an Ethereum transaction object with a random amount in the specified range."""
     account = Account.create()
     to_account = Account.create()
     if random.choice([True, False]):  # 50% chance to choose between integer or floating-point
@@ -36,12 +35,11 @@ def generate_ethereum_transaction(amount_min, amount_max):
         "txn_hash": signed_txn.hash.hex(),
         "lp_fee": str(round(random.uniform(0.01, 1), 2)),
         "amount": str(amount),
-        "asset": "ETH",
+        "asset": "WBTC",
         "status": random.choice(["Swapping", "Completed"])
     }
 
 def generate_bitcoin_transaction(amount_min, amount_max):
-    """Generate a Bitcoin transaction object with a random amount in the specified range."""
     key = Key()
     to_key = Key()
     if random.choice([True, False]):  # 50% chance to choose between integer or floating-point
@@ -60,7 +58,6 @@ def generate_bitcoin_transaction(amount_min, amount_max):
     }
 
 def create_activity(eth_amount_range, btc_amount_range, num_entries):
-    """Create the activity object with random amounts and specified number of entries, sorted by timestamp."""
     activity = []
     for _ in range(num_entries):
         activity.append(generate_ethereum_transaction(*eth_amount_range))
