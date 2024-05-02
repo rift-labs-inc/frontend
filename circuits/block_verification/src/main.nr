@@ -1,18 +1,31 @@
 use dep::std;
+use dep::rift_lib::byte_lib;
 
 global TARGET_PERIOD: u32 = 2016; // blocks between difficulty retargets
 global TARGET_TIMESPAN: u32 = 1209600; // goal time of 10 minutes per block * 2016 blocks
 
-struct ProposedBlock {
-    block_hash: [u8; 32],
+struct EncodedProposedBlock {
+    block_hash_encoded: [Field; 2],
     height: Field,
     version: Field,
-    prev_block_hash: [u8; 32],
-    merkle_root: [u8; 32],
+    prev_block_hash_encoded: [Field; 2],
+    merkle_root_encoded: [Field; 2],
     timestamp: Field,
     bits: Field,
     nonce: Field,
 }
+
+struct ProposedBlock {
+    block_hash_encoded: [u8; 32],
+    height: Field,
+    version: Field,
+    prev_block_hash_encoded: [Field; 2],
+    merkle_root_encoded: [Field; 2],
+    timestamp: Field,
+    bits: Field,
+    nonce: Field,
+}
+
 
 struct RetargetBlock {
     bits: Field,
@@ -21,12 +34,28 @@ struct RetargetBlock {
 }
 
 fn main(
-    previous_block_hash: pub [u8; 32], // from contract
+    previous_block_hash_encoded: pub [Field; 2], //
     previous_block_height: pub u32, // from contract
     retarget_block: pub RetargetBlock, // from contract
     proposed_block: pub ProposedBlock // from indexer
 ) {
     //------------------ MAIN CIRCUIT ------------------
+    let previous_block_hash = byte_lib::decode_field_encoded_hash(previous_block_hash_encoded);
+
+	let decoded_proposed_block = ProposedBlock {
+		block_hash_encoded: [Field; 2],
+		height: Field,
+		version: Field,
+		prev_block_hash_encoded: [Field; 2],
+		merkle_root_encoded: [Field; 2],
+		timestamp: Field,
+		bits: Field,
+		nonce: Field,
+	};
+
+	let proposed_block_hash = byte_lib::decode_field_encoded_hash(
+		proposed_block.block_hash_encoded
+	);
 
     // [1] verify proposed target is equal to real target
     let proposed_target = bits_to_target(proposed_block.bits);
