@@ -4,39 +4,45 @@ import {UltraVerifier as TransactionInclusionPlonkVerification} from "./verifier
 import {HeaderStorage} from "./HeaderStorage.sol";
 import {ERC20} from "token-types/ERC20.sol";
 
-contract Swap {
-    error DepositTooLow();
-    error DepositFailed();
-    error WithdrawFailed();
-    error LpDoesntExist();
-    error TooManyLps();
-    error NotEnoughLiquidity();
-    error InvalidOrder();
-    error NotEnoughLiquidityConsumed();
-    error LiquidityReserved(uint until);
-    error LiquidityNotReserved();
-    error InvalidLpIndex();
-    error NoLiquidityToReserve();
-    error OrderComplete();
+error DepositTooLow();
+error DepositFailed();
+error WithdrawFailed();
+error LpDoesntExist();
+error TooManyLps();
+error NotEnoughLiquidity();
+error InvalidOrder();
+error NotEnoughLiquidityConsumed();
+error LiquidityReserved();
+error LiquidityNotReserved();
+error InvalidLpIndex();
+error NoLiquidityToReserve();
+error OrderComplete();
 
+contract Escrow {
     // TODO: Make this non-constant, recalculable targeting ~150 USD
     uint64 public constant MIN_DEPOSIT = 0.002 * 10 ** 8;
     uint64 public constant RESERVATION_LOCKUP = 12 hours;
     uint16 public constant MAX_LIQUIDITY_PROVIDERS_PER_SWAP = 50;
 
     struct LiquidityProvider {
-        uint64 amountDeposited;
-        // (-10000, 10000) basis points
-        int16 lpFee;
-        uint256 lastReservationTimestamp;
-        // TODO: Would it be better to encode this as a bytes32?, len is always <= 25
-        string payoutBTCAddress;
-        address ethAddress;
+        // Slot #1
+        // (-100%, 1000%)
+        int16 lpFee; // 2 bytes
+        uint64 amountDeposited; // 8 bytes
+        // index into order array, offset by +1 b/c 0 is a sentinel value for unused
+        uint176 lastReservationPointer; // 22 bytes, maximizes the amount of space left in this slot
+        // Slot #2+
+        // len is always <= 25
+        bytes32 payoutBTCAddress;
+        // This is a hash of an LP's current state aka a hash of all the above fields (besides reservation pointer)
+        // this is beneficial because we can just cleanly load this single variable from storage instead of
+        // loading an lp's entire state and then hashing it
+        bytes32 stateRoot;
     }
 
-    struct SwapOrder {
+    struct Order {
         // max length == MAX_LIQUIDITY_PROVIDERS_PER_SWAP
-        // TODO: Ensure solidity is packing at least  8 of these per sslot
+        // TODO: Ensure solidity is packing at least  8 of these per slot
         uint32[] lpIndexes;
         // user's evm address
         address payoutAddress;
@@ -62,7 +68,8 @@ contract Swap {
     // unlocking liquidity much cheaper gas wise
     mapping(uint32 => LiquidityProvider) public lps;
     mapping(address => uint32) public lpIndex;
-    SwapOrder[] public activeSwapOrders;
+    // note that the max amount of swap orders is 2**176
+    Order[] public swapOrders;
 
     constructor(address _wrapped_bitcoin, address _header_storage) {
         verifier = new TransactionInclusionPlonkVerification();
@@ -70,41 +77,89 @@ contract Swap {
         header_storage = HeaderStorage(_header_storage);
     }
 
-    function provideLiquidity(
-        string memory payoutBTCAddress,
-        uint64 value,
+    //TODO: Ensure this uses 1 sload
+    function getLiquidity(
+        uint32 _lpIndex
+    )
+        internal
+        returns (
+            int16 _lpFee,
+            uint64 _amountDeposited,
+            uint176 _lastReservationPointer
+        )
+    {
+        _lpFee = lps[_lpIndex].lpFee;
+        _amountDeposited = lps[_lpIndex].amountDeposited;
+        _lastReservationPointer = lps[_lpIndex].lastReservationPointer;
+    }
+
+    function validateLiquidityFree(uint176 _lastReservationPointer) internal {
+        // lp exists and has been used before
+        if (_lastReservationPointer != 0) {
+            uint unlock_timestamp = swapOrders[_lastReservationPointer - 1]
+                .reservationTimestamp + RESERVATION_LOCKUP;
+
+            // we could potentially allow depositing more liquidity if we modify the way
+            // we handle order hashes, at the moment protocol expects liquidity to be fixed for lifetime of order
+            if (block.timestamp <= unlock_timestamp) {
+                revert LiquidityReserved();
+            }
+        }
+    }
+
+    /*
+    function computeLPStateRoot(bytes lpHash) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(lp.lpFee, lp.amountDeposited, lp.payoutBTCAddress)
+            );
+    }
+    */
+
+    function depositLiquidity(
+        bytes32 payoutBTCAddress,
+        uint64 depositAmount,
         int16 lpFee
     ) public {
-        if (value < MIN_DEPOSIT) {
+        if (depositAmount < MIN_DEPOSIT) {
             revert DepositTooLow();
         }
 
         uint32 _lpIndex = lpIndex[msg.sender];
         if (_lpIndex != 0) {
-            uint unlock_timestamp = lps[_lpIndex].lastReservationTimestamp +
-                RESERVATION_LOCKUP;
+            (
+                ,
+                uint64 amountDeposited,
+                uint176 lastReservationPointer
+            ) = getLiquidity(_lpIndex);
+            validateLiquidityFree(lastReservationPointer);
 
-            // we could potentially allow depositing more liquidity if we modify the way
-            // we handle order hashes, at the moment protocol expects liquidity to be fixed for lifetime of order
-            if (block.timestamp <= unlock_timestamp) {
-                revert LiquidityReserved(unlock_timestamp);
-            }
             // happy path add monee + update _lpFee
-            lps[_lpIndex].amountDeposited += value;
+            // TODO: Is it possible to set both of these values in a single SSTORE?
+            lps[_lpIndex].amountDeposited = depositAmount + amountDeposited;
             lps[_lpIndex].lpFee = lpFee;
+            lps[_lpIndex].stateRoot = keccak256(abi.encode(
+                payoutBTCAddress,
+                depositAmount + amountDeposited,
+                lpFee
+            ));
         } else {
-            totalLpCount += 1;
             uint32 _totalLpCount = totalLpCount;
+            totalLpCount = _totalLpCount + 1;
             lpIndex[msg.sender] = _totalLpCount;
             lps[_totalLpCount] = LiquidityProvider({
-                amountDeposited: value,
+                amountDeposited: depositAmount,
                 lpFee: lpFee,
-                lastReservationTimestamp: 0,
-                ethAddress: msg.sender,
-                payoutBTCAddress: payoutBTCAddress
+                lastReservationPointer: 0,
+                payoutBTCAddress: payoutBTCAddress,
+                stateRoot: keccak256(abi.encode(
+                    payoutBTCAddress,
+                    depositAmount,
+                    lpFee
+                ))
             });
         }
-        wrapped_bitcoin.transferFrom(msg.sender, address(this), uint256(value));
+        wrapped_bitcoin.transferFrom(msg.sender, address(this), uint256(depositAmount));
     }
 
     function withdrawLiquidity(uint64 amount) public {
@@ -112,15 +167,18 @@ contract Swap {
         if (_lpIndex == 0) {
             revert LpDoesntExist();
         }
-        if (lps[_lpIndex].amountDeposited < amount) {
+
+        (
+            ,
+            uint64 amountDeposited,
+            uint176 lastReservationPointer
+        ) = getLiquidity(_lpIndex);
+
+        if (amountDeposited < amount) {
             revert NotEnoughLiquidity();
         }
-        uint unlock_timestamp = lps[_lpIndex].lastReservationTimestamp +
-            RESERVATION_LOCKUP;
 
-        if (unlock_timestamp > block.timestamp) {
-            revert LiquidityReserved(unlock_timestamp);
-        }
+        validateLiquidityFree(lastReservationPointer);
 
         lps[_lpIndex].amountDeposited -= amount;
 
@@ -130,7 +188,7 @@ contract Swap {
     function reserveLiquidity(
         uint32[] memory _lpIndexes,
         address _payoutAddress,
-        string memory _senderBtcAddress
+        string memory _senderBTCAddress
     ) public {
         if (_lpIndexes.length > MAX_LIQUIDITY_PROVIDERS_PER_SWAP) {
             revert TooManyLps();
@@ -141,6 +199,7 @@ contract Swap {
                 revert InvalidLpIndex();
             }
 
+            //TODO: this should strictly use two SLOADS'
             LiquidityProvider memory lp = lps[_lpIndexes[i]];
 
             if (lp.amountDeposited == 0) {
@@ -157,42 +216,43 @@ contract Swap {
             lpHash = keccak256(
                 abi.encode(
                     lpHash,
-                    lp.payoutBTCAddress,
+                    lp.lpFee,
                     lp.amountDeposited,
-                    lp.lpFee
+                    lp.payoutBTCAddress
                 )
             );
 
             lps[_lpIndexes[i]].lastReservationTimestamp = block.timestamp;
         }
 
-        SwapOrder memory newSwapOrder = SwapOrder({
+        Order memory newOrder = Order({
             lpIndexes: _lpIndexes,
             payoutAddress: _payoutAddress,
-            senderBtcAddress: _senderBtcAddress,
+            senderBtcAddress: _senderBTCAddress,
             reservationTimestamp: block.timestamp,
             // Doesn't need to be truly random,
             // just enough so that the chance the hash has been
-            // put in an inscription is effectively impossible.
+            // put in an inscription is effectively 0.
             // may be overkill
             nonce: keccak256(
                 abi.encode(
                     _payoutAddress,
-                    _senderBtcAddress,
+                    _senderBTCAddress,
                     block.timestamp,
-                    activeSwapOrders.length
+                    block.chainid,
+                    swapOrders.length
                 )
             ),
             lpHash: lpHash,
             complete: false
         });
 
-        activeSwapOrders.push(newSwapOrder);
+        swapOrders.push(newOrder);
     }
 
     // This needs to be in noir (╯°□°)╯︵ ┻━┻
     /*
-	function validateLpUtxos(SwapOrder memory swap_order, LpUtxo[] memory lp_payments) public view returns (bytes32) {
+	function validateLpUtxos(Order memory swap_order, LpUtxo[] memory lp_payments) public view returns (bytes32) {
 		uint64 sats_output;
 		for (uint i = 0; i < lp_payments.length; i++){
             if(swap_order.lpIndexes[i] != lp_payments[i].lpIndex) {
@@ -222,17 +282,15 @@ contract Swap {
 
             // Potentially other state updates
         }	}
-	*/
-
-    // order_id is an index into activeSwapOrders
-    function unlockLiquidity(
-        uint256 order_id,
-        uint256 payment_btc_block_height,
-        LPBalanceChange[] memory updated_balances,
-        uint256 output,
-        bytes calldata payment_proof
+        */
+    function proposeTransactionProof(
+        uint256 orderId,
+        uint256 TXNBlockHeight,
+        LPBalanceChange[] memory updatedBalances,
+        uint256 swapOutput,
+        bytes calldata paymentProof
     ) public {
-        SwapOrder memory swap_order = activeSwapOrders[order_id];
+        Order memory swap_order = swapOrders[orderId];
         // lp_payments should be the same length as the swap_order
         if (swap_order.lpIndexes.length != updated_balances.length) {
             revert NotEnoughLiquidityConsumed();
@@ -249,19 +307,29 @@ contract Swap {
         bytes32 merkle_root = header_storage.getMerkleRootSafe(
             payment_btc_block_height
         );
-        //TODO: CHECK PROOF HERE, pass lpHash, order nonce, updated_bal hash, output amt, merkle_root
-        /*
-        verifier.verify(
-            payment_proof,
 
-        );
-        */
         swap_order.complete = true;
         for (uint16 i = 0; i < updated_balances.length; i++) {
             lps[updated_balances[i].lpIndex].amountDeposited = updated_balances[
                 i
             ].value;
+
+            lps[updated_balances[i].lpIndex].l = updated_balances[i].value;
         }
+
+        //TODO: CHECK PROOF HERE pub input:
+        // 1. lpHash of order
+        // 2. order nonce
+        // 3. updated_lp_balances hash
+        // 4. output amt
+        // 5. merkle_root
+        verifier.verify(
+            paymentProof,
+
+        );
         wrapped_bitcoin.transfer(msg.sender, uint256(output));
     }
+
+        function unlockLiquidity(
+        ){}
 }

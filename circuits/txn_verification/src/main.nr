@@ -26,8 +26,8 @@ fn main(
     //------------------ MAIN CIRCUIT ------------------
     // [0] verify merkle proof
 	sha256_merkle::assert_merkle_proof_equality(
-		byte_lib::decode_encoded_hash(merkle_root),
-		byte_lib::decode_encoded_hash(encoded_expected_hash),
+		byte_lib::decode_field_encoded_hash(merkle_root),
+		byte_lib::decode_field_encoded_hash(encoded_expected_hash),
 		proposed_merkle_proof
 	);
 

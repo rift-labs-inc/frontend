@@ -92,7 +92,7 @@ pub fn extract_bytes_from_u64<N>(byte_count: CompConstant<N>, number: u64) -> [u
     bytes
 }
 
-pub fn decode_encoded_hash(encoded_expected_hash: [Field; 2]) -> [u8; 32] {
+pub fn decode_field_encoded_hash(encoded_expected_hash: [Field; 2]) -> [u8; 32] {
 	let mut proposed_txn_hash: [u8; 32] = [0; 32];
 	let leg1 = encoded_expected_hash[0].to_be_bytes(31);
 	let leg2 = encoded_expected_hash[1].to_be_bytes(1);
