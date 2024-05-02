@@ -1,4 +1,4 @@
-import { Tabs, TabList, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
+import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -29,7 +29,7 @@ export const SwapUI = ({}) => {
                 const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=eth');
                 const data = await response.json();
                 if (data.bitcoin && data.bitcoin.eth) {
-                    // setBtcToEthRate(data.bitcoin.eth);
+                    setBtcToEthRate(data.bitcoin.eth);
                 }
             } catch (error) {
                 console.error('Failed to fetch exchange rate:', error);
@@ -434,7 +434,7 @@ export const SwapUI = ({}) => {
                         <Flex px='10px' bg='#2E1C0C' w='100%' h='78px' border='2px solid #78491F' borderRadius={'10px'}>
                             <Flex direction={'column'}>
                                 <Text
-                                    color={colors.textGray}
+                                    color={colors.offWhite}
                                     fontSize={'13px'}
                                     mt='7px'
                                     ml='3px'
@@ -458,7 +458,7 @@ export const SwapUI = ({}) => {
                                     _selected={{ border: 'none', boxShadow: 'none' }}
                                     fontSize='38px'
                                     placeholder='0.0'
-                                    _placeholder={{ color: colors.offWhite }}
+                                    _placeholder={{ color: colors.textGray }}
                                 />
                             </Flex>
                             <Spacer />
@@ -492,7 +492,7 @@ export const SwapUI = ({}) => {
                         <Flex mt='5px' px='10px' bg='#161A33' w='100%' h='78px' border='2px solid #303F9F' borderRadius={'10px'}>
                             <Flex direction={'column'}>
                                 <Text
-                                    color={colors.textGray}
+                                    color={colors.offWhite}
                                     fontSize={'13px'}
                                     mt='7px'
                                     ml='3px'
@@ -516,7 +516,7 @@ export const SwapUI = ({}) => {
                                     _selected={{ border: 'none', boxShadow: 'none' }}
                                     fontSize='38px'
                                     placeholder='0.0'
-                                    _placeholder={{ color: colors.offWhite }}
+                                    _placeholder={{ color: colors.textGray }}
                                 />
                             </Flex>
                             <Spacer />
@@ -544,7 +544,16 @@ export const SwapUI = ({}) => {
                                         textDecoration: 'underline',
                                         textUnderlineOffset: '6px',
                                     }}>
-                                    Including Fees
+                                    <Tooltip
+                                        fontFamily={'Aux'}
+                                        letterSpacing={'-0.5px'}
+                                        color={colors.offWhite}
+                                        bg={'#121212'}
+                                        fontSize={'12px'}
+                                        label='This exchange rate includes the hypernode, protocol, and LP Fees. There are no additional or hidden fees.'
+                                        aria-label='A tooltip'>
+                                        Including Fees
+                                    </Tooltip>
                                 </Box>
                             </Text>
                             <Spacer />
@@ -605,7 +614,7 @@ export const SwapUI = ({}) => {
                         <Flex mt='18px' px='10px' bg='#161A33' w='100%' h='78px' border='2px solid #303F9F' borderRadius={'10px'}>
                             <Flex direction={'column'}>
                                 <Text
-                                    color={colors.textGray}
+                                    color={colors.offWhite}
                                     fontSize={'13px'}
                                     mt='7px'
                                     ml='3px'
@@ -629,7 +638,7 @@ export const SwapUI = ({}) => {
                                     _selected={{ border: 'none', boxShadow: 'none' }}
                                     fontSize='38px'
                                     placeholder='0.0'
-                                    _placeholder={{ color: colors.offWhite }}
+                                    _placeholder={{ color: colors.textGray }}
                                 />
                             </Flex>
                             <Spacer />
@@ -639,7 +648,7 @@ export const SwapUI = ({}) => {
                         <Flex mt='10px' px='10px' bg='#132B12' w='100%' h='78px' border='2px solid #557D23' borderRadius={'10px'}>
                             <Flex direction={'column'}>
                                 <Text
-                                    color={colors.textGray}
+                                    color={colors.offWhite}
                                     fontSize={'13px'}
                                     mt='7px'
                                     ml='3px'
@@ -665,7 +674,7 @@ export const SwapUI = ({}) => {
                                     _selected={{ border: 'none', boxShadow: 'none' }}
                                     fontSize='38px'
                                     placeholder='0.05%'
-                                    _placeholder={{ color: colors.offWhite }}
+                                    _placeholder={{ color: colors.textGray }}
                                 />
                             </Flex>
                             <Text
@@ -684,7 +693,7 @@ export const SwapUI = ({}) => {
                         <Flex mt='10px' px='10px' bg='#2E1C0C' w='100%' h='78px' border='2px solid #78491F' borderRadius={'10px'}>
                             <Flex direction={'column'}>
                                 <Text
-                                    color={colors.textGray}
+                                    color={colors.offWhite}
                                     fontSize={'13px'}
                                     mt='7px'
                                     ml='3px'
@@ -708,7 +717,7 @@ export const SwapUI = ({}) => {
                                     _selected={{ border: 'none', boxShadow: 'none' }}
                                     fontSize='26px'
                                     placeholder='Your BTC payout address'
-                                    _placeholder={{ color: colors.offWhite }}
+                                    _placeholder={{ color: colors.textGray }}
                                 />
                             </Flex>
                             {/* TODO: ADD LOADING INDICATOR AND ADDRESS VALIDATION CHECK CIRCLE HERE */}
