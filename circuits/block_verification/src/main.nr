@@ -42,7 +42,7 @@ fn main(
     }
 
     // [4] verify PoW (double sha256(block_hash) <= target)
-    verify_PoW(proposed_block, proposed_target);
+    verify_PoW(proposed_block, real_target);
 }
 
 fn bits_to_target(bits: Field) -> Field {
