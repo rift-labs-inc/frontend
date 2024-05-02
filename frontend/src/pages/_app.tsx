@@ -12,10 +12,12 @@ import toast, { ToastBar, Toaster } from "react-hot-toast";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const setActivityData = useStore((state) => state.setActivityData);
+  const setLiquidityData = useStore((state) => state.setLiquidityData);
 
   useEffect(() => {
     // TODO: populate all real data from smart contracts
     setActivityData(testData.activity);
+    setLiquidityData(testData.liquidity);
   }, [setActivityData]);
 
   return (
