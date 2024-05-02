@@ -219,9 +219,7 @@ const Liquidity = () => {
                                             <Flex w='170px' textAlign='left'>
                                                 <Text>Timestamp</Text>
                                             </Flex>
-                                            <Flex w='180px' textAlign='left'>
-                                                <Text>Provider</Text>
-                                            </Flex>
+
                                             <Flex w='85px' textAlign='left'>
                                                 <Text>Asset</Text>
                                             </Flex>
@@ -231,8 +229,11 @@ const Liquidity = () => {
                                             <Flex w='85px' textAlign='left'>
                                                 <Text>LP Fee</Text>
                                             </Flex>
+                                            <Flex w='180px' textAlign='left'>
+                                                <Text>Provider</Text>
+                                            </Flex>
                                             <Flex w='100px' textAlign='left'>
-                                                <Text>Status</Text>
+                                                <Text>Swap Now</Text>
                                             </Flex>
                                         </Flex>
                                     </Flex>
@@ -259,9 +260,7 @@ const Liquidity = () => {
                                                 <Flex ml='33px' w='170px' textAlign='left'>
                                                     <Text color={colors.offerWhite}>{timeAgo(deposit.timestamp)}</Text>
                                                 </Flex>
-                                                <Flex w='180px' textAlign='left'>
-                                                    <Text color={colors.textGray}>{formatAddress(deposit.lp)}</Text>
-                                                </Flex>
+
                                                 <Flex w='85px'>
                                                     <BTCSVG />
                                                 </Flex>
@@ -302,9 +301,12 @@ const Liquidity = () => {
                                                         {parseFloat(deposit.lp_fee).toFixed(2) + '%'}
                                                     </Tooltip>
                                                 </Flex>
+                                                <Flex w='180px' textAlign='left'>
+                                                    <Text color={colors.textGray}>{formatAddress(deposit.lp)}</Text>
+                                                </Flex>
                                                 <Flex w='100px' textAlign='left'>
                                                     {deposit.status == 'available' ? (
-                                                        <Flex></Flex>
+                                                        <Flex border='2px solid #445BCB'>SWAP NOW</Flex>
                                                     ) : (
                                                         <Text userSelect={'none'} color={deposit.status == 'available' ? '#238739' : colors.textGray}>
                                                             {deposit.status}

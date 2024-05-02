@@ -4000,22 +4000,810 @@
         "status": "Completed"
     }
 ],
-  "liquidity": [
+
+
+    "liquidity": [
         {
-      "timestamp": 1649990500,
-      "lp": "0xf0178e462BE164ac1CB30935875A2c1D4610B788",
-      "lp_fee": "0.7",
-      "amount": "10.12",
-      "asset": "WBTC",
-      "status": "available"
-    },
-            {
-      "timestamp": 1649990400,
-      "lp": "0xa4178e462BE164ac1CB30935875A2c1D4610B788",
-      "lp_fee": "0.45",
-      "amount": "5.321643",
-      "asset": "WBTC",
-      "status": "reserved"
-    }
-  ]
+            "timestamp": 1712203623,
+            "lp": "0x1A363E64cc43B6e4a1b1010fFA14c1EcdE4a2D0d",
+            "lp_fee": "0.95",
+            "amount": "558.1123",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712873863,
+            "lp": "0x98fc58D6c484268Fdeb3E1e3aD11BdF064280095",
+            "lp_fee": "4.82",
+            "amount": "519.46366",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712608158,
+            "lp": "0xC8AEe0527B3a035A60103B36077925Fa29Eb6805",
+            "lp_fee": "4.93",
+            "amount": "714.09699",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714090889,
+            "lp": "0x6f59313069a91ac956bf18efDE150A9EfA6A621e",
+            "lp_fee": "4.69",
+            "amount": "646.6815",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713618423,
+            "lp": "0x818279a0c140D804fBafef082E4244c6e54De898",
+            "lp_fee": "3.02",
+            "amount": "104.71558",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712192383,
+            "lp": "0x38CcebB7220935538dDad397571031B7e60E2C9e",
+            "lp_fee": "-0.11",
+            "amount": "93.9878",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714251361,
+            "lp": "0x0513e6e484FDce9B17665307Ca002456bbd53cD3",
+            "lp_fee": "0.62",
+            "amount": "799.91314",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1714116253,
+            "lp": "0xbDc85892D9905F91d1eDcEdA299fC1A5F38Eb863",
+            "lp_fee": "3.77",
+            "amount": "331.27072",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712406819,
+            "lp": "0xf5349EaE9d9403378a88A46b3E00Ff7D6a008264",
+            "lp_fee": "2.22",
+            "amount": "329.55178",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712561984,
+            "lp": "0x29fB3646f506295644e79b6ce3FEB35da24aC644",
+            "lp_fee": "0.69",
+            "amount": "267.33619",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713126871,
+            "lp": "0x8F61a32e2AA86595bB60F92774bDe5355aA14668",
+            "lp_fee": "2.48",
+            "amount": "629.30961",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713240686,
+            "lp": "0x56ea6a822875476C979357B088bB26aCcC9eB8Ad",
+            "lp_fee": "3.25",
+            "amount": "317.53874",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712264836,
+            "lp": "0xcB09e47eC5040bbeb76EC60809Ba01536D7A9972",
+            "lp_fee": "1.48",
+            "amount": "404.25752",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713115396,
+            "lp": "0x0af9D2C8Aae1fFaD1Be036A71b67D9DaC118c839",
+            "lp_fee": "3.33",
+            "amount": "617.72886",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714450449,
+            "lp": "0xCf434136b2934286e676796C3b40c64C02AdBD9a",
+            "lp_fee": "4.56",
+            "amount": "936.64494",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712456541,
+            "lp": "0xe44177e859D139d408731b82BDAf4691F984a7b7",
+            "lp_fee": "1.33",
+            "amount": "737.7581",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712815390,
+            "lp": "0x0c6392171E1a9a2649a47B93A933e045bEC21B31",
+            "lp_fee": "0.89",
+            "amount": "787.43769",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712337200,
+            "lp": "0xd3B3371b89093049D292cb843b069B4f547f109f",
+            "lp_fee": "4.32",
+            "amount": "892.97326",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713906693,
+            "lp": "0xD2C51F2A3C50Ac39d8b96c7b1c1f8458154aF179",
+            "lp_fee": "4.06",
+            "amount": "274.59467",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714131634,
+            "lp": "0x55FAaEAfEEF090B98be662F525A61532675AA44e",
+            "lp_fee": "2.21",
+            "amount": "339.05754",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713817829,
+            "lp": "0x5C9f8BC03D24D684C6A1030698FF993EC6E7B34e",
+            "lp_fee": "4.92",
+            "amount": "446.55597",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712739994,
+            "lp": "0xbCff9ee80cE9052f8DaBd1F1DC9cADF676b4433d",
+            "lp_fee": "2.21",
+            "amount": "948.94369",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714539201,
+            "lp": "0xfCE5dA202A578F8AfE04D544a8Ac59B05e4E21c7",
+            "lp_fee": "2.93",
+            "amount": "898.95144",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713855529,
+            "lp": "0x9fd2f3657731DC98B3ad1162DAD1a57622dd3AfD",
+            "lp_fee": "2.6",
+            "amount": "70.20344",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714532433,
+            "lp": "0x3185989A20729cd6365569be6091d1a307e2b1EB",
+            "lp_fee": "4.79",
+            "amount": "110.49905",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713548044,
+            "lp": "0xe8D502F5AD78Dc0d4dE5F6C85924F44db0C96ad4",
+            "lp_fee": "4.97",
+            "amount": "451.21912",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712954143,
+            "lp": "0x9CCf5552c331a427F9DF40f22253413ebcdc8222",
+            "lp_fee": "2.97",
+            "amount": "708.03591",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712742219,
+            "lp": "0x14fB956942Ae14d5EDce65438eC7E736Cf478343",
+            "lp_fee": "2.52",
+            "amount": "377.03847",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713885432,
+            "lp": "0x35332b2Bf432473dc20DB643eFcdD6Fdf2EBEAE1",
+            "lp_fee": "3.33",
+            "amount": "577.68852",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1714036656,
+            "lp": "0x0AA95cf8d13B7c8054CeF53A6584a507C5E7194d",
+            "lp_fee": "1.1",
+            "amount": "624.27301",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713607352,
+            "lp": "0xC71274eA958aa3D5e7E8e87c0fB1f129fB5ce08c",
+            "lp_fee": "2.24",
+            "amount": "914.78279",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713215246,
+            "lp": "0x86c641f362A5884ae813B1071d9027b04648C8c3",
+            "lp_fee": "4.42",
+            "amount": "908.47075",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713559374,
+            "lp": "0x0685a82F2Bf875FfeC2cae4A7FFc4f4944315456",
+            "lp_fee": "4.93",
+            "amount": "176.4931",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712627407,
+            "lp": "0x03FD2aC105b4861e9e123c4B016cb8719Ad1e4f7",
+            "lp_fee": "0.08",
+            "amount": "268.66769",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713583522,
+            "lp": "0xD6391aC35e3c007b53faba6610F50eE8af141Ea0",
+            "lp_fee": "1.12",
+            "amount": "483.85491",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712309154,
+            "lp": "0x44eC3a1046Be1A11Ecd89aa61Ca9939B5760f532",
+            "lp_fee": "3.18",
+            "amount": "72.92812",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712751747,
+            "lp": "0xAA9D75B3fde0565B15B10b0a86DAfb84E123599F",
+            "lp_fee": "3.36",
+            "amount": "355.91326",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712892659,
+            "lp": "0x2d253bc4cD7D2cb0fceA25384e54386F3bBD08B5",
+            "lp_fee": "4.82",
+            "amount": "54.73105",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712258572,
+            "lp": "0xD4E5930C6686FA7e53b8ea8aF47D76B0D222e915",
+            "lp_fee": "4.69",
+            "amount": "31.70749",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712184764,
+            "lp": "0x3432DA19F48d932Ca09fD86BcdD024C17956c2AB",
+            "lp_fee": "2.41",
+            "amount": "263.38312",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713417690,
+            "lp": "0xb94eB5FebbC7201B28D9dEbAfBaD9F1e8908311b",
+            "lp_fee": "0.28",
+            "amount": "410.53809",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714065458,
+            "lp": "0xC0D099cBFD62A55b0Bd30Ff83649e9EC897b4327",
+            "lp_fee": "1.17",
+            "amount": "416.27951",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713193883,
+            "lp": "0x61743e2f7a42021E33f8E28A223C8f9100f4DB4F",
+            "lp_fee": "2.8",
+            "amount": "226.18313",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712725154,
+            "lp": "0x08EfA7b5E1700C305B7073A397fc4198462FD629",
+            "lp_fee": "2.95",
+            "amount": "880.09523",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712692058,
+            "lp": "0x6cE77b62a25A79dA1f40acDDf309Ee589F41aEF3",
+            "lp_fee": "0.55",
+            "amount": "635.98623",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712803465,
+            "lp": "0xcc22dBa9023221BD8b40cc676e0c9B90dd397216",
+            "lp_fee": "1.44",
+            "amount": "308.19439",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712557235,
+            "lp": "0x48aF1D4751d7F2176E204e0aA71dE466f7ad539F",
+            "lp_fee": "2.53",
+            "amount": "446.78862",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712832869,
+            "lp": "0x77E5EbD6420195FD7BeEC1F1D6Da4e6253C0ebC3",
+            "lp_fee": "0.54",
+            "amount": "399.74764",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712332361,
+            "lp": "0x9253D3FC0Df70650440729B921d0226893218299",
+            "lp_fee": "3.76",
+            "amount": "232.58581",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712860288,
+            "lp": "0x237AB4b014165Ff9f2AE2267DDbE6f3B35CA9B45",
+            "lp_fee": "0.37",
+            "amount": "349.81322",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712651735,
+            "lp": "0x025E3d64e135cCa8ce74a95e4E2EfA99a7a1fb86",
+            "lp_fee": "2.74",
+            "amount": "599.31973",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713023607,
+            "lp": "0x0C2333B923ee300e596FF86dB860C56F4cD6B5A4",
+            "lp_fee": "4.89",
+            "amount": "861.99241",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1714018976,
+            "lp": "0x67289E0209E0C213b47e023E45BA1DDD58875011",
+            "lp_fee": "0.91",
+            "amount": "138.6821",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712776534,
+            "lp": "0x2dD74c7e104d92d61C360D8282e6E36f4ADc954B",
+            "lp_fee": "3.67",
+            "amount": "910.92843",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714588091,
+            "lp": "0xf6f4B4D1e290A1A6CA9e02FFf4231f0e7638B68A",
+            "lp_fee": "-0.08",
+            "amount": "696.0011",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713823794,
+            "lp": "0x758A9328c10A03A7D416eF4f43BF425aE8aC6CeA",
+            "lp_fee": "0.65",
+            "amount": "82.44779",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713096400,
+            "lp": "0xa9E711DF4fc561209f42fa078F8BE580257800E3",
+            "lp_fee": "1.26",
+            "amount": "372.5665",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714524510,
+            "lp": "0x615cf4e4927D130c58c1bEe670b886469f1CF587",
+            "lp_fee": "1.8",
+            "amount": "833.9579",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713691802,
+            "lp": "0x6c6E7f44fa7E59a3b2CFFA0357d8f10CE8E593Ec",
+            "lp_fee": "3.73",
+            "amount": "291.25381",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714690099,
+            "lp": "0xA00BA66381Cf084a3c6044847F9Cc6F454fd18a5",
+            "lp_fee": "2.08",
+            "amount": "100.87869",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712972718,
+            "lp": "0x09B02d49029953ea8D370F114f78B56Ec265139C",
+            "lp_fee": "3.39",
+            "amount": "777.2837",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712415346,
+            "lp": "0xfC8B8f91F29df13a1Fd4EC94E65511190a09a4B5",
+            "lp_fee": "3.75",
+            "amount": "228.04914",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713222104,
+            "lp": "0x04309b63BED49863e9c09600Ba9f9C96808FaDcd",
+            "lp_fee": "0.46",
+            "amount": "238.46359",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1714472934,
+            "lp": "0xD8264D0218f91649d65726222b95f6C1f7Fa91d1",
+            "lp_fee": "4.46",
+            "amount": "780.09973",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713359012,
+            "lp": "0x7Aa01A5Bc7227467345D3116eb7b2e8c41EDCee9",
+            "lp_fee": "2.02",
+            "amount": "18.74325",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714466798,
+            "lp": "0xC0e3A9e151547e96BEac0868422Df3eD26272d0F",
+            "lp_fee": "2.06",
+            "amount": "718.60445",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712264154,
+            "lp": "0xEa9fd630c8E853b9dfE7B839b58a30613350d158",
+            "lp_fee": "1.39",
+            "amount": "146.44364",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712271611,
+            "lp": "0xa39dE73E792A7fDE5F3e0be8123caF371e4C4188",
+            "lp_fee": "0.29",
+            "amount": "9.11515",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712911878,
+            "lp": "0x7C3adBC5c7dbBb372f9156135dFbF465e61461c7",
+            "lp_fee": "1.9",
+            "amount": "612.98044",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713132793,
+            "lp": "0x767Bf32d4c01003cCc85fF358473CDa5c96476ba",
+            "lp_fee": "2.83",
+            "amount": "264.84363",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713427907,
+            "lp": "0xc5dbb2E2C713A4d4bf8F2Df9C5F503B7fcD8a284",
+            "lp_fee": "2.11",
+            "amount": "886.51796",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713091991,
+            "lp": "0x7754C83B58D7e5990Af4032975B36c115478a0E6",
+            "lp_fee": "2.82",
+            "amount": "913.07705",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712837035,
+            "lp": "0x0D84F02E31E8Be892EEB2B40a1f578fec3Ee8Fbc",
+            "lp_fee": "3.69",
+            "amount": "69.94995",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712151099,
+            "lp": "0xA141aD6dcb7be4e3cc0E240fDE49Aa209FFB2A27",
+            "lp_fee": "2.55",
+            "amount": "962.26519",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713335711,
+            "lp": "0xA13079A28bE8AA03DBDbF989aeB129251a807DAA",
+            "lp_fee": "4.42",
+            "amount": "586.88541",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713069568,
+            "lp": "0x1Cb6bB3b1DFCc9CCA2391066b862A33b911BA230",
+            "lp_fee": "-0.01",
+            "amount": "441.03197",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712579462,
+            "lp": "0x08e781200bEac2C1Ee87240cA3E352A6E249c51A",
+            "lp_fee": "3.48",
+            "amount": "815.55854",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713215352,
+            "lp": "0xED8B89588406CD9592cCAD605bCa6e4cbDf88f54",
+            "lp_fee": "-0.12",
+            "amount": "399.00626",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714506753,
+            "lp": "0x14EEfaafEb25aFBCEB478A60Ac4121fE968b4fd6",
+            "lp_fee": "4.8",
+            "amount": "622.62961",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713888766,
+            "lp": "0x6421cffA141702862E93487B5010EF57E1814fD7",
+            "lp_fee": "2.13",
+            "amount": "587.34916",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713224365,
+            "lp": "0x2088A7696B4E7D2a053349663e2E23a158106c14",
+            "lp_fee": "4.66",
+            "amount": "23.37579",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1714093912,
+            "lp": "0x44354D73D17210DFf3785e0cD134Be065Da12735",
+            "lp_fee": "1.78",
+            "amount": "823.15673",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712540254,
+            "lp": "0x03AeaC79Fa23a80F0e11263b7C24f2BCAc2Cf117",
+            "lp_fee": "2.29",
+            "amount": "761.23292",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712989492,
+            "lp": "0x38079BB330408AD5524c49c3a45F3c7EEbDeD9C5",
+            "lp_fee": "3.42",
+            "amount": "66.36034",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713672919,
+            "lp": "0xd4Ef053FD989D9b4Dbe75EC9680132e9a5ecB046",
+            "lp_fee": "1.8",
+            "amount": "564.023",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712540853,
+            "lp": "0xbc21dEC163C0662672933d295aB864c372Fb4D1b",
+            "lp_fee": "3.04",
+            "amount": "2.7511",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713057780,
+            "lp": "0x2054F434d50c5A64af3405fb792E1234F3f654De",
+            "lp_fee": "3.44",
+            "amount": "71.67246",
+            "asset": "WBTC",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712626049,
+            "lp": "0xAc55bcA6A55ce31daCb0bD9bE1E1A7bec0739284",
+            "lp_fee": "1.87",
+            "amount": "353.86448",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712308226,
+            "lp": "0x57737760a3662aA1E6bdab900cFc48202D5c731c",
+            "lp_fee": "1.3",
+            "amount": "404.90059",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1714223975,
+            "lp": "0xe8297AF2350db0F94E700ddFEa9d1F29411BD3F0",
+            "lp_fee": "3.37",
+            "amount": "779.69726",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1712716404,
+            "lp": "0x1409742D97c1681B88362f21590EC1344523040c",
+            "lp_fee": "1.69",
+            "amount": "96.14606",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713169723,
+            "lp": "0x9f0e0525868E2458d8cF31AeECcBb10a80A676ed",
+            "lp_fee": "2.21",
+            "amount": "619.30644",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1714324887,
+            "lp": "0x0e81B35552083947D626FA5EA5976DF1268b042E",
+            "lp_fee": "2.24",
+            "amount": "346.92834",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713728005,
+            "lp": "0x6bD22C5FDBf0B91e4AEf79A6F5870628aa298229",
+            "lp_fee": "4.99",
+            "amount": "933.479",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1714456449,
+            "lp": "0xA0630754766a1C5AD1FDccF594f89C930C4d79eb",
+            "lp_fee": "2.47",
+            "amount": "456.02889",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713417484,
+            "lp": "0x9dD5dbEA83E60Cbd65Cfcf535F68c3F2fFa6eb3b",
+            "lp_fee": "4.38",
+            "amount": "784.64822",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1712266187,
+            "lp": "0xc0C25E730867e32ced1E39659d04E9bdfAF951De",
+            "lp_fee": "0.62",
+            "amount": "97.25927",
+            "asset": "ETH",
+            "status": "available"
+        },
+        {
+            "timestamp": 1713853796,
+            "lp": "0xB8a0E5ab5A9F55517212Dbd9800eFbC60547690F",
+            "lp_fee": "1.17",
+            "amount": "834.14982",
+            "asset": "WBTC",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713580930,
+            "lp": "0xab6b18134B08458c084232C5d82878009e740665",
+            "lp_fee": "4.16",
+            "amount": "246.20945",
+            "asset": "ETH",
+            "status": "reserved"
+        },
+        {
+            "timestamp": 1713099432,
+            "lp": "0xeC238238a360E544Ea967D52Ec1B9F521A53EC02",
+            "lp_fee": "1.91",
+            "amount": "275.56425",
+            "asset": "WBTC",
+            "status": "available"
+        }
+    ]
+
+
 }
