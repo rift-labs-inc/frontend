@@ -4,6 +4,7 @@ import { Flex, Spacer, Text, Box } from '@chakra-ui/react';
 import { Navbar } from '../components/Navbar';
 import colors from '../styles/colors';
 import { SwapUI } from '../components/SwapUI';
+import { OpenGraph } from '../components/background/OpenGraph';
 
 const Home = () => {
     const { height, width } = useWindowSize();
@@ -15,13 +16,7 @@ const Home = () => {
 
     const RiftSVG = () => {
         return (
-            <svg
-                width='80'
-                height='40'
-                viewBox='0 0 2293 547'
-                fill='none'
-                xmlns='http://www.w3.org/2000/svg'
-            >
+            <svg width='80' height='40' viewBox='0 0 2293 547' fill='none' xmlns='http://www.w3.org/2000/svg'>
                 <path
                     fill-rule='evenodd'
                     clip-rule='evenodd'
@@ -33,79 +28,73 @@ const Home = () => {
     };
 
     return (
-        <Flex
-            h='100vh'
-            width='100%'
-            direction='column'
-            backgroundImage={'/images/rift_background.png'}
-            backgroundSize='cover'
-            backgroundPosition='center'
-        >
-            <Navbar />
-            <Flex direction={'column'} align='center' w='100%' mt='19vh'>
-                {/* LOGOS & TEXT */}
-                <RiftSVG />
-                <Flex
-                    sx={{
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text'
-                    }}
-                    bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
-                    letterSpacing={'2px'}
-                    mt='-25px'
-                >
-                    <Text
-                        userSelect={'none'}
-                        fontSize='94px'
-                        fontFamily={'Klein'}
-                        fontWeight='bold'
-                        px='12px'
-                        // dropShadow={"10px 10px 10px rgba(122, 90, 212)"} TODO: Add drop shadow to all gradient text
-                    >
-                        HyperBrid
-                    </Text>
-                    <Text
-                        userSelect={'none'}
-                        fontSize='94px'
-                        fontFamily={'Klein'}
-                        ml='-20px'
-                        fontWeight='bold'
+        <>
+            <OpenGraph />
+            <Flex
+                h='100vh'
+                width='100%'
+                direction='column'
+                backgroundImage={'/images/rift_background.png'}
+                backgroundSize='cover'
+                backgroundPosition='center'>
+                <Navbar />
+                <Flex direction={'column'} align='center' w='100%' mt='19vh'>
+                    {/* LOGOS & TEXT */}
+                    <RiftSVG />
+                    <Flex
                         sx={{
                             WebkitTextFillColor: 'transparent',
                             backgroundClip: 'text',
-                            WebkitBackgroundClip: 'text'
+                            WebkitBackgroundClip: 'text',
                         }}
-                    >
-                        ge
+                        bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
+                        letterSpacing={'2px'}
+                        mt='-25px'>
+                        <Text
+                            userSelect={'none'}
+                            fontSize='94px'
+                            fontFamily={'Klein'}
+                            fontWeight='bold'
+                            px='12px'
+                            as='h1'
+                            // dropShadow={"10px 10px 10px rgba(122, 90, 212)"} TODO: Add drop shadow to all gradient text
+                        >
+                            HyperBrid
+                        </Text>
+                        <Text
+                            userSelect={'none'}
+                            fontSize='94px'
+                            fontFamily={'Klein'}
+                            ml='-20px'
+                            fontWeight='bold'
+                            sx={{
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                                WebkitBackgroundClip: 'text',
+                            }}
+                            as='h1'>
+                            ge
+                        </Text>
+                    </Flex>
+                    <Text userSelect={'none'} fontSize='13px' fontFamily={'Aux'} color={'#c3c3c3'} mt='5px' fontWeight={'normal'} as='h2'>
+                        Trustless, peer-to-peer bridging using zk-proofs. See{' '}
+                        <Box
+                            as='span'
+                            onClick={() => handleNavigation('/whitepaper')}
+                            _hover={{
+                                cursor: 'pointer',
+                            }}
+                            style={{
+                                textDecoration: 'underline',
+                            }}
+                            fontWeight={'bold'}>
+                            how it works
+                        </Box>
                     </Text>
+                    <SwapUI />
                 </Flex>
-                <Text
-                    userSelect={'none'}
-                    fontSize='13px'
-                    fontFamily={'Aux'}
-                    color={'#c3c3c3'}
-                    mt='5px'
-                    fontWeight={'normal'}
-                >
-                    Trustless, peer-to-peer bridging using zk-proofs. See{' '}
-                    <Box
-                        as='span'
-                        onClick={() => handleNavigation('/whitepaper')}
-                        _hover={{
-                            cursor: 'pointer'
-                        }}
-                        style={{
-                            textDecoration: 'underline'
-                        }}
-                        fontWeight={'bold'}
-                    >
-                        how it works
-                    </Box>
-                </Text>
-                <SwapUI />
             </Flex>
-        </Flex>
+        </>
     );
 };
 
