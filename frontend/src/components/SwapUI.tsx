@@ -47,24 +47,6 @@ export const SwapUI = ({}) => {
         setActiveTab(tabName);
     };
 
-    const RoundedTabLeft = styled(Button)`
-        --r: 1.3em; /* Control the curvature */
-        border-inline: var(--r) solid transparent;
-        border-radius: 0 calc(2 * var(--r)) 0 0 / 1.6em var(--r) 0 0;
-        border-left-width: 0;
-        mask: radial-gradient(var(--r) at var(--r) 0, transparent 98%, black 101%) calc(-1 * var(--r)) 100% / 100% var(--r) repeat-x,
-            conic-gradient(black 0 0) padding-box;
-    `;
-
-    const RoundedTabRight = styled(Button)`
-        --r: 1.3em; /* Control the curvature */
-        border-inline: var(--r) solid transparent;
-        border-radius: calc(2 * var(--r)) 0 0 0 / var(--r) 1.6em 0 0;
-        border-right-width: 0;
-        mask: radial-gradient(var(--r) at var(--r) 0, transparent 98%, black 101%) calc(-1 * var(--r)) 100% / 100% var(--r) repeat-x,
-            conic-gradient(black 0 0) padding-box;
-    `;
-
     const BTCSVG = () => {
         return (
             <svg width='98' height='69' viewBox='0 0 190 69' fill='none' xmlns='http://www.w3.org/2000/svg'>
@@ -242,22 +224,12 @@ export const SwapUI = ({}) => {
     const isSwapTab = activeTab == 'swap';
 
     return (
-        <Flex
-            width='580px'
-            h={activeTab === 'swap' ? '332px' : '478px'}
-            // bg='rgba(20, 20, 20, 0.55)'
-            // backdropFilter='blur(8px)'
-            mt='30px'
-            direction={'column'}
-            overflow='hidden'
-            // borderBottom='2px solid #323232'
-            // borderLeft='2px solid #323232'
-            // borderRight='2px solid #323232'
-        >
+        <Flex width='580px' h={activeTab === 'swap' ? '332px' : '478px'} mt='30px' direction={'column'} overflow='hidden'>
+            {/* Tab Buttons */}
             <Flex justifyContent='center' w='100%' h='43px' position='relative'>
-                {/* Tab Buttons */}
                 {/* Swap Tab */}
                 <Flex flex={1} align='center' justify='center' zIndex={isSwapTab ? 3 : 1} onClick={() => handleTabClick('swap')} pr='1px'>
+                    {/* Tab Text */}
                     <Flex
                         flex={1}
                         {...backgroundColor}
@@ -273,15 +245,19 @@ export const SwapUI = ({}) => {
                             Swap
                         </Text>
                     </Flex>
+                    {/* Tab Curve (Right Side) */}
                     <Flex h='100%' w='20px' flexDir='column' position='relative'>
+                        {/* Top Curve and Bottom Space */}
                         <Flex
                             {...backgroundColor}
                             flex={1}
                             borderTopRightRadius={'20px'}
                             borderTop={borderColor}
                             borderRight={borderColor}
-                            cursor='pointer'></Flex>
+                            cursor='pointer'
+                        />
                         <Flex {...backgroundColor} flex={1} cursor='pointer'></Flex>
+                        {/* Bottom Curve OR Behind Curve */}
                         {isSwapTab ? (
                             <Flex
                                 zIndex={isSwapTab ? 3 : 1}
@@ -325,6 +301,7 @@ export const SwapUI = ({}) => {
                     bg='rgba(0, 0, 0, 0.1)'
                     boxShadow='0px 0px 20px 10px rgba(0, 0, 0, 0.5)'
                 />
+                {/* Middle Patching */}
                 <Flex
                     zIndex={1}
                     position='absolute'
@@ -338,7 +315,9 @@ export const SwapUI = ({}) => {
 
                 {/* Liquidity Tab */}
                 <Flex flex={1} align='center' justify='center' zIndex={isSwapTab ? 1 : 3} onClick={() => handleTabClick('liquidity')} pl='1px'>
+                    {/* Tab Curve (Left Side) */}
                     <Flex h='100%' w='20px' flexDir='column' position='relative'>
+                        {/* Top Curve and Bottom Space */}
                         <Flex
                             {...backgroundColor}
                             flex={1}
@@ -347,6 +326,7 @@ export const SwapUI = ({}) => {
                             borderLeft={borderColor}
                             cursor='pointer'></Flex>
                         <Flex {...backgroundColor} flex={1} cursor='pointer'></Flex>
+                        {/* Bottom Curve OR Behind Curve */}
                         {!isSwapTab ? (
                             <Flex
                                 zIndex={isSwapTab ? 1 : 3}
@@ -390,32 +370,6 @@ export const SwapUI = ({}) => {
                         </Text>
                     </Flex>
                 </Flex>
-                {/* <RoundedTabLeft
-                    w='100%'
-                    mr='-19px'
-                    bg={activeTab === 'swap' ? 'rgba(30, 30, 30, 0.99)' : 'none'}
-                    h='45px'
-                    color={activeTab === 'liquidity' ? '#9A96A2' : colors.offWhite}
-                    _hover={{ bg: '' }}
-                    _active={{ bg: '' }}
-                    zIndex={activeTab === 'swap' ? 1 : 0}
-                    onClick={() => handleTabClick('swap')}
-                    border={activeTab === 'liquidity' ? '2px solid #323232' : ''}>
-                    Swap
-                </RoundedTabLeft> */}
-                {/* <RoundedTabRight
-                    w='100%'
-                    ml='-19px'
-                    h='45px'
-                    bg={activeTab === 'liquidity' ? 'rgba(30, 30, 30, 0.99)' : 'none'}
-                    color={activeTab === 'swap' ? '#9A96A2' : colors.offWhite}
-                    _hover={{ bg: '' }}
-                    _active={{ bg: '' }}
-                    zIndex={activeTab === 'liquidity' ? 1 : 0}
-                    onClick={() => handleTabClick('liquidity')}
-                    border={activeTab === 'swap' ? '2px solid #323232' : ''}>
-                    Provide Liquidity
-                </RoundedTabRight> */}
             </Flex>
 
             {/* Content */}
