@@ -48,21 +48,7 @@ const Activity = () => {
                             letterSpacing={'2px'}
                             mt='-25px'>
                             <Text userSelect={'none'} fontSize='46px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
-                                Activi
-                            </Text>
-                            <Text
-                                userSelect={'none'}
-                                fontSize='46px'
-                                fontFamily={'Klein'}
-                                ml='-10px'
-                                fontWeight='bold'
-                                sx={{
-                                    WebkitTextFillColor: 'transparent',
-                                    backgroundClip: 'text',
-                                    WebkitBackgroundClip: 'text',
-                                }}
-                                as='h1'>
-                                ty
+                                Activity
                             </Text>
                         </Flex>
                         <Text
