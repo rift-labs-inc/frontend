@@ -62,7 +62,7 @@ const Activity = () => {
                             fontWeight={'normal'}
                             textShadow={'0px 0px 4px rgba(0, 0, 0)'}
                             as='h2'>
-                            Manage the status of your current swaps and see previous bridge activity.
+                            Manage current swaps and previous bridge activity.
                         </Text>
                     </Flex>
                     {/* SEARCH & ACTIVITY DATA */}

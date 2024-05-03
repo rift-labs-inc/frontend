@@ -76,7 +76,7 @@ const Liquidity = () => {
                             fontWeight={'normal'}
                             textShadow={'0px 0px 4px rgba(0, 0, 0)'}
                             as='h2'>
-                            See avalible liquidity, sort by fees, or swap from multiple LPs at once.
+                            See avalible liquidity, sort by fees, and swap from multiple LPs at once.
                         </Text>
                     </Flex>
                     {/* SEARCH & ACTIVITY DATA */}
