@@ -47,24 +47,6 @@ export const SwapUI = ({}) => {
         setActiveTab(tabName);
     };
 
-    const RoundedTabLeft = styled(Button)`
-        --r: 1.3em; /* Control the curvature */
-        border-inline: var(--r) solid transparent;
-        border-radius: 0 calc(2 * var(--r)) 0 0 / 1.6em var(--r) 0 0;
-        border-left-width: 0;
-        mask: radial-gradient(var(--r) at var(--r) 0, transparent 98%, black 101%) calc(-1 * var(--r)) 100% / 100% var(--r) repeat-x,
-            conic-gradient(black 0 0) padding-box;
-    `;
-
-    const RoundedTabRight = styled(Button)`
-        --r: 1.3em; /* Control the curvature */
-        border-inline: var(--r) solid transparent;
-        border-radius: calc(2 * var(--r)) 0 0 0 / var(--r) 1.6em 0 0;
-        border-right-width: 0;
-        mask: radial-gradient(var(--r) at var(--r) 0, transparent 98%, black 101%) calc(-1 * var(--r)) 100% / 100% var(--r) repeat-x,
-            conic-gradient(black 0 0) padding-box;
-    `;
-
     const BTCSVG = () => {
         return (
             <svg width='98' height='69' viewBox='0 0 190 69' fill='none' xmlns='http://www.w3.org/2000/svg'>
@@ -242,22 +224,12 @@ export const SwapUI = ({}) => {
     const isSwapTab = activeTab == 'swap';
 
     return (
-        <Flex
-            width='580px'
-            h={activeTab === 'swap' ? '332px' : '478px'}
-            // bg='rgba(20, 20, 20, 0.55)'
-            // backdropFilter='blur(8px)'
-            mt='30px'
-            direction={'column'}
-            overflow='hidden'
-            // borderBottom='2px solid #323232'
-            // borderLeft='2px solid #323232'
-            // borderRight='2px solid #323232'
-        >
+        <Flex width='580px' h={activeTab === 'swap' ? '332px' : '478px'} mt='30px' direction={'column'} overflow='hidden'>
+            {/* Tab Buttons */}
             <Flex justifyContent='center' w='100%' h='43px' position='relative'>
-                {/* Tab Buttons */}
                 {/* Swap Tab */}
                 <Flex flex={1} align='center' justify='center' zIndex={isSwapTab ? 3 : 1} onClick={() => handleTabClick('swap')} pr='1px'>
+                    {/* Tab Text */}
                     <Flex
                         flex={1}
                         {...backgroundColor}
@@ -273,15 +245,19 @@ export const SwapUI = ({}) => {
                             Swap
                         </Text>
                     </Flex>
+                    {/* Tab Curve (Right Side) */}
                     <Flex h='100%' w='20px' flexDir='column' position='relative'>
+                        {/* Top Curve and Bottom Space */}
                         <Flex
                             {...backgroundColor}
                             flex={1}
                             borderTopRightRadius={'20px'}
                             borderTop={borderColor}
                             borderRight={borderColor}
-                            cursor='pointer'></Flex>
+                            cursor='pointer'
+                        />
                         <Flex {...backgroundColor} flex={1} cursor='pointer'></Flex>
+                        {/* Bottom Curve OR Behind Curve */}
                         {isSwapTab ? (
                             <Flex
                                 zIndex={isSwapTab ? 3 : 1}
@@ -325,6 +301,7 @@ export const SwapUI = ({}) => {
                     bg='rgba(0, 0, 0, 0.1)'
                     boxShadow='0px 0px 20px 10px rgba(0, 0, 0, 0.5)'
                 />
+                {/* Middle Patching */}
                 <Flex
                     zIndex={1}
                     position='absolute'
@@ -338,7 +315,9 @@ export const SwapUI = ({}) => {
 
                 {/* Liquidity Tab */}
                 <Flex flex={1} align='center' justify='center' zIndex={isSwapTab ? 1 : 3} onClick={() => handleTabClick('liquidity')} pl='1px'>
+                    {/* Tab Curve (Left Side) */}
                     <Flex h='100%' w='20px' flexDir='column' position='relative'>
+                        {/* Top Curve and Bottom Space */}
                         <Flex
                             {...backgroundColor}
                             flex={1}
@@ -347,6 +326,7 @@ export const SwapUI = ({}) => {
                             borderLeft={borderColor}
                             cursor='pointer'></Flex>
                         <Flex {...backgroundColor} flex={1} cursor='pointer'></Flex>
+                        {/* Bottom Curve OR Behind Curve */}
                         {!isSwapTab ? (
                             <Flex
                                 zIndex={isSwapTab ? 1 : 3}
@@ -390,32 +370,6 @@ export const SwapUI = ({}) => {
                         </Text>
                     </Flex>
                 </Flex>
-                {/* <RoundedTabLeft
-                    w='100%'
-                    mr='-19px'
-                    bg={activeTab === 'swap' ? 'rgba(30, 30, 30, 0.99)' : 'none'}
-                    h='45px'
-                    color={activeTab === 'liquidity' ? '#9A96A2' : colors.offWhite}
-                    _hover={{ bg: '' }}
-                    _active={{ bg: '' }}
-                    zIndex={activeTab === 'swap' ? 1 : 0}
-                    onClick={() => handleTabClick('swap')}
-                    border={activeTab === 'liquidity' ? '2px solid #323232' : ''}>
-                    Swap
-                </RoundedTabLeft> */}
-                {/* <RoundedTabRight
-                    w='100%'
-                    ml='-19px'
-                    h='45px'
-                    bg={activeTab === 'liquidity' ? 'rgba(30, 30, 30, 0.99)' : 'none'}
-                    color={activeTab === 'swap' ? '#9A96A2' : colors.offWhite}
-                    _hover={{ bg: '' }}
-                    _active={{ bg: '' }}
-                    zIndex={activeTab === 'liquidity' ? 1 : 0}
-                    onClick={() => handleTabClick('liquidity')}
-                    border={activeTab === 'swap' ? '2px solid #323232' : ''}>
-                    Provide Liquidity
-                </RoundedTabRight> */}
             </Flex>
 
             {/* Content */}
@@ -430,97 +384,102 @@ export const SwapUI = ({}) => {
                 borderRight={borderColor}>
                 {activeTab === 'swap' && (
                     <Flex w='90%' direction={'column'}>
-                        {/* BTC Input */}
-                        <Flex px='10px' bg='#2E1C0C' w='100%' h='78px' border='2px solid #78491F' borderRadius={'10px'}>
-                            <Flex direction={'column'}>
-                                <Text
-                                    color={colors.offWhite}
-                                    fontSize={'13px'}
-                                    mt='7px'
-                                    ml='3px'
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    You Send
-                                </Text>
-                                <Input
-                                    value={btcSwapAmount}
-                                    onChange={handleBtcChange}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='1px'
-                                    mr='-150px'
-                                    p='0px'
-                                    letterSpacing={'-6px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='38px'
-                                    placeholder='0.0'
-                                    _placeholder={{ color: colors.textGray }}
-                                />
+                        {/* Inputs */}
+                        <Flex w='100%' flexDir='column' position='relative'>
+                            {/* BTC Input */}
+                            <Flex px='10px' bg='#2E1C0C' w='100%' h='78px' border='2px solid #78491F' borderRadius={'10px'}>
+                                <Flex direction={'column'}>
+                                    <Text
+                                        color={colors.offWhite}
+                                        fontSize={'13px'}
+                                        mt='7px'
+                                        ml='3px'
+                                        letterSpacing={'-1px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        You Send
+                                    </Text>
+                                    <Input
+                                        value={btcSwapAmount}
+                                        onChange={handleBtcChange}
+                                        fontFamily={'Aux'}
+                                        border='none'
+                                        mt='1px'
+                                        mr='-150px'
+                                        p='0px'
+                                        letterSpacing={'-6px'}
+                                        color={colors.offWhite}
+                                        _active={{ border: 'none', boxShadow: 'none' }}
+                                        _focus={{ border: 'none', boxShadow: 'none' }}
+                                        _selected={{ border: 'none', boxShadow: 'none' }}
+                                        fontSize='38px'
+                                        placeholder='0.0'
+                                        _placeholder={{ color: colors.textGray }}
+                                    />
+                                </Flex>
+                                <Spacer />
+                                <BTCSVG />
                             </Flex>
-                            <Spacer />
-                            <BTCSVG />
-                        </Flex>
-                        {/* Switch Button */}
-                        <Flex
-                            w='30px'
-                            h='30px'
-                            borderRadius={'20%'}
-                            alignSelf={'center'}
-                            align={'center'}
-                            justify={'center'}
-                            cursor={'pointer'}
-                            _hover={{ bg: '#232323' }}
-                            onClick={() => setActiveTab('liquidity')}
-                            top='127px'
-                            position={'absolute'}
-                            bg='#161616'
-                            border='2px solid #323232'>
-                            <svg xmlns='http://www.w3.org/2000/svg' width='20px' height='20px' viewBox='0 0 20 20'>
-                                <path
-                                    fill='#909090'
-                                    fill-rule='evenodd'
-                                    d='M2.24 6.8a.75.75 0 0 0 1.06-.04l1.95-2.1v8.59a.75.75 0 0 0 1.5 0V4.66l1.95 2.1a.75.75 0 1 0 1.1-1.02l-3.25-3.5a.75.75 0 0 0-1.1 0L2.2 5.74a.75.75 0 0 0 .04 1.06m8 6.4a.75.75 0 0 0-.04 1.06l3.25 3.5a.75.75 0 0 0 1.1 0l3.25-3.5a.75.75 0 1 0-1.1-1.02l-1.95 2.1V6.75a.75.75 0 0 0-1.5 0v8.59l-1.95-2.1a.75.75 0 0 0-1.06-.04'
-                                    clip-rule='evenodd'
-                                />
-                            </svg>
-                        </Flex>
-                        {/* ETH Output */}
-                        <Flex mt='5px' px='10px' bg='#161A33' w='100%' h='78px' border='2px solid #303F9F' borderRadius={'10px'}>
-                            <Flex direction={'column'}>
-                                <Text
-                                    color={colors.offWhite}
-                                    fontSize={'13px'}
-                                    mt='7px'
-                                    ml='3px'
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    You Receive
-                                </Text>
-                                <Input
-                                    value={ethSwapAmount}
-                                    onChange={handleEthSwapChange}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='1px'
-                                    mr='-150px'
-                                    p='0px'
-                                    letterSpacing={'-6px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='38px'
-                                    placeholder='0.0'
-                                    _placeholder={{ color: colors.textGray }}
-                                />
+                            {/* Switch Button */}
+                            <Flex
+                                w='30px'
+                                h='30px'
+                                borderRadius={'20%'}
+                                alignSelf={'center'}
+                                align={'center'}
+                                justify={'center'}
+                                cursor={'pointer'}
+                                _hover={{ bg: '#232323' }}
+                                onClick={() => setActiveTab('liquidity')}
+                                position={'absolute'}
+                                bg='#161616'
+                                border='2px solid #323232'
+                                top='50%'
+                                left='50%'
+                                transform='translate(-50%, -50%)'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='20px' height='20px' viewBox='0 0 20 20'>
+                                    <path
+                                        fill='#909090'
+                                        fill-rule='evenodd'
+                                        d='M2.24 6.8a.75.75 0 0 0 1.06-.04l1.95-2.1v8.59a.75.75 0 0 0 1.5 0V4.66l1.95 2.1a.75.75 0 1 0 1.1-1.02l-3.25-3.5a.75.75 0 0 0-1.1 0L2.2 5.74a.75.75 0 0 0 .04 1.06m8 6.4a.75.75 0 0 0-.04 1.06l3.25 3.5a.75.75 0 0 0 1.1 0l3.25-3.5a.75.75 0 1 0-1.1-1.02l-1.95 2.1V6.75a.75.75 0 0 0-1.5 0v8.59l-1.95-2.1a.75.75 0 0 0-1.06-.04'
+                                        clip-rule='evenodd'
+                                    />
+                                </svg>
                             </Flex>
-                            <Spacer />
-                            <ETHSVG />
+                            {/* ETH Output */}
+                            <Flex mt='5px' px='10px' bg='#161A33' w='100%' h='78px' border='2px solid #303F9F' borderRadius={'10px'}>
+                                <Flex direction={'column'}>
+                                    <Text
+                                        color={colors.offWhite}
+                                        fontSize={'13px'}
+                                        mt='7px'
+                                        ml='3px'
+                                        letterSpacing={'-1px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        You Receive
+                                    </Text>
+                                    <Input
+                                        value={ethSwapAmount}
+                                        onChange={handleEthSwapChange}
+                                        fontFamily={'Aux'}
+                                        border='none'
+                                        mt='1px'
+                                        mr='-150px'
+                                        p='0px'
+                                        letterSpacing={'-6px'}
+                                        color={colors.offWhite}
+                                        _active={{ border: 'none', boxShadow: 'none' }}
+                                        _focus={{ border: 'none', boxShadow: 'none' }}
+                                        _selected={{ border: 'none', boxShadow: 'none' }}
+                                        fontSize='38px'
+                                        placeholder='0.0'
+                                        _placeholder={{ color: colors.textGray }}
+                                    />
+                                </Flex>
+                                <Spacer />
+                                <ETHSVG />
+                            </Flex>
                         </Flex>
                         {/* Rate/Liquidity Details */}
                         <Flex mt='9px'>
