@@ -12,6 +12,20 @@ import { useStore } from '../store';
 import { toastSuccess } from '../hooks/toast';
 import { BTCSVG } from '../components/SVGs';
 import { OpenGraph } from '../components/background/OpenGraph';
+
+const SortByFeesIcon = ({ sortLowestFee }: { sortLowestFee: boolean }) => {
+    const color = sortLowestFee ? 'red' : '#2CAD39';
+    const BAR_HEIGHT = '3px';
+
+    return (
+        <Flex gap='5px' w='24px' flexDir='column' mr='10px'>
+            <Flex w={sortLowestFee ? '100%' : '50%'} h={BAR_HEIGHT} borderRadius='10px' bg={color} transition='0.2s all ease-in-out' />
+            <Flex w={'75%'} h={BAR_HEIGHT} borderRadius='10px' bg={color} transition='0.2s all ease-in-out' />
+            <Flex w={sortLowestFee ? '50%' : '100%'} h={BAR_HEIGHT} borderRadius='10px' bg={color} transition='0.2s all ease-in-out' />
+        </Flex>
+    );
+};
+
 const Liquidity = () => {
     const { height, width } = useWindowSize();
     const isSmallScreen = width < 1200;
@@ -121,7 +135,7 @@ const Liquidity = () => {
                             </Flex>
                             <Flex
                                 ml='6px'
-                                w='240px'
+                                w='260px'
                                 borderRadius={'8px'}
                                 onClick={() => setSelectMultiple(!selectMultiple)}
                                 cursor={'pointer'}
@@ -158,7 +172,7 @@ const Liquidity = () => {
                             </Flex>
                             <Flex
                                 ml='6px'
-                                w='200px'
+                                w='250px'
                                 borderRadius={'8px'}
                                 onClick={() => setSortLowestFee(!sortLowestFee)}
                                 cursor={'pointer'}
@@ -166,6 +180,7 @@ const Liquidity = () => {
                                 h='100%'
                                 bg={sortLowestFee ? '#181D3D' : 'rgba(15, 15, 15, 0.8)'}
                                 align={'center'}
+                                justify='space-between'
                                 border={sortLowestFee ? '2px solid #445BCB' : '2px solid #282828'}>
                                 <Flex direction={'column'} ml='15px' mr='9px'>
                                     <Text
@@ -182,16 +197,17 @@ const Liquidity = () => {
                                         color={!sortLowestFee ? colors.offerWhite : colors.offWhite}
                                         fontSize={'13px'}
                                         mt='-2px'>
-                                        Lowest Fee
+                                        {sortLowestFee ? 'Lowest' : 'Highest'} Fee
                                     </Text>
                                 </Flex>
-                                <Flex mt='1px'>
+                                {/* <Flex mt='1px'>
                                     {sortLowestFee ? (
                                         <FaCheckSquare color='#829EEA' size={'16px'} />
                                     ) : (
                                         <MdOutlineCheckBoxOutlineBlank color={'#666'} size={'16px'} />
                                     )}
-                                </Flex>
+                                </Flex> */}
+                                <SortByFeesIcon sortLowestFee={!sortLowestFee} />
                             </Flex>
                         </Flex>
                         {/* ACTIVITY DATA */}
@@ -208,18 +224,12 @@ const Liquidity = () => {
                                         color={colors.textGray}
                                         boxShadow={'0px 10px 12px rgba(0, 0, 0, 0.4)'}>
                                         <Flex ml='33px' align='start' fontSize={'14px'} color={colors.textGray}>
-                                            {/* {
-      "timestamp": "1649990500",
-      "liquidity_provider": "0xf0178e462BE164ac1CB30935875A2c1D4610B788",
-      "lp_fee": "0.7",
-      "amount": "10.12",
-      "asset": "WBTC",
-      "status": "available"
-    }, */}
+                                            <Flex w='150px' textAlign='left'>
+                                                <Text>Status</Text>
+                                            </Flex>
                                             <Flex w='170px' textAlign='left'>
                                                 <Text>Timestamp</Text>
                                             </Flex>
-
                                             <Flex w='85px' textAlign='left'>
                                                 <Text>Asset</Text>
                                             </Flex>
@@ -232,7 +242,7 @@ const Liquidity = () => {
                                             <Flex w='180px' textAlign='left'>
                                                 <Text>Provider</Text>
                                             </Flex>
-                                            <Flex w='100px' textAlign='left'>
+                                            <Flex w='140px' textAlign='left'>
                                                 <Text>Swap Now</Text>
                                             </Flex>
                                         </Flex>
@@ -249,72 +259,115 @@ const Liquidity = () => {
                                             'scrollbar-width': 'none',
                                         }}
                                         overflow='scroll'>
-                                        {liquidityData.map((deposit, index) => (
-                                            <Flex
-                                                align='start'
-                                                py='10px'
-                                                w='100%'
-                                                textAlign={'left'}
-                                                fontSize={'14px'}
-                                                borderTop={index != 0 ? '1px solid #333' : 'none'}>
-                                                <Flex ml='33px' w='170px' textAlign='left'>
-                                                    <Text color={colors.offerWhite}>{timeAgo(deposit.timestamp)}</Text>
-                                                </Flex>
-
-                                                <Flex w='85px'>
-                                                    <BTCSVG />
-                                                </Flex>
+                                        {liquidityData.map((deposit, index) => {
+                                            const isAvailable = deposit.status == 'available';
+                                            return (
                                                 <Flex
-                                                    w='125px'
-                                                    color={colors.offerWhite}
-                                                    textAlign='left'
-                                                    cursor={'pointer'}
-                                                    userSelect={'none'}
-                                                    onClick={() => copyToClipboard(deposit.amount, 'Amount copied')}>
-                                                    <Tooltip
-                                                        fontFamily={'Aux'}
-                                                        letterSpacing={'-0.5px'}
-                                                        color={colors.textGray}
-                                                        bg={'#121212'}
-                                                        fontSize={'12px'}
-                                                        label='Copy full amount'
-                                                        aria-label='A tooltip'>
-                                                        {formatAmount(deposit.amount)}
-                                                    </Tooltip>
-                                                </Flex>
+                                                    align='start'
+                                                    py='10px'
+                                                    w='100%'
+                                                    textAlign={'left'}
+                                                    fontSize={'14px'}
+                                                    borderTop={index != 0 ? '1px solid #333' : 'none'}>
+                                                    <Flex ml='33px' w='150px' textAlign='left'>
+                                                        <Flex gap='4px' align='center'>
+                                                            <>
+                                                                {isAvailable ? (
+                                                                    <Flex w='10px' h='10px' borderRadius='10px' bg='green' />
+                                                                ) : (
+                                                                    <Flex w='10px' h='10px' borderRadius='10px' border='2px solid #959595' />
+                                                                )}
+                                                            </>
+                                                            <Text color={isAvailable ? '#238739' : '#959595'}>
+                                                                {isAvailable ? 'Available' : 'Reserved'}
+                                                            </Text>
+                                                        </Flex>
+                                                    </Flex>
+                                                    <Flex w='170px' textAlign='left'>
+                                                        <Text color={colors.offerWhite}>{timeAgo(deposit.timestamp)}</Text>
+                                                    </Flex>
 
-                                                <Flex
-                                                    w='85px'
-                                                    textAlign='left'
-                                                    cursor={'pointer'}
-                                                    userSelect={'none'}
-                                                    color={colors.textGray}
-                                                    onClick={() => copyToClipboard(deposit.lp_fee, 'LP Fee copied')}>
-                                                    <Tooltip
-                                                        fontFamily={'Aux'}
-                                                        letterSpacing={'-0.5px'}
+                                                    <Flex w='85px'>
+                                                        <BTCSVG />
+                                                    </Flex>
+                                                    <Flex
+                                                        w='125px'
+                                                        color={colors.offerWhite}
+                                                        textAlign='left'
+                                                        cursor={'pointer'}
+                                                        userSelect={'none'}
+                                                        onClick={() => copyToClipboard(deposit.amount, 'Amount copied')}>
+                                                        <Tooltip
+                                                            fontFamily={'Aux'}
+                                                            letterSpacing={'-0.5px'}
+                                                            color={colors.textGray}
+                                                            bg={'#121212'}
+                                                            fontSize={'12px'}
+                                                            label='Copy full amount'
+                                                            aria-label='A tooltip'>
+                                                            {formatAmount(deposit.amount)}
+                                                        </Tooltip>
+                                                    </Flex>
+
+                                                    <Flex
+                                                        w='85px'
+                                                        textAlign='left'
+                                                        cursor={'pointer'}
+                                                        userSelect={'none'}
                                                         color={colors.textGray}
-                                                        bg={'#121212'}
-                                                        fontSize={'12px'}
-                                                        label='Copy full amount'
-                                                        aria-label='A tooltip'>
-                                                        {parseFloat(deposit.lp_fee).toFixed(2) + '%'}
-                                                    </Tooltip>
+                                                        onClick={() => copyToClipboard(deposit.lp_fee, 'LP Fee copied')}>
+                                                        <Tooltip
+                                                            fontFamily={'Aux'}
+                                                            letterSpacing={'-0.5px'}
+                                                            color={colors.textGray}
+                                                            bg={'#121212'}
+                                                            fontSize={'12px'}
+                                                            label='Copy full amount'
+                                                            aria-label='A tooltip'>
+                                                            {parseFloat(deposit.lp_fee).toFixed(2) + '%'}
+                                                        </Tooltip>
+                                                    </Flex>
+                                                    <Flex w='180px' textAlign='left'>
+                                                        <Text color={colors.textGray}>{formatAddress(deposit.lp)}</Text>
+                                                    </Flex>
+                                                    <Flex w='140px' textAlign='left'>
+                                                        {isAvailable ? (
+                                                            <Flex
+                                                                bg='rgba(50, 66, 168, 0.3)'
+                                                                _hover={{ bg: 'rgba(50, 66, 168, 0.65)' }}
+                                                                w='100%'
+                                                                transition={'0.2s'}
+                                                                fontSize={'15px'}
+                                                                align={'center'}
+                                                                borderRadius={'10px'}
+                                                                cursor={'pointer'}
+                                                                justify={'center'}
+                                                                border={'3px solid #445BCB'}>
+                                                                <Text fontFamily='Nostromo' userSelect='none'>
+                                                                    Swap Now
+                                                                </Text>
+                                                            </Flex>
+                                                        ) : (
+                                                            <Flex
+                                                                bg='rgba(85, 85, 85, 0.30)'
+                                                                // _hover={{ bg: 'rgba(85, 85, 85, 0.65)' }}
+                                                                w='100%'
+                                                                transition={'0.2s'}
+                                                                fontSize={'15px'}
+                                                                align={'center'}
+                                                                borderRadius={'10px'}
+                                                                cursor={'pointer'}
+                                                                justify={'center'}
+                                                                border={'3px solid #666'}>
+                                                                <Text fontFamily='Nostromo' userSelect='none' color='#9F9F9F'>
+                                                                    Reserved
+                                                                </Text>
+                                                            </Flex>
+                                                        )}
+                                                    </Flex>
                                                 </Flex>
-                                                <Flex w='180px' textAlign='left'>
-                                                    <Text color={colors.textGray}>{formatAddress(deposit.lp)}</Text>
-                                                </Flex>
-                                                <Flex w='100px' textAlign='left'>
-                                                    {deposit.status == 'available' ? (
-                                                        <Flex border='2px solid #445BCB'>SWAP NOW</Flex>
-                                                    ) : (
-                                                        <Text userSelect={'none'} color={deposit.status == 'available' ? '#238739' : colors.textGray}>
-                                                            {deposit.status}
-                                                        </Text>
-                                                    )}
-                                                </Flex>
-                                            </Flex>
-                                        ))}
+                                            );
+                                        })}
                                     </Flex>
                                 </Flex>
                             </Flex>
