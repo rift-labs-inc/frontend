@@ -27,10 +27,11 @@ def calculate_mining_time(hash_rate_per_second, current_difficulty):
 
 # Your machine's hash rate (e.g., 100 TH/s, which is 100e12 H/s)
 
-hash_rate_per_second = 10e18
+hash_rate_per_second = 17700000000000000000
+
 
 # Current network difficulty (as of writing, ~23 trillion, but this number changes)
-current_difficulty = 83.13e12
+current_difficulty = 88.10e12
 
 # Calculate the estimated time
 time_seconds = calculate_mining_time(hash_rate_per_second, current_difficulty)
