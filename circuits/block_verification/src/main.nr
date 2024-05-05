@@ -1,77 +1,86 @@
+// TODO: handle retarget blocks properly 
 use dep::std;
 use dep::rift_lib::byte_lib;
 
 global TARGET_PERIOD: u32 = 2016; // blocks between difficulty retargets
 global TARGET_TIMESPAN: u32 = 1209600; // goal time of 10 minutes per block * 2016 blocks
+global INNER_BLOCK_COUNT: u64 = 125; // if this is zero, then there's one safe block
 
-struct EncodedProposedBlock {
-    block_hash_encoded: [Field; 2],
-    height: Field,
+
+struct Block {
+    height: u64,
     version: Field,
-    prev_block_hash_encoded: [Field; 2],
-    merkle_root_encoded: [Field; 2],
+    prev_block_hash: [u8; 32],
+    merkle_root: [u8; 32],
     timestamp: Field,
     bits: Field,
     nonce: Field,
-}
-
-struct ProposedBlock {
-    block_hash_encoded: [u8; 32],
-    height: Field,
-    version: Field,
-    prev_block_hash_encoded: [Field; 2],
-    merkle_root_encoded: [Field; 2],
-    timestamp: Field,
-    bits: Field,
-    nonce: Field,
-}
-
-
-struct RetargetBlock {
-    bits: Field,
-    height: Field,
-    timestamp: Field
 }
 
 fn main(
-    previous_block_hash_encoded: pub [Field; 2], //
-    previous_block_height: pub u32, // from contract
-    retarget_block: pub RetargetBlock, // from contract
-    proposed_block: pub ProposedBlock // from indexer
+    proposed_block_hash_encoded: pub [Field; 2],
+    safe_block_hash_encoded: pub [Field; 2],
+    retarget_block_hash_encoded: pub [Field; 2],
+    safe_block_height: pub Field,
+	block_height_delta: pub Field,
+    proposed_block: Block,
+    safe_block: Block,
+    retarget_block: Block,
+	inner_block_hashes_encoded: [[Field; 2]; INNER_BLOCK_COUNT],
+	inner_blocks: [Block; INNER_BLOCK_COUNT]
 ) {
+	assert(block_height_delta as u64 == INNER_BLOCK_COUNT);
     //------------------ MAIN CIRCUIT ------------------
-    let previous_block_hash = byte_lib::decode_field_encoded_hash(previous_block_hash_encoded);
-
-	let decoded_proposed_block = ProposedBlock {
-		block_hash_encoded: [Field; 2],
-		height: Field,
-		version: Field,
-		prev_block_hash_encoded: [Field; 2],
-		merkle_root_encoded: [Field; 2],
-		timestamp: Field,
-		bits: Field,
-		nonce: Field,
-	};
-
-	let proposed_block_hash = byte_lib::decode_field_encoded_hash(
-		proposed_block.block_hash_encoded
+    let proposed_block_hash = byte_lib::decode_field_encoded_hash(proposed_block_hash_encoded);
+    let safe_block_hash = byte_lib::decode_field_encoded_hash(safe_block_hash_encoded);
+	assert(safe_block_hash == build_block_hash(safe_block));
+    let retarget_block_hash = byte_lib::decode_field_encoded_hash(retarget_block_hash_encoded);
+	assert(retarget_block_hash == build_block_hash(retarget_block));
+	
+	let mut last_block_height = safe_block_height as u64;
+	let mut last_block = safe_block;
+	let mut last_block_hash = safe_block_hash;
+    for i in 0..INNER_BLOCK_COUNT {
+		let inner_proposed_block_hash = byte_lib::decode_field_encoded_hash(inner_block_hashes_encoded[i]);
+        verify_block(
+			inner_proposed_block_hash,
+			last_block_hash,
+			inner_blocks[i],
+			retarget_block,
+			last_block_height
+		);
+		last_block = inner_blocks[i];
+		last_block_height += 1;
+		last_block_hash = inner_proposed_block_hash;
+    }
+	verify_block(
+		proposed_block_hash,
+		last_block_hash,
+		proposed_block,
+		retarget_block,
+		last_block_height
 	);
-
+}
+fn verify_block(
+    proposed_block_hash: [u8; 32],
+	previous_block_hash: [u8; 32],
+    proposed_block: Block,
+    retarget_block: Block,
+    previous_block_height: u64
+)  {
     // [1] verify proposed target is equal to real target
     let proposed_target = bits_to_target(proposed_block.bits);
     let real_target = calculate_real_target(retarget_block, proposed_block);
     assert(proposed_target == real_target);
 
     // [2] verify the proposed block height is one greater than previous_block_height
-    assert(proposed_block.height as u32 == previous_block_height + 1);
+    assert(proposed_block.height as u64 == previous_block_height + 1);
 
     // [3] verify the proposed prev_block_hash matches real previous_block_hash
-    for i in 0..32 {
-        assert(proposed_block.prev_block_hash[i] == previous_block_hash[i]);
-    }
+    assert(proposed_block.prev_block_hash == previous_block_hash);
 
     // [4] verify PoW (double sha256(block_hash) <= target)
-    verify_PoW(proposed_block, real_target);
+    verify_PoW(proposed_block_hash, proposed_block, real_target);
 }
 
 fn bits_to_target(bits: Field) -> Field {
@@ -104,7 +113,7 @@ fn bits_to_target(bits: Field) -> Field {
     target
 }
 
-fn calculate_real_target(retarget_block: RetargetBlock, proposed_block: ProposedBlock) -> Field {
+fn calculate_real_target(retarget_block: Block, proposed_block: Block) -> Field {
     // [0] calculate the actual time between blocks
     let mut actual_time = proposed_block.timestamp as u64 - retarget_block.timestamp as u64;
     if actual_time < (TARGET_TIMESPAN / 4) as u64 {
@@ -137,50 +146,48 @@ fn calculate_real_target(retarget_block: RetargetBlock, proposed_block: Proposed
     }
 }
 
-fn verify_PoW(proposed_block: ProposedBlock, proposed_target: Field) {
-    println("\nVerifying PoW...");
-
+fn build_block_hash(block: Block) -> [u8; 32] {
     // [0] build serialized header from proposed block data
     let mut serialized_header_array: [u8; 80] = [0; 80];
     let mut i = 0;
 
     // version
-    let version_bytes = proposed_block.version.to_le_bytes(4);
+    let version_bytes = block.version.to_le_bytes(4);
     for j in 0..4 {
         serialized_header_array[i] = version_bytes[j];
         i += 1;
     }
 
     // previous block hash
-    let len = proposed_block.prev_block_hash.len();
+    let len = block.prev_block_hash.len();
     for j in 0..len {
-        serialized_header_array[i] = proposed_block.prev_block_hash[len - 1 - j];
+        serialized_header_array[i] = block.prev_block_hash[len - 1 - j];
         i += 1;
     }
 
     // merkle root
-    let len = proposed_block.merkle_root.len();
+    let len = block.merkle_root.len();
     for j in 0..len {
-        serialized_header_array[i] = proposed_block.merkle_root[len - 1 - j];
+        serialized_header_array[i] = block.merkle_root[len - 1 - j];
         i += 1;
     }
 
     // timestamp
-    let timestamp_bytes = proposed_block.timestamp.to_le_bytes(4);
+    let timestamp_bytes = block.timestamp.to_le_bytes(4);
     for j in 0..4 {
         serialized_header_array[i] = timestamp_bytes[j];
         i += 1;
     }
 
     // bits
-    let bits_bytes = proposed_block.bits.to_le_bytes(4);
+    let bits_bytes = block.bits.to_le_bytes(4);
     for j in 0..4 {
         serialized_header_array[i] = bits_bytes[j];
         i += 1;
     }
 
     // nonce
-    let nonce_bytes = proposed_block.nonce.to_le_bytes(4);
+    let nonce_bytes = block.nonce.to_le_bytes(4);
     for j in 0..4 {
         serialized_header_array[i] = nonce_bytes[j];
         i += 1;
@@ -191,15 +198,19 @@ fn verify_PoW(proposed_block: ProposedBlock, proposed_target: Field) {
     let second_hash = std::hash::sha256(first_hash);
 
     // convert block hash to little-endian
-    let mut block_hash: [Field; 32] = [0; 32];
+    let mut block_hash: [u8; 32] = [0; 32];
     for i in 0..32 {
-        block_hash[i] = (second_hash[len - 1 - i] as u8) as Field;
+        block_hash[i] = (second_hash[len - 1 - i] as u8);
     }
+    block_hash
+}
+
+fn verify_PoW(proposed_block_hash: [u8; 32], proposed_block: Block, proposed_target: Field) {
+    println("\nVerifying PoW...");
+    let calculated_block_hash = build_block_hash(proposed_block);
 
     // [2] verify proposed block hash matches calculated block hash
-    for i in 0..32 {
-        assert(block_hash[i] == proposed_block.block_hash[i] as Field);
-    }
+    assert(calculated_block_hash == proposed_block_hash);
 
     // convert proposed target to array of bytes
     let mut proposed_target_array: [u8; 32] = [0; 32];
@@ -208,15 +219,8 @@ fn verify_PoW(proposed_block: ProposedBlock, proposed_target: Field) {
         proposed_target_array[i] = proposed_target_bytes[i];
     }
 
-    // convert block hash to array of bytes
-    let mut block_hash_bytes: [u8; 32] = [0; 32];
-    for i in 0..32 {
-        block_hash_bytes[i] = block_hash[i] as u8;
-    }
-
     // [3] verify PoW if block hash <= proposed target
-    let PoW = larger_byte_array(block_hash_bytes, proposed_target_array);
-    assert(PoW != 1);
+    assert(is_block_hash_larger_than_target(proposed_block_hash, proposed_target_array));
     println("\nPoW verified!\n");
 }
 
@@ -236,3 +240,8 @@ fn larger_byte_array(a: [u8; 32], b: [u8; 32]) -> u32 {
     }
     result // a == b
 }
+
+fn is_block_hash_larger_than_target(proposed_block_hash: [u8; 32], target: [u8; 32]) -> bool {
+    1 != larger_byte_array(proposed_block_hash, target)
+}
+
