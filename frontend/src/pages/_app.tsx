@@ -6,6 +6,7 @@ import { useStore } from '../store';
 import { AppProps } from 'next/app';
 import '../styles/custom-fonts.css';
 import testData from '../testData.json';
+import assets from '../assets.json';
 import { MdClose } from 'react-icons/md';
 import colors from '../styles/colors';
 import toast, { ToastBar, Toaster } from 'react-hot-toast';
@@ -13,12 +14,14 @@ import toast, { ToastBar, Toaster } from 'react-hot-toast';
 function MyApp({ Component, pageProps }: AppProps) {
     const setActivityData = useStore((state) => state.setActivityData);
     const setLiquidityData = useStore((state) => state.setLiquidityData);
+    const setAvailableAssets = useStore((state) => state.setAvailableAssets);
 
     useEffect(() => {
         // TODO: populate all real data from smart contracts
         setActivityData(testData.activity);
         setLiquidityData(testData.liquidity);
-    }, [setActivityData]);
+        setAvailableAssets(assets.avalible_assets);
+    }, [setActivityData, setLiquidityData, setAvailableAssets]);
 
     return (
         <ChakraProvider theme={theme}>
