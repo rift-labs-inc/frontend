@@ -48,21 +48,7 @@ const Activity = () => {
                             letterSpacing={'2px'}
                             mt='-25px'>
                             <Text userSelect={'none'} fontSize='46px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
-                                Activi
-                            </Text>
-                            <Text
-                                userSelect={'none'}
-                                fontSize='46px'
-                                fontFamily={'Klein'}
-                                ml='-10px'
-                                fontWeight='bold'
-                                sx={{
-                                    WebkitTextFillColor: 'transparent',
-                                    backgroundClip: 'text',
-                                    WebkitBackgroundClip: 'text',
-                                }}
-                                as='h1'>
-                                ty
+                                Activity
                             </Text>
                         </Flex>
                         <Text
@@ -76,7 +62,7 @@ const Activity = () => {
                             fontWeight={'normal'}
                             textShadow={'0px 0px 4px rgba(0, 0, 0)'}
                             as='h2'>
-                            Manage the status of your current swaps and see previous bridge activity.
+                            Manage current swaps and previous bridge activity.
                         </Text>
                     </Flex>
                     {/* SEARCH & ACTIVITY DATA */}
