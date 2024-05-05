@@ -21,15 +21,15 @@ fn main(
     proposed_block_hash_encoded: pub [Field; 2],
     safe_block_hash_encoded: pub [Field; 2],
     retarget_block_hash_encoded: pub [Field; 2],
-    safe_block_height: pub Field,
-	block_height_delta: pub Field,
+    safe_block_height: pub u64,
+	block_height_delta: pub u64,
     proposed_block: Block,
     safe_block: Block,
     retarget_block: Block,
 	inner_block_hashes_encoded: [[Field; 2]; INNER_BLOCK_COUNT],
 	inner_blocks: [Block; INNER_BLOCK_COUNT]
 ) {
-	assert(block_height_delta as u64 == INNER_BLOCK_COUNT);
+	assert(block_height_delta as u64 <= INNER_BLOCK_COUNT);
     //------------------ MAIN CIRCUIT ------------------
     let proposed_block_hash = byte_lib::decode_field_encoded_hash(proposed_block_hash_encoded);
     let safe_block_hash = byte_lib::decode_field_encoded_hash(safe_block_hash_encoded);
@@ -41,17 +41,19 @@ fn main(
 	let mut last_block = safe_block;
 	let mut last_block_hash = safe_block_hash;
     for i in 0..INNER_BLOCK_COUNT {
-		let inner_proposed_block_hash = byte_lib::decode_field_encoded_hash(inner_block_hashes_encoded[i]);
-        verify_block(
-			inner_proposed_block_hash,
-			last_block_hash,
-			inner_blocks[i],
-			retarget_block,
-			last_block_height
-		);
-		last_block = inner_blocks[i];
-		last_block_height += 1;
-		last_block_hash = inner_proposed_block_hash;
+		if  i < block_height_delta {
+			let inner_proposed_block_hash = byte_lib::decode_field_encoded_hash(inner_block_hashes_encoded[i]);
+			verify_block(
+				inner_proposed_block_hash,
+				last_block_hash,
+				inner_blocks[i],
+				retarget_block,
+				last_block_height
+			);
+			last_block = inner_blocks[i];
+			last_block_height += 1;
+			last_block_hash = inner_proposed_block_hash;
+		}
     }
 	verify_block(
 		proposed_block_hash,
