@@ -315,7 +315,7 @@ export const SwapUI = ({}) => {
                                         _selected={{ border: 'none', boxShadow: 'none' }}
                                         fontSize='38px'
                                         placeholder='0.0'
-                                        _placeholder={{ color: colors.textGray }}
+                                        _placeholder={{ color: colors.darkerGray }}
                                     />
                                     <Text
                                         color={colors.textGray}
@@ -394,7 +394,7 @@ export const SwapUI = ({}) => {
                                         _selected={{ border: 'none', boxShadow: 'none' }}
                                         fontSize='38px'
                                         placeholder='0.0'
-                                        _placeholder={{ color: colors.textGray }}
+                                        _placeholder={{ color: colors.darkerGray }}
                                     />
                                     <Text
                                         color={colors.textGray}
