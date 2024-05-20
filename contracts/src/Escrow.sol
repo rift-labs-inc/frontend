@@ -20,9 +20,9 @@ error OrderComplete();
 
 contract Escrow {
     // TODO: Make this non-constant, recalculable targeting ~150 USD
-    uint64 public constant MIN_DEPOSIT = 0.002 * 10 ** 8;
-    uint64 public constant RESERVATION_LOCKUP = 12 hours;
-    uint16 public constant MAX_LIQUIDITY_PROVIDERS_PER_SWAP = 50;
+    uint64 public constant MIN_DEPOSIT = 0.002 * 10 ** 8;  // Min deposit: 0.002 BTC
+    uint64 public constant RESERVATION_LOCKUP = 12 hours;  // Lockup period: 12 hours
+    uint16 public constant MAX_LIQUIDITY_PROVIDERS_PER_SWAP = 50;  // Max output: 50 LPs
 
     struct LiquidityProvider {
         // Slot #1
