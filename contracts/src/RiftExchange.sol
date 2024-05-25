@@ -3,10 +3,12 @@ pragma solidity ^0.8.0;
 
 import { UltraVerifier as TransactionInclusionPlonkVerification } from './verifiers/TransactionInclusionPlonkVerification.sol';
 import { HeaderStorage } from './HeaderStorage.sol';
+import { console } from 'forge-std/console.sol';
 
 error DepositTooLow();
 error DepositTooHigh();
 error DepositFailed();
+error exchangeRateZero();
 error WithdrawFailed();
 error LpDoesntExist();
 error TooManyLps();
@@ -22,11 +24,14 @@ error OrderComplete();
 error ReservationFeeTooLow();
 error InvalidDepositIndex();
 error WithdrawalAmountError();
+error InvalidEthereumAddress();
+error InvalidBitcoinAddress();
+error InvalidProof();
 
 contract RiftExchange {
     uint64 public constant MIN_DEPOSIT = 0.05 ether;
     uint256 public constant MAX_DEPOSIT = 200_000 ether;
-    uint64 public constant RESERVATION_LOCKUP_PERIOD = 12 hours;
+    uint64 public constant RESERVATION_LOCKUP_PERIOD = 6 hours;
     uint16 public constant MAX_DEPOSIT_OUTPUTS = 50;
     uint256 public constant PROOF_GAS_COST = 420_000;
     uint256 public constant MIN_ORDER_GAS_MULTIPLIER = 2;
@@ -39,28 +44,28 @@ contract RiftExchange {
     uint256 public proverGasReward = 0.002 ether;
 
     struct LPBalanceChange {
-        uint32 depositIndex;
+        uint32 vaultID;
         uint64 value;
     }
 
     struct DepositVault {
         uint256 ethDepositAmount;
-        uint256[] ethReservedAmounts;
-        uint256 btcExchangeRate; // amount of btc per 1 eth
+        uint256 btcExchangeRate; // amount of btc per 1 eth, in sato
         string btcPayoutAddress;
-        bytes32 depositStateHash;
+        uint256[] ethReservedAmounts;
         uint256[] reservationTimestamps;
+        bytes32 depositStateHash; // keccak256 of all deposit state variables
     }
 
     struct SwapReservation {
         address[] lpAddresses;
-        uint32[] depositIds;
+        uint32[] vaultIDs;
         uint256[] amountsToReserve;
         address ethPayoutAddress;
         string btcSenderAddress;
         uint256 reservationTimestamp;
-        bytes32 nonce;
-        bytes32 depositsHash;
+        bytes32 nonce; // sent in bitcoin tx calldata from buyer -> lps to prevent replay attacks
+        bytes32 combinedDepositsStateHash; // keccak256 of all deposit state hashes in the swap
         bool completed;
     }
 
@@ -100,11 +105,14 @@ contract RiftExchange {
             revert DepositTooHigh();
         }
 
-        // TODO: [1] validate btcPayoutAddress && btcExchangeRate
+        // [1] validate btcPayoutAddress && btcExchangeRate
+        validateBtcAddress(btcPayoutAddress);
+        if (btcExchangeRate == 0) {
+            revert exchangeRateZero();
+        }
 
         // [2] add new liquidity deposit
         uint32[] storage overwriteableIndexes = emptyVaultIDs[msg.sender];
-        bytes32 depositStateHash = keccak256(abi.encode(btcPayoutAddress, depositAmount, btcExchangeRate)); // TODO: decide what to hash
 
         // overwrite an empty deposit slot if one exists
         if (overwriteableIndexes.length > 0) {
@@ -116,7 +124,16 @@ contract RiftExchange {
             oldDeposit.ethDepositAmount = uint64(depositAmount);
             oldDeposit.btcExchangeRate = btcExchangeRate;
             oldDeposit.btcPayoutAddress = btcPayoutAddress;
-            oldDeposit.depositStateHash = depositStateHash;
+
+            //serialize ethReservedAmounts and reservationTimestamps
+
+            uint256[] memory ethReservedAmounts = new uint256[](oldDeposit.ethReservedAmounts.length);
+            uint256[] memory reservationTimestamps = new uint256[](oldDeposit.reservationTimestamps.length);
+
+            for (uint i = 0; i < oldDeposit.ethReservedAmounts.length; i++) {
+                ethReservedAmounts[i] = oldDeposit.ethReservedAmounts[i];
+                reservationTimestamps[i] = oldDeposit.reservationTimestamps[i];
+            }
 
             // clear arrays
             delete oldDeposit.ethReservedAmounts;
@@ -130,11 +147,11 @@ contract RiftExchange {
             depositVaults[msg.sender].push(
                 DepositVault({
                     ethDepositAmount: uint64(depositAmount),
-                    ethReservedAmounts: new uint256[](0),
                     btcExchangeRate: btcExchangeRate,
                     btcPayoutAddress: btcPayoutAddress,
-                    depositStateHash: depositStateHash,
-                    reservationTimestamps: new uint256[](0)
+                    ethReservedAmounts: new uint256[](0),
+                    reservationTimestamps: new uint256[](0),
+                    depositStateHash: keccak256(abi.encode(btcPayoutAddress, depositAmount, btcExchangeRate, new uint256[](0), new uint256[](0)))
                 })
             );
         }
@@ -149,23 +166,33 @@ contract RiftExchange {
         require(newBtcExchangeRate > 0, 'Invalid new BTC exchange rate');
 
         // Check if there's any unreserved ETH to update
-        uint256 ethAvailableAmount = getAvailableLiquidity(msg.sender, depositVaultIndex);
+        uint256 ethAvailableAmount = getAvailableLiquidityInVault(msg.sender, depositVaultIndex);
         require(ethAvailableAmount > 0, 'No unreserved ETH available to update');
 
         // If there are no reservations for this vault, simply update the exchange rate
         if (deposit.ethReservedAmounts.length == 0) {
             deposit.btcExchangeRate = newBtcExchangeRate;
-            deposit.depositStateHash = keccak256(abi.encode(deposit));
+            deposit.depositStateHash = keccak256(
+                abi.encode(
+                    deposit.ethDepositAmount,
+                    newBtcExchangeRate,
+                    deposit.btcPayoutAddress,
+                    deposit.ethReservedAmounts,
+                    deposit.reservationTimestamps
+                )
+            );
         } else {
             // Create a new deposit for the unreserved amount with the new exchange rate
             deposit.ethDepositAmount -= ethAvailableAmount;
             DepositVault memory newDeposit = DepositVault({
                 ethDepositAmount: ethAvailableAmount,
-                ethReservedAmounts: new uint256[](0),
                 btcExchangeRate: newBtcExchangeRate,
                 btcPayoutAddress: deposit.btcPayoutAddress,
-                depositStateHash: keccak256(abi.encode(deposit.btcPayoutAddress, ethAvailableAmount, newBtcExchangeRate)),
-                reservationTimestamps: new uint256[](0)
+                ethReservedAmounts: new uint256[](0),
+                reservationTimestamps: new uint256[](0),
+                depositStateHash: keccak256(
+                    abi.encode(ethAvailableAmount, newBtcExchangeRate, deposit.btcPayoutAddress, new uint256[](0), new uint256[](0))
+                )
             });
 
             depositVaults[msg.sender].push(newDeposit);
@@ -182,7 +209,7 @@ contract RiftExchange {
         DepositVault storage deposit = depositVaults[msg.sender][depositVaultIndex];
 
         // [2] validate amount to withdraw
-        uint256 availableLiquidity = getAvailableLiquidity(msg.sender, depositVaultIndex);
+        uint256 availableLiquidity = getAvailableLiquidityInVault(msg.sender, depositVaultIndex);
         if (amountToWithdraw == 0 || amountToWithdraw > availableLiquidity) {
             revert WithdrawalAmountError();
         }
@@ -200,11 +227,14 @@ contract RiftExchange {
 
     function reserveLiquidity(
         address[] memory lpAddressesToReserve,
-        uint32[] memory lpdepositIds,
+        uint32[] memory lpVaultIDs,
         uint256[] memory amountsToReserve,
         address ethPayoutAddress,
-        string memory btcSenderAddress // TODO: validateAddresses([ethPayoutAddress], [btcSenderAddress])
+        string memory btcSenderAddress
     ) public payable {
+        // validate btcSenderAddress and ethPayoutAddress
+        validateBtcAddress(btcSenderAddress);
+
         // calculate total amount of ETH the user is attempting to reserve
         uint256 totalSwapAmount = 0;
         for (uint i = 0; i < amountsToReserve.length; i++) {
@@ -212,9 +242,15 @@ contract RiftExchange {
         }
 
         // verify reservation amount is greater than minimum swap size
+        // TODO: use max gas rather than tx.gasprice (avoid prover manipulation)
         if (totalSwapAmount < ((PROOF_GAS_COST * tx.gasprice) * MIN_ORDER_GAS_MULTIPLIER) + proverGasReward) {
             revert ReservationAmountTooLow();
         }
+
+        // TODO: send back the excess amount to the user
+
+        // array to hold the deposit state hashes
+        bytes32[] memory combinedDepositsStateHash = new bytes32[](lpAddressesToReserve.length);
 
         // validate reservation fee can be paid
         if (msg.value < (totalSwapAmount * (protocolFee / 10_000))) {
@@ -229,10 +265,13 @@ contract RiftExchange {
             // iterate over each liquidity deposit to reserve
             for (uint i = 0; i < lpAddressesToReserve.length; i++) {
                 // retrieve specific liquidity deposit
-                DepositVault storage deposit = depositVaults[lpAddressesToReserve[i]][lpdepositIds[i]];
+                DepositVault storage deposit = depositVaults[lpAddressesToReserve[i]][lpVaultIDs[i]];
+
+                // add deposit state hash to combinedDepositsStateHash
+                combinedDepositsStateHash[i] = deposit.depositStateHash;
 
                 // calculate amount available in deposit
-                uint256 ethAvailableToReserve = getAvailableLiquidity(lpAddressesToReserve[i], lpdepositIds[i]);
+                uint256 ethAvailableToReserve = getAvailableLiquidityInVault(lpAddressesToReserve[i], lpVaultIDs[i]);
 
                 // check if there is enough liquidity in this deposit to reserve
                 if (amountsToReserve[i] > ethAvailableToReserve) {
@@ -268,37 +307,63 @@ contract RiftExchange {
 
             // overwrite old swap order
             swapReservation.lpAddresses = lpAddressesToReserve;
-            swapReservation.depositIds = lpdepositIds;
+            swapReservation.vaultIDs = lpVaultIDs;
             swapReservation.amountsToReserve = amountsToReserve;
             swapReservation.ethPayoutAddress = ethPayoutAddress;
             swapReservation.btcSenderAddress = btcSenderAddress;
             swapReservation.reservationTimestamp = block.timestamp;
-            swapReservation.nonce = keccak256(abi.encode(ethPayoutAddress, btcSenderAddress, block.timestamp, swapReservation.lpAddresses.length)); // Assuming lpAddresses is still part of SwapReservation
-            swapReservation.depositsHash = keccak256(abi.encode(1)); // TODO: fix this
+            swapReservation.nonce = keccak256(abi.encode(ethPayoutAddress, btcSenderAddress, block.timestamp, block.chainid, completedSwaps.length));
+            swapReservation.combinedDepositsStateHash = keccak256(abi.encode(combinedDepositsStateHash));
             swapReservation.completed = false;
 
             // mark swap order as active by removing it from completed swaps
             completedSwaps.pop();
         }
-        // if there are no completed swaps to overwrite, allocate a new one new swap order
+        // if there are no completed swaps to overwrite, loop through swap reservations to find expired slots
         else {
-            swapReservations[ethPayoutAddress].push(
-                SwapReservation({
-                    lpAddresses: lpAddressesToReserve,
-                    depositIds: lpdepositIds,
-                    amountsToReserve: amountsToReserve,
-                    ethPayoutAddress: ethPayoutAddress,
-                    btcSenderAddress: btcSenderAddress,
-                    reservationTimestamp: block.timestamp,
-                    nonce: keccak256(abi.encode(ethPayoutAddress, btcSenderAddress, block.timestamp)), // TODO: decide what randomness generates this nonce
-                    depositsHash: keccak256(abi.encode(1)), // TODO: fix this
-                    completed: false
-                })
-            );
+            bool reservationOverwritten = false;
+            for (uint i = 0; i < swapReservations[ethPayoutAddress].length; i++) {
+                if (
+                    // check if reservation has expired
+                    block.timestamp - swapReservations[ethPayoutAddress][i].reservationTimestamp > RESERVATION_LOCKUP_PERIOD
+                ) {
+                    // overwrite expired reservation
+                    swapReservations[ethPayoutAddress][i] = SwapReservation({
+                        lpAddresses: lpAddressesToReserve,
+                        vaultIDs: lpVaultIDs,
+                        amountsToReserve: amountsToReserve,
+                        ethPayoutAddress: ethPayoutAddress,
+                        btcSenderAddress: btcSenderAddress,
+                        reservationTimestamp: block.timestamp,
+                        nonce: keccak256(abi.encode(ethPayoutAddress, btcSenderAddress, block.timestamp, block.chainid, completedSwaps.length)),
+                        combinedDepositsStateHash: keccak256(abi.encode(combinedDepositsStateHash)),
+                        completed: false
+                    });
+                    reservationOverwritten = true;
+                    break;
+                }
+            }
+
+            // push new reservation if no expired slots are available to overwrite
+            if (!reservationOverwritten) {
+                swapReservations[ethPayoutAddress].push(
+                    SwapReservation({
+                        lpAddresses: lpAddressesToReserve,
+                        vaultIDs: lpVaultIDs,
+                        amountsToReserve: amountsToReserve,
+                        ethPayoutAddress: ethPayoutAddress,
+                        btcSenderAddress: btcSenderAddress,
+                        reservationTimestamp: block.timestamp,
+                        nonce: keccak256(abi.encode(ethPayoutAddress, btcSenderAddress, block.timestamp, block.chainid, completedSwaps.length)),
+                        combinedDepositsStateHash: keccak256(abi.encode(combinedDepositsStateHash)),
+                        completed: false
+                    })
+                );
+            }
         }
     }
 
-    function unlockLiquidity(address ethPayoutAddress, uint256 swapReservationIndex, bytes memory proof, bytes32[] calldata publicInputs) public {
+    function unlockLiquidity(address ethPayoutAddress, uint256 swapReservationIndex, bytes memory proof, bytes32 publicInputsHash) public {
         // [0] retrieve swap order
         SwapReservation storage swapReservation = swapReservations[ethPayoutAddress][swapReservationIndex];
 
@@ -313,20 +378,18 @@ contract RiftExchange {
             totalSwapAmount += swapReservation.amountsToReserve[i];
         }
 
-        // [3] verify swap amount matches public input's ETH output amount
-        if (totalSwapAmount != uint256(publicInputs[0])) {
-            revert NotEnoughLiquidityConsumed();
-        }
-
-        // Get public inputs from the HeaderStorage contract
-
-        // uint256[] memory headerPublicInputs = HeaderStorageContract.getPublicInputs();
         // TODO: create publicInputs
+        // Get public inputs from the HeaderStorage contract
+        // uint256[] memory headerPublicInputs = HeaderStorageContract.getPublicInputs();
 
         // [x] verify proposed btc payment proof
-        bool verified = VerifierContract.verify(proof, publicInputs);
+        bytes32[] memory publicInputsHashArray = new bytes32[](1);
+        publicInputsHashArray[0] = publicInputsHash;
+        bool verified = VerifierContract.verify(proof, publicInputsHashArray);
 
-        if (verified) {
+        if (!verified) {
+            revert InvalidProof();
+        } else {
             // [x] mark swap order as completed
             swapReservation.completed = true;
 
@@ -334,13 +397,13 @@ contract RiftExchange {
             for (uint i = 0; i < swapReservation.lpAddresses.length; i++) {
                 // [x] retrieve deposit vault
                 address lpAddress = swapReservation.lpAddresses[i];
-                uint32 depositIndex = swapReservation.depositIds[i];
-                DepositVault storage deposit = depositVaults[lpAddress][depositIndex];
+                uint32 vaultID = swapReservation.vaultIDs[i];
+                DepositVault storage deposit = depositVaults[lpAddress][vaultID];
                 deposit.ethDepositAmount -= swapReservation.amountsToReserve[i];
 
                 // [x] check if deposit is empty
                 if (deposit.ethDepositAmount == 0) {
-                    emptyVaultIDs[lpAddress].push(depositIndex);
+                    emptyVaultIDs[lpAddress].push(vaultID);
                 }
             }
 
@@ -353,8 +416,6 @@ contract RiftExchange {
             // Release the remaining funds to the ETH payout address
             (success, ) = ethPayoutAddress.call{ value: totalSwapAmount - fees }('');
             require(success, 'ETH payout failed');
-        } else {
-            revert('Proof verification failed');
         }
     }
 
@@ -368,40 +429,49 @@ contract RiftExchange {
         return depositVaults[lpAddress].length;
     }
 
-    function getAmountReservedOnDeposit(address lpAddress, uint256 depositIndex) public view returns (uint256) {
+    function getAmountReservedInVault(address lpAddress, uint256 vaultID) public view returns (uint256) {
         // [0] validate deposit index
-        require(depositIndex < depositVaults[lpAddress].length, 'Invalid deposit index');
+        require(vaultID < depositVaults[lpAddress].length, 'Invalid deposit index');
 
         // [1] retrieve deposit
-        DepositVault storage deposit = depositVaults[lpAddress][depositIndex];
+        DepositVault storage vault = depositVaults[lpAddress][vaultID];
         uint256 totalReserved = 0;
 
         // [2] calculate total amount reserved
-        for (uint256 i = 0; i < deposit.ethReservedAmounts.length; i++) {
-            if (block.timestamp - deposit.reservationTimestamps[i] < RESERVATION_LOCKUP_PERIOD) {
-                totalReserved += deposit.ethReservedAmounts[i];
+        for (uint256 i = 0; i < vault.ethReservedAmounts.length; i++) {
+            if (block.timestamp - vault.reservationTimestamps[i] < RESERVATION_LOCKUP_PERIOD) {
+                totalReserved += vault.ethReservedAmounts[i];
             }
         }
 
         return totalReserved;
     }
 
+    function getAvailableLiquidityInVault(address lpAddress, uint vaultID) public view returns (uint256) {
+        DepositVault storage vault = depositVaults[lpAddress][vaultID];
+        return vault.ethDepositAmount - getAmountReservedInVault(lpAddress, vaultID);
+    }
+
+    function getReservation(address ethPayoutAddress, uint256 index) public view returns (SwapReservation memory) {
+        return swapReservations[ethPayoutAddress][index];
+    }
+
+    function getReservationLength(address ethPayoutAddress) public view returns (uint256) {
+        return swapReservations[ethPayoutAddress].length;
+    }
+
     //--------- HELPER FUNCTIONS ---------//
 
-    function getAvailableLiquidity(address lpAddress, uint depositIndex) public view returns (uint256) {
-        // [0] retrieve specific liquidity deposit
-        DepositVault storage deposit = depositVaults[lpAddress][depositIndex];
-
-        // [1] calculate total amount reserved
-        uint256 totalReserved = 0;
-        for (uint i = 0; i < deposit.ethReservedAmounts.length; i++) {
-            // ensure reservation is not expired
-            if (block.timestamp - deposit.reservationTimestamps[i] < RESERVATION_LOCKUP_PERIOD) {
-                totalReserved += deposit.ethReservedAmounts[i];
-            }
+    function validateBtcAddress(string memory btcAddress) public pure {
+        bytes memory addressBytes = bytes(btcAddress);
+        // revert if the address does not start with 'bc1q' or is not exactly 42 characters long
+        bool correctPrefix = (addressBytes.length > 3 &&
+            addressBytes[0] == 'b' &&
+            addressBytes[1] == 'c' &&
+            addressBytes[2] == '1' &&
+            addressBytes[3] == 'q');
+        if (addressBytes.length != 42 || !correctPrefix) {
+            revert InvalidBitcoinAddress();
         }
-
-        // [2] return available liquidity amount
-        return deposit.ethDepositAmount - totalReserved;
     }
 }
