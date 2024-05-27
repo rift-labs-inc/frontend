@@ -173,32 +173,59 @@ contract RiftExchangeTest is Test {
     }
 
     function testReservationOverwriting() public {
-        vm.deal(testAddress, 10 ether);
+        vm.deal(testAddress, 1000000 ether);
         vm.startPrank(testAddress);
 
-        uint256 depositAmount = 10 ether;
+        uint256 depositAmount = 100000 ether;
         riftExchange.depositLiquidity{ value: depositAmount }('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq', 50);
+        // console.log('AMOUNT DEPOSITED',s riftExchange.getDepositVault(testAddress, 0).ethDepositAmount);
         address[] memory lpAddresses = new address[](1);
         lpAddresses[0] = testAddress;
         uint32[] memory depositIds = new uint32[](1);
         depositIds[0] = 0;
         uint256[] memory amountsToReserve = new uint256[](1);
-        amountsToReserve[0] = 5 ether;
+        amountsToReserve[0] = 0.002 ether;
 
-        // Make reservation
-        riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
+        // // Make reservation
+        uint256 iterations = 2000;
+        for (uint i = 0; i < iterations; i++) {
+            riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
+        }
 
-        // make another reservation 4 hours later (should push new reservation)
+        // assert reservation count and total amount
+        // console.log('AMOUNT RESERVED', riftExchange.getAmountReservedInVault(testAddress, 0));
+        // console.log('AMOUNT AVAILABLE', riftExchange.getAmountAvailableInVault(testAddress, 0));
+        // console.log('TOTAL RESERVATIONS', riftExchange.getReservationLength(testAddress));
+        assertEq(riftExchange.getReservationLength(testAddress), iterations, 'Should have exactly one reservation entry');
+        assertEq(
+            riftExchange.getAmountReservedInVault(testAddress, 0),
+            iterations * 0.002 ether,
+            'Total amount reserved should match the reservation amount'
+        );
+
+        // // make another reservation 4 hours later (should push new reservation)
         vm.warp(block.timestamp + 4 hours);
         riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
-        assertEq(riftExchange.getReservationLength(testAddress), 2, 'Should have exactly two reservation entries');
+        // riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
+        // riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
+        // riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
 
-        // simulate reservation expiring
+        // assertEq(riftExchange.getReservationLength(testAddress), 2, 'Should have exactly two reservation entries');
+
+        // // simulate reservation expiring
         vm.warp(block.timestamp + 4 hours);
 
-        // make another reservation (should overwrite)
-        riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
-        assertEq(riftExchange.getReservationLength(testAddress), 2, 'Should still have only two reservation entries');
+        // // make another reservation (should overwrite)
+        // riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
+
+        // test random index gen
+        uint256 length = riftExchange.getReservationLength(testAddress);
+        for (uint i = 0; i < 10; i++) {
+            uint256 index = riftExchange.sampleRandomIndex(length, i);
+            // console.log('RANDOM INDEX', index);
+            assert(index < length);
+        }
+        // assertEq(riftExchange.getReservationLength(testAddress), 2, 'Should still have only two reservation entries');
         vm.stopPrank();
     }
 

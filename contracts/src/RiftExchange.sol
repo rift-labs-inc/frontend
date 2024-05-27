@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicensed
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.2;
 
 import { UltraVerifier as TransactionInclusionPlonkVerification } from './verifiers/TransactionInclusionPlonkVerification.sol';
 import { HeaderStorage } from './HeaderStorage.sol';
@@ -22,19 +22,24 @@ error InvalidLpIndex();
 error NoLiquidityToReserve();
 error OrderComplete();
 error ReservationFeeTooLow();
-error InvalidDepositIndex();
+error InvalidvaultIndex();
 error WithdrawalAmountError();
 error InvalidEthereumAddress();
 error InvalidBitcoinAddress();
 error InvalidProof();
+error InvaidSameExchangeRatevaultIndex();
+error InvalidVaultUpdate();
+error ReservationNotExpired();
+error InvalidUpdateWithActiveReservations();
 
 contract RiftExchange {
     uint64 public constant MIN_DEPOSIT = 0.05 ether;
-    uint256 public constant MAX_DEPOSIT = 200_000 ether;
-    uint64 public constant RESERVATION_LOCKUP_PERIOD = 6 hours;
+    uint256 public constant MAX_DEPOSIT = 200_000 ether; // TODO: find out what the real max deposit is
+    uint64 public constant RESERVATION_LOCKUP_PERIOD = 6 hours; // TODO: get longest 6 block confirmation time
     uint16 public constant MAX_DEPOSIT_OUTPUTS = 50;
     uint256 public constant PROOF_GAS_COST = 420_000;
     uint256 public constant MIN_ORDER_GAS_MULTIPLIER = 2;
+    uint8 public constant SAMPLING_SIZE = 10;
 
     // 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 - testing header storage contract address
     // 0x007ab3f410ceba1a111b100de2f76a8154b80126cda3f8cab47728d2f8cd0d6d - testing btc payout address
@@ -43,39 +48,43 @@ contract RiftExchange {
     uint8 public treasuryFee = 0;
     uint256 public proverGasReward = 0.002 ether;
 
-    struct LPBalanceChange {
-        uint32 vaultID;
+    struct LPunreservedBalanceChange {
+        uint32 vaultIndex;
         uint64 value;
     }
 
+    struct LiquidityProvider {
+        uint256[] depositVaultIndexes;
+        bytes32[] btcPayoutAddresses; // TODO: change to locking script
+    }
+
     struct DepositVault {
-        uint256 ethDepositAmount;
-        uint256 btcExchangeRate; // amount of btc per 1 eth, in sato
-        string btcPayoutAddress;
-        uint256[] ethReservedAmounts;
-        uint256[] reservationTimestamps;
-        bytes32 depositStateHash; // keccak256 of all deposit state variables
+        // true balance = unreservedBalance + expired, !completed SwapReservations
+        uint184 initialBalance;
+        int184 unreservedBalance;
+        uint64 btcExchangeRate; // amount of btc per 1 eth, in sats
+        uint8 btcPayoutAddressIndex;
+        uint256[] reservationIndexes;
     }
 
     struct SwapReservation {
-        address[] lpAddresses;
-        uint32[] vaultIDs;
-        uint256[] amountsToReserve;
+        bool completed;
         address ethPayoutAddress;
         string btcSenderAddress;
         uint256 reservationTimestamp;
         bytes32 nonce; // sent in bitcoin tx calldata from buyer -> lps to prevent replay attacks
-        bytes32 combinedDepositsStateHash; // keccak256 of all deposit state hashes in the swap
-        bool completed;
+        bytes32 reservationStateHash; // keccak256 of all deposit state hashes in the swap
+        address[] lpAddresses;
+        uint32[] vaultIndexes;
+        uint256[] amountsToReserve;
     }
 
-    // Liquidity Deposits
-    mapping(address => DepositVault[]) public depositVaults; // lpAddress => DepositVaults
-    mapping(address => uint32[]) public emptyVaultIDs; // lpAddress => id of completed deposits
+    // Liquidity Providers
+    mapping(address => LiquidityProvider) public liquidityProviders; // lpAddress => LiquidityProvider
 
     // Swap Reservations
-    mapping(address => SwapReservation[]) public swapReservations; // ethPayoutAddress => SwapReservation
-    SwapReservation[] public completedSwaps;
+    SwapReservation[] public swapReservations;
+    DepositVault[] public depositVaults;
 
     TransactionInclusionPlonkVerification public immutable VerifierContract;
     HeaderStorage public immutable HeaderStorageContract;
@@ -88,15 +97,14 @@ contract RiftExchange {
         HeaderStorageContract = HeaderStorage(headerStorageContractAddress);
     }
 
-    //--------- TESTING FUNCTIONS ---------//
-
-    function markDepositOverwritableTesting(uint32 index) public {
-        emptyVaultIDs[msg.sender].push(index);
-    }
-
     //--------- WRITE FUNCTIONS ---------//
-
-    function depositLiquidity(string memory btcPayoutAddress, uint64 btcExchangeRate) public payable {
+    // TODO: merge liquidity into existing vault if it has the same exchange rate
+    function depositLiquidity(
+        string memory btcPayoutAddress,
+        uint64 btcExchangeRate,
+        int256 vaultIndexToOverwrite,
+        uint256[] vaultIndexesWithSameExchangeRate
+    ) public payable {
         // [0] validate deposit amount
         uint256 depositAmount = msg.value;
         if (depositAmount <= MIN_DEPOSIT) {
@@ -105,265 +113,252 @@ contract RiftExchange {
             revert DepositTooHigh();
         }
 
-        // [1] validate btcPayoutAddress && btcExchangeRate
-        validateBtcAddress(btcPayoutAddress);
+        // [2] validate btc exchange rate
         if (btcExchangeRate == 0) {
             revert exchangeRateZero();
         }
 
-        // [2] add new liquidity deposit
-        uint32[] storage overwriteableIndexes = emptyVaultIDs[msg.sender];
+        // [3] create new liquidity provider if it doesn't exist
+        if (liquidityProviders[msg.sender].btcPayoutAddresses.length == 0) {
+            liquidityProviders[msg.sender] = LiquidityProvider({
+                depositVaultIndexes: new uint256[](0),
+                btcPayoutAddresses: btcPayoutAddress
+            });
+        }
 
-        // overwrite an empty deposit slot if one exists
-        if (overwriteableIndexes.length > 0) {
-            // overwrite last available slot
-            uint32 reuseIndex = overwriteableIndexes[overwriteableIndexes.length - 1];
-            DepositVault storage oldDeposit = depositVaults[msg.sender][reuseIndex];
+        // [4] merge liquidity into vaults with the same exchange rate
+        if (vaultIndexesWithSameExchangeRate.length > 0) {
+            for (uint i = 0; i < vaultIndexesWithSameExchangeRate.length; i++) {
+                uint256 vaultIndex = vaultIndexesWithSameExchangeRate[i];
+                DepositVault storage vault = depositVaults[msg.sender][vaultIndex];
+                if (vault.btcExchangeRate == btcExchangeRate && vault.btcPayoutAddress == btcPayoutAddress) {
+                    vault.unreservedBalance += depositAmount;
+                } else {
+                    revert InvaidSameExchangeRatevaultIndex();
+                }
+            }
+        }
+        // [5] overwrite empty deposit vault
+        else if (vaultIndexToOverwrite != -1) {
+            // [0] retrieve deposit vault to overwrite
+            DepositVault storage emptyVault = depositVaults[uint256(vaultIndexToOverwrite)];
 
-            // update old deposit slot
-            oldDeposit.ethDepositAmount = uint64(depositAmount);
-            oldDeposit.btcExchangeRate = btcExchangeRate;
-            oldDeposit.btcPayoutAddress = btcPayoutAddress;
-
-            //serialize ethReservedAmounts and reservationTimestamps
-
-            uint256[] memory ethReservedAmounts = new uint256[](oldDeposit.ethReservedAmounts.length);
-            uint256[] memory reservationTimestamps = new uint256[](oldDeposit.reservationTimestamps.length);
-
-            for (uint i = 0; i < oldDeposit.ethReservedAmounts.length; i++) {
-                ethReservedAmounts[i] = oldDeposit.ethReservedAmounts[i];
-                reservationTimestamps[i] = oldDeposit.reservationTimestamps[i];
+            // [1] validate vault is empty
+            if (emptyVault.unreservedBalance != 0) {
+                revert InvalidvaultIndex();
             }
 
-            // clear arrays
-            delete oldDeposit.ethReservedAmounts;
-            delete oldDeposit.reservationTimestamps;
-
-            // remove slot from available indexes
-            overwriteableIndexes.pop();
-
-            // if no empty slot exists, add a new deposit
-        } else {
+            // [2] overwrite empty vault with new deposit
+            emptyVault.unreservedBalance = uint256(depositAmount);
+            emptyVault.btcExchangeRate = btcExchangeRate;
+            emptyVault.btcPayoutAddressIndex = liquidityProviders[msg.sender].btcPayoutAddresses.length - 1;
+            emptyVault.reservationIndexes = new uint256[](0);
+        }
+        // [6] otherwise, create a new deposit vault if none are empty
+        else {
             depositVaults[msg.sender].push(
                 DepositVault({
-                    ethDepositAmount: uint64(depositAmount),
+                    unreservedBalance: uint256(depositAmount),
                     btcExchangeRate: btcExchangeRate,
-                    btcPayoutAddress: btcPayoutAddress,
-                    ethReservedAmounts: new uint256[](0),
-                    reservationTimestamps: new uint256[](0),
-                    depositStateHash: keccak256(abi.encode(btcPayoutAddress, depositAmount, btcExchangeRate, new uint256[](0), new uint256[](0)))
+                    btcPayoutAddressIndex: liquidityProviders[msg.sender].btcPayoutAddresses.length - 1,
+                    reservationIndexes: new uint256[](0)
                 })
             );
         }
+
+        // [7] add deposit vault index to liquidity provider
+        liquidityProviders[msg.sender].depositVaultIndexes.push(depositVaults[msg.sender].length - 1);
     }
 
-    function updateExchangeRate(uint256 depositVaultIndex, uint256 newBtcExchangeRate) public {
-        // retrieve deposit
-        DepositVault storage deposit = depositVaults[msg.sender][depositVaultIndex];
-
-        // validate this is an active vault
-        require(deposit.ethDepositAmount > 0, 'Invalid liquidity deposit index');
-        require(newBtcExchangeRate > 0, 'Invalid new BTC exchange rate');
-
-        // Check if there's any unreserved ETH to update
-        uint256 ethAvailableAmount = getAvailableLiquidityInVault(msg.sender, depositVaultIndex);
-        require(ethAvailableAmount > 0, 'No unreserved ETH available to update');
-
-        // If there are no reservations for this vault, simply update the exchange rate
-        if (deposit.ethReservedAmounts.length == 0) {
-            deposit.btcExchangeRate = newBtcExchangeRate;
-            deposit.depositStateHash = keccak256(
-                abi.encode(
-                    deposit.ethDepositAmount,
-                    newBtcExchangeRate,
-                    deposit.btcPayoutAddress,
-                    deposit.ethReservedAmounts,
-                    deposit.reservationTimestamps
-                )
-            );
-        } else {
-            // Create a new deposit for the unreserved amount with the new exchange rate
-            deposit.ethDepositAmount -= ethAvailableAmount;
-            DepositVault memory newDeposit = DepositVault({
-                ethDepositAmount: ethAvailableAmount,
-                btcExchangeRate: newBtcExchangeRate,
-                btcPayoutAddress: deposit.btcPayoutAddress,
-                ethReservedAmounts: new uint256[](0),
-                reservationTimestamps: new uint256[](0),
-                depositStateHash: keccak256(
-                    abi.encode(ethAvailableAmount, newBtcExchangeRate, deposit.btcPayoutAddress, new uint256[](0), new uint256[](0))
-                )
-            });
-
-            depositVaults[msg.sender].push(newDeposit);
+    function updateVaultExchangeRate(uint256 vaultIndex, uint256 newBtcExchangeRate, uint256[] expiredReservationIndexes) public {
+        // [0] validate new exchange rate
+        if (newBtcExchangeRate == 0) {
+            revert InvalidVaultUpdate();
         }
+
+        // [1] retrieve deposit vault
+        DepositVault storage vault = depositVaults[msg.sender][vaultIndex];
+
+        // [3] ensure no reservations are active by checking if actual available balance is equal to initial balance
+        if (getAvailableBalance(vault, expiredReservationIndexes) != vault.initialBalance) {
+            revert InvalidUpdateWithActiveReservations();
+        }
+
+        // [4] update exchange rate
+        vault.btcExchangeRate = newBtcExchangeRate;
     }
 
-    function withdrawLiquidity(uint256 depositVaultIndex, uint256 amountToWithdraw) public {
-        // [0] validate deposit index
-        if (depositVaultIndex >= depositVaults[msg.sender].length) {
-            revert InvalidDepositIndex();
+    function withdrawLiquidity(uint256 vaultIndex, uint256 amountToWithdraw, uint256[] expiredReservationIndexes) public {
+        // [0] validate vault index
+        if (vaultIndex >= depositVaults[msg.sender].length) {
+            revert InvalidvaultIndex();
         }
 
-        // [1] retrieve the deposit
-        DepositVault storage deposit = depositVaults[msg.sender][depositVaultIndex];
+        // [1] retrieve the vault
+        DepositVault storage vault = depositVaults[msg.sender][vaultIndex];
 
         // [2] validate amount to withdraw
-        uint256 availableLiquidity = getAvailableLiquidityInVault(msg.sender, depositVaultIndex);
-        if (amountToWithdraw == 0 || amountToWithdraw > availableLiquidity) {
+        if (amountToWithdraw == 0 || amountToWithdraw > getAvailableBalance(vault, expiredReservationIndexes)) {
             revert WithdrawalAmountError();
         }
 
         // [3] withdraw funds
-        deposit.ethDepositAmount -= amountToWithdraw;
+        vault.unreservedBalance -= amountToWithdraw;
         (bool success, ) = payable(msg.sender).call{ value: amountToWithdraw }('');
         require(success, 'Failed to transfer ETH');
-
-        // [4] mark deposit as completed if empty
-        if (deposit.ethDepositAmount == 0) {
-            emptyVaultIDs[msg.sender].push(uint32(depositVaultIndex));
-        }
     }
 
     function reserveLiquidity(
         address[] memory lpAddressesToReserve,
-        uint32[] memory lpVaultIDs,
+        uint32[] memory lpvaultIndexesToReserve,
         uint256[] memory amountsToReserve,
         address ethPayoutAddress,
-        string memory btcSenderAddress
+        string memory btcSenderAddress,
+        int256 vaultIndexToOverwrite
     ) public payable {
-        // validate btcSenderAddress and ethPayoutAddress
-        validateBtcAddress(btcSenderAddress);
-
-        // calculate total amount of ETH the user is attempting to reserve
+        // [1] calculate total amount of ETH the user is attempting to reserve
         uint256 totalSwapAmount = 0;
         for (uint i = 0; i < amountsToReserve.length; i++) {
             totalSwapAmount += amountsToReserve[i];
         }
 
-        // verify reservation amount is greater than minimum swap size
-        // TODO: use max gas rather than tx.gasprice (avoid prover manipulation)
+        // [3] verify reservation amount is greater than minimum swap size
+        // TODO: use base fee instead of gas price
+        // todo: get historical priority fee
         if (totalSwapAmount < ((PROOF_GAS_COST * tx.gasprice) * MIN_ORDER_GAS_MULTIPLIER) + proverGasReward) {
             revert ReservationAmountTooLow();
         }
 
-        // TODO: send back the excess amount to the user
-
-        // array to hold the deposit state hashes
-        bytes32[] memory combinedDepositsStateHash = new bytes32[](lpAddressesToReserve.length);
-
-        // validate reservation fee can be paid
-        if (msg.value < (totalSwapAmount * (protocolFee / 10_000))) {
+        // [4] transfer protocol fee to protocol address
+        uint protocol_fee_in_eth = (totalSwapAmount * (protocolFee / 10_000));
+        (bool success, ) = protocolAddress.call{ value: protocol_fee_in_eth }('');
+        if (!success) {
             revert ReservationFeeTooLow();
-        } else {
-            // send protocol fee to protocol address
-            (bool success, ) = protocolAddress.call{ value: msg.value }('');
-            if (!success) {
+        }
+
+        // [5] refund user if overpaid
+        if (msg.value - protocol_fee_in_eth > 0) {
+            (bool refundSuccess, ) = msg.sender.call{ value: msg.value - protocol_fee_in_eth }('');
+            if (!refundSuccess) {
                 revert DepositFailed();
-            }
-
-            // iterate over each liquidity deposit to reserve
-            for (uint i = 0; i < lpAddressesToReserve.length; i++) {
-                // retrieve specific liquidity deposit
-                DepositVault storage deposit = depositVaults[lpAddressesToReserve[i]][lpVaultIDs[i]];
-
-                // add deposit state hash to combinedDepositsStateHash
-                combinedDepositsStateHash[i] = deposit.depositStateHash;
-
-                // calculate amount available in deposit
-                uint256 ethAvailableToReserve = getAvailableLiquidityInVault(lpAddressesToReserve[i], lpVaultIDs[i]);
-
-                // check if there is enough liquidity in this deposit to reserve
-                if (amountsToReserve[i] > ethAvailableToReserve) {
-                    revert NotEnoughLiquidity();
-                }
-
-                // check for expired reservation slots to overwrite
-                int256 overwriteableReservationSlotIndex = -1;
-                for (int256 j = 0; j < int256(deposit.reservationTimestamps.length); j++) {
-                    if (block.timestamp - deposit.reservationTimestamps[uint256(j)] > RESERVATION_LOCKUP_PERIOD) {
-                        overwriteableReservationSlotIndex = j;
-                        break;
-                    }
-                }
-
-                // overwrite expired reservation slot in deposit if available
-                if (overwriteableReservationSlotIndex != -1) {
-                    deposit.ethReservedAmounts[uint256(overwriteableReservationSlotIndex)] = amountsToReserve[i];
-                    deposit.reservationTimestamps[uint256(overwriteableReservationSlotIndex)] = block.timestamp;
-                }
-                // if no expired slots available, push new reservation to deposit
-                else {
-                    deposit.ethReservedAmounts.push(amountsToReserve[i]);
-                    deposit.reservationTimestamps.push(block.timestamp);
-                }
             }
         }
 
-        // check if there are any completed swap orders that can be overwritten
-        if (completedSwaps.length > 0) {
+        // add reservations to deposit vaults
+        for (uint i = 0; i < lpvaultIndexesToReserve.length; i++) {
+            // retrieve deposit vault
+            address lpAddress = lpAddressesToReserve[i];
+            uint32 vaultIndex = lpvaultIndexesToReserve[i];
+            uint256 amountToReserve = amountsToReserve[i];
+            DepositVault storage vault = depositVaults[lpAddress][vaultIndex];
+
+            // ensure there is enough liquidity in this vault to reserve
+            uint256 ethAvailableToReserve = getAmountAvailableInVault(lpAddress, vaultIndex);
+            if (amountToReserve > ethAvailableToReserve) {
+                revert NotEnoughLiquidity();
+            }
+
+            // check for expired reservations to overwrite
+            bool expiredReservationFound = false;
+            uint256 vaultReservationsCount = vault.reservationTimestamps.length;
+
+            // if there are more than SAMPLING_SIZE reservations, sample for expired reservations
+            if (SAMPLING_SIZE < vaultReservationsCount) {
+                for (uint j = 0; j < SAMPLING_SIZE; j++) {
+                    uint256 randomIndex = sampleRandomIndex(vaultReservationsCount, j);
+                    // if reservation is expired, overwrite it
+                    if (block.timestamp - vault.reservationTimestamps[randomIndex] > RESERVATION_LOCKUP_PERIOD) {
+                        vault.ethReservedAmounts[randomIndex] = amountToReserve;
+                        vault.reservationTimestamps[randomIndex] = block.timestamp;
+                        expiredReservationFound = true;
+                        break;
+                    }
+                }
+            }
+            // if there are less than SAMPLING_SIZE reservations, check all for expiration
+            else {
+                for (uint j = 0; j < vaultReservationsCount; j++) {
+                    if (block.timestamp - vault.reservationTimestamps[uint256(j)] > RESERVATION_LOCKUP_PERIOD) {
+                        vault.ethReservedAmounts[j] = amountToReserve;
+                        vault.reservationTimestamps[j] = block.timestamp;
+                        expiredReservationFound = true;
+                        break;
+                    }
+                }
+            }
+
+            // if no expired reservations, add a new reservation to the vault
+            if (!expiredReservationFound) {
+                vault.ethReservedAmounts.push(amountToReserve);
+                vault.reservationTimestamps.push(block.timestamp);
+            }
+
+            // add deposit state hash to reservationStateHash
+        }
+
+        // create a new swap reservation
+        if (vaultIndexToOverwrite == -1) {
+            // if there are no completed swaps to overwrite push a new reservation
+            bytes32 nonce = keccak256(abi.encode(ethPayoutAddress, btcSenderAddress, block.timestamp, block.chainid));
+            swapReservations[ethPayoutAddress].push(
+                SwapReservation({
+                    lpAddresses: lpAddressesToReserve,
+                    vaultIndexes: lpvaultIndexesToReserve,
+                    amountsToReserve: amountsToReserve,
+                    ethPayoutAddress: ethPayoutAddress,
+                    btcSenderAddress: btcSenderAddress,
+                    reservationTimestamp: block.timestamp,
+                    nonce: nonce,
+                    reservationStateHash: keccak256(
+                        abi.encode(
+                            lpAddressesToReserve,
+                            lpvaultIndexesToReserve,
+                            amountsToReserve,
+                            ethPayoutAddress,
+                            btcSenderAddress,
+                            block.timestamp,
+                            nonce
+                        )
+                    ),
+                    completed: false
+                })
+            );
+
+            // push new reservation if no expired swaps can be found
+        } else {
             // retrieve swap order to overwrite
-            SwapReservation storage swapReservation = completedSwaps[completedSwaps.length - 1];
+            SwapReservation storage swapReservation = swapReservations[ethPayoutAddress][uint256(vaultIndexToOverwrite)];
 
             // overwrite old swap order
             swapReservation.lpAddresses = lpAddressesToReserve;
-            swapReservation.vaultIDs = lpVaultIDs;
+            swapReservation.vaultIndexes = lpvaultIndexesToReserve;
             swapReservation.amountsToReserve = amountsToReserve;
             swapReservation.ethPayoutAddress = ethPayoutAddress;
             swapReservation.btcSenderAddress = btcSenderAddress;
             swapReservation.reservationTimestamp = block.timestamp;
-            swapReservation.nonce = keccak256(abi.encode(ethPayoutAddress, btcSenderAddress, block.timestamp, block.chainid, completedSwaps.length));
-            swapReservation.combinedDepositsStateHash = keccak256(abi.encode(combinedDepositsStateHash));
+            swapReservation.nonce = keccak256(abi.encode(ethPayoutAddress, btcSenderAddress, block.timestamp, block.chainid));
+            swapReservation.reservationStateHash = keccak256(
+                abi.encode(
+                    swapReservation.lpAddresses,
+                    swapReservation.vaultIndexes,
+                    swapReservation.amountsToReserve,
+                    swapReservation.reservationStateHash,
+                    swapReservation.ethPayoutAddress,
+                    swapReservation.btcSenderAddress,
+                    swapReservation.reservationTimestamp,
+                    swapReservation.nonce
+                )
+            );
             swapReservation.completed = false;
-
-            // mark swap order as active by removing it from completed swaps
-            completedSwaps.pop();
-        }
-        // if there are no completed swaps to overwrite, loop through swap reservations to find expired slots
-        else {
-            bool reservationOverwritten = false;
-            for (uint i = 0; i < swapReservations[ethPayoutAddress].length; i++) {
-                if (
-                    // check if reservation has expired
-                    block.timestamp - swapReservations[ethPayoutAddress][i].reservationTimestamp > RESERVATION_LOCKUP_PERIOD
-                ) {
-                    // overwrite expired reservation
-                    swapReservations[ethPayoutAddress][i] = SwapReservation({
-                        lpAddresses: lpAddressesToReserve,
-                        vaultIDs: lpVaultIDs,
-                        amountsToReserve: amountsToReserve,
-                        ethPayoutAddress: ethPayoutAddress,
-                        btcSenderAddress: btcSenderAddress,
-                        reservationTimestamp: block.timestamp,
-                        nonce: keccak256(abi.encode(ethPayoutAddress, btcSenderAddress, block.timestamp, block.chainid, completedSwaps.length)),
-                        combinedDepositsStateHash: keccak256(abi.encode(combinedDepositsStateHash)),
-                        completed: false
-                    });
-                    reservationOverwritten = true;
-                    break;
-                }
-            }
-
-            // push new reservation if no expired slots are available to overwrite
-            if (!reservationOverwritten) {
-                swapReservations[ethPayoutAddress].push(
-                    SwapReservation({
-                        lpAddresses: lpAddressesToReserve,
-                        vaultIDs: lpVaultIDs,
-                        amountsToReserve: amountsToReserve,
-                        ethPayoutAddress: ethPayoutAddress,
-                        btcSenderAddress: btcSenderAddress,
-                        reservationTimestamp: block.timestamp,
-                        nonce: keccak256(abi.encode(ethPayoutAddress, btcSenderAddress, block.timestamp, block.chainid, completedSwaps.length)),
-                        combinedDepositsStateHash: keccak256(abi.encode(combinedDepositsStateHash)),
-                        completed: false
-                    })
-                );
-            }
         }
     }
 
-    function unlockLiquidity(address ethPayoutAddress, uint256 swapReservationIndex, bytes memory proof, bytes32 publicInputsHash) public {
+    function unlockLiquidity(
+        address ethPayoutAddress,
+        uint256 swapReservationIndex,
+        bytes memory proof,
+        bytes32 publicInputsHash
+    ) public {
         // [0] retrieve swap order
         SwapReservation storage swapReservation = swapReservations[ethPayoutAddress][swapReservationIndex];
 
@@ -397,14 +392,9 @@ contract RiftExchange {
             for (uint i = 0; i < swapReservation.lpAddresses.length; i++) {
                 // [x] retrieve deposit vault
                 address lpAddress = swapReservation.lpAddresses[i];
-                uint32 vaultID = swapReservation.vaultIDs[i];
-                DepositVault storage deposit = depositVaults[lpAddress][vaultID];
-                deposit.ethDepositAmount -= swapReservation.amountsToReserve[i];
-
-                // [x] check if deposit is empty
-                if (deposit.ethDepositAmount == 0) {
-                    emptyVaultIDs[lpAddress].push(vaultID);
-                }
+                uint32 vaultIndex = swapReservation.vaultIndexes[i];
+                DepositVault storage deposit = depositVaults[lpAddress][vaultIndex];
+                deposit.unreservedBalance -= swapReservation.amountsToReserve[i];
             }
 
             // Refund the proving cost + proving reward to the prover
@@ -429,29 +419,6 @@ contract RiftExchange {
         return depositVaults[lpAddress].length;
     }
 
-    function getAmountReservedInVault(address lpAddress, uint256 vaultID) public view returns (uint256) {
-        // [0] validate deposit index
-        require(vaultID < depositVaults[lpAddress].length, 'Invalid deposit index');
-
-        // [1] retrieve deposit
-        DepositVault storage vault = depositVaults[lpAddress][vaultID];
-        uint256 totalReserved = 0;
-
-        // [2] calculate total amount reserved
-        for (uint256 i = 0; i < vault.ethReservedAmounts.length; i++) {
-            if (block.timestamp - vault.reservationTimestamps[i] < RESERVATION_LOCKUP_PERIOD) {
-                totalReserved += vault.ethReservedAmounts[i];
-            }
-        }
-
-        return totalReserved;
-    }
-
-    function getAvailableLiquidityInVault(address lpAddress, uint vaultID) public view returns (uint256) {
-        DepositVault storage vault = depositVaults[lpAddress][vaultID];
-        return vault.ethDepositAmount - getAmountReservedInVault(lpAddress, vaultID);
-    }
-
     function getReservation(address ethPayoutAddress, uint256 index) public view returns (SwapReservation memory) {
         return swapReservations[ethPayoutAddress][index];
     }
@@ -460,18 +427,21 @@ contract RiftExchange {
         return swapReservations[ethPayoutAddress].length;
     }
 
-    //--------- HELPER FUNCTIONS ---------//
+    //--------- INTERNAL FUNCTIONS ---------//
 
-    function validateBtcAddress(string memory btcAddress) public pure {
-        bytes memory addressBytes = bytes(btcAddress);
-        // revert if the address does not start with 'bc1q' or is not exactly 42 characters long
-        bool correctPrefix = (addressBytes.length > 3 &&
-            addressBytes[0] == 'b' &&
-            addressBytes[1] == 'c' &&
-            addressBytes[2] == '1' &&
-            addressBytes[3] == 'q');
-        if (addressBytes.length != 42 || !correctPrefix) {
-            revert InvalidBitcoinAddress();
+    // unreserved balance + expired reservations
+    function getAvailableBalance(
+        DepositVault storage vault,
+        uint256[] expiredReservationIndexes
+    ) internal view returns (uint256) {
+        uint256 availableBalance = vault.unreservedBalance;
+        for (uint i = 0; i < expiredReservationIndexes.length; i++) {
+            if (block.timestamp - vault.reservationTimestamps[expiredReservationIndexes[i]] < RESERVATION_LOCKUP_PERIOD) {
+                revert ReservationNotExpired();
+            }
+            uint256 reservationAmount = vault.ethReservedAmounts[expiredReservationIndexes[i]];
+            availableBalance += reservationAmount;
         }
+        return availableBalance;
     }
 }
