@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: Unlicensed
 pragma solidity =0.8.25;
 
-import {HeaderLib} from "./HeaderLib.sol";
-import {UltraVerifier as HeaderStoragePlonkVerifier} from "./verifiers/HeaderStoragePlonkVerification.sol";
-import "forge-std/console.sol";
+import { HeaderLib } from './HeaderLib.sol';
+import { UltraVerifier as HeaderStoragePlonkVerifier } from './verifiers/HeaderStoragePlonkVerification.sol';
+import 'forge-std/console.sol';
 
-contract HeaderStorage {
-    error InvalidTarget(uint256 provided, uint256 expected);
-    error BlockDoesntExist(uint256 height);
-    error InvalidBlockList();
-    error NotLongestChain();
-    error ProofVerificationFailed();
-    error BlockIsNotRetarget(uint256 invalid_height);
+error InvalidTarget(uint256 provided, uint256 expected);
+error BlockDoesntExist(uint256 height);
+error InvalidBlockList();
+error NotLongestChain();
+error ProofVerificationFailed();
+error BlockIsNotRetarget(uint256 invalid_height);
 
+abstract contract HeaderStorage {
     HeaderStoragePlonkVerifier public verifier;
 
     // height => block
@@ -133,9 +133,7 @@ contract HeaderStorage {
     function setBlock(HeaderLib.ProposedBlock memory data) internal {
         // validate block data before setting
         HeaderLib.Block memory last_block = blockchain[data._current_height];
-        HeaderLib.Block memory retarget_block = blockchain[
-            data._current_height - (data._current_height % TARGET_PERIOD)
-        ];
+        HeaderLib.Block memory retarget_block = blockchain[data._current_height - (data._current_height % TARGET_PERIOD)];
 
         // reverts on proof failure
         verifier.verify(
@@ -145,8 +143,7 @@ contract HeaderStorage {
                     previous_block_hash: last_block.block_hash,
                     last_block_height: data._current_height,
                     retarget_block_bits: retarget_block.bits,
-                    retarget_block_height: data._current_height -
-                        (data._current_height % TARGET_PERIOD),
+                    retarget_block_height: data._current_height - (data._current_height % TARGET_PERIOD),
                     retarget_block_timestamp: retarget_block.timestamp,
                     proposed_block_hash: data._block_hash,
                     proposed_block_height: data._current_height + 1,
@@ -173,25 +170,16 @@ contract HeaderStorage {
     }
 
     function assertSafeHeight(uint256 height) internal view {
-        if (
-            (height != first_block) &&
-            (height > current_height ||
-                height < btc_checkpoint_height ||
-                height > current_height - SAFE_BLOCKS)
-        ) {
+        if ((height != first_block) && (height > current_height || height < btc_checkpoint_height || height > current_height - SAFE_BLOCKS)) {
             revert BlockDoesntExist(height);
         }
     }
 
-    function getBlockUnsafe(
-        uint256 height
-    ) public view returns (HeaderLib.Block memory) {
+    function getBlockUnsafe(uint256 height) public view returns (HeaderLib.Block memory) {
         return blockchain[height];
     }
 
-    function getBlockSafe(
-        uint256 height
-    ) public view returns (HeaderLib.Block memory) {
+    function getBlockSafe(uint256 height) public view returns (HeaderLib.Block memory) {
         assertSafeHeight(height);
         return blockchain[height];
     }

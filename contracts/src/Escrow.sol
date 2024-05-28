@@ -18,7 +18,7 @@ error InvalidLpIndex();
 error NoLiquidityToReserve();
 error OrderComplete();
 
-contract Escrow {
+contract Escrow is BlockStorageContract {
     // TODO: Make this non-constant, recalculable targeting ~150 USD
     uint64 public constant MIN_DEPOSIT = 0.002 * 10 ** 8;
     uint64 public constant RESERVATION_LOCKUP = 12 hours;
@@ -285,7 +285,7 @@ contract Escrow {
         */
     function proposeTransactionProof(
         uint256 orderId,
-        uint256 TXNBlockHeight,
+        uint256 txnBlockHeight,
         LPBalanceChange[] memory updatedBalances,
         uint256 swapOutput,
         bytes calldata paymentProof
