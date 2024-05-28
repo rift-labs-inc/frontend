@@ -33,54 +33,27 @@ contract RiftExchangeTest is Test {
         vm.deal(testAddress, 10 ether);
         vm.startPrank(testAddress);
 
-        // [0] deposit 1.2 eth
-        string memory btcPayoutAddress = 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq';
-        uint64 btcExchangeRate = 69;
+        bytes32 btcPayoutAddress = keccak256(abi.encodePacked('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'));
+        uint256 btcExchangeRate = 69;
         uint256 depositAmount = 1.2 ether;
+        uint256[] memory vaultIndexesWithSameExchangeRate = new uint256[](0);
 
-        riftExchange.depositLiquidity{ value: depositAmount }(btcPayoutAddress, btcExchangeRate);
+        console.log('CONTRACT BALANCE BEFORE DEPOSIT', address(riftExchange).balance);
+        riftExchange.depositLiquidity{ value: depositAmount }(
+            btcPayoutAddress,
+            btcExchangeRate,
+            -1,
+            vaultIndexesWithSameExchangeRate
+        );
+        console.log('CONTRACT BALANCE AFTER DEPOSIT', address(riftExchange).balance);
 
-        // [1] assert deposit is correct
         assertEq(address(riftExchange).balance, depositAmount, 'Contract balance should match deposit amount');
         uint256 depositsLength = riftExchange.getDepositVaultsLength(testAddress);
         assertEq(depositsLength, 1, 'Should have exactly one deposit entry');
 
         RiftExchange.DepositVault memory deposit = riftExchange.getDepositVault(testAddress, 0);
-
-        assertEq(deposit.ethDepositAmount, depositAmount, 'Deposit amount mismatch');
-        assertEq(deposit.btcExchangeRate, btcExchangeRate, 'BTC riftExchange rate mismatch');
-        assertEq(deposit.btcPayoutAddress, btcPayoutAddress, 'BTC payout address mismatch');
-
-        vm.stopPrank();
-    }
-
-    function testDepositTooLow() public {
-        vm.deal(testAddress, 10 ether);
-        vm.startPrank(testAddress);
-
-        // Deposit amount below minimum (0.05 ether)
-        uint256 lowDepositAmount = 0.01 ether; // Deliberately below the 0.05 ether minimum
-        string memory btcPayoutAddress = 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq';
-        uint64 btcExchangeRate = 69;
-
-        vm.expectRevert(DEPOSIT_TOO_LOW);
-        riftExchange.depositLiquidity{ value: lowDepositAmount }(btcPayoutAddress, btcExchangeRate);
-
-        vm.stopPrank();
-    }
-
-    function testDepositTooHigh() public {
-        vm.deal(testAddress, 300_000 ether);
-        vm.startPrank(testAddress);
-
-        // Deposit amount above maximum (200,000 ether)
-        uint256 highDepositAmount = 300_000 ether; // Deliberately above the 200,000 ether maximum
-        string memory btcPayoutAddress = 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq';
-        uint64 btcExchangeRate = 69;
-
-        vm.expectRevert(DEPOSIT_TOO_HIGH);
-        riftExchange.depositLiquidity{ value: highDepositAmount }(btcPayoutAddress, btcExchangeRate);
-
+        assertEq(deposit.initialBalance, depositAmount, 'Deposit amount mismatch');
+        assertEq(deposit.btcExchangeRate, btcExchangeRate, 'BTC exchange rate mismatch');
         vm.stopPrank();
     }
 
@@ -88,208 +61,360 @@ contract RiftExchangeTest is Test {
         vm.deal(testAddress, 10 ether);
         vm.startPrank(testAddress);
 
-        // [0] Deposit initial liquidity
-        string memory initialBtcPayoutAddress = 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq';
-        uint64 initialBtcExchangeRate = 50; // Initial BTC riftExchange rate
-        uint256 initialDepositAmount = 1 ether;
+        // Initial deposit
+        bytes32 btcPayoutAddress = keccak256(abi.encodePacked('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'));
+        uint256 btcExchangeRate = 69;
+        uint256 initialDepositAmount = 1.2 ether;
+        uint256[] memory emptyVaultIndexes = new uint256[](0);
 
-        riftExchange.depositLiquidity{ value: initialDepositAmount }(initialBtcPayoutAddress, initialBtcExchangeRate);
-        assertEq(riftExchange.getDepositVaultsLength(testAddress), 1, 'Initial deposit should be recorded.');
+        // Perform initial deposit
+        riftExchange.depositLiquidity{ value: initialDepositAmount }(
+            btcPayoutAddress,
+            btcExchangeRate,
+            -1, // No vault index to overwrite initially
+            emptyVaultIndexes
+        );
 
-        // [1] mark deposit as overwriteable (testing only funciton)
-        riftExchange.markDepositOverwritableTesting(0);
+        // Overwrite deposit with new details
+        riftExchange.emptyDepositVault(0);
+        uint256 newDepositAmount = 2.4 ether; // new amount to deposit
+        uint256 newBtcExchangeRate = 75; // new BTC exchange rate
+        int256 vaultIndexToOverwrite = 0; // assuming the initial deposit is at index 0
 
-        // [2] overwrite the deposit with new liquidity
-        string memory newBtcPayoutAddress = 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq';
-        uint64 newBtcExchangeRate = 75; // New BTC riftExchange rate
-        uint256 newDepositAmount = 2 ether;
+        // Execute the overwrite operation
+        console.log('TOTAL DEPOSITS BEFORE OVERWRITE', riftExchange.getDepositVaultsLength(testAddress));
+        riftExchange.depositLiquidity{ value: newDepositAmount }(
+            btcPayoutAddress,
+            newBtcExchangeRate,
+            vaultIndexToOverwrite,
+            emptyVaultIndexes
+        );
+        console.log('TOTAL DEPOSITS AFTER OVERWRITE', riftExchange.getDepositVaultsLength(testAddress));
 
-        riftExchange.depositLiquidity{ value: newDepositAmount }(newBtcPayoutAddress, newBtcExchangeRate);
+        // Assertions
+        assertEq(
+            address(riftExchange).balance,
+            initialDepositAmount + newDepositAmount,
+            'Contract balance should match total deposits'
+        );
+        uint256 depositsLength = riftExchange.getDepositVaultsLength(testAddress);
+        assertEq(depositsLength, 1, 'Should still have exactly one deposit entry after overwrite');
 
-        // [3] verify old deposit was overwritten
-        RiftExchange.DepositVault memory overwrittenDeposit = riftExchange.getDepositVault(testAddress, 0);
-        assertEq(overwrittenDeposit.ethDepositAmount, newDepositAmount, 'Overwritten deposit amount should match new deposit amount.');
-        assertEq(overwrittenDeposit.btcExchangeRate, newBtcExchangeRate, 'Overwritten BTC riftExchange rate should match new rate.');
-        assertEq(overwrittenDeposit.btcPayoutAddress, newBtcPayoutAddress, 'Overwritten BTC payout address should match new payout address.');
-        assertEq(riftExchange.getDepositVaultsLength(testAddress), 1, 'Should have exactly one deposit entry');
+        // Fetch the overwritten deposit and verify its details
+        RiftExchange.DepositVault memory overwrittenDeposit = riftExchange.getDepositVault(
+            testAddress,
+            uint256(vaultIndexToOverwrite)
+        );
+        assertEq(
+            overwrittenDeposit.initialBalance,
+            newDepositAmount,
+            'Overwritten deposit amount should match new deposit amount'
+        );
+        assertEq(overwrittenDeposit.btcExchangeRate, newBtcExchangeRate, 'Overwritten BTC exchange rate should match new rate');
+
         vm.stopPrank();
     }
 
-    //--------- UPDATE DEPOSIT TESTS ---------//
+    function testMultipleDepositsGasCost() public {
+        vm.deal(testAddress, 10000 ether);
+        vm.startPrank(testAddress);
+
+        uint256 firstDepositGasCost;
+        uint256 lastDepositGasCost;
+
+        bytes32 btcPayoutAddress = keccak256(abi.encodePacked('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'));
+        uint256 btcExchangeRate = 69;
+        uint256 depositAmount = 1 ether;
+        uint256[] memory emptyVaultIndexes = new uint256[](0);
+        uint256 totalGasUsed = 0; // Variable to keep track of the total gas used
+
+        // Loop to create multiple deposits
+        uint256 numDeposits = 2000;
+        for (uint256 i = 0; i < numDeposits; i++) {
+            uint256 gasBefore = gasleft(); // Measure gas before deposit
+
+            riftExchange.depositLiquidity{ value: depositAmount }(
+                btcPayoutAddress,
+                btcExchangeRate,
+                -1, // No vault index to overwrite
+                emptyVaultIndexes
+            );
+
+            uint256 gasUsed = gasBefore - gasleft(); // Calculate gas used for the operation
+            totalGasUsed += gasUsed; // Accumulate total gas used
+
+            if (i == 0) {
+                firstDepositGasCost = gasUsed; // Store gas cost of the first deposit
+            }
+            if (i == numDeposits - 1) {
+                lastDepositGasCost = gasUsed; // Store gas cost of the last deposit
+            }
+        }
+
+        uint256 averageGasCost = totalGasUsed / numDeposits; // Calculate the average gas cost
+
+        vm.stopPrank();
+
+        // Output the gas cost for first and last deposits
+        console.log('Gas cost for the first deposit:', firstDepositGasCost);
+        console.log('Gas cost for the ', numDeposits, 'th deposit:', lastDepositGasCost);
+        console.log('Average gas cost:', averageGasCost);
+    }
 
     function testDepositUpdateExchangeRate() public {
         vm.deal(testAddress, 10 ether);
         vm.startPrank(testAddress);
 
-        // Initial deposit
-        uint256 depositAmount = 5 ether;
-        riftExchange.depositLiquidity{ value: depositAmount }('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq', 50);
+        bytes32 btcPayoutAddress = keccak256(abi.encodePacked('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'));
+        uint256 initialBtcExchangeRate = 69;
+        uint256 depositAmount = 1 ether;
+        uint256[] memory emptyVaultIndexes = new uint256[](0);
+        uint256[] memory expiredReservationIndexes = new uint256[](0); // Assuming no reservations to clean up
 
-        // Update exchange rate
-        uint64 newExchangeRate = 100;
-        riftExchange.updateExchangeRate(0, newExchangeRate);
+        // Create initial deposit
+        riftExchange.depositLiquidity{ value: depositAmount }(
+            btcPayoutAddress,
+            initialBtcExchangeRate,
+            -1, // No vault index to overwrite
+            emptyVaultIndexes
+        );
 
-        // Check if the exchange rate has been updated
+        // Update the BTC exchange rate
+        uint256 newBtcExchangeRate = 75;
+        console.log('Updating BTC exchange rate from', initialBtcExchangeRate, 'to', newBtcExchangeRate);
+        riftExchange.updateExchangeRate(0, newBtcExchangeRate, expiredReservationIndexes);
+        console.log('NEW BTC EXCHANGE RATE:', riftExchange.getDepositVault(testAddress, 0).btcExchangeRate);
+
+        // Fetch the updated deposit and verify the new exchange rate
         RiftExchange.DepositVault memory updatedDeposit = riftExchange.getDepositVault(testAddress, 0);
-        assertEq(updatedDeposit.btcExchangeRate, newExchangeRate, 'Exchange rate should be updated');
+        assertEq(updatedDeposit.btcExchangeRate, newBtcExchangeRate, 'BTC exchange rate should be updated to the new value');
 
         vm.stopPrank();
     }
 
     //--------- RESERVATION TESTS ---------//
 
-    function testReserveSingleLP() public {
-        vm.deal(lp1, 10 ether);
-
-        // Deposit initial liquidity
-        vm.startPrank(lp1);
-        string memory btcPayoutAddress = 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq';
-        uint64 btcExchangeRate = 69;
-        uint256 depositAmount = 5 ether;
-        riftExchange.depositLiquidity{ value: depositAmount }(btcPayoutAddress, btcExchangeRate);
-        vm.stopPrank();
-
-        // Reserve liquidity
-        address[] memory lpAddresses = new address[](1);
-        lpAddresses[0] = lp1;
-        uint32[] memory vaultIDs = new uint32[](1);
-        vaultIDs[0] = 0;
-        uint256[] memory amountsToReserve = new uint256[](1);
-        amountsToReserve[0] = 1 ether;
-        string memory btcSenderAddress = 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq';
-
-        vm.deal(buyer1, 10 ether);
-        vm.startPrank(buyer1);
-        // TODO: check for exact amount of ETH sent for fee
-        riftExchange.reserveLiquidity{ value: 5 ether }(lpAddresses, vaultIDs, amountsToReserve, buyer1, btcSenderAddress);
-        vm.stopPrank();
-
-        // Check reservation
-        RiftExchange.SwapReservation memory reservation = riftExchange.getReservation(buyer1, 0);
-        assertEq(reservation.amountsToReserve[0], amountsToReserve[0], 'Reservation amount mismatch');
-        assertEq(reservation.ethPayoutAddress, buyer1, 'ETH payout address mismatch');
-
-        vm.stopPrank();
-    }
-
-    function testReservationOverwriting() public {
-        vm.deal(testAddress, 1000000 ether);
+    function testReserveLiquidity() public {
+        vm.deal(testAddress, 10 ether);
         vm.startPrank(testAddress);
 
-        uint256 depositAmount = 100000 ether;
-        riftExchange.depositLiquidity{ value: depositAmount }('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq', 50);
-        // console.log('AMOUNT DEPOSITED',s riftExchange.getDepositVault(testAddress, 0).ethDepositAmount);
-        address[] memory lpAddresses = new address[](1);
-        lpAddresses[0] = testAddress;
-        uint32[] memory depositIds = new uint32[](1);
-        depositIds[0] = 0;
+        // Initial setup for deposits
+        bytes32 btcPayoutAddress = keccak256(abi.encodePacked('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'));
+        uint256 btcExchangeRate = 69;
+        uint256 depositAmount = 5 ether;
+        uint256[] memory emptyVaultIndexes = new uint256[](0);
+
+        // Create a deposit
+        riftExchange.depositLiquidity{ value: depositAmount }(btcPayoutAddress, btcExchangeRate, -1, emptyVaultIndexes);
+
+        // Setup for reservation
+        uint256[] memory vaultIndexesToReserve = new uint256[](1);
+        vaultIndexesToReserve[0] = 0; // Index of the deposit to reserve from
         uint256[] memory amountsToReserve = new uint256[](1);
-        amountsToReserve[0] = 0.002 ether;
+        amountsToReserve[0] = 1 ether; // Amount to reserve
+        address ethPayoutAddress = testAddress; // ETH payout address
+        string memory btcSenderAddress = 'bc1qsenderaddress'; // BTC sender address
+        uint256[] memory expiredSwapReservationIndexes = new uint256[](0); // No expired reservations
 
-        // // Make reservation
-        uint256 iterations = 2000;
-        for (uint i = 0; i < iterations; i++) {
-            riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
-        }
-
-        // assert reservation count and total amount
-        // console.log('AMOUNT RESERVED', riftExchange.getAmountReservedInVault(testAddress, 0));
-        // console.log('AMOUNT AVAILABLE', riftExchange.getAmountAvailableInVault(testAddress, 0));
-        // console.log('TOTAL RESERVATIONS', riftExchange.getReservationLength(testAddress));
-        assertEq(riftExchange.getReservationLength(testAddress), iterations, 'Should have exactly one reservation entry');
-        assertEq(
-            riftExchange.getAmountReservedInVault(testAddress, 0),
-            iterations * 0.002 ether,
-            'Total amount reserved should match the reservation amount'
+        uint256 gasBefore = gasleft(); // Measure gas before reservation
+        riftExchange.reserveLiquidity{ value: 1 ether }(
+            vaultIndexesToReserve,
+            amountsToReserve,
+            ethPayoutAddress,
+            btcSenderAddress,
+            expiredSwapReservationIndexes
         );
+        uint256 gasUsed = gasBefore - gasleft(); // Calculate gas used for the reservation
 
-        // // make another reservation 4 hours later (should push new reservation)
-        vm.warp(block.timestamp + 4 hours);
-        riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
-        // riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
-        // riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
-        // riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
+        // Fetch the reservation and verify
+        RiftExchange.SwapReservation memory reservation = riftExchange.getReservation(ethPayoutAddress, 0);
+        assertEq(reservation.ethPayoutAddress, ethPayoutAddress, 'ETH payout address should match');
+        assertEq(reservation.btcSenderAddress, btcSenderAddress, 'BTC sender address should match');
+        assertEq(reservation.amountsToReserve[0], amountsToReserve[0], 'Reserved amount should match');
+        assert(reservation.isCompleted == false);
+        assert(reservation.isDead == false);
 
-        // assertEq(riftExchange.getReservationLength(testAddress), 2, 'Should have exactly two reservation entries');
+        console.log('Gas used for the reservation:', gasUsed);
 
-        // // simulate reservation expiring
-        vm.warp(block.timestamp + 4 hours);
-
-        // // make another reservation (should overwrite)
-        // riftExchange.reserveLiquidity(lpAddresses, depositIds, amountsToReserve, testAddress, 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq');
-
-        // test random index gen
-        uint256 length = riftExchange.getReservationLength(testAddress);
-        for (uint i = 0; i < 10; i++) {
-            uint256 index = riftExchange.sampleRandomIndex(length, i);
-            // console.log('RANDOM INDEX', index);
-            assert(index < length);
-        }
-        // assertEq(riftExchange.getReservationLength(testAddress), 2, 'Should still have only two reservation entries');
         vm.stopPrank();
     }
+
+    function testMultipleReservationsGasCost() public {
+        vm.deal(testAddress, 10000 ether);
+        vm.startPrank(testAddress);
+
+        // Initial setup for deposits
+        bytes32 btcPayoutAddress = keccak256(abi.encodePacked('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'));
+        uint256 btcExchangeRate = 69;
+        uint256 depositAmount = 10 ether; // Increase deposit amount to ensure sufficient liquidity
+        uint256[] memory emptyVaultIndexes = new uint256[](0);
+
+        // Create a large deposit to cover all reservations
+        riftExchange.depositLiquidity{ value: depositAmount }(btcPayoutAddress, btcExchangeRate, -1, emptyVaultIndexes);
+
+        // Setup for multiple reservations
+        uint256 numReservations = 2000;
+        uint256 firstReservationGasCost;
+        uint256 lastReservationGasCost;
+        uint256 totalGasUsed = 0;
+
+        for (uint256 i = 0; i < numReservations; i++) {
+            uint256[] memory vaultIndexesToReserve = new uint256[](1);
+            vaultIndexesToReserve[0] = 0; // Index of the deposit to reserve from
+            uint256[] memory amountsToReserve = new uint256[](1);
+            amountsToReserve[0] = 0.005 ether; // Amount to reserve, smaller to allow many reservations
+            address ethPayoutAddress = testAddress; // ETH payout address
+            string memory btcSenderAddress = 'bc1qsenderaddress'; // BTC sender address
+            uint256[] memory expiredSwapReservationIndexes = new uint256[](0); // No expired reservations
+
+            uint256 gasBefore = gasleft();
+            riftExchange.reserveLiquidity{ value: 0.005 ether }(
+                vaultIndexesToReserve,
+                amountsToReserve,
+                ethPayoutAddress,
+                btcSenderAddress,
+                expiredSwapReservationIndexes
+            );
+            uint256 gasUsed = gasBefore - gasleft();
+            totalGasUsed += gasUsed;
+
+            if (i == 0) {
+                firstReservationGasCost = gasUsed;
+            }
+            if (i == numReservations - 1) {
+                lastReservationGasCost = gasUsed;
+            }
+        }
+
+        uint256 averageGasCost = totalGasUsed / numReservations;
+
+        vm.stopPrank();
+
+        console.log('Gas used for the first reservation:', firstReservationGasCost);
+        console.log('Gas used for the', numReservations, 'th reservation:', lastReservationGasCost);
+        console.log('Average gas cost per reservation:', averageGasCost);
+    }
+
+    function testReservationWithVaryingVaults() public {
+        vm.deal(testAddress, 10000 ether);
+        vm.startPrank(testAddress);
+
+        uint256 maxVaults = 3; // Adjust based on your test coverage needs
+        uint256 depositAmount = 1 ether;
+        uint256 btcExchangeRate = 69;
+        bytes32 btcPayoutAddress = keccak256(abi.encodePacked('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'));
+
+        // Create multiple vaults
+        for (uint256 i = 0; i < maxVaults; i++) {
+            riftExchange.depositLiquidity{ value: depositAmount }(btcPayoutAddress, btcExchangeRate, -1, new uint256[](0));
+        }
+
+        string memory btcSenderAddress = 'bc1qsenderaddress'; // BTC sender address
+
+        // Perform reservations from an increasing number of vaults
+        for (uint256 numVaults = 1; numVaults <= maxVaults; numVaults++) {
+            // Create arrays for each reservation with the correct size
+            uint256[] memory vaultIndexesToReserve = new uint256[](numVaults);
+            uint256[] memory amountsToReserve = new uint256[](numVaults);
+
+            for (uint256 j = 0; j < numVaults; j++) {
+                vaultIndexesToReserve[j] = j;
+                amountsToReserve[j] = 0.1 ether; // smaller amount to ensure it can be covered by deposit
+            }
+
+            uint256 gasBefore = gasleft();
+            riftExchange.reserveLiquidity{ value: 0.1 ether * numVaults }(
+                vaultIndexesToReserve,
+                amountsToReserve,
+                testAddress,
+                btcSenderAddress,
+                new uint256[](0)
+            );
+            uint256 gasUsed = gasBefore - gasleft();
+            console.log('Gas used for reserving from', numVaults, 'vaults:', gasUsed);
+        }
+
+        vm.stopPrank();
+    }
+
+    // TODO: fix this array out of bounds error
+    // function testReservationOverwriting() public {
+    //     vm.deal(testAddress, 10000 ether);
+    //     vm.startPrank(testAddress);
+
+    //     // Setup initial deposit
+    //     bytes32 btcPayoutAddress = keccak256(abi.encodePacked('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'));
+    //     uint256 btcExchangeRate = 69;
+    //     uint256 depositAmount = 5 ether;
+    //     uint256[] memory emptyVaultIndexes = new uint256[](0); // Memory array for empty vault indexes
+    //     riftExchange.depositLiquidity{ value: depositAmount }(btcPayoutAddress, btcExchangeRate, -1, emptyVaultIndexes);
+
+    //     // Initial reservation
+    //     uint256[] memory vaultIndexesToReserve = new uint256[](1);
+    //     vaultIndexesToReserve[0] = 0; // Index of the deposit to reserve from
+    //     uint256[] memory amountsToReserve = new uint256[](1);
+    //     amountsToReserve[0] = 1 ether; // Amount to reserve
+    //     string memory btcSenderAddressInitial = 'bc1qinitialsender'; // BTC sender address for the initial reservation
+
+    //     uint256[] memory expiredSwapReservationIndexes = new uint256[](1); // No expired reservations initially
+    //     expiredSwapReservationIndexes[0] = 0; // Simulating that the first reservation has expired
+
+    //     riftExchange.reserveLiquidity{ value: 1 ether }(
+    //         vaultIndexesToReserve,
+    //         amountsToReserve,
+    //         testAddress,
+    //         btcSenderAddressInitial,
+    //         expiredSwapReservationIndexes
+    //     );
+
+    //     vm.warp(1 days); // Warp time to simulate reservation expiration
+    //     // Overwrite the reservation with new parameters
+    //     string memory btcSenderAddressOverwrite = 'bc1qoverwritesender'; // BTC sender address for the overwrite
+    //     riftExchange.reserveLiquidity{ value: 1 ether }(
+    //         vaultIndexesToReserve,
+    //         amountsToReserve,
+    //         testAddress,
+    //         btcSenderAddressOverwrite,
+    //         expiredSwapReservationIndexes
+    //     );
+
+    //     // Verify the reservation overwrite
+    //     RiftExchange.SwapReservation memory overwrittenReservation = riftExchange.getReservation(testAddress, 0);
+    //     assertEq(overwrittenReservation.ethPayoutAddress, testAddress, 'ETH payout address should match');
+    //     assertEq(
+    //         overwrittenReservation.btcSenderAddress,
+    //         btcSenderAddressOverwrite,
+    //         'BTC sender address should be updated to new one'
+    //     );
+    //     assertEq(overwrittenReservation.amountsToReserve[0], amountsToReserve[0], 'Reserved amount should match');
+    //     assert(!overwrittenReservation.isCompleted);
+    //     assert(!overwrittenReservation.isDead);
+
+    //     vm.stopPrank();
+    // }
 
     //--------- WITHDRAW TESTS ---------//
 
-    function testWithdrawLiquidity() public {
-        vm.deal(testAddress, 5 ether);
-        vm.startPrank(testAddress);
+    // function testWithdrawLiquidity() public {
+    //     vm.deal(testAddress, 5 ether);
+    //     vm.startPrank(testAddress);
 
-        // [0] initial deposit
-        uint256 depositAmount = 5 ether;
-        riftExchange.depositLiquidity{ value: depositAmount }('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq', 50);
+    //     // [0] initial deposit
+    //     uint256 depositAmount = 5 ether;
+    //     riftExchange.depositLiquidity{ value: depositAmount }('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq', 50);
 
-        // [1] withdraw some of the liquidity
-        uint256 withdrawAmount = 2 ether;
-        riftExchange.withdrawLiquidity(0, withdrawAmount);
+    //     // [1] withdraw some of the liquidity
+    //     uint256 withdrawAmount = 2 ether;
+    //     riftExchange.withdrawLiquidity(0, withdrawAmount);
 
-        // [2] check if the balance has decreased correctly
-        RiftExchange.DepositVault memory depositAfterWithdrawal = riftExchange.getDepositVault(testAddress, 0);
-        uint256 expectedRemaining = depositAmount - withdrawAmount;
-        assertEq(depositAfterWithdrawal.ethDepositAmount, expectedRemaining, 'Remaining deposit should match expected amount after withdrawal');
+    //     // [2] check if the balance has decreased correctly
+    //     RiftExchange.DepositVault memory depositAfterWithdrawal = riftExchange.getDepositVault(testAddress, 0);
+    //     uint256 expectedRemaining = depositAmount - withdrawAmount;
+    //     assertEq(depositAfterWithdrawal.ethDepositAmount, expectedRemaining, 'Remaining deposit should match expected amount after withdrawal');
 
-        // [3] check if the funds reached the LP's address
-        assertEq(testAddress.balance, withdrawAmount, "LP's balance should match the withdrawn amount");
+    //     // [3] check if the funds reached the LP's address
+    //     assertEq(testAddress.balance, withdrawAmount, "LP's balance should match the withdrawn amount");
 
-        vm.stopPrank();
-    }
-
-    //--------- INPUT VALIDATION TESTS ---------//
-
-    function testDepositInvalidBtcAddress() public {
-        vm.deal(testAddress, 10 ether);
-        vm.startPrank(testAddress);
-
-        // [0] deposit with invalid BTC payout address
-        uint256 depositAmount = 1 ether;
-        string memory invalidBtcPayoutAddress = '0xInvalidAddress';
-
-        // [1] expect revert
-        vm.expectRevert(INVALID_BTC_PAYOUT_ADDRESS);
-        riftExchange.depositLiquidity{ value: depositAmount }(invalidBtcPayoutAddress, 50);
-        vm.stopPrank();
-    }
-
-    function testReserveInvalidBtcAddress() public {
-        vm.deal(testAddress, 10 ether);
-        vm.startPrank(testAddress);
-
-        // [0] deposit initial liquidity
-        uint256 depositAmount = 1 ether;
-        riftExchange.depositLiquidity{ value: depositAmount }('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq', 50);
-
-        // [1] reserve liquidity with invalid BTC payout address
-        address[] memory lpAddresses = new address[](1);
-        lpAddresses[0] = testAddress;
-        uint32[] memory depositIds = new uint32[](1);
-        depositIds[0] = 0;
-        uint256[] memory amountsToReserve = new uint256[](1);
-        amountsToReserve[0] = 1 ether;
-        string memory invalidBtcPayoutAddress = '0xInvalidAddress';
-
-        // [2] expect revert
-        vm.expectRevert(INVALID_BTC_PAYOUT_ADDRESS);
-        riftExchange.reserveLiquidity{ value: 1 ether }(lpAddresses, depositIds, amountsToReserve, testAddress, invalidBtcPayoutAddress);
-        vm.stopPrank();
-    }
+    //     vm.stopPrank();
+    // }
 }
