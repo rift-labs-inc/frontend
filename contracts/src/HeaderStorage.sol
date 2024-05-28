@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicensed
-pragma solidity =0.8.25;
+pragma solidity ^0.8.0;
 
 import { HeaderLib } from './HeaderLib.sol';
 import { UltraVerifier as HeaderStoragePlonkVerifier } from './verifiers/HeaderStoragePlonkVerification.sol';
