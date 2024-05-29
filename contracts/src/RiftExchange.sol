@@ -32,7 +32,7 @@ error InvalidVaultUpdate();
 error ReservationNotExpired();
 error InvalidUpdateWithActiveReservations();
 
-contract RiftExchange {
+contract RiftExchange is BlockHeaderStorage {
     uint256 public constant MIN_DEPOSIT = 0.5 ether;
     uint256 public constant MAX_DEPOSIT = 200_000 ether; // TODO: find out what the real max deposit is
     uint256 public constant RESERVATION_LOCKUP_PERIOD = 6 hours; // TODO: get longest 6 block confirmation time
@@ -82,14 +82,16 @@ contract RiftExchange {
     DepositVault[] public depositVaults;
 
     TransactionInclusionPlonkVerification public immutable verifierContract;
-    BlockHeaderStorage public immutable blockHeaderStorageContract;
     address payable protocolAddress = payable(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
 
     //--------- CONSTRUCTOR ---------//
 
-    constructor(address headerStorageContractAddress) {
-        verifierContract = new TransactionInclusionPlonkVerification();
-        blockHeaderStorageContract = BlockHeaderStorage(headerStorageContractAddress);
+    constructor(
+        uint256 initialCheckpointHeight,
+        bytes32 initialBlockHash,
+        address verifierContractAddress
+    ) BlockHeaderStorage(initialCheckpointHeight, initialBlockHash) {
+        verifierContract = TransactionInclusionPlonkVerification(verifierContractAddress);
     }
 
     //--------- WRITE FUNCTIONS ---------//
@@ -329,7 +331,7 @@ contract RiftExchange {
         bytes32 btcBlockHash,
         uint256 blockCheckpointHeight,
         bytes32 confirmationBlockHash, // 5 blocks ahead of blockCheckpointHeight + block delta
-        uint256 blockHeightDelta,
+        uint256 confirmationBlockHeightDelta, // delta from blockCheckpointHeight
         bytes memory proof
     ) public {
         // [0] retrieve swap order
@@ -341,10 +343,11 @@ contract RiftExchange {
             totalSwapAmount += swapReservation.amountsToReserve[i];
         }
 
-        // TODO: create publicInputs
-
-        // verify proof (will revert if invalid)
+        // TODO: verify proof (will revert if invalid)
         // verifierContract.verify(proof, publicInputs, ...);
+
+        // [x] add block to block header storage contract
+        BlockHeaderStorage.addBlock(blockCheckpointHeight, confirmationBlockHeightDelta, confirmationBlockHash);
 
         // [x] mark swap order as completed
         swapReservation.isCompleted = true;
