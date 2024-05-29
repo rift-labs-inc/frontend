@@ -4,7 +4,7 @@ use dep::rift_lib::constants;
 
 // current maxes, could be changed
 // p2pkh -> 25 bytes, p2wpkh -> 22 bytes
-global MAX_SCRIPTSIG_SIZE: u64 = 25;
+global MAX_SCRIPTSIG_SIZE: u64 = 22;
 global MAX_OUTPUT_COUNT: u64 = 10; //1000
 global MAX_INPUT_COUNT: u64 = 1000; //1000
 

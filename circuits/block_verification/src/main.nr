@@ -63,6 +63,7 @@ fn main(
 		last_block_height
 	);
 }
+
 fn verify_block(
     proposed_block_hash: [u8; 32],
 	previous_block_hash: [u8; 32],
