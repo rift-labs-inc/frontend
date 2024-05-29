@@ -2,7 +2,7 @@
 pragma solidity ^0.8.2;
 
 import { UltraVerifier as TransactionInclusionPlonkVerification } from './verifiers/TransactionInclusionPlonkVerification.sol';
-import { HeaderStorage } from './HeaderStorage.sol';
+import { BlockHeaderStorage } from './BlockHeaderStorage.sol';
 import { console } from 'forge-std/console.sol';
 
 error DepositTooLow();
@@ -82,14 +82,14 @@ contract RiftExchange {
     DepositVault[] public depositVaults;
 
     TransactionInclusionPlonkVerification public immutable verifierContract;
-    HeaderStorage public immutable headerStorageContract;
+    BlockHeaderStorage public immutable blockHeaderStorageContract;
     address payable protocolAddress = payable(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
 
     //--------- CONSTRUCTOR ---------//
 
     constructor(address headerStorageContractAddress) {
         verifierContract = new TransactionInclusionPlonkVerification();
-        headerStorageContract = HeaderStorage(headerStorageContractAddress);
+        blockHeaderStorageContract = BlockHeaderStorage(headerStorageContractAddress);
     }
 
     //--------- WRITE FUNCTIONS ---------//
@@ -101,7 +101,7 @@ contract RiftExchange {
     ) public payable {
         // [0] validate deposit amount
         uint256 depositAmount = msg.value;
-        if (depositAmount <= MIN_DEPOSIT) {
+        if (depositAmount < MIN_DEPOSIT) {
             revert DepositTooLow();
         } else if (depositAmount >= MAX_DEPOSIT) {
             revert DepositTooHigh();
@@ -324,7 +324,14 @@ contract RiftExchange {
         }
     }
 
-    function unlockLiquidity(uint256 swapReservationIndex, bytes memory proof, bytes32 publicInputsHash) public {
+    function unlockLiquidity(
+        uint256 swapReservationIndex,
+        bytes32 btcBlockHash,
+        uint256 blockCheckpointHeight,
+        bytes32 confirmationBlockHash, // 5 blocks ahead of blockCheckpointHeight + block delta
+        uint256 blockHeightDelta,
+        bytes memory proof
+    ) public {
         // [0] retrieve swap order
         SwapReservation storage swapReservation = swapReservations[swapReservationIndex];
 
@@ -335,15 +342,9 @@ contract RiftExchange {
         }
 
         // TODO: create publicInputs
-        // Get public inputs from the HeaderStorage contract
-
-        // [x] verify proposed btc payment proof
-        // uint256[] memory headerPublicInputs = headerStorageContract.getPublicInputs();
-        bytes32[] memory publicInputsHashArray = new bytes32[](1);
-        publicInputsHashArray[0] = publicInputsHash;
 
         // verify proof (will revert if invalid)
-        verifierContract.verify(proof, publicInputsHashArray);
+        // verifierContract.verify(proof, publicInputs, ...);
 
         // [x] mark swap order as completed
         swapReservation.isCompleted = true;
