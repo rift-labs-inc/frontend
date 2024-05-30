@@ -3,7 +3,14 @@ pragma solidity ^0.8.2;
 
 import { UltraVerifier as TransactionInclusionPlonkVerification } from './verifiers/TransactionInclusionPlonkVerification.sol';
 import { BlockHeaderStorage } from './BlockHeaderStorage.sol';
+import { RiftExchangeAbstract } from './RiftExchangeAbstract.sol';
 import { console } from 'forge-std/console.sol';
+
+interface IERC20 {
+    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+
+    function balanceOf(address account) external view returns (uint256);
+}
 
 error DepositTooLow();
 error DepositTooHigh();
@@ -34,9 +41,8 @@ error InvalidUpdateWithActiveReservations();
 error StillInChallengePeriod();
 error ReservationNotUnlocked();
 
-contract RiftExchange is BlockHeaderStorage {
-    uint256 public constant MIN_DEPOSIT = 0.5 ether;
-    uint256 public constant MAX_DEPOSIT = 200_000 ether; // TODO: find out what the real max deposit is
+contract RiftExchangeWETH is RiftExchangeAbstract {
+    uint256 public constant MAX_WETH_DEPOSIT = 200_000 ether; // TODO: find out what the real max deposit is
     uint256 public constant RESERVATION_LOCKUP_PERIOD = 6 hours; // TODO: get longest 6 block confirmation time
     uint256 public constant CHALLENGE_PERIOD = 10 minutes;
     uint16 public constant MAX_DEPOSIT_OUTPUTS = 50;
@@ -44,6 +50,8 @@ contract RiftExchange is BlockHeaderStorage {
     uint256 public constant RELEASE_GAS_COST = 210_000;
     uint256 public constant MIN_ORDER_GAS_MULTIPLIER = 2;
     uint8 public constant SAMPLING_SIZE = 10;
+    IERC20 public immutable WETH;
+    IERC20 public immutable WBTC;
 
     // 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 - testing header storage contract address
     // 0x007ab3f410ceba1a111b100de2f76a8154b80126cda3f8cab47728d2f8cd0d6d - testing btc payout address
@@ -79,6 +87,11 @@ contract RiftExchange is BlockHeaderStorage {
         Expired
     }
 
+    enum DepositToken {
+        WETH,
+        WBTC
+    }
+
     struct SwapReservation {
         ReservationState state;
         address ethPayoutAddress;
@@ -105,9 +118,13 @@ contract RiftExchange is BlockHeaderStorage {
     constructor(
         uint256 initialCheckpointHeight,
         bytes32 initialBlockHash,
-        address verifierContractAddress
+        address verifierContractAddress,
+        address wethAddress,
+        address wbtcAddress
     ) BlockHeaderStorage(initialCheckpointHeight, initialBlockHash) {
         verifierContract = TransactionInclusionPlonkVerification(verifierContractAddress);
+        WETH = IERC20(wethAddress);
+        WBTC = IERC20(wbtcAddress);
     }
 
     //--------- WRITE FUNCTIONS ---------//
@@ -115,13 +132,17 @@ contract RiftExchange is BlockHeaderStorage {
         bytes32 btcPayoutAddress,
         uint256 btcExchangeRate,
         int256 vaultIndexToOverwrite,
+        DepositToken depositTokenFlag,
+        uint256 depositAmount,
         uint256[] memory vaultIndexesWithSameExchangeRate
     ) public payable {
+        // [0] retrieve deposit token
+        IERC20 depositToken = getDepositToken(depositTokenFlag);
+
         // [0] validate deposit amount
-        uint256 depositAmount = msg.value;
-        if (depositAmount < MIN_DEPOSIT) {
+        if (depositAmount < MIN_WETH_DEPOSIT) {
             revert DepositTooLow();
-        } else if (depositAmount >= MAX_DEPOSIT) {
+        } else if (depositAmount >= MAX_WETH_DEPOSIT) {
             revert DepositTooHigh();
         }
 
@@ -455,6 +476,14 @@ contract RiftExchange is BlockHeaderStorage {
             ) {
                 revert ReservationNotExpired();
             }
+        }
+    }
+
+    function getDepositToken(DepositToken depositToken) internal view returns (IERC20) {
+        if (depositToken == DepositToken.WETH) {
+            return WETH;
+        } else {
+            return WBTC;
         }
     }
 
