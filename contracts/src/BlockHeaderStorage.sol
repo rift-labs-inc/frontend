@@ -17,7 +17,8 @@ contract BlockHeaderStorage {
         blockchain[checkpoint_height] = blockHash;
     }
 
-    function addBlock(uint256 blockCheckpointHeight, uint256 blockHeight, bytes32 blockHash) internal {
+    function addBlock(uint256 blockCheckpointHeight, uint256 blockHeight, bytes32 blockHash) public {
+        // TODO: make this interanal after testing
         // [0] validate checkpoint height
         uint _currentHeight = currentHeight;
         if (blockCheckpointHeight > _currentHeight) {
