@@ -3,7 +3,6 @@ pragma solidity ^0.8.2;
 
 import { UltraVerifier as TransactionInclusionPlonkVerification } from './verifiers/TransactionInclusionPlonkVerification.sol';
 import { BlockHeaderStorage } from './BlockHeaderStorage.sol';
-import { RiftExchangeAbstract } from './RiftExchangeAbstract.sol';
 import { console } from 'forge-std/console.sol';
 
 interface IERC20 {
@@ -41,8 +40,7 @@ error InvalidUpdateWithActiveReservations();
 error StillInChallengePeriod();
 error ReservationNotUnlocked();
 
-contract RiftExchangeWETH is RiftExchangeAbstract {
-    uint256 public constant MAX_WETH_DEPOSIT = 200_000 ether; // TODO: find out what the real max deposit is
+abstract contract RiftExchange is BlockHeaderStorage {
     uint256 public constant RESERVATION_LOCKUP_PERIOD = 6 hours; // TODO: get longest 6 block confirmation time
     uint256 public constant CHALLENGE_PERIOD = 10 minutes;
     uint16 public constant MAX_DEPOSIT_OUTPUTS = 50;
@@ -50,8 +48,9 @@ contract RiftExchangeWETH is RiftExchangeAbstract {
     uint256 public constant RELEASE_GAS_COST = 210_000;
     uint256 public constant MIN_ORDER_GAS_MULTIPLIER = 2;
     uint8 public constant SAMPLING_SIZE = 10;
-    IERC20 public immutable WETH;
-    IERC20 public immutable WBTC;
+    uint256 public immutable MIN_DEPOSIT = 0.5 ether;
+    uint256 public immutable MAX_DEPOSIT = 200_000 ether; // TODO: find out what the real max deposit is
+    IERC20 public immutable DEPOSIT_TOKEN;
 
     // 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 - testing header storage contract address
     // 0x007ab3f410ceba1a111b100de2f76a8154b80126cda3f8cab47728d2f8cd0d6d - testing btc payout address
@@ -119,12 +118,14 @@ contract RiftExchangeWETH is RiftExchangeAbstract {
         uint256 initialCheckpointHeight,
         bytes32 initialBlockHash,
         address verifierContractAddress,
-        address wethAddress,
-        address wbtcAddress
+        address depositTokenAddress,
+        uint256 minDeposit,
+        uint256 maxDeposit
     ) BlockHeaderStorage(initialCheckpointHeight, initialBlockHash) {
         verifierContract = TransactionInclusionPlonkVerification(verifierContractAddress);
-        WETH = IERC20(wethAddress);
-        WBTC = IERC20(wbtcAddress);
+        DEPOSIT_TOKEN = IERC20(depositTokenAddress);
+        MIN_DEPOSIT = minDeposit;
+        MAX_DEPOSIT = maxDeposit;
     }
 
     //--------- WRITE FUNCTIONS ---------//
@@ -132,17 +133,13 @@ contract RiftExchangeWETH is RiftExchangeAbstract {
         bytes32 btcPayoutAddress,
         uint256 btcExchangeRate,
         int256 vaultIndexToOverwrite,
-        DepositToken depositTokenFlag,
         uint256 depositAmount,
         uint256[] memory vaultIndexesWithSameExchangeRate
-    ) public payable {
-        // [0] retrieve deposit token
-        IERC20 depositToken = getDepositToken(depositTokenFlag);
-
+    ) public {
         // [0] validate deposit amount
-        if (depositAmount < MIN_WETH_DEPOSIT) {
+        if (depositAmount < MIN_DEPOSIT) {
             revert DepositTooLow();
-        } else if (depositAmount >= MAX_WETH_DEPOSIT) {
+        } else if (depositAmount >= MAX_DEPOSIT) {
             revert DepositTooHigh();
         }
 
@@ -206,6 +203,9 @@ contract RiftExchangeWETH is RiftExchangeAbstract {
 
         // [7] add deposit vault index to liquidity provider
         liquidityProviders[msg.sender].depositVaultIndexes.push(depositVaults.length - 1);
+
+        // [8] transfer deposit token to contract
+        DEPOSIT_TOKEN.transferFrom(msg.sender, address(this), depositAmount);
     }
 
     function updateExchangeRate(
@@ -250,23 +250,28 @@ contract RiftExchangeWETH is RiftExchangeAbstract {
             revert WithdrawalAmountError();
         }
 
-        // [3] withdraw funds
+        // [3] withdraw funds to LP
         vault.unreservedBalance -= amountToWithdraw;
-        (bool success, ) = payable(msg.sender).call{ value: amountToWithdraw }('');
-        require(success, 'Failed to transfer ETH');
+        DEPOSIT_TOKEN.transferFrom(address(this), msg.sender, amountToWithdraw);
     }
 
     function reserveLiquidity(
         uint256[] memory vaultIndexesToReserve,
         uint256[] memory amountsToReserve,
+        uint256 totalSwapAmount, // TODO: update this to be and check whats good
         address ethPayoutAddress,
         string memory btcSenderAddress,
         uint256[] memory expiredSwapReservationIndexes
     ) public payable {
         // [0] calculate total amount of ETH the user is attempting to reserve
-        uint256 totalSwapAmount = 0;
+        uint256 combinedAmountsToReserve = 0;
         for (uint i = 0; i < amountsToReserve.length; i++) {
-            totalSwapAmount += amountsToReserve[i];
+            combinedAmountsToReserve += amountsToReserve[i];
+        }
+
+        // ensure combined amounts to reserve is equal to total swap amount
+        if (combinedAmountsToReserve != totalSwapAmount) {
+            revert InvalidOrder();
         }
 
         // [1] calculate fees
@@ -275,15 +280,9 @@ contract RiftExchangeWETH is RiftExchangeAbstract {
         uint releaserFee = releaserReward + ((RELEASE_GAS_COST * block.basefee) * MIN_ORDER_GAS_MULTIPLIER);
         // TODO: get historical priority fee and potentially add it ^
 
-        // [1] verify enough ETH was sent to cover fees
-        if (msg.value < (proverFee + protocolFee + releaserFee)) {
+        // [1] verify total swap amount is enough to cover fees
+        if (totalSwapAmount < (proverFee + protocolFee + releaserFee)) {
             revert ReservationAmountTooLow();
-        }
-
-        // [2] transfer protocol fee
-        (bool success, ) = protocolAddress.call{ value: protocolFee }('');
-        if (!success) {
-            revert ReservationFeeTooLow();
         }
 
         // [3] verify proposed expired swap reservation indexes
@@ -343,14 +342,11 @@ contract RiftExchangeWETH is RiftExchangeAbstract {
             );
         }
 
-        // [5] refund user if overpaid
-        uint256 amountOverpaid = msg.value - (proverFee + releaserFee + protocolFee);
-        if (amountOverpaid > 0) {
-            (bool refundSuccess, ) = msg.sender.call{ value: amountOverpaid }('');
-            if (!refundSuccess) {
-                revert DepositFailed();
-            }
-        }
+        // transfer from user to contract
+        DEPOSIT_TOKEN.transferFrom(msg.sender, address(this), totalSwapAmount); // TODO we only need to take 1% + fees not totalSwapAmount
+
+        // transfer protocol fee
+        DEPOSIT_TOKEN.transferFrom(msg.sender, protocolAddress, protocolFee);
     }
 
     function unlockLiquidity(
@@ -476,14 +472,6 @@ contract RiftExchangeWETH is RiftExchangeAbstract {
             ) {
                 revert ReservationNotExpired();
             }
-        }
-    }
-
-    function getDepositToken(DepositToken depositToken) internal view returns (IERC20) {
-        if (depositToken == DepositToken.WETH) {
-            return WETH;
-        } else {
-            return WBTC;
         }
     }
 
