@@ -1,4 +1,17 @@
-import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
+import {
+    Tabs,
+    TabList,
+    Tooltip,
+    TabPanels,
+    Tab,
+    Button,
+    Flex,
+    Text,
+    useColorModeValue,
+    Box,
+    Spacer,
+    Input,
+} from '@chakra-ui/react';
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -30,7 +43,9 @@ export const SwapUI = ({}) => {
     useEffect(() => {
         const fetchPricesAndRate = async () => {
             try {
-                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd,eth');
+                const response = await fetch(
+                    'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd,eth',
+                );
                 const data = await response.json();
                 if (data.bitcoin && data.bitcoin.usd) {
                     setasset1PriceUSD(data.bitcoin.usd); // Bitcoin price in USD
@@ -129,7 +144,13 @@ export const SwapUI = ({}) => {
             {/* Tab Buttons */}
             <Flex justifyContent='center' w='100%' h='43px' position='relative'>
                 {/* Swap Tab */}
-                <Flex flex={1} align='center' justify='center' zIndex={isSwapTab ? 3 : 1} onClick={() => handleTabClick('swap')} pr='1px'>
+                <Flex
+                    flex={1}
+                    align='center'
+                    justify='center'
+                    zIndex={isSwapTab ? 3 : 1}
+                    onClick={() => handleTabClick('swap')}
+                    pr='1px'>
                     {/* Tab Text */}
                     <Flex
                         flex={1}
@@ -142,7 +163,12 @@ export const SwapUI = ({}) => {
                         borderLeft={borderColor}
                         borderBottom={isSwapTab ? 'none' : borderColor}
                         cursor='pointer'>
-                        <Text textAlign={'center'} mr='-20px' mt={isSwapTab ? '-2px' : '0px'} userSelect='none' fontFamily='Nostromo'>
+                        <Text
+                            textAlign={'center'}
+                            mr='-20px'
+                            mt={isSwapTab ? '-2px' : '0px'}
+                            userSelect='none'
+                            fontFamily='Nostromo'>
                             Swap
                         </Text>
                     </Flex>
@@ -215,7 +241,13 @@ export const SwapUI = ({}) => {
                 />
 
                 {/* Liquidity Tab */}
-                <Flex flex={1} align='center' justify='center' zIndex={isSwapTab ? 1 : 3} onClick={() => handleTabClick('liquidity')} pl='1px'>
+                <Flex
+                    flex={1}
+                    align='center'
+                    justify='center'
+                    zIndex={isSwapTab ? 1 : 3}
+                    onClick={() => handleTabClick('liquidity')}
+                    pl='1px'>
                     {/* Tab Curve (Left Side) */}
                     <Flex h='100%' w='20px' flexDir='column' position='relative'>
                         {/* Top Curve and Bottom Space */}
@@ -266,7 +298,12 @@ export const SwapUI = ({}) => {
                         borderRight={borderColor}
                         borderBottom={isSwapTab ? borderColor : 'none'}
                         cursor='pointer'>
-                        <Text textAlign={'center'} ml='-20px' mt={isSwapTab ? '0px' : '-2px'} userSelect={'none'} fontFamily='Nostromo'>
+                        <Text
+                            textAlign={'center'}
+                            ml='-20px'
+                            mt={isSwapTab ? '0px' : '-2px'}
+                            userSelect={'none'}
+                            fontFamily='Nostromo'>
                             Provide Liquidity
                         </Text>
                     </Flex>
@@ -367,7 +404,14 @@ export const SwapUI = ({}) => {
                                 </svg>
                             </Flex>
                             {/* ETH Output */}
-                            <Flex mt='5px' px='10px' bg='#161A33' w='100%' h='110px' border='2px solid #303F9F' borderRadius={'10px'}>
+                            <Flex
+                                mt='5px'
+                                px='10px'
+                                bg='#161A33'
+                                w='100%'
+                                h='110px'
+                                border='2px solid #303F9F'
+                                borderRadius={'10px'}>
                                 <Flex direction={'column'}>
                                     <Text
                                         color={colors.textGray}
@@ -515,11 +559,19 @@ export const SwapUI = ({}) => {
                                 fontFamily={'Aux'}>
                                 Set your own fees, withdraw anytime.
                                 <br />
-                                Automatically swap from ETH to BTC when your order is filled. Orders are filled by fee, lowest to highest.
+                                Automatically swap from ETH to BTC when your order is filled. Orders are filled by fee, lowest to
+                                highest.
                             </Text>
                         </Flex>
                         {/* Deposit Input */}
-                        <Flex mt='18px' px='10px' bg='#161A33' w='100%' h='110px' border='2px solid #303F9F' borderRadius={'10px'}>
+                        <Flex
+                            mt='18px'
+                            px='10px'
+                            bg='#161A33'
+                            w='100%'
+                            h='110px'
+                            border='2px solid #303F9F'
+                            borderRadius={'10px'}>
                             <Flex direction={'column'}>
                                 <Text
                                     color={colors.textGray}

@@ -76,8 +76,15 @@ const Home = () => {
                             ge
                         </Text>
                     </Flex>
-                    <Text userSelect={'none'} fontSize='13px' fontFamily={'Aux'} color={'#c3c3c3'} mt='5px' fontWeight={'normal'} as='h2'>
-                        Trustless, peer-to-peer swapping using zk-proofs. See{' '}
+                    <Text
+                        userSelect={'none'}
+                        fontSize='13px'
+                        fontFamily={'Aux'}
+                        color={'#c3c3c3'}
+                        mt='5px'
+                        fontWeight={'normal'}
+                        as='h2'>
+                        Trustless, cross-chain swaps using zero-knowledge proofs. See{' '}
                         <Box
                             as='span'
                             onClick={() => handleNavigation('/whitepaper')}
