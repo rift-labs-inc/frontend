@@ -32,15 +32,16 @@ export const Navbar = ({}) => {
                 {router.pathname === route && (
                     <Flex
                         position={'absolute'}
+                        ml='1px'
                         top='29px'
                         w={
-                            router.pathname === '/liquidity'
-                                ? '100px'
+                            router.pathname === '/pools'
+                                ? '68px'
                                 : router.pathname === '/activity'
-                                ? '94px'
+                                ? '93px'
                                 : router.pathname === '/whitepaper'
-                                ? '136px'
-                                : '59px'
+                                ? '134px'
+                                : '57px'
                         }
                         height='2px'
                         bgGradient={`linear(90deg, #394AFF, #FF8F28)`}></Flex>
@@ -52,10 +53,11 @@ export const Navbar = ({}) => {
     return (
         <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1000}>
             <Flex direction='row' w='100%' px={'30px'} pt='25px'>
-                {navItem('Home', '/')}
+                {navItem('Swap', '/')}
+                {navItem('Lending', '/lending')}
+                {navItem('OTC', '/otc')}
                 {navItem('Activity', '/activity')}
-                {navItem('Liquidity', '/liquidity')}
-                {navItem('Whitepaper', '/whitepaper')}
+                {navItem('About', '/about')}
                 <Spacer />
                 <Flex>{/* CONNECT WALLET BUTTON */}</Flex>
             </Flex>

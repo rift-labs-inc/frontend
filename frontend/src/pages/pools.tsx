@@ -19,9 +19,21 @@ const SortByFeesIcon = ({ sortLowestFee }: { sortLowestFee: boolean }) => {
 
     return (
         <Flex gap='5px' w='24px' flexDir='column' mr='10px'>
-            <Flex w={sortLowestFee ? '100%' : '50%'} h={BAR_HEIGHT} borderRadius='10px' bg={color} transition='0.2s all ease-in-out' />
+            <Flex
+                w={sortLowestFee ? '100%' : '50%'}
+                h={BAR_HEIGHT}
+                borderRadius='10px'
+                bg={color}
+                transition='0.2s all ease-in-out'
+            />
             <Flex w={'75%'} h={BAR_HEIGHT} borderRadius='10px' bg={color} transition='0.2s all ease-in-out' />
-            <Flex w={sortLowestFee ? '50%' : '100%'} h={BAR_HEIGHT} borderRadius='10px' bg={color} transition='0.2s all ease-in-out' />
+            <Flex
+                w={sortLowestFee ? '50%' : '100%'}
+                h={BAR_HEIGHT}
+                borderRadius='10px'
+                bg={color}
+                transition='0.2s all ease-in-out'
+            />
         </Flex>
     );
 };
@@ -62,7 +74,7 @@ const Liquidity = () => {
                             letterSpacing={'2px'}
                             mt='-25px'>
                             <Text userSelect={'none'} fontSize='46px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
-                                Liquidity
+                                Liquidity Pools
                             </Text>
                         </Flex>
                         <Text
@@ -91,7 +103,12 @@ const Liquidity = () => {
                         direction={'column'}
                         mt='55px'>
                         <Flex w='100%' mt='-55px' mb='8px' h='44px'>
-                            <Flex w='100%' h='100%' border={'2px solid #282828'} borderRadius={'8px'} backdropFilter={'blur(10px)'}>
+                            <Flex
+                                w='100%'
+                                h='100%'
+                                border={'2px solid #282828'}
+                                borderRadius={'8px'}
+                                backdropFilter={'blur(10px)'}>
                                 {/* SEARCHBAR */}
                                 <InputGroup>
                                     <Input
@@ -261,7 +278,12 @@ const Liquidity = () => {
                                                                 {isAvailable ? (
                                                                     <Flex w='10px' h='10px' borderRadius='10px' bg='green' />
                                                                 ) : (
-                                                                    <Flex w='10px' h='10px' borderRadius='10px' border='2px solid #959595' />
+                                                                    <Flex
+                                                                        w='10px'
+                                                                        h='10px'
+                                                                        borderRadius='10px'
+                                                                        border='2px solid #959595'
+                                                                    />
                                                                 )}
                                                             </>
                                                             <Text color={isAvailable ? '#238739' : '#959595'}>
