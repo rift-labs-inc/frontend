@@ -2,7 +2,7 @@
 pragma solidity ^0.8.2;
 
 import { UltraVerifier as TransactionInclusionPlonkVerification } from './verifiers/TransactionInclusionPlonkVerification.sol';
-import { BlockHeaderStorage } from './BlockHeaderStorage.sol';
+import { BlockHashStorage } from './BlockHashStorage.sol';
 import { console } from 'forge-std/console.sol';
 
 interface IERC20 {
