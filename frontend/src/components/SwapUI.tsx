@@ -624,7 +624,7 @@ export const SwapUI = ({}) => {
                             </Flex>{' '}
                         </Flex>
                         {/* LP Fee */}
-                        <Flex mt='10px' px='10px' bg='#132B12' w='100%' h='78px' border='2px solid #557D23' borderRadius={'10px'}>
+                        <Flex mt='10px' px='10px' bg='#132B12' w='100%' h='78px' border='2px solid #319C48' borderRadius={'10px'}>
                             <Flex direction={'column'}>
                                 <Text
                                     color={colors.offWhite}

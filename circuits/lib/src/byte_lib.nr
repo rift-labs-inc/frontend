@@ -11,7 +11,6 @@ impl<N> New<N> for CompConstant<N> {
 	}
 }
 
-
 // `_theoretical_max` needs to be const-generic-esque b/c for loops must be known at compile time
 fn grab_bytes_conditional<T, N, C, Env>(
     data: [T; N],
@@ -34,19 +33,11 @@ fn grab_bytes_conditional<T, N, C, Env>(
     out
 }
 
-pub fn grab_bytes_be<T, N, C>(
-    max: CompConstant<C>,
-    data: [T; N],
-    offset: u64
-) -> [T; C] where T: Default {
+pub fn grab_bytes_be<T, N, C>(max: CompConstant<C>, data: [T; N], offset: u64) -> [T; C] where T: Default {
     grab_bytes_conditional(data, offset, false, max, |_| true)
 }
 
-pub fn grab_bytes_le<T, N, C>(
-    max: CompConstant<C>,
-    data: [T; N],
-    offset: u64
-) -> [T; C] where T: Default {
+pub fn grab_bytes_le<T, N, C>(max: CompConstant<C>, data: [T; N], offset: u64) -> [T; C] where T: Default {
     grab_bytes_conditional(data, offset, true, max, |_| true)
 }
 
@@ -61,7 +52,7 @@ pub fn grab_bytes_be_conditional<T, N, C, Env>(
 
 pub fn grab_bytes_le_conditional<T, N, C, Env>(
     max: CompConstant<C>,
-	data: [T; N],
+    data: [T; N],
     offset: u64,
     runtime_max: fn[Env](u64) -> bool
 ) -> [T; C] where T: Default {
@@ -69,7 +60,7 @@ pub fn grab_bytes_le_conditional<T, N, C, Env>(
 }
 
 pub fn u8_bytes_to_field<N>(array: [u8; N]) -> Field {
-	assert(N <= 31);
+    assert(N <= 31);
     let mut result: Field = 0;
     for i in 0..N {
         result = (result * 256) + (array[i] as Field);
@@ -85,7 +76,7 @@ pub fn extract_bytes_from_u64<N>(byte_count: CompConstant<N>, number: u64) -> [u
         // Calculate the shift amount for big-endian byte order
         let shift_amount = 8 * (8 - N + i);
         // Shift the number right by calculated bits and mask with 0xFF to get the ith byte in big-endian order
-        let byte = ((number >> shift_amount) & 0xFF) as u8;
+        let byte = ((number >> shift_amount as u8) & 0xFF) as u8;
         bytes[i] = byte;
     }
 
@@ -93,12 +84,12 @@ pub fn extract_bytes_from_u64<N>(byte_count: CompConstant<N>, number: u64) -> [u
 }
 
 pub fn decode_field_encoded_hash(encoded_expected_hash: [Field; 2]) -> [u8; 32] {
-	let mut proposed_txn_hash: [u8; 32] = [0; 32];
-	let leg1 = encoded_expected_hash[0].to_be_bytes(31);
-	let leg2 = encoded_expected_hash[1].to_be_bytes(1);
-	for i in 0..31 {
-		proposed_txn_hash[i] = leg1[i];	
-	}
-	proposed_txn_hash[31] = leg2[0];	
-	proposed_txn_hash
+    let mut proposed_txn_hash: [u8; 32] = [0; 32];
+    let leg1 = encoded_expected_hash[0].to_be_bytes(31);
+    let leg2 = encoded_expected_hash[1].to_be_bytes(1);
+    for i in 0..31 {
+        proposed_txn_hash[i] = leg1[i];
+    }
+    proposed_txn_hash[31] = leg2[0];
+    proposed_txn_hash
 }

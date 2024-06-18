@@ -29,11 +29,12 @@ fn main(
     inner_block_hashes_encoded: [[Field; 2]; INNER_BLOCK_COUNT],
     inner_blocks: [Block; INNER_BLOCK_COUNT]
 ) {
-    //------------------ MAIN CIRCUIT ------------------
-    assert(block_height_delta as u64 <= INNER_BLOCK_COUNT);
+    //------------------ MAIN CIRCUIT ------------------ //
+
+    assert(block_height_delta as u64 <= INNER_BLOCK_COUNT); // verify proposed block height delta
     let proposed_block_hash = byte_lib::decode_field_encoded_hash(proposed_block_hash_encoded);
     let safe_block_hash = byte_lib::decode_field_encoded_hash(safe_block_hash_encoded);
-    assert(safe_block_hash == build_block_hash(safe_block));
+    assert(safe_block_hash == build_block_hash(safe_block)); // verify safe block hash
     let retarget_block_hash = byte_lib::decode_field_encoded_hash(retarget_block_hash_encoded);
     assert(retarget_block_hash == build_block_hash(retarget_block));
 
