@@ -114,21 +114,21 @@ async def create_prover_toml_witness(
             f"block_height_delta={block_height_delta}",
             
             "[proposed_block]",
-            *block_toml_encoder(proposed_block),
+            *await block_toml_encoder(proposed_block),
 
             "[safe_block]",
-            *block_toml_encoder(safe_block),
+            *await block_toml_encoder(safe_block),
 
             "[retarget_block]",
-            *block_toml_encoder(retarget_block),
+            *await block_toml_encoder(retarget_block),
 
             f"inner_block_hashes_encoded={json.dumps(padded_inner_block_hashes_encoded)}",
             
-            *list(map(lambda block: "\n".join(
-                "[[inner_blocks]]",
-                *block_toml_encoder(block)
-            ), padded_inner_blocks)),
-
+            *[
+                "\n".join(
+                    ["[[inner_blocks]]"] + await block_toml_encoder(block)
+                ) for block in padded_inner_blocks
+            ],
         ]
     )
     print("PROVER TOML STRING")
