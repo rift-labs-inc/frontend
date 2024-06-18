@@ -83,6 +83,7 @@ async def create_prover_toml_witness(
     inner_blocks: list[Block],
     compilation_build_folder: str
 ):
+    print("Generating prover toml...")
     MAX_INNER_BLOCKS = 100
     if len(inner_block_hashes_hex) > MAX_INNER_BLOCKS:
         raise ValueError(f"Too many inner blocks. Max is {MAX_INNER_BLOCKS}")
@@ -131,9 +132,10 @@ async def create_prover_toml_witness(
             ],
         ]
     )
-    print("PROVER TOML STRING")
-    print(prover_toml_string)
+    # print("PROVER TOML STRING")
+    # print(prover_toml_string)
 
+    print("Creating witness...")
     await create_witness(prover_toml_string, compilation_build_folder)
 
 
