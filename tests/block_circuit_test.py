@@ -87,7 +87,15 @@ async def create_prover_toml_witness(
     if len(inner_block_hashes_hex) > MAX_INNER_BLOCKS:
         raise ValueError(f"Too many inner blocks. Max is {MAX_INNER_BLOCKS}")
     
-    padded_inner_blocks = pad_list(inner_blocks, MAX_INNER_BLOCKS, Block())
+    padded_inner_blocks = pad_list(inner_blocks, MAX_INNER_BLOCKS, Block(
+        height=0,
+        version=0,
+        prev_block_hash='0' * 64,
+        merkle_root='0' * 64,
+        timestamp=0,
+        bits=0,
+        nonce=0
+    ))
 
     proposed_block_hash_encoded = split_hex_into_31_byte_chunks(proposed_block_hash_hex)
     safe_block_hash_encoded = split_hex_into_31_byte_chunks(safe_block_hash_hex)
