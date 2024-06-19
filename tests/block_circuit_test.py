@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 from pydantic import BaseModel
 import json
 
@@ -59,6 +60,34 @@ class Block(BaseModel):
     bits: int
     nonce: int
 
+def compute_block_hash(block: Block) -> str:
+    """
+    Computes the double SHA-256 hash of a block header.
+
+    Args:
+    block (Block): The block for which to compute the hash.
+
+    Returns:
+    str: The hexadecimal representation of the hash.
+    """
+    # Convert block header information into a single bytes object.
+    # Note: Bitcoin serializes these values in little-endian format.
+    header_hex = (
+        block.version.to_bytes(4, 'little') +
+        bytes.fromhex(block.prev_block_hash)[::-1] +  # Reverse to little-endian
+        bytes.fromhex(block.merkle_root)[::-1] +      # Reverse to little-endian
+        block.timestamp.to_bytes(4, 'little') +
+        block.bits.to_bytes(4, 'little') +
+        block.nonce.to_bytes(4, 'little')
+    )
+    
+    # Perform double SHA-256 hashing.
+    hash1 = hashlib.sha256(header_hex).digest()
+    hash2 = hashlib.sha256(hash1).digest()
+
+    # Bitcoin presents hashes in little-endian format, so we reverse before returning.
+    return hash2[::-1].hex()
+
 async def block_toml_encoder(block: Block) -> list[str]:
     return [
         f"bits={block.bits}",
@@ -113,17 +142,21 @@ async def create_prover_toml_witness(
             f"retarget_block_hash_encoded={json.dumps(retarget_block_hash_encoded)}",
             f"safe_block_height={safe_block_height}",
             f"block_height_delta={block_height_delta}",
+
+            f"inner_block_hashes_encoded={json.dumps(padded_inner_block_hashes_encoded)}",
             
             "[proposed_block]",
             *await block_toml_encoder(proposed_block),
+            "",
 
             "[safe_block]",
             *await block_toml_encoder(safe_block),
+            "",
 
             "[retarget_block]",
             *await block_toml_encoder(retarget_block),
+            "",
 
-            f"inner_block_hashes_encoded={json.dumps(padded_inner_block_hashes_encoded)}",
             
             *[
                 "\n".join(
@@ -133,7 +166,7 @@ async def create_prover_toml_witness(
         ]
     )
     # print("PROVER TOML STRING")
-    # print(prover_toml_string)
+    print(prover_toml_string)
 
     print("Creating witness...")
     await create_witness(prover_toml_string, compilation_build_folder)
@@ -147,17 +180,18 @@ async def single_block_verification_test():
 
     proposed_block = Block(
         height=848525,
-        version=1,
+        version=536870912,
         prev_block_hash="0000000000000000000116072c747a36de1e104cef399dd388c36dd1cf7fd4ec",
         merkle_root="450a32c0f61ce7155893f9a6ba5d44db2c6124c3a11ff01c071a22b02ee96aa4",
         timestamp=1718745344,
         bits=386096312,
-        nonce=1595975252
+        nonce=1913798735
     )
+    
 
     safe_block = Block(
         height=848524,
-        version=1,
+        version=768548864,
         prev_block_hash="000000000000000000002b338c518fa4970e11b7365915934bad79b0210b800e",
         merkle_root="c09758b50aa04c688b45d2284f100ec798fa3d8605af928093d9b84d046be1bc",
         timestamp=1718742499,
@@ -167,7 +201,7 @@ async def single_block_verification_test():
 
     retarget_block = Block(
         height=846720,
-        version=1,
+        version=538222592,
         prev_block_hash="0000000000000000000132f5df736574a143d1e41e1a0cdb9c7d1656a906124c",
         merkle_root="feac8899c7090cd12aaca0c5fb3f5f33ad1e5935934db150bd0f5a7e84aff439",
         timestamp=1717664663,
@@ -176,9 +210,9 @@ async def single_block_verification_test():
     )
     
     await create_prover_toml_witness(
-        proposed_block_hash_hex="0x",
-        safe_block_hash_hex="0x",
-        retarget_block_hash_hex="0x",
+        proposed_block_hash_hex=compute_block_hash(proposed_block),
+        safe_block_hash_hex=compute_block_hash(safe_block),
+        retarget_block_hash_hex=compute_block_hash(retarget_block),
         safe_block_height=safe_block.height,
         block_height_delta=proposed_block.height - safe_block.height,
         proposed_block=proposed_block,
