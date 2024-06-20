@@ -92,7 +92,7 @@ fn verify_block(
 fn bits_to_target(bits: Field) -> [u8; 32] {
     // [0] convert the given bits to target
     let exponent = (bits as u32) >> 24; // 1 byte
-	assert(exponent < 0x20); // needs to be less than 32
+    assert(exponent < 0x20); // needs to be less than 32
     let coefficient = (bits as u32) & 0xffffff; // 3 bytes
 
     // [1] convert new target to byte array
@@ -100,15 +100,15 @@ fn bits_to_target(bits: Field) -> [u8; 32] {
     let target_bytes = (coefficient as Field).to_be_bytes(3);
 
     for i in 0..32 {
-		if i == 32 - exponent {
-			target_array[i] = target_bytes[0];
-		} else if i == 32 - exponent + 1 {
-			target_array[i] = target_bytes[1];
-		} else if i == 32 - exponent + 2 {
-			target_array[i] = target_bytes[2];
-		} else {
-			target_array[i] = 0x00;
-		}
+        if i == 32 - exponent {
+            target_array[i] = target_bytes[0];
+        } else if i == 32 - exponent + 1 {
+            target_array[i] = target_bytes[1];
+        } else if i == 32 - exponent + 2 {
+            target_array[i] = target_bytes[2];
+        } else {
+            target_array[i] = 0x00;
+        }
     }
 
     // [2] convert maximum possible target to byte array
@@ -119,7 +119,8 @@ fn bits_to_target(bits: Field) -> [u8; 32] {
         max_target_array[i] = max_target_bytes[i];
     }
 
-	let mut target: [u8; 32] = target_array;
+    let mut target: [u8; 32] = target_array;
+
     // [3] clamp target if above max 
     let comparison = larger_byte_array(target_array, max_target_array);
     if (comparison == 1) { // target > max_target
@@ -131,7 +132,7 @@ fn bits_to_target(bits: Field) -> [u8; 32] {
 
 fn calculate_real_target(retarget_block: Block, proposed_block: Block) -> [u8; 32] {
     // [0] calculate the actual time between blocks
-	assert(proposed_block.timestamp as u64 >= retarget_block.timestamp as u64);
+    assert(proposed_block.timestamp as u64 >= retarget_block.timestamp as u64);
     let mut actual_time = proposed_block.timestamp as u64 - retarget_block.timestamp as u64;
     if actual_time < (TARGET_TIMESPAN / 4) as u64 {
         actual_time = (TARGET_TIMESPAN / 4) as u64;
