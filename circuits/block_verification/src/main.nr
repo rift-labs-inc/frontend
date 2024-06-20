@@ -43,7 +43,7 @@ fn main(
     let mut last_block_hash = safe_block_hash;
 
     for i in 0..INNER_BLOCK_COUNT {
-        if i < block_height_delta {
+        if i < block_height_delta - 1 {
             let inner_proposed_block_hash = byte_lib::decode_field_encoded_hash(inner_block_hashes_encoded[i]);
             verify_block(
                 inner_proposed_block_hash,
@@ -89,38 +89,49 @@ fn verify_block(
     verify_PoW(proposed_block_hash, proposed_block, real_target);
 }
 
-fn bits_to_target(bits: Field) -> Field {
+fn bits_to_target(bits: Field) -> [u8; 32] {
     // [0] convert the given bits to target
-    let exponent = (bits as u32) >> 24;
-    let coefficient = (bits as u32) & 0xffffff;
-    let mut target = (coefficient as Field) * 2.pow_32(8 * ((exponent as Field) - 3));
+    let exponent = (bits as u32) >> 24; // 1 byte
+	assert(exponent < 0x20); // needs to be less than 32
+    let coefficient = (bits as u32) & 0xffffff; // 3 bytes
 
     // [1] convert new target to byte array
     let mut target_array: [u8; 32] = [0; 32];
-    let target_bytes = target.to_be_bytes(32);
+    let target_bytes = (coefficient as Field).to_be_bytes(3);
+
     for i in 0..32 {
-        target_array[i] = target_bytes[i];
+		if i == 32 - exponent {
+			target_array[i] = target_bytes[0];
+		} else if i == 32 - exponent + 1 {
+			target_array[i] = target_bytes[1];
+		} else if i == 32 - exponent + 2 {
+			target_array[i] = target_bytes[2];
+		} else {
+			target_array[i] = 0x00;
+		}
     }
 
     // [2] convert maximum possible target to byte array
     let max_target = 0xFFFF0000000000000000000000000000000000000000000000000000;
     let mut max_target_array: [u8; 32] = [0; 32];
-    let max_target_bytes = max_target.to_be_bytes(32);
+    let max_target_bytes: [u8; 32] = max_target.to_be_bytes(32).as_array();
     for i in 0..32 {
         max_target_array[i] = max_target_bytes[i];
     }
 
+	let mut target: [u8; 32] = target_array;
     // [3] clamp target if above max 
     let comparison = larger_byte_array(target_array, max_target_array);
     if (comparison == 1) { // target > max_target
         println("\nProposed target > max, clamping...");
-        target = max_target;
+        target = max_target_bytes;
     }
     target
 }
 
-fn calculate_real_target(retarget_block: Block, proposed_block: Block) -> Field {
+fn calculate_real_target(retarget_block: Block, proposed_block: Block) -> [u8; 32] {
     // [0] calculate the actual time between blocks
+	assert(proposed_block.timestamp as u64 >= retarget_block.timestamp as u64);
     let mut actual_time = proposed_block.timestamp as u64 - retarget_block.timestamp as u64;
     if actual_time < (TARGET_TIMESPAN / 4) as u64 {
         actual_time = (TARGET_TIMESPAN / 4) as u64;
@@ -142,7 +153,7 @@ fn calculate_real_target(retarget_block: Block, proposed_block: Block) -> Field 
     // [3] calculate new bits
     let new_bits = (old_exponent << 24) | new_coefficient as u32; // combine exponent and coefficient
     let new_target = bits_to_target(new_bits as Field);
-    let old_target = bits_to_target(retarget_block.bits) as Field;
+    let old_target = bits_to_target(retarget_block.bits);
 
     // [4] return new target if 2016 blocks have passed since last retarget
     if (proposed_block.height as u32 >= retarget_block.height as u32 + TARGET_PERIOD) {
@@ -211,22 +222,15 @@ fn build_block_hash(block: Block) -> [u8; 32] {
     block_hash
 }
 
-fn verify_PoW(proposed_block_hash: [u8; 32], proposed_block: Block, proposed_target: Field) {
+fn verify_PoW(proposed_block_hash: [u8; 32], proposed_block: Block, proposed_target: [u8; 32]) {
     println("\nVerifying PoW...");
     let calculated_block_hash = build_block_hash(proposed_block);
 
     // [2] verify proposed block hash matches calculated block hash
     assert(calculated_block_hash == proposed_block_hash);
 
-    // convert proposed target to array of bytes
-    let mut proposed_target_array: [u8; 32] = [0; 32];
-    let proposed_target_bytes = proposed_target.to_be_bytes(32);
-    for i in 0..32 {
-        proposed_target_array[i] = proposed_target_bytes[i];
-    }
-
     // [3] verify PoW if block hash <= proposed target
-    assert(is_block_hash_larger_than_target(proposed_block_hash, proposed_target_array));
+    assert(is_block_hash_larger_than_target(proposed_block_hash, proposed_target));
     println("\nPoW verified!\n");
 }
 

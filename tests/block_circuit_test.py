@@ -165,8 +165,6 @@ async def create_prover_toml_witness(
             ],
         ]
     )
-    # print("PROVER TOML STRING")
-    print(prover_toml_string)
 
     print("Creating witness...")
     await create_witness(prover_toml_string, compilation_build_folder)
@@ -175,7 +173,9 @@ async def create_prover_toml_witness(
 
 async def single_block_verification_test():
     BLOCK_VERIFICATION_DIR = "circuits/block_verification"
+    BB = "~/.nargo/backends/acvm-backend-barretenberg/backend_binary"
     
+    print("Compiling block verification circuit...")
     await compile_project(BLOCK_VERIFICATION_DIR)
 
     proposed_block = Block(
@@ -222,6 +222,26 @@ async def single_block_verification_test():
         inner_blocks=[],
         compilation_build_folder=BLOCK_VERIFICATION_DIR
     )
+    vk = "./target/vk"
+    print("Building verification key...")
+    await build_raw_verification_key(vk, BLOCK_VERIFICATION_DIR, BB)
+
+    print("Creating proof...")
+    await create_proof(
+        pub_inputs=8, # Fields
+        vk_path=vk,
+        compilation_dir=BLOCK_VERIFICATION_DIR,
+        bb_binary=BB
+    )
+
+    print("Verifying proof...")
+    await verify_proof(
+        vk_path=vk,
+        compilation_dir=BLOCK_VERIFICATION_DIR,
+        bb_binary=BB
+    )
+
+    print("Verified proof!")
 
 
 def main():
