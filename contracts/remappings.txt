@@ -1,2 +1,0 @@
-forge-std/=lib/forge-std/src/
-token-types/=lib/token-types/src/
