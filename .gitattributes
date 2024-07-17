@@ -4,3 +4,4 @@
 frontend/public filter=lfs diff=lfs merge=lfs -text
 frontned/public filter=lfs diff=lfs merge=lfs -text
 *.pack filter=lfs diff=lfs merge=lfs -text
+.next/cache/webpack/client-development/0.pack filter=lfs diff=lfs merge=lfs -text
