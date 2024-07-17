@@ -5,3 +5,4 @@ __pycache__/
 **/proofs/
 .next/
 .vscode/.next/
+.next/
