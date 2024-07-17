@@ -2,7 +2,7 @@ import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { Flex, Spacer } from '@chakra-ui/react';
 import { Navbar } from '../components/Navbar';
-import colors from '../styles/colors';
+import { colors } from '../utils/colors';
 import { OpenGraph } from '../components/background/OpenGraph';
 
 const Whitepaper = () => {
@@ -22,7 +22,7 @@ const Whitepaper = () => {
                 direction='column'
                 alignItems='center'
                 justifyContent='flex-start'
-                backgroundImage={'/images/rift_background.png'}
+                backgroundImage={'/images/rift_background_op.webp'}
                 backgroundSize='cover'
                 backgroundPosition='center'>
                 <Navbar />

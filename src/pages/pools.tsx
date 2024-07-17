@@ -2,7 +2,7 @@ import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { Flex, Spacer, Text, Box, Input, Button, InputGroup, InputRightElement, Tooltip } from '@chakra-ui/react';
 import { Navbar } from '../components/Navbar';
-import colors from '../styles/colors';
+import { colors } from '../utils/colors';
 import { IoCheckbox } from 'react-icons/io5';
 import { useState } from 'react';
 import { MdOutlineCheckBoxOutlineBlank } from 'react-icons/md';
@@ -57,7 +57,7 @@ const Liquidity = () => {
                 h='100vh'
                 width='100%'
                 direction='column'
-                backgroundImage={'/images/rift_background.png'}
+                backgroundImage={'/images/rift_background_op.webp'}
                 backgroundSize='cover'
                 backgroundPosition='center'>
                 <Navbar />

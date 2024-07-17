@@ -1,8 +1,10 @@
 import { Box, Button, Flex, FlexProps, Spacer, Text } from '@chakra-ui/react';
-import colors from '../styles/colors';
+import { colors } from '../utils/colors';
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { IoMenu } from 'react-icons/io5';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { ConnectWalletButton } from './ConnectWalletButton';
 
 export const Navbar = ({}) => {
     const { height, width } = useWindowSize();
@@ -59,7 +61,9 @@ export const Navbar = ({}) => {
                 {navItem('Activity', '/activity')}
                 {navItem('About', '/about')}
                 <Spacer />
-                <Flex>{/* CONNECT WALLET BUTTON */}</Flex>
+                <Flex mb='-5px' pr='5px'>
+                    <ConnectWalletButton />
+                </Flex>
             </Flex>
         </Flex>
     );

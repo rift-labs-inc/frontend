@@ -2,7 +2,7 @@ import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { Flex, Spacer, Text, Box, Input, Button, InputGroup, InputRightElement, Tooltip } from '@chakra-ui/react';
 import { Navbar } from '../components/Navbar';
-import colors from '../styles/colors';
+import { colors } from '../utils/colors';
 import { IoCheckbox } from 'react-icons/io5';
 import { useState } from 'react';
 import { MdOutlineCheckBoxOutlineBlank } from 'react-icons/md';
@@ -31,7 +31,7 @@ const Activity = () => {
                 h='100vh'
                 width='100%'
                 direction='column'
-                backgroundImage={'/images/rift_background.png'}
+                backgroundImage={'/images/rift_background_op.webp'}
                 backgroundSize='cover'
                 backgroundPosition='center'>
                 <Navbar />
@@ -77,7 +77,12 @@ const Activity = () => {
                         direction={'column'}
                         mt='55px'>
                         <Flex w='100%' mt='-55px' mb='8px' h='44px'>
-                            <Flex w='100%' h='100%' border={'2px solid #282828'} borderRadius={'8px'} backdropFilter={'blur(10px)'}>
+                            <Flex
+                                w='100%'
+                                h='100%'
+                                border={'2px solid #282828'}
+                                borderRadius={'8px'}
+                                backdropFilter={'blur(10px)'}>
                                 {/* SEARCHBAR */}
                                 <InputGroup>
                                     <Input
@@ -270,7 +275,13 @@ const Activity = () => {
                                                             {formatAddress(order.from_address)}
                                                         </Text>
                                                     </Tooltip>
-                                                    {order.asset == 'BTC' ? <BTCArrow /> : order.asset == 'WBTC' ? <BTCArrow /> : <ETHArrow />}
+                                                    {order.asset == 'BTC' ? (
+                                                        <BTCArrow />
+                                                    ) : order.asset == 'WBTC' ? (
+                                                        <BTCArrow />
+                                                    ) : (
+                                                        <ETHArrow />
+                                                    )}
                                                 </Flex>
                                                 <Flex
                                                     w='180px'

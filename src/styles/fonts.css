@@ -1,0 +1,47 @@
+@font-face {
+    font-family: 'Klein';
+    src: url('/fonts/KleinHeadline-BoldOblique.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Aux';
+    src: url('/fonts/AuxMono.otf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SFPro';
+    src: url('/fonts/SF-Pro-Display-Bold.otf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Nostromo';
+    src: url('/fonts/NostromoRegular-Bold.otf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Cutive Mono';
+    src: url('/fonts/CutiveMono-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SomeType';
+    src: url('/fonts/SometypeMono-VariableFont_wght.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}

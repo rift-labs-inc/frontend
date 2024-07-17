@@ -2,9 +2,12 @@ import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { Flex, Spacer, Text, Box } from '@chakra-ui/react';
 import { Navbar } from '../components/Navbar';
-import colors from '../styles/colors';
+import { colors } from '../utils/colors';
 import { SwapUI } from '../components/SwapUI';
 import { OpenGraph } from '../components/background/OpenGraph';
+import { FONT_FAMILIES } from '../utils/font';
+import BlueText from '../components/BlueText';
+import OrangeText from '../components/OrangeText';
 
 const Home = () => {
     const { height, width } = useWindowSize();
@@ -34,7 +37,7 @@ const Home = () => {
                 h='100vh'
                 width='100%'
                 direction='column'
-                backgroundImage={'/images/rift_background.png'}
+                backgroundImage={'/images/rift_background_op.webp'}
                 backgroundSize='cover'
                 backgroundPosition='center'>
                 <Navbar />
@@ -76,28 +79,33 @@ const Home = () => {
                             ge
                         </Text>
                     </Flex>
-                    <Text
+                    <Flex
+                        flexDir={'column'}
+                        textAlign={'center'}
                         userSelect={'none'}
-                        fontSize='13px'
-                        fontFamily={'Aux'}
+                        fontSize={'14px'}
+                        mt={'8px'}
+                        fontFamily={FONT_FAMILIES.AUX_MONO}
                         color={'#c3c3c3'}
-                        mt='5px'
                         fontWeight={'normal'}
-                        as='h2'>
-                        Trustless, cross-chain swaps using zero-knowledge proofs. See{' '}
-                        <Box
-                            as='span'
-                            onClick={() => handleNavigation('/whitepaper')}
-                            _hover={{
-                                cursor: 'pointer',
-                            }}
-                            style={{
-                                textDecoration: 'underline',
-                            }}
-                            fontWeight={'bold'}>
-                            how it works
-                        </Box>
-                    </Text>
+                        gap={'0px'}>
+                        <Text>Trustless cross-chain swaps between</Text>
+
+                        <Text>
+                            <OrangeText>Bitcoin</OrangeText> and <BlueText>Ethereum</BlueText>. See{' '}
+                            <Box
+                                as='span'
+                                // go to https://rift.exchange
+                                onClick={() => (window.location.href = 'https://rift.exchange')}
+                                style={{
+                                    textDecoration: 'underline',
+                                    cursor: 'pointer !important',
+                                }}
+                                fontWeight={'bold'}>
+                                how it works
+                            </Box>
+                        </Text>
+                    </Flex>
                     <SwapUI />
                 </Flex>
             </Flex>

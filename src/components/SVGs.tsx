@@ -28,7 +28,13 @@ export const WBTCSVG = () => {
                     <stop stop-color='#C16C21' />
                     <stop offset='1' stop-color='#C46816' />
                 </linearGradient>
-                <linearGradient id='paint1_linear_4723_44' x1='2287.13' y1='-1.09841' x2='2287.13' y2='4576.27' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint1_linear_4723_44'
+                    x1='2287.13'
+                    y1='-1.09841'
+                    x2='2287.13'
+                    y2='4576.27'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stop-color='#F9AA4B' />
                     <stop offset='1' stop-color='#F7931A' />
                 </linearGradient>
@@ -63,11 +69,23 @@ export const BTCSVG = ({ width = '100', height = '20', viewBox = '0 0 200 46' })
                 fill='white'
             />
             <defs>
-                <linearGradient id='paint0_linear_4628_619' x1='72.8891' y1='1.66211' x2='72.8891' y2='44.3162' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint0_linear_4628_619'
+                    x1='72.8891'
+                    y1='1.66211'
+                    x2='72.8891'
+                    y2='44.3162'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stop-color='#C16C21' />
                     <stop offset='1' stop-color='#C46816' />
                 </linearGradient>
-                <linearGradient id='paint1_linear_4628_619' x1='2287.91' y1='-1.09841' x2='2287.91' y2='4576.27' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint1_linear_4628_619'
+                    x1='2287.91'
+                    y1='-1.09841'
+                    x2='2287.91'
+                    y2='4576.27'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stop-color='#F9AA4B' />
                     <stop offset='1' stop-color='#F7931A' />
                 </linearGradient>
@@ -89,14 +107,7 @@ export const ETHSVG = ({ width = '100', height = '20', viewBox = '0 0 200 46' })
                 stroke='#627EEA'
                 stroke-width='2.48735'
             />
-            <path
-                d='M45.0827 28.6504C42.0253 40.9161 29.5982 48.3722 17.3501 45.3146C5.08408 42.2571 -2.37206 29.8306 0.685591 17.5826C3.74306 5.31699 16.1521 -2.13915 28.4181 0.918502C40.6662 3.95809 48.1404 16.3846 45.0827 28.6504Z'
-                fill='url(#paint1_linear_4628_625)'
-            />
-            <path
-                d='M33.7793 20.2649C34.2263 17.2257 31.92 15.5809 28.7378 14.4904L29.7747 10.3606L27.2718 9.73489L26.2707 13.7574C25.6092 13.5965 24.9298 13.4356 24.2505 13.2926L25.2516 9.25219L22.7487 8.62646L21.7297 12.7384C21.1755 12.6132 20.6391 12.4881 20.1207 12.3629V12.3451L16.6524 11.4869L15.9909 14.1686C15.9909 14.1686 17.8502 14.5977 17.8144 14.6155C18.8335 14.8658 19.0122 15.5452 18.9765 16.0815L17.7965 20.7834C17.8681 20.8013 17.9575 20.8192 18.0647 20.8728C17.9753 20.8549 17.8859 20.837 17.7965 20.8013L16.1518 27.3803C16.0266 27.6843 15.7048 28.1491 15.0076 27.9703C15.0255 28.0061 13.1841 27.5233 13.1841 27.5233L11.9326 30.4017L15.2043 31.2241C15.8121 31.385 16.4021 31.528 16.992 31.6889L15.9551 35.8544L18.458 36.4802L19.4949 32.3504C20.1743 32.5291 20.8537 32.7079 21.4973 32.8688L20.4782 36.9807L22.9811 37.6065L24.018 33.4409C28.3087 34.2454 31.5267 33.9236 32.8676 30.0441C33.9581 26.9334 32.8139 25.1277 30.5613 23.9478C32.224 23.5723 33.4575 22.4818 33.7793 20.2649ZM28.0406 28.31C27.2718 31.4207 22.0157 29.7402 20.3173 29.3111L21.6939 23.7869C23.3923 24.2159 28.8629 25.0562 28.0406 28.31ZM28.8272 20.2113C28.1121 23.0539 23.7499 21.6058 22.3375 21.2482L23.589 16.2424C25.0013 16.6 29.5602 17.2615 28.8272 20.2113Z'
-                fill='white'
-            />
+
             <path
                 d='M22.8836 46.0002C35.5219 46.0002 45.7673 35.7548 45.7673 23.1166C45.7673 10.4783 35.5219 0.23291 22.8836 0.23291C10.2454 0.23291 0 10.4783 0 23.1166C0 35.7548 10.2454 46.0002 22.8836 46.0002Z'
                 fill='#627EEA'
@@ -112,13 +123,15 @@ export const ETHSVG = ({ width = '100', height = '20', viewBox = '0 0 200 46' })
                 fill='white'
             />
             <defs>
-                <linearGradient id='paint0_linear_4628_625' x1='72.5503' y1='1.66699' x2='72.5503' y2='44.9982' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint0_linear_4628_625'
+                    x1='72.5503'
+                    y1='1.66699'
+                    x2='72.5503'
+                    y2='44.9982'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stop-color='#2E40B7' />
                     <stop offset='1' stop-color='#2E45B0' />
-                </linearGradient>
-                <linearGradient id='paint1_linear_4628_625' x1='2287.13' y1='-0.865504' x2='2287.13' y2='4576.5' gradientUnits='userSpaceOnUse'>
-                    <stop stop-color='#F9AA4B' />
-                    <stop offset='1' stop-color='#F7931A' />
                 </linearGradient>
             </defs>
         </svg>
@@ -197,7 +210,13 @@ export const ETH_Logo = () => {
             <path d='M68.5699 86.2605L99.7293 68.1684L68.5699 54.2532V86.2605Z' fill='white' fill-opacity='0.2' />
             <path d='M37.4067 68.1684L68.5703 86.2605V54.2532L37.4067 68.1684Z' fill='white' fill-opacity='0.602' />
             <defs>
-                <linearGradient id='paint0_linear_110_1894' x1='6646.4' y1='-2.4384' x2='6646.4' y2='13299.4' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint0_linear_110_1894'
+                    x1='6646.4'
+                    y1='-2.4384'
+                    x2='6646.4'
+                    y2='13299.4'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stop-color='#F9AA4B' />
                     <stop offset='1' stop-color='#F7931A' />
                 </linearGradient>
@@ -218,7 +237,13 @@ export const BTC_Logo = () => {
                 fill='white'
             />
             <defs>
-                <linearGradient id='paint0_linear_110_1891' x1='6646.41' y1='-3.192' x2='6646.41' y2='13298.7' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint0_linear_110_1891'
+                    x1='6646.41'
+                    y1='-3.192'
+                    x2='6646.41'
+                    y2='13298.7'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stop-color='#F9AA4B' />
                     <stop offset='1' stop-color='#F7931A' />
                 </linearGradient>

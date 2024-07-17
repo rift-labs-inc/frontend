@@ -1,7 +1,7 @@
 import React from 'react';
 import Header from 'next/head';
 import { NextPage } from 'next';
-import colors from '../../styles/colors';
+import { colors } from '../../utils/colors';
 
 export interface Props {
     title?: string;
@@ -29,7 +29,9 @@ export const OpenGraph: NextPage<Props> = ({
             {owner ? <meta name='author' content={owner} /> : ''}
             <meta
                 name='keywords'
-                content={`Rift, HyperBridge, Ethereum, Bitcoin, Swap, Decentralized Exchange, DEX, ${additionalKeywords?.map((k) => `, ${k}`)}`}
+                content={`Rift, HyperBridge, Ethereum, Bitcoin, Swap, Decentralized Exchange, DEX, ${additionalKeywords?.map(
+                    (k) => `, ${k}`,
+                )}`}
             />
             <meta name='theme-color' content={colors.RiftOrange} />
             {embed ? (

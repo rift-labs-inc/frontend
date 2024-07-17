@@ -16,7 +16,7 @@ import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import colors from '../styles/colors';
+import { colors } from '../utils/colors';
 import { BTCSVG, ETHSVG, InfoSVG } from './SVGs';
 
 type ActiveTab = 'swap' | 'liquidity';
@@ -304,7 +304,7 @@ export const SwapUI = ({}) => {
                             mt={isSwapTab ? '0px' : '-2px'}
                             userSelect={'none'}
                             fontFamily='Nostromo'>
-                            Provide Liquidity
+                            Become an LP
                         </Text>
                     </Flex>
                 </Flex>
@@ -328,7 +328,7 @@ export const SwapUI = ({}) => {
                             <Flex px='10px' bg='#2E1C0C' w='100%' h='110px' border='2px solid #78491F' borderRadius={'10px'}>
                                 <Flex direction={'column'}>
                                     <Text
-                                        color={colors.textGray}
+                                        color={!btcSwapAmount ? colors.offWhite : colors.textGray}
                                         fontSize={'13px'}
                                         mt='9px'
                                         ml='3px'
@@ -355,7 +355,7 @@ export const SwapUI = ({}) => {
                                         _placeholder={{ color: colors.darkerGray }}
                                     />
                                     <Text
-                                        color={colors.textGray}
+                                        color={!btcSwapAmount ? 'white' : colors.textGray}
                                         fontSize={'13px'}
                                         mt='5px'
                                         ml='3px'
@@ -377,6 +377,7 @@ export const SwapUI = ({}) => {
                                     <BTCSVG width='128' height='80' viewBox='0 0 170 69' />
                                 </Flex>
                             </Flex>
+
                             {/* Switch Button */}
                             <Flex
                                 w='30px'
@@ -414,7 +415,7 @@ export const SwapUI = ({}) => {
                                 borderRadius={'10px'}>
                                 <Flex direction={'column'}>
                                     <Text
-                                        color={colors.textGray}
+                                        color={!ethSwapAmount ? colors.offWhite : colors.textGray}
                                         fontSize={'13px'}
                                         mt='9px'
                                         ml='3px'
@@ -441,7 +442,7 @@ export const SwapUI = ({}) => {
                                         _placeholder={{ color: colors.darkerGray }}
                                     />
                                     <Text
-                                        color={colors.textGray}
+                                        color={!ethSwapAmount ? colors.offWhite : colors.textGray}
                                         fontSize={'13px'}
                                         mt='5px'
                                         ml='3px'
@@ -465,7 +466,7 @@ export const SwapUI = ({}) => {
                             </Flex>
                         </Flex>
                         {/* Rate/Liquidity Details */}
-                        <Flex mt='9px'>
+                        <Flex mt='12px'>
                             <Text
                                 color={colors.textGray}
                                 fontSize={'13px'}
@@ -496,9 +497,6 @@ export const SwapUI = ({}) => {
                                 letterSpacing={'-1.5px'}
                                 fontWeight={'normal'}
                                 fontFamily={'Aux'}>
-                                <Box as='span' fontWeight={'bold'}>
-                                    {currentETHLiquidity}{' '}
-                                </Box>
                                 <Flex>
                                     <Tooltip
                                         fontFamily={'Aux'}
@@ -528,26 +526,30 @@ export const SwapUI = ({}) => {
                         {/* Exchange Button */}
 
                         <Flex
-                            bg='rgba(50, 66, 168, 0.3)'
-                            _hover={{ bg: 'rgba(50, 66, 168, 0.65)' }}
+                            bg={ethSwapAmount ? colors.purpleBackground : colors.purpleBackgroundDisabled}
+                            _hover={{ bg: colors.purpleHover }}
                             w='100%'
-                            mt='18px'
+                            mt='15px'
                             transition={'0.2s'}
-                            h='42px'
+                            h='45px'
+                            onClick={ethSwapAmount ? () => handleNavigation('/') : null}
                             fontSize={'15px'}
                             align={'center'}
-                            borderRadius={'10px'}
+                            userSelect={'none'}
                             cursor={'pointer'}
+                            borderRadius={'10px'}
                             justify={'center'}
-                            border={'3px solid #445BCB'}>
-                            <Text fontFamily='Nostromo'>Exchange</Text>
+                            border={ethSwapAmount ? '3px solid #445BCB' : '3px solid #3242a8'}>
+                            <Text color={ethSwapAmount ? colors.offWhite : colors.textGray} fontFamily='Nostromo'>
+                                Exchange
+                            </Text>
                         </Flex>
                     </Flex>
                 )}
                 {activeTab === 'liquidity' && (
                     <Flex w='90%' direction={'column'}>
                         {/* LP Info */}
-                        <Flex mt='-2px'>
+                        <Flex mt='-2px' justify={'center'} align='center'>
                             <Text
                                 textAlign={'center'}
                                 color={colors.textGray}
@@ -557,10 +559,11 @@ export const SwapUI = ({}) => {
                                 letterSpacing={'-1px'}
                                 fontWeight={'normal'}
                                 fontFamily={'Aux'}>
-                                Set your own fees, withdraw anytime.
+                                Earn fees swapping from ETH to BTC.
                                 <br />
-                                Automatically swap from ETH to BTC when your order is filled. Orders are filled by fee, lowest to
-                                highest.
+                                Orders are filled by fee, lowest to highest.
+                                <br />
+                                Withdraw unreserved liquidity anytime.
                             </Text>
                         </Flex>
                         {/* Deposit Input */}
