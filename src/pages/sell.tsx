@@ -39,7 +39,7 @@ const SortByFeesIcon = ({ sortLowestFee }: { sortLowestFee: boolean }) => {
     );
 };
 
-const Deposit = () => {
+const Sell = () => {
     const { height, width } = useWindowSize();
     const isSmallScreen = width < 1200;
     const router = useRouter();
@@ -71,7 +71,7 @@ const Deposit = () => {
                             letterSpacing={'2px'}
                             mt='-25px'>
                             <Text userSelect={'none'} fontSize='56px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
-                                Liquidity
+                                Sell Ethereum
                             </Text>
                         </Flex>
                     </Flex>
@@ -135,4 +135,4 @@ const timeAgo = (unixTimestamp) => {
     return seconds === 1 ? '1 second ago' : `${Math.floor(seconds)} seconds ago`;
 };
 
-export default Deposit;
+export default Sell;

@@ -43,13 +43,13 @@ export const Navbar = ({}) => {
                         ml='1px'
                         top='29px'
                         w={
-                            router.pathname === '/deposit'
-                                ? '87px'
+                            router.pathname === '/sell'
+                                ? '50px'
                                 : router.pathname === '/activity'
                                 ? '93px'
                                 : router.pathname === '/whitepaper'
                                 ? '134px'
-                                : '57px'
+                                : '40px'
                         }
                         height='2px'
                         bgGradient={`linear(90deg, #394AFF, #FF8F28)`}></Flex>
@@ -61,11 +61,11 @@ export const Navbar = ({}) => {
     return (
         <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1000}>
             <Flex direction='row' w='100%' px={'30px'} pt='25px'>
-                {navItem('Swap', '/')}
+                {navItem('Buy', '/')}
                 {/* {navItem('Lending', '/lending')} */}
                 {/* {navItem('OTC', '/otc')} */}
+                {navItem('Sell', '/sell')}
                 {navItem('Activity', '/activity')}
-                {navItem('Deposit', '/deposit')}
                 {navItem('About', '/about')}
                 <Spacer />
                 <Flex mb='-5px' pr='5px'>
