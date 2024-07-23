@@ -52,7 +52,7 @@ const HorizontalButtonSelector = ({
                     key={index}
                     onClick={() => {
                         setSelectedIndex(index);
-                        onSelectItem(options[index]);
+                        if (onSelectItem) onSelectItem(options[index]);
                     }}
                     flex={1}
                     zIndex={1}
