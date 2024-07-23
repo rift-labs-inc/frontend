@@ -17,7 +17,7 @@ const HorizontalButtonSelector = () => {
             borderRadius='10px'
             border='2px solid'
             borderColor={colors.borderGray}
-            height='55px'>
+            height='50px'>
             <MotionFlex
                 position='absolute'
                 bg={colors.purpleButtonBG}

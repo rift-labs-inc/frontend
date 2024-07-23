@@ -58,7 +58,7 @@ const Sell = () => {
                 backgroundSize='cover'
                 backgroundPosition='center'>
                 <Navbar />
-                <Flex direction={'column'} align='center' w='100%' h='100%' mt='195px'>
+                <Flex direction={'column'} align='center' w='100%' h='100%' mt='155px'>
                     {/* LOGOS & TEXT */}
                     <Flex direction={'column'} align='center' w='100%'>
                         <Flex
@@ -70,14 +70,29 @@ const Sell = () => {
                             bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
                             letterSpacing={'2px'}
                             mt='-25px'>
-                            <Text userSelect={'none'} fontSize='56px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
+                            <Text userSelect={'none'} fontSize='64px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
                                 Sell Ethereum
                             </Text>
                         </Flex>
                     </Flex>
                     {/* Horizontal Button Selector */}
-                    <Flex mt={8}>
+                    <Flex mt={'14px'}>
                         <HorizontalButtonSelector />
+                    </Flex>
+                    <Flex
+                        w='1300px'
+                        h='500px'
+                        borderRadius={'20px'}
+                        mt='30px'
+                        bg={colors.offBlack}
+                        border='3px solid'
+                        borderColor={colors.borderGray}>
+                        <Flex w='50%' h='100%'>
+                            {/* ADVAITH WORK HERE */}
+                        </Flex>
+                        <Flex w='50%' h='100%'>
+                            {/* TRISTAN WORK HERE */}
+                        </Flex>
                     </Flex>
                 </Flex>
             </Flex>
