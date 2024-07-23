@@ -1,8 +1,8 @@
-import { Flex, Box, Button, Text } from '@chakra-ui/react';
+import { Flex, Box, Button, Text, Avatar } from '@chakra-ui/react';
 import { useStore } from '../store';
 import useWindowSize from '../hooks/useWindowSize';
-import { ETH_Logo, BTC_Logo, ETHSVG } from './SVGs'; // Assuming you also have a BTC logo
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon } from './SVGs'; // Assuming you also have a BTC logo
+import { ConnectButton, AvatarComponent } from '@rainbow-me/rainbowkit';
 import { colors } from '../utils/colors';
 
 export const ConnectWalletButton = ({}) => {
@@ -53,7 +53,7 @@ export const ConnectWalletButton = ({}) => {
                             }
 
                             return (
-                                <div style={{ display: 'flex', gap: 12 }}>
+                                <div style={{ display: 'flex', gap: 8 }}>
                                     <Button
                                         bg={colors.purpleBackground}
                                         border={`2.4px solid ${colors.purpleBorder}`}
@@ -71,13 +71,13 @@ export const ConnectWalletButton = ({}) => {
                                         type='button'>
                                         {chain.hasIcon && (
                                             <>
-                                                <Flex px='20px' mr='-2px' fontSize={'16px'}>
-                                                    {account.displayBalance
-                                                        ? `${parseFloat(account.balanceFormatted).toFixed(3)}`
-                                                        : ''}
+                                                <Flex mt='-2px' mr='-10px' pl='15px'>
+                                                    <ETH_Icon width='12' height='17' viewBox='0 0 23 36' />
                                                 </Flex>
-                                                <Flex pt='2px' mr='-5px'>
-                                                    <ETHSVG width='110' height='80' viewBox='0 0 130 50' />
+                                                <Flex px='20px' mt='-2px' mr='-2px' fontSize={'16px'} fontFamily={'aux'}>
+                                                    {account.displayBalance
+                                                        ? `${parseFloat(account.balanceFormatted).toFixed(2)}`
+                                                        : ''}
                                                 </Flex>
                                             </>
                                         )}
@@ -89,6 +89,7 @@ export const ConnectWalletButton = ({}) => {
                                         _active={{ bg: colors.purpleBackground }}
                                         bg={colors.purpleBackground}
                                         borderRadius={'10px'}
+                                        fontFamily={'aux'}
                                         fontSize={'16px'}
                                         fontWeight={'bold'}
                                         pt='2px'

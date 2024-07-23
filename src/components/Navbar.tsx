@@ -23,7 +23,13 @@ export const Navbar = ({}) => {
                 cursor='pointer'
                 borderRadius='6px'
                 mr='15px'
-                onClick={() => handleNavigation(route)}
+                onClick={() => {
+                    if (route === '/about') {
+                        window.location.href = 'https://rift.exchange';
+                    } else {
+                        handleNavigation(route);
+                    }
+                }}
                 px='10px'
                 py='2px'
                 position='relative'
@@ -37,8 +43,8 @@ export const Navbar = ({}) => {
                         ml='1px'
                         top='29px'
                         w={
-                            router.pathname === '/pools'
-                                ? '68px'
+                            router.pathname === '/deposit'
+                                ? '87px'
                                 : router.pathname === '/activity'
                                 ? '93px'
                                 : router.pathname === '/whitepaper'
@@ -56,9 +62,10 @@ export const Navbar = ({}) => {
         <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1000}>
             <Flex direction='row' w='100%' px={'30px'} pt='25px'>
                 {navItem('Swap', '/')}
-                {navItem('Lending', '/lending')}
-                {navItem('OTC', '/otc')}
+                {/* {navItem('Lending', '/lending')} */}
+                {/* {navItem('OTC', '/otc')} */}
                 {navItem('Activity', '/activity')}
+                {navItem('Deposit', '/deposit')}
                 {navItem('About', '/about')}
                 <Spacer />
                 <Flex mb='-5px' pr='5px'>

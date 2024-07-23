@@ -140,198 +140,28 @@ export const SwapUI = ({}) => {
     const isSwapTab = activeTab == 'swap';
 
     return (
-        <Flex width='580px' mt='30px' direction={'column'} overflow='hidden'>
-            {/* Tab Buttons */}
-            <Flex justifyContent='center' w='100%' h='43px' position='relative'>
-                {/* Swap Tab */}
-                <Flex
-                    flex={1}
-                    align='center'
-                    justify='center'
-                    zIndex={isSwapTab ? 3 : 1}
-                    onClick={() => handleTabClick('swap')}
-                    pr='1px'>
-                    {/* Tab Text */}
-                    <Flex
-                        flex={1}
-                        {...backgroundColor}
-                        h='100%'
-                        align='center'
-                        justify='center'
-                        borderRadius='20px 0px 0px 0px'
-                        borderTop={borderColor}
-                        borderLeft={borderColor}
-                        borderBottom={isSwapTab ? 'none' : borderColor}
-                        cursor='pointer'>
-                        <Text
-                            textAlign={'center'}
-                            mr='-20px'
-                            mt={isSwapTab ? '-2px' : '0px'}
-                            userSelect='none'
-                            fontFamily='Nostromo'>
-                            Swap
-                        </Text>
-                    </Flex>
-                    {/* Tab Curve (Right Side) */}
-                    <Flex h='100%' w='20px' flexDir='column' position='relative'>
-                        {/* Top Curve and Bottom Space */}
-                        <Flex
-                            {...backgroundColor}
-                            flex={1}
-                            borderTopRightRadius={'20px'}
-                            borderTop={borderColor}
-                            borderRight={borderColor}
-                            cursor='pointer'
-                        />
-                        <Flex {...backgroundColor} flex={1} cursor='pointer'></Flex>
-                        {/* Bottom Curve OR Behind Curve */}
-                        {isSwapTab ? (
-                            <Flex
-                                zIndex={isSwapTab ? 3 : 1}
-                                w='24px'
-                                position='absolute'
-                                bottom='0px'
-                                right='-22px'
-                                h='25px'
-                                borderBottomLeftRadius='25px'
-                                borderLeft={borderColor}
-                                borderBottom={borderColor}
-                                cursor='pointer'
-                            />
-                        ) : (
-                            <Flex
-                                zIndex={isSwapTab ? 1 : 3}
-                                w='4px'
-                                position='absolute'
-                                bottom='12px'
-                                right='-2px'
-                                h='12px'
-                                borderBottomLeftRadius='25px'
-                                borderLeft={borderColor}
-                                borderBottom={borderColor}
-                            />
-                        )}
-                    </Flex>
-                </Flex>
-
-                {/* Middle Shadow */}
-                <Flex
-                    zIndex={2}
-                    position='absolute'
-                    w='5px'
-                    h='5px'
-                    // bg='red'
-                    top='50%'
-                    left='50%'
-                    transform='translate(-50%, -50%)'
-                    borderRadius='100px'
-                    bg='rgba(0, 0, 0, 0.1)'
-                    boxShadow='0px 0px 20px 10px rgba(0, 0, 0, 0.5)'
-                />
-                {/* Middle Patching */}
-                <Flex
-                    zIndex={1}
-                    position='absolute'
-                    w='5px'
-                    h='14px'
-                    bottom={'-7px'}
-                    left='50%'
-                    transform='translate(-50%, -50%)'
-                    {...backgroundColor}
-                />
-
-                {/* Liquidity Tab */}
-                <Flex
-                    flex={1}
-                    align='center'
-                    justify='center'
-                    zIndex={isSwapTab ? 1 : 3}
-                    onClick={() => handleTabClick('liquidity')}
-                    pl='1px'>
-                    {/* Tab Curve (Left Side) */}
-                    <Flex h='100%' w='20px' flexDir='column' position='relative'>
-                        {/* Top Curve and Bottom Space */}
-                        <Flex
-                            {...backgroundColor}
-                            flex={1}
-                            borderTopLeftRadius={'20px'}
-                            borderTop={borderColor}
-                            borderLeft={borderColor}
-                            cursor='pointer'></Flex>
-                        <Flex {...backgroundColor} flex={1} cursor='pointer'></Flex>
-                        {/* Bottom Curve OR Behind Curve */}
-                        {!isSwapTab ? (
-                            <Flex
-                                zIndex={isSwapTab ? 1 : 3}
-                                w='24px'
-                                position='absolute'
-                                bottom='0px'
-                                left='-22px'
-                                h='25px'
-                                borderBottomRightRadius='25px'
-                                borderRight={borderColor}
-                                borderBottom={borderColor}
-                                cursor='pointer'
-                            />
-                        ) : (
-                            <Flex
-                                zIndex={isSwapTab ? 3 : 1}
-                                w='3px'
-                                position='absolute'
-                                bottom='12px'
-                                left='-1px'
-                                h='10px'
-                                borderBottomRightRadius='25px'
-                                borderRight={borderColor}
-                                borderBottom={borderColor}
-                            />
-                        )}
-                    </Flex>
-                    <Flex
-                        flex={1}
-                        {...backgroundColor}
-                        h='100%'
-                        align='center'
-                        justify='center'
-                        borderRadius='0px 20px 0px 0px'
-                        borderTop={borderColor}
-                        borderRight={borderColor}
-                        borderBottom={isSwapTab ? borderColor : 'none'}
-                        cursor='pointer'>
-                        <Text
-                            textAlign={'center'}
-                            ml='-20px'
-                            mt={isSwapTab ? '0px' : '-2px'}
-                            userSelect={'none'}
-                            fontFamily='Nostromo'>
-                            Become an LP
-                        </Text>
-                    </Flex>
-                </Flex>
-            </Flex>
-
+        <Flex width='600px' mt='30px' direction={'column'} overflow='hidden'>
             {/* Content */}
             <Flex
                 direction='column'
                 align='center'
-                py='18px'
-                borderRadius='0px 0px 20px 20px'
+                py='25px'
+                borderRadius='20px'
                 {...backgroundColor}
                 borderBottom={borderColor}
                 borderLeft={borderColor}
+                borderTop={borderColor}
                 borderRight={borderColor}>
                 {activeTab === 'swap' && (
                     <Flex w='90%' direction={'column'}>
                         {/* Inputs */}
                         <Flex w='100%' flexDir='column' position='relative'>
                             {/* BTC Input */}
-                            <Flex px='10px' bg='#2E1C0C' w='100%' h='110px' border='2px solid #78491F' borderRadius={'10px'}>
-                                <Flex direction={'column'}>
+                            <Flex px='10px' bg='#2E1C0C' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
+                                <Flex direction={'column'} py='10px' px='5px'>
                                     <Text
                                         color={!btcSwapAmount ? colors.offWhite : colors.textGray}
                                         fontSize={'13px'}
-                                        mt='9px'
-                                        ml='3px'
                                         letterSpacing={'-1px'}
                                         fontWeight={'normal'}
                                         fontFamily={'Aux'}>
@@ -342,23 +172,24 @@ export const SwapUI = ({}) => {
                                         onChange={handleBtcChange}
                                         fontFamily={'Aux'}
                                         border='none'
-                                        mt='5px'
+                                        mt='2px'
                                         mr='-150px'
+                                        ml='-5px'
                                         p='0px'
                                         letterSpacing={'-6px'}
                                         color={colors.offWhite}
                                         _active={{ border: 'none', boxShadow: 'none' }}
                                         _focus={{ border: 'none', boxShadow: 'none' }}
                                         _selected={{ border: 'none', boxShadow: 'none' }}
-                                        fontSize='38px'
+                                        fontSize='40px'
                                         placeholder='0.0'
                                         _placeholder={{ color: colors.darkerGray }}
                                     />
                                     <Text
-                                        color={!btcSwapAmount ? 'white' : colors.textGray}
+                                        color={!btcSwapAmount ? colors.offWhite : colors.textGray}
                                         fontSize={'13px'}
-                                        mt='5px'
-                                        ml='3px'
+                                        mt='2px'
+                                        ml='1px'
                                         letterSpacing={'-1px'}
                                         fontWeight={'normal'}
                                         fontFamily={'Aux'}>
@@ -373,7 +204,7 @@ export const SwapUI = ({}) => {
                                     </Text>
                                 </Flex>
                                 <Spacer />
-                                <Flex mt='19px' mr='-25px'>
+                                <Flex mt='18px' mr='-25px'>
                                     <BTCSVG width='128' height='80' viewBox='0 0 170 69' />
                                 </Flex>
                             </Flex>
@@ -410,15 +241,13 @@ export const SwapUI = ({}) => {
                                 px='10px'
                                 bg='#161A33'
                                 w='100%'
-                                h='110px'
+                                h='105px'
                                 border='2px solid #303F9F'
                                 borderRadius={'10px'}>
-                                <Flex direction={'column'}>
+                                <Flex direction={'column'} py='10px' px='5px'>
                                     <Text
                                         color={!ethSwapAmount ? colors.offWhite : colors.textGray}
                                         fontSize={'13px'}
-                                        mt='9px'
-                                        ml='3px'
                                         letterSpacing={'-1px'}
                                         fontWeight={'normal'}
                                         fontFamily={'Aux'}>
@@ -429,23 +258,24 @@ export const SwapUI = ({}) => {
                                         onChange={handleEthSwapChange}
                                         fontFamily={'Aux'}
                                         border='none'
-                                        mt='5px'
+                                        mt='2px'
                                         mr='-150px'
+                                        ml='-5px'
                                         p='0px'
                                         letterSpacing={'-6px'}
                                         color={colors.offWhite}
                                         _active={{ border: 'none', boxShadow: 'none' }}
                                         _focus={{ border: 'none', boxShadow: 'none' }}
                                         _selected={{ border: 'none', boxShadow: 'none' }}
-                                        fontSize='38px'
+                                        fontSize='40px'
                                         placeholder='0.0'
                                         _placeholder={{ color: colors.darkerGray }}
                                     />
                                     <Text
                                         color={!ethSwapAmount ? colors.offWhite : colors.textGray}
                                         fontSize={'13px'}
-                                        mt='5px'
-                                        ml='3px'
+                                        mt='2px'
+                                        ml='1px'
                                         letterSpacing={'-1px'}
                                         fontWeight={'normal'}
                                         fontFamily={'Aux'}>
@@ -460,7 +290,7 @@ export const SwapUI = ({}) => {
                                     </Text>
                                 </Flex>
                                 <Spacer />
-                                <Flex mt='19px' mr='-25px'>
+                                <Flex mt='18px' mr='-25px'>
                                     <ETHSVG width='128' height='80' viewBox='0 0 170 69' />
                                 </Flex>
                             </Flex>
@@ -538,7 +368,7 @@ export const SwapUI = ({}) => {
                             borderRadius={'10px'}
                             justify={'center'}
                             border={ethSwapAmount ? '3px solid #445BCB' : '3px solid #3242a8'}>
-                            <Text color={ethSwapAmount ? colors.offWhite : colors.textGray} fontFamily='Nostromo'>
+                            <Text color={ethSwapAmount ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
                                 Exchange
                             </Text>
                         </Flex>

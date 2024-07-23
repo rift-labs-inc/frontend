@@ -8,12 +8,14 @@ export const colors = {
 
     purpleBorder: '#445BCB',
     purpleBorderDark: '#303F9F',
+    purpleButtonBG: '#1B2144',
 
     offWhite: '#eeeeee',
     offerWhite: '#dddddd',
     textGray: '#a5a5a5',
     darkerGray: '#777777',
-    offBlack: '#212121',
+    offBlack: '#151515',
+    borderGray: '#282828',
     text: {
         orange: '#F89B63',
         blue: '#8094F6',

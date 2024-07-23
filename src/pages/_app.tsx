@@ -95,7 +95,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     return (
         <WagmiProvider config={config}>
             <QueryClientProvider client={queryClient}>
-                <RainbowKitProvider theme={myCustomTheme}>
+                <RainbowKitProvider theme={myCustomTheme} modalSize='compact'>
                     <ChakraProvider theme={theme}>
                         {/* <title>Rift Hyperbridge - </title> */}
                         <Component {...pageProps} />
