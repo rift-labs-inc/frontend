@@ -489,7 +489,7 @@ export const SwapUI = ({}) => {
                                     }}></Box>
                             </Text>
                             <Spacer />
-                            <Text
+                            <Flex
                                 ml='-3px'
                                 color={colors.textGray}
                                 fontSize={'13px'}
@@ -497,31 +497,29 @@ export const SwapUI = ({}) => {
                                 letterSpacing={'-1.5px'}
                                 fontWeight={'normal'}
                                 fontFamily={'Aux'}>
-                                <Flex>
-                                    <Tooltip
-                                        fontFamily={'Aux'}
-                                        letterSpacing={'-0.5px'}
-                                        color={colors.offWhite}
-                                        bg={'#121212'}
-                                        fontSize={'12px'}
-                                        label='Exchange rate includes the hypernode, protocol, and LP Fees. There are no additional or hidden fees.'
-                                        aria-label='A tooltip'>
-                                        <Flex ml='8px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
-                                            <Text
-                                                color={colors.textGray}
-                                                fontSize={'13px'}
-                                                mr='8px'
-                                                mt='1px'
-                                                letterSpacing={'-1.5px'}
-                                                fontWeight={'normal'}
-                                                fontFamily={'Aux'}>
-                                                Including Fees
-                                            </Text>
-                                            <InfoSVG width='13' />
-                                        </Flex>
-                                    </Tooltip>
-                                </Flex>
-                            </Text>
+                                <Tooltip
+                                    fontFamily={'Aux'}
+                                    letterSpacing={'-0.5px'}
+                                    color={colors.offWhite}
+                                    bg={'#121212'}
+                                    fontSize={'12px'}
+                                    label='Exchange rate includes the hypernode, protocol, and LP Fees. There are no additional or hidden fees.'
+                                    aria-label='A tooltip'>
+                                    <Flex ml='8px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
+                                        <Text
+                                            color={colors.textGray}
+                                            fontSize={'13px'}
+                                            mr='8px'
+                                            mt='1px'
+                                            letterSpacing={'-1.5px'}
+                                            fontWeight={'normal'}
+                                            fontFamily={'Aux'}>
+                                            Including Fees
+                                        </Text>
+                                        <InfoSVG width='13' />
+                                    </Flex>
+                                </Tooltip>
+                            </Flex>
                         </Flex>
                         {/* Exchange Button */}
 
