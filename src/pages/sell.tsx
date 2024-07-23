@@ -7,6 +7,8 @@ import { toastSuccess } from '../hooks/toast';
 import useWindowSize from '../hooks/useWindowSize';
 import { colors } from '../utils/colors';
 import { FONT_FAMILIES } from '../utils/font';
+import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
+import { useEffect } from 'react';
 
 const SortByFeesIcon = ({ sortLowestFee }: { sortLowestFee: boolean }) => {
     const color = sortLowestFee ? 'red' : '#2CAD39';
@@ -40,6 +42,7 @@ const Sell = () => {
     const handleNavigation = (route: string) => {
         router.push(route);
     };
+    const { options, selected, setSelected } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
 
     return (
         <>
@@ -71,7 +74,7 @@ const Sell = () => {
                     </Flex>
                     {/* Horizontal Button Selector */}
                     <Flex mt={'14px'}>
-                        <HorizontalButtonSelector options={['Create a Vault', 'Manage Vaults']} />
+                        <HorizontalButtonSelector options={options} onSelectItem={setSelected} />
                     </Flex>
                     <Flex
                         w='1300px'

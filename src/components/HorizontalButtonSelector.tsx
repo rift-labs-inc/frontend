@@ -6,17 +6,20 @@ import { FONT_FAMILIES } from '../utils/font';
 
 const MotionFlex = motion(Flex);
 
-interface HorizontalButtonSelectorProps extends FlexProps {
-    options?: string[];
-    onSelectItem?: (s: string) => void;
+type InferArrayElements<T> = T extends ReadonlyArray<infer U> ? U : never;
+
+interface HorizontalButtonSelectorProps<T extends ReadonlyArray<string> = string[]> extends FlexProps {
+    options?: T;
+    onSelectItem?: (s: InferArrayElements<T>) => void;
     buttonWidth?: string | number;
 }
-const HorizontalButtonSelector = ({
-    options = [],
+
+const HorizontalButtonSelector = <T extends ReadonlyArray<string> = string[]>({
+    options = [] as unknown as T,
     buttonWidth = '200px',
     onSelectItem,
     ...props
-}: HorizontalButtonSelectorProps) => {
+}: HorizontalButtonSelectorProps<T>) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
 
     const numOptions = options.length;
@@ -52,7 +55,7 @@ const HorizontalButtonSelector = ({
                     key={index}
                     onClick={() => {
                         setSelectedIndex(index);
-                        if (onSelectItem) onSelectItem(options[index]);
+                        if (onSelectItem) onSelectItem(options[index] as InferArrayElements<T>);
                     }}
                     flex={1}
                     zIndex={1}
