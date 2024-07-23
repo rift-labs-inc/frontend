@@ -152,296 +152,49 @@ export const SwapUI = ({}) => {
                 borderLeft={borderColor}
                 borderTop={borderColor}
                 borderRight={borderColor}>
-                {activeTab === 'swap' && (
-                    <Flex w='90%' direction={'column'}>
-                        {/* Inputs */}
-                        <Flex w='100%' flexDir='column' position='relative'>
-                            {/* BTC Input */}
-                            <Flex px='10px' bg='#2E1C0C' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
-                                <Flex direction={'column'} py='10px' px='5px'>
-                                    <Text
-                                        color={!btcSwapAmount ? colors.offWhite : colors.textGray}
-                                        fontSize={'13px'}
-                                        letterSpacing={'-1px'}
-                                        fontWeight={'normal'}
-                                        fontFamily={'Aux'}>
-                                        You Send
-                                    </Text>
-                                    <Input
-                                        value={btcSwapAmount}
-                                        onChange={handleBtcChange}
-                                        fontFamily={'Aux'}
-                                        border='none'
-                                        mt='2px'
-                                        mr='-150px'
-                                        ml='-5px'
-                                        p='0px'
-                                        letterSpacing={'-6px'}
-                                        color={colors.offWhite}
-                                        _active={{ border: 'none', boxShadow: 'none' }}
-                                        _focus={{ border: 'none', boxShadow: 'none' }}
-                                        _selected={{ border: 'none', boxShadow: 'none' }}
-                                        fontSize='40px'
-                                        placeholder='0.0'
-                                        _placeholder={{ color: colors.darkerGray }}
-                                    />
-                                    <Text
-                                        color={!btcSwapAmount ? colors.offWhite : colors.textGray}
-                                        fontSize={'13px'}
-                                        mt='2px'
-                                        ml='1px'
-                                        letterSpacing={'-1px'}
-                                        fontWeight={'normal'}
-                                        fontFamily={'Aux'}>
-                                        {asset1PriceUSD
-                                            ? btcSwapAmount
-                                                ? (asset1PriceUSD * parseFloat(btcSwapAmount)).toLocaleString('en-US', {
-                                                      style: 'currency',
-                                                      currency: 'USD',
-                                                  })
-                                                : '$0.00'
-                                            : '$0.00'}
-                                    </Text>
-                                </Flex>
-                                <Spacer />
-                                <Flex mt='18px' mr='-25px'>
-                                    <BTCSVG width='128' height='80' viewBox='0 0 170 69' />
-                                </Flex>
-                            </Flex>
-
-                            {/* Switch Button */}
-                            <Flex
-                                w='30px'
-                                h='30px'
-                                borderRadius={'20%'}
-                                alignSelf={'center'}
-                                align={'center'}
-                                justify={'center'}
-                                cursor={'pointer'}
-                                _hover={{ bg: '#232323' }}
-                                onClick={() => setActiveTab('liquidity')}
-                                position={'absolute'}
-                                bg='#161616'
-                                border='2px solid #323232'
-                                top='50%'
-                                left='50%'
-                                transform='translate(-50%, -50%)'>
-                                <svg xmlns='http://www.w3.org/2000/svg' width='20px' height='20px' viewBox='0 0 20 20'>
-                                    <path
-                                        fill='#909090'
-                                        fill-rule='evenodd'
-                                        d='M2.24 6.8a.75.75 0 0 0 1.06-.04l1.95-2.1v8.59a.75.75 0 0 0 1.5 0V4.66l1.95 2.1a.75.75 0 1 0 1.1-1.02l-3.25-3.5a.75.75 0 0 0-1.1 0L2.2 5.74a.75.75 0 0 0 .04 1.06m8 6.4a.75.75 0 0 0-.04 1.06l3.25 3.5a.75.75 0 0 0 1.1 0l3.25-3.5a.75.75 0 1 0-1.1-1.02l-1.95 2.1V6.75a.75.75 0 0 0-1.5 0v8.59l-1.95-2.1a.75.75 0 0 0-1.06-.04'
-                                        clip-rule='evenodd'
-                                    />
-                                </svg>
-                            </Flex>
-                            {/* ETH Output */}
-                            <Flex
-                                mt='5px'
-                                px='10px'
-                                bg='#161A33'
-                                w='100%'
-                                h='105px'
-                                border='2px solid #303F9F'
-                                borderRadius={'10px'}>
-                                <Flex direction={'column'} py='10px' px='5px'>
-                                    <Text
-                                        color={!ethSwapAmount ? colors.offWhite : colors.textGray}
-                                        fontSize={'13px'}
-                                        letterSpacing={'-1px'}
-                                        fontWeight={'normal'}
-                                        fontFamily={'Aux'}>
-                                        You Receive
-                                    </Text>
-                                    <Input
-                                        value={ethSwapAmount}
-                                        onChange={handleEthSwapChange}
-                                        fontFamily={'Aux'}
-                                        border='none'
-                                        mt='2px'
-                                        mr='-150px'
-                                        ml='-5px'
-                                        p='0px'
-                                        letterSpacing={'-6px'}
-                                        color={colors.offWhite}
-                                        _active={{ border: 'none', boxShadow: 'none' }}
-                                        _focus={{ border: 'none', boxShadow: 'none' }}
-                                        _selected={{ border: 'none', boxShadow: 'none' }}
-                                        fontSize='40px'
-                                        placeholder='0.0'
-                                        _placeholder={{ color: colors.darkerGray }}
-                                    />
-                                    <Text
-                                        color={!ethSwapAmount ? colors.offWhite : colors.textGray}
-                                        fontSize={'13px'}
-                                        mt='2px'
-                                        ml='1px'
-                                        letterSpacing={'-1px'}
-                                        fontWeight={'normal'}
-                                        fontFamily={'Aux'}>
-                                        {asset2PriceUSD
-                                            ? ethSwapAmount
-                                                ? (asset2PriceUSD * parseFloat(ethSwapAmount)).toLocaleString('en-US', {
-                                                      style: 'currency',
-                                                      currency: 'USD',
-                                                  })
-                                                : '$0.00'
-                                            : '$0.00'}
-                                    </Text>
-                                </Flex>
-                                <Spacer />
-                                <Flex mt='18px' mr='-25px'>
-                                    <ETHSVG width='128' height='80' viewBox='0 0 170 69' />
-                                </Flex>
-                            </Flex>
-                        </Flex>
-                        {/* Rate/Liquidity Details */}
-                        <Flex mt='12px'>
-                            <Text
-                                color={colors.textGray}
-                                fontSize={'13px'}
-                                ml='3px'
-                                letterSpacing={'-1.5px'}
-                                fontWeight={'normal'}
-                                fontFamily={'Aux'}>
-                                1 BTC ≈ {btcToEthRate} ETH{' '}
-                                <Box
-                                    as='span'
-                                    color={colors.textGray}
-                                    _hover={{
-                                        cursor: 'pointer',
-                                        //open popup about fee info
-                                    }}
-                                    letterSpacing={'-1.5px'}
-                                    style={{
-                                        textDecoration: 'underline',
-                                        textUnderlineOffset: '6px',
-                                    }}></Box>
-                            </Text>
-                            <Spacer />
-                            <Flex
-                                ml='-3px'
-                                color={colors.textGray}
-                                fontSize={'13px'}
-                                mr='3px'
-                                letterSpacing={'-1.5px'}
-                                fontWeight={'normal'}
-                                fontFamily={'Aux'}>
-                                <Tooltip
-                                    fontFamily={'Aux'}
-                                    letterSpacing={'-0.5px'}
-                                    color={colors.offWhite}
-                                    bg={'#121212'}
-                                    fontSize={'12px'}
-                                    label='Exchange rate includes the hypernode, protocol, and LP Fees. There are no additional or hidden fees.'
-                                    aria-label='A tooltip'>
-                                    <Flex ml='8px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
-                                        <Text
-                                            color={colors.textGray}
-                                            fontSize={'13px'}
-                                            mr='8px'
-                                            mt='1px'
-                                            letterSpacing={'-1.5px'}
-                                            fontWeight={'normal'}
-                                            fontFamily={'Aux'}>
-                                            Including Fees
-                                        </Text>
-                                        <InfoSVG width='13' />
-                                    </Flex>
-                                </Tooltip>
-                            </Flex>
-                        </Flex>
-                        {/* Exchange Button */}
-
-                        <Flex
-                            bg={ethSwapAmount ? colors.purpleBackground : colors.purpleBackgroundDisabled}
-                            _hover={{ bg: colors.purpleHover }}
-                            w='100%'
-                            mt='15px'
-                            transition={'0.2s'}
-                            h='45px'
-                            onClick={ethSwapAmount ? () => handleNavigation('/') : null}
-                            fontSize={'15px'}
-                            align={'center'}
-                            userSelect={'none'}
-                            cursor={'pointer'}
-                            borderRadius={'10px'}
-                            justify={'center'}
-                            border={ethSwapAmount ? '3px solid #445BCB' : '3px solid #3242a8'}>
-                            <Text color={ethSwapAmount ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
-                                Exchange
-                            </Text>
-                        </Flex>
-                    </Flex>
-                )}
-                {activeTab === 'liquidity' && (
-                    <Flex w='90%' direction={'column'}>
-                        {/* LP Info */}
-                        <Flex mt='-2px' justify={'center'} align='center'>
-                            <Text
-                                textAlign={'center'}
-                                color={colors.textGray}
-                                fontSize={'13px'}
-                                mt='0px'
-                                ml='3px'
-                                letterSpacing={'-1px'}
-                                fontWeight={'normal'}
-                                fontFamily={'Aux'}>
-                                Earn fees swapping from ETH to BTC.
-                                <br />
-                                Orders are filled by fee, lowest to highest.
-                                <br />
-                                Withdraw unreserved liquidity anytime.
-                            </Text>
-                        </Flex>
-                        {/* Deposit Input */}
-                        <Flex
-                            mt='18px'
-                            px='10px'
-                            bg='#161A33'
-                            w='100%'
-                            h='110px'
-                            border='2px solid #303F9F'
-                            borderRadius={'10px'}>
-                            <Flex direction={'column'}>
+                <Flex w='90%' direction={'column'}>
+                    {/* Inputs */}
+                    <Flex w='100%' flexDir='column' position='relative'>
+                        {/* BTC Input */}
+                        <Flex px='10px' bg='#2E1C0C' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
+                            <Flex direction={'column'} py='10px' px='5px'>
                                 <Text
-                                    color={colors.textGray}
+                                    color={!btcSwapAmount ? colors.offWhite : colors.textGray}
                                     fontSize={'13px'}
-                                    mt='9px'
-                                    ml='3px'
                                     letterSpacing={'-1px'}
                                     fontWeight={'normal'}
                                     fontFamily={'Aux'}>
-                                    Deposit Amount
+                                    You Send
                                 </Text>
                                 <Input
-                                    value={ethDepositAmount}
-                                    onChange={handleEthDepositChange}
+                                    value={btcSwapAmount}
+                                    onChange={handleBtcChange}
                                     fontFamily={'Aux'}
                                     border='none'
-                                    mt='5px'
+                                    mt='2px'
                                     mr='-150px'
+                                    ml='-5px'
                                     p='0px'
                                     letterSpacing={'-6px'}
                                     color={colors.offWhite}
                                     _active={{ border: 'none', boxShadow: 'none' }}
                                     _focus={{ border: 'none', boxShadow: 'none' }}
                                     _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='38px'
+                                    fontSize='40px'
                                     placeholder='0.0'
-                                    _placeholder={{ color: colors.textGray }}
+                                    _placeholder={{ color: colors.darkerGray }}
                                 />
                                 <Text
-                                    color={colors.textGray}
+                                    color={!btcSwapAmount ? colors.offWhite : colors.textGray}
                                     fontSize={'13px'}
-                                    mt='5px'
-                                    ml='3px'
+                                    mt='2px'
+                                    ml='1px'
                                     letterSpacing={'-1px'}
                                     fontWeight={'normal'}
                                     fontFamily={'Aux'}>
-                                    {lpDepositAssetPriceUSD
-                                        ? ethDepositAmount
-                                            ? (lpDepositAssetPriceUSD * parseFloat(ethDepositAmount)).toLocaleString('en-US', {
+                                    {asset1PriceUSD
+                                        ? btcSwapAmount
+                                            ? (asset1PriceUSD * parseFloat(btcSwapAmount)).toLocaleString('en-US', {
                                                   style: 'currency',
                                                   currency: 'USD',
                                               })
@@ -450,106 +203,168 @@ export const SwapUI = ({}) => {
                                 </Text>
                             </Flex>
                             <Spacer />
-                            <Flex mt='19px' mr='-25px'>
-                                <ETHSVG width='128' height='80' viewBox='0 0 170 69' />
-                            </Flex>{' '}
+                            <Flex mt='18px' mr='-25px'>
+                                <BTCSVG width='128' height='80' viewBox='0 0 170 69' />
+                            </Flex>
                         </Flex>
-                        {/* LP Fee */}
-                        <Flex mt='10px' px='10px' bg='#132B12' w='100%' h='78px' border='2px solid #319C48' borderRadius={'10px'}>
-                            <Flex direction={'column'}>
+
+                        {/* Switch Button */}
+                        <Flex
+                            w='30px'
+                            h='30px'
+                            borderRadius={'20%'}
+                            alignSelf={'center'}
+                            align={'center'}
+                            justify={'center'}
+                            cursor={'pointer'}
+                            _hover={{ bg: '#232323' }}
+                            onClick={() => setActiveTab('liquidity')}
+                            position={'absolute'}
+                            bg='#161616'
+                            border='2px solid #323232'
+                            top='50%'
+                            left='50%'
+                            transform='translate(-50%, -50%)'>
+                            <svg xmlns='http://www.w3.org/2000/svg' width='20px' height='20px' viewBox='0 0 20 20'>
+                                <path
+                                    fill='#909090'
+                                    fill-rule='evenodd'
+                                    d='M2.24 6.8a.75.75 0 0 0 1.06-.04l1.95-2.1v8.59a.75.75 0 0 0 1.5 0V4.66l1.95 2.1a.75.75 0 1 0 1.1-1.02l-3.25-3.5a.75.75 0 0 0-1.1 0L2.2 5.74a.75.75 0 0 0 .04 1.06m8 6.4a.75.75 0 0 0-.04 1.06l3.25 3.5a.75.75 0 0 0 1.1 0l3.25-3.5a.75.75 0 1 0-1.1-1.02l-1.95 2.1V6.75a.75.75 0 0 0-1.5 0v8.59l-1.95-2.1a.75.75 0 0 0-1.06-.04'
+                                    clip-rule='evenodd'
+                                />
+                            </svg>
+                        </Flex>
+                        {/* ETH Output */}
+                        <Flex mt='5px' px='10px' bg='#161A33' w='100%' h='105px' border='2px solid #303F9F' borderRadius={'10px'}>
+                            <Flex direction={'column'} py='10px' px='5px'>
                                 <Text
-                                    color={colors.offWhite}
+                                    color={!ethSwapAmount ? colors.offWhite : colors.textGray}
                                     fontSize={'13px'}
-                                    mt='7px'
-                                    ml='3px'
                                     letterSpacing={'-1px'}
                                     fontWeight={'normal'}
                                     fontFamily={'Aux'}>
-                                    Set your LP Fee
+                                    You Receive
                                 </Text>
                                 <Input
-                                    value={lpFee}
-                                    onChange={handleLPFeeChange}
-                                    onBlur={handleLPFeeBlur}
-                                    onFocus={handleLPFeeFocus}
+                                    value={ethSwapAmount}
+                                    onChange={handleEthSwapChange}
                                     fontFamily={'Aux'}
                                     border='none'
-                                    mt='1px'
+                                    mt='2px'
                                     mr='-150px'
+                                    ml='-5px'
                                     p='0px'
                                     letterSpacing={'-6px'}
                                     color={colors.offWhite}
                                     _active={{ border: 'none', boxShadow: 'none' }}
                                     _focus={{ border: 'none', boxShadow: 'none' }}
                                     _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='38px'
-                                    placeholder='0.05%'
-                                    _placeholder={{ color: colors.textGray }}
+                                    fontSize='40px'
+                                    placeholder='0.0'
+                                    _placeholder={{ color: colors.darkerGray }}
                                 />
-                            </Flex>
-                            <Text
-                                position={'absolute'}
-                                color={colors.textGray}
-                                fontSize={'13px'}
-                                right='45px'
-                                mt='45px'
-                                letterSpacing={'-1px'}
-                                fontWeight={'normal'}
-                                fontFamily={'Aux'}>
-                                {`${parseFloat(ethDepositAmount) * (parseFloat(lpFee.replace('%', '')) / 100) || 0} ETH`}
-                            </Text>
-                        </Flex>
-                        {/* BTC Payout Address */}
-                        <Flex mt='10px' px='10px' bg='#2E1C0C' w='100%' h='78px' border='2px solid #78491F' borderRadius={'10px'}>
-                            <Flex direction={'column'}>
                                 <Text
-                                    color={colors.offWhite}
+                                    color={!ethSwapAmount ? colors.offWhite : colors.textGray}
                                     fontSize={'13px'}
-                                    mt='7px'
-                                    ml='3px'
+                                    mt='2px'
+                                    ml='1px'
                                     letterSpacing={'-1px'}
                                     fontWeight={'normal'}
                                     fontFamily={'Aux'}>
-                                    BTC Payout Wallet
+                                    {asset2PriceUSD
+                                        ? ethSwapAmount
+                                            ? (asset2PriceUSD * parseFloat(ethSwapAmount)).toLocaleString('en-US', {
+                                                  style: 'currency',
+                                                  currency: 'USD',
+                                              })
+                                            : '$0.00'
+                                        : '$0.00'}
                                 </Text>
-                                <Input
-                                    value={payoutBTCAddress}
-                                    onChange={handleBTCPayoutAddressChange}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='1px'
-                                    mr='110px'
-                                    p='0px'
-                                    letterSpacing={'-5px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='26px'
-                                    placeholder='BTC payout address'
-                                    _placeholder={{ color: colors.textGray }}
-                                />
                             </Flex>
-                            {/* TODO: ADD LOADING INDICATOR AND ADDRESS VALIDATION CHECK CIRCLE HERE */}
-                        </Flex>
-                        {/* Deposit Button */}
-                        <Flex
-                            bg='rgba(50, 66, 168, 0.3)'
-                            _hover={{ bg: 'rgba(50, 66, 168, 0.65)' }}
-                            w='100%'
-                            mt='20px'
-                            transition={'0.2s'}
-                            h='42px'
-                            fontSize={'14px'}
-                            align={'center'}
-                            borderRadius={'10px'}
-                            cursor={'pointer'}
-                            justify={'center'}
-                            border={'3px solid #445BCB'}>
-                            <Text fontFamily='Nostromo'>Deposit</Text>
+                            <Spacer />
+                            <Flex mt='18px' mr='-25px'>
+                                <ETHSVG width='128' height='80' viewBox='0 0 170 69' />
+                            </Flex>
                         </Flex>
                     </Flex>
-                )}
+                    {/* Rate/Liquidity Details */}
+                    <Flex mt='12px'>
+                        <Text
+                            color={colors.textGray}
+                            fontSize={'13px'}
+                            ml='3px'
+                            letterSpacing={'-1.5px'}
+                            fontWeight={'normal'}
+                            fontFamily={'Aux'}>
+                            1 BTC ≈ {btcToEthRate} ETH{' '}
+                            <Box
+                                as='span'
+                                color={colors.textGray}
+                                _hover={{
+                                    cursor: 'pointer',
+                                    //open popup about fee info
+                                }}
+                                letterSpacing={'-1.5px'}
+                                style={{
+                                    textDecoration: 'underline',
+                                    textUnderlineOffset: '6px',
+                                }}></Box>
+                        </Text>
+                        <Spacer />
+                        <Flex
+                            ml='-3px'
+                            color={colors.textGray}
+                            fontSize={'13px'}
+                            mr='3px'
+                            letterSpacing={'-1.5px'}
+                            fontWeight={'normal'}
+                            fontFamily={'Aux'}>
+                            <Tooltip
+                                fontFamily={'Aux'}
+                                letterSpacing={'-0.5px'}
+                                color={colors.offWhite}
+                                bg={'#121212'}
+                                fontSize={'12px'}
+                                label='Exchange rate includes the hypernode, protocol, and LP Fees. There are no additional or hidden fees.'
+                                aria-label='A tooltip'>
+                                <Flex ml='8px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
+                                    <Text
+                                        color={colors.textGray}
+                                        fontSize={'13px'}
+                                        mr='8px'
+                                        mt='1px'
+                                        letterSpacing={'-1.5px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        Including Fees
+                                    </Text>
+                                    <InfoSVG width='13' />
+                                </Flex>
+                            </Tooltip>
+                        </Flex>
+                    </Flex>
+                    {/* Exchange Button */}
+
+                    <Flex
+                        bg={ethSwapAmount ? colors.purpleBackground : colors.purpleBackgroundDisabled}
+                        _hover={{ bg: colors.purpleHover }}
+                        w='100%'
+                        mt='15px'
+                        transition={'0.2s'}
+                        h='45px'
+                        onClick={ethSwapAmount ? () => handleNavigation('/') : null}
+                        fontSize={'15px'}
+                        align={'center'}
+                        userSelect={'none'}
+                        cursor={'pointer'}
+                        borderRadius={'10px'}
+                        justify={'center'}
+                        border={ethSwapAmount ? '3px solid #445BCB' : '3px solid #3242a8'}>
+                        <Text color={ethSwapAmount ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
+                            Exchange
+                        </Text>
+                    </Flex>
+                </Flex>
             </Flex>
         </Flex>
     );
