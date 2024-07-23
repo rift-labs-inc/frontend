@@ -200,10 +200,11 @@ export const DepositUI = ({}) => {
                                 _placeholder={{ color: colors.darkerGray }}
                             />
                             <Text
-                                position={'absolute'}
+                                position={'relative'}
                                 fontFamily={'Aux'}
-                                mt='10px'
-                                right='-175px'
+                                mb='-10px'
+                                mt='-50px'
+                                right='-400px'
                                 p='0px'
                                 letterSpacing={'-12px'}
                                 color={colors.offWhite}
