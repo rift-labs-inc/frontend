@@ -1,16 +1,5 @@
-import useWindowSize from '../hooks/useWindowSize';
+import { Flex, Image, Text } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
-import { Flex, Spacer, Text, Box, Input, Button, InputGroup, InputRightElement, Tooltip } from '@chakra-ui/react';
-import { Navbar } from '../components/Navbar';
-import { colors } from '../utils/colors';
-import { IoCheckbox } from 'react-icons/io5';
-import { useState } from 'react';
-import { MdOutlineCheckBoxOutlineBlank } from 'react-icons/md';
-import { FaCheckSquare } from 'react-icons/fa';
-import { FaSearch } from 'react-icons/fa';
-import { useStore } from '../store';
-import { toastSuccess } from '../hooks/toast';
-import { BTCSVG } from '../components/SVGs';
 import { OpenGraph } from '../components/background/OpenGraph';
 import HorizontalButtonSelector from '../components/HorizontalButtonSelector';
 import OrangeText from '../components/OrangeText';
@@ -19,6 +8,10 @@ import { FONT_FAMILIES } from '../utils/font';
 import BlueText from '../components/BlueText';
 import WhiteText from '../components/WhiteText';
 import { DepositUI } from '../components/DepositUI';
+import { Navbar } from '../components/Navbar';
+import { toastSuccess } from '../hooks/toast';
+import useWindowSize from '../hooks/useWindowSize';
+import { colors } from '../utils/colors';
 
 const SortByFeesIcon = ({ sortLowestFee }: { sortLowestFee: boolean }) => {
     const color = sortLowestFee ? 'red' : '#2CAD39';
@@ -83,7 +76,7 @@ const Sell = () => {
                     </Flex>
                     {/* Horizontal Button Selector */}
                     <Flex mt={'14px'}>
-                        <HorizontalButtonSelector />
+                        <HorizontalButtonSelector options={['Create a Vault', 'Manage Vaults']} />
                     </Flex>
                     <Flex
                         w='1300px'
@@ -93,8 +86,18 @@ const Sell = () => {
                         mt='20px'
                         border='3px solid'
                         borderColor={colors.borderGray}>
-                        <Flex w='50%' h='100%'>
+                        <Flex w='50%' h='100%' flexDir='column' p='20px'>
                             {/* ADVAITH WORK HERE */}
+                            <Text fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray} fontSize='0.8rem'>
+                                Total Liquidity
+                            </Text>
+                            <Flex gap='8px' align='center'>
+                                <Image src='/images/icons/Ethereum.svg' h='26px' />
+                                <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='30px'>
+                                    323,249.00
+                                </Text>
+                            </Flex>
+                            <Flex flex={1} w='100%' />
                         </Flex>
                         <Flex
                             w='50%'

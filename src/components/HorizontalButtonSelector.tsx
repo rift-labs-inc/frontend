@@ -1,14 +1,26 @@
 import React, { useState } from 'react';
-import { Flex, Button } from '@chakra-ui/react';
+import { Flex, Button, FlexProps } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import { colors } from '../utils/colors';
+import { FONT_FAMILIES } from '../utils/font';
 
 const MotionFlex = motion(Flex);
 
-const HorizontalButtonSelector = () => {
-    const [selectedOption, setSelectedOption] = useState('Create a Vault');
+interface HorizontalButtonSelectorProps extends FlexProps {
+    options?: string[];
+    onSelectItem?: (s: string) => void;
+    buttonWidth?: string | number;
+}
+const HorizontalButtonSelector = ({
+    options = [],
+    buttonWidth = '200px',
+    onSelectItem,
+    ...props
+}: HorizontalButtonSelectorProps) => {
+    const [selectedIndex, setSelectedIndex] = useState(0);
 
-    const options = ['Create a Vault', 'Manage Vaults'];
+    const numOptions = options.length;
+    const optionWidth = 100 / numOptions;
 
     return (
         <Flex
@@ -17,56 +29,48 @@ const HorizontalButtonSelector = () => {
             borderRadius='10px'
             border='2px solid'
             borderColor={colors.borderGray}
-            height='50px'>
+            height='50px'
+            {...props}>
             <MotionFlex
                 position='absolute'
                 bg={colors.purpleButtonBG}
                 height='108%'
                 mt='-2px'
-                width='50.5%'
+                width={`${optionWidth}%`}
                 border='2px solid'
                 borderColor={colors.purpleBorder}
                 borderRadius='10px'
                 initial={false}
                 animate={{
-                    x: selectedOption === 'Create a Vault' ? '-1%' : '99%',
+                    // x: `${selectedIndex * animationWidth - 1}%`,
+                    x: selectedIndex == 0 ? '-1%' : `${selectedIndex * 100 + (selectedIndex == numOptions - 1 ? 1 : 0)}%`,
                 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />
-            <Button
-                h='100%'
-                pt='-10px'
-                w='200px'
-                alignContent={'center'}
-                textAlign={'center'}
-                // pl='12px'
-                _active={{ border: 'none', borderWidth: '0px' }}
-                _selected={{ border: 'none', borderWidth: '0px' }}
-                fontSize={'14px'}
-                key={'Create a Vault'}
-                onClick={() => setSelectedOption('Create a Vault')}
-                flex={1}
-                variant='ghost'
-                zIndex={1}
-                color={selectedOption === 'Create a Vault' ? colors.offWhite : colors.textGray}
-                _hover={{ bg: 'transparent', border: 'none' }}>
-                {'Create a Vault'}
-            </Button>
-            <Button
-                // pr='20px'
-                w='200px'
-                h='100%'
-                pt='-10px'
-                fontSize={'14px'}
-                key={'Manage Vaults'}
-                onClick={() => setSelectedOption('Manage Vaults')}
-                flex={1}
-                variant='ghost'
-                zIndex={1}
-                color={selectedOption === 'Manage Vaults' ? colors.offWhite : colors.textGray}
-                _hover={{ bg: 'transparent' }}>
-                {'Manage Vaults'}
-            </Button>
+            {options.map((text, index) => (
+                <Button
+                    key={index}
+                    onClick={() => {
+                        setSelectedIndex(index);
+                        if (onSelectItem) onSelectItem(options[index]);
+                    }}
+                    flex={1}
+                    zIndex={1}
+                    fontSize={'14px'}
+                    variant='ghost'
+                    h='100%'
+                    pt='-10px'
+                    w={buttonWidth}
+                    alignContent={'center'}
+                    textAlign={'center'}
+                    color={selectedIndex === index ? colors.offWhite : colors.textGray}
+                    fontFamily={FONT_FAMILIES.NOSTROMO}
+                    _active={{ border: 'none', borderWidth: '0px' }}
+                    _selected={{ border: 'none', borderWidth: '0px' }}
+                    _hover={{ bg: 'transparent', border: 'none' }}>
+                    {text}
+                </Button>
+            ))}
         </Flex>
     );
 };
