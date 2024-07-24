@@ -21,4 +21,8 @@ export const colors = {
         blue: '#8094F6',
         body: '#e3e3e3',
     },
+    graph: {
+        lightGreen: '#77E088',
+        darkGreen: '#1A4734',
+    },
 };

@@ -14,6 +14,7 @@ import { colors } from '../utils/colors';
 import { FONT_FAMILIES } from '../utils/font';
 import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
 import { useEffect } from 'react';
+import ExchangeRateChart from '../components/charts/ExchangeRateChart';
 
 const SortByFeesIcon = ({ sortLowestFee }: { sortLowestFee: boolean }) => {
     const color = sortLowestFee ? 'red' : '#2CAD39';
@@ -91,16 +92,23 @@ const Sell = () => {
                         borderColor={colors.borderGray}>
                         <Flex w='50%' h='100%' flexDir='column' p='20px'>
                             {/* ADVAITH WORK HERE */}
-                            <Text fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray} fontSize='0.8rem'>
+                            <Text
+                                fontFamily={FONT_FAMILIES.AUX_MONO}
+                                color={colors.textGray}
+                                fontSize='0.8rem'
+                                fontWeight='300'
+                                letterSpacing='-0.5px'>
                                 Total Liquidity
                             </Text>
                             <Flex gap='8px' align='center'>
                                 <Image src='/images/icons/Ethereum.svg' h='26px' />
-                                <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='30px'>
+                                <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='30px' letterSpacing='-4px'>
                                     323,249.00
                                 </Text>
                             </Flex>
-                            <Flex flex={1} w='100%' />
+                            <Flex flex={1} w='100%'>
+                                <ExchangeRateChart />
+                            </Flex>
                         </Flex>
                         <Flex
                             w='50%'
