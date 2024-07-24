@@ -294,10 +294,21 @@ export const DepositUI = ({}) => {
                             </Text>
                         </Flex>
                         <Spacer />
-                        {/* <Flex mt='18px' direction='column' bg='red'>
-                            <Text>Your exchange rate</Text>
-                            <Text>{btcToEthExchangeRate}</Text>
-                        </Flex> */}
+                        <Flex
+                            alignSelf={'center'}
+                            mr='6px'
+                            w='200px'
+                            h='50px'
+                            bg='#224231'
+                            align='center'
+                            justify='center'
+                            border='2px solid #548148'
+                            borderRadius={'10px'}
+                            textAlign='center'
+                            direction='column'>
+                            <Text color={colors.offWhite}>Your Exchange Rate</Text>
+                            <Text>1 BTC = {btcToEthExchangeRate}</Text>
+                        </Flex>
                     </Flex>
                     {/* Bitcoin Amount Out */}
                     <Flex mt='10px' px='10px' bg='#2E1C0C' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
