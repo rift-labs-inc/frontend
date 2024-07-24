@@ -61,7 +61,7 @@ const Sell = () => {
                 backgroundSize='cover'
                 backgroundPosition='center'>
                 <Navbar />
-                <Flex direction={'column'} align='center' w='100%' h='100%' mt='155px'>
+                <Flex direction={'column'} align='center' w='100%' h='100%' mt='105px'>
                     {/* LOGOS & TEXT */}
                     <Flex direction={'column'} align='center' w='100%'>
                         <Flex
@@ -70,10 +70,10 @@ const Sell = () => {
                                 backgroundClip: 'text',
                                 WebkitBackgroundClip: 'text',
                             }}
-                            bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
+                            bgGradient={`linear(-90deg, #394AFF, #FF8F28)`}
                             letterSpacing={'2px'}
                             mt='-25px'>
-                            <Text userSelect={'none'} fontSize='64px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
+                            <Text userSelect={'none'} fontSize='60px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
                                 Sell Ethereum
                             </Text>
                         </Flex>
@@ -85,9 +85,9 @@ const Sell = () => {
                     <Flex
                         w='1300px'
                         bg={colors.offBlack}
-                        h='500px'
+                        h='650px'
                         borderRadius={'20px'}
-                        mt='20px'
+                        mt='14px'
                         border='3px solid'
                         borderColor={colors.borderGray}>
                         <Flex w='50%' h='100%' flexDir='column' p='20px'>

@@ -44,7 +44,7 @@ const Activity = () => {
                                 backgroundClip: 'text',
                                 WebkitBackgroundClip: 'text',
                             }}
-                            bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
+                            bgGradient={`linear(90deg, #FF8F28, #394AFF)`}
                             letterSpacing={'2px'}
                             mt='-25px'>
                             <Text userSelect={'none'} fontSize='46px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
