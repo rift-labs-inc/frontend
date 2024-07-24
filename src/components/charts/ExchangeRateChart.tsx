@@ -40,11 +40,50 @@ const ExchangeRateChart: React.FC<ExchangeRateChartProps> = () => {
     const xAxis = Array.from({ length: numRangeIntervals }, (_, i) => rangeStart + rangeInterval * i);
     const yAxis = graphDataArray.map((x) => x.y);
 
+    const percentToOffset = (exchangeRate: number) => {
+        if (exchangeRate < rangeStart) return 0;
+        else if (exchangeRate > rangeEnd) return 100;
+        else return ((exchangeRate - rangeStart) / range) * 100;
+    };
+
+    const exchangeRate = 2;
+
     return (
-        <Flex w='100%' flexDir='column'>
-            <Flex flex={1} gap='3px' align='flex-end'>
+        <Flex w='100%' flexDir='column' position='relative'>
+            <Flex position='absolute' top='0' right='0' gap='10px' flexDir='column'>
+                <Flex bg='#420F0F' border='2px solid #B94040' borderRadius='10px' p='6px 8px' flexDir='column' textAlign='center'>
+                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.8rem' letterSpacing='-1px'>
+                        Market Rate
+                    </Text>
+                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.7rem' color={colors.textGray} letterSpacing='-1px'>
+                        1 BTC ≈ 18.485204 ETH
+                    </Text>
+                </Flex>
+                <Flex bg='#161A33' border='2px solid #445BCB' borderRadius='10px' p='6px 8px' flexDir='column' textAlign='center'>
+                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.8rem' letterSpacing='-1px'>
+                        Your Exchange Rate
+                    </Text>
+                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.7rem' color={colors.textGray} letterSpacing='-1px'>
+                        1 BTC ≈ 22.1332 ETH
+                    </Text>
+                </Flex>
+            </Flex>
+            <Flex flex={1} gap='3px' align='flex-end' position='relative'>
+                {/* Your Exchange Rate Bar */}
+                <Flex
+                    position='absolute'
+                    h='100%'
+                    flexDir='column'
+                    justify='center'
+                    align='center'
+                    ml={`${percentToOffset(exchangeRate)}%`}
+                    zIndex={30}>
+                    <Flex w='7px' h='7px' borderRadius='5px' mb='-3px' bg='#465FF9' />
+                    <Flex w='3px' flex={1} bg='#465FF9' />
+                </Flex>
                 {yAxis.map((x, i) => (
                     <Flex w='100%' h='100%' position='relative' align='flex-end'>
+                        {/* Market Rate Bar */}
                         {i == 2 && (
                             <Flex position='absolute' left='0px' h='100%'>
                                 <Flex w='11px' h='4px' borderRadius='5px' bg='#D65252' left='-4px' position='absolute' />
