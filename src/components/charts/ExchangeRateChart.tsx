@@ -1,6 +1,7 @@
 import { Flex, Text } from '@chakra-ui/react';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
+import { useEffect, useRef, useState } from 'react';
 interface ExchangeRateChartProps {}
 const ExchangeRateChart: React.FC<ExchangeRateChartProps> = () => {
     const rangeStart = -1;
@@ -40,16 +41,31 @@ const ExchangeRateChart: React.FC<ExchangeRateChartProps> = () => {
     const xAxis = Array.from({ length: numRangeIntervals }, (_, i) => rangeStart + rangeInterval * i);
     const yAxis = graphDataArray.map((x) => x.y);
 
-    const percentToOffset = (exchangeRate: number) => {
+    const [exchangeRate, setExchangeRate] = useState(2);
+    const [drag, setDrag] = useState(false);
+    const [chartDimensions, setChartDimensions] = useState<DOMRect>();
+
+    const chartRef = useRef<HTMLDivElement>(null);
+
+    const exchangeRateToMarginOffset = () => {
         if (exchangeRate < rangeStart) return 0;
         else if (exchangeRate > rangeEnd) return 100;
         else return ((exchangeRate - rangeStart) / range) * 100;
     };
 
-    const exchangeRate = 2;
+    const marginOffsetToExchangeRate = (offsetDecimal: number) => {
+        const rate = offsetDecimal * range + rangeStart;
+        setExchangeRate(rate);
+    };
+
+    useEffect(() => {
+        if (chartRef && chartRef.current) {
+            setChartDimensions(chartRef.current.getBoundingClientRect());
+        }
+    }, [chartRef]);
 
     return (
-        <Flex w='100%' flexDir='column' position='relative'>
+        <Flex w='100%' flexDir='column' position='relative' mt='20px'>
             <Flex position='absolute' top='0' right='0' gap='10px' flexDir='column'>
                 <Flex bg='#420F0F' border='2px solid #B94040' borderRadius='10px' p='6px 8px' flexDir='column' textAlign='center'>
                     <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.8rem' letterSpacing='-1px'>
@@ -68,7 +84,27 @@ const ExchangeRateChart: React.FC<ExchangeRateChartProps> = () => {
                     </Text>
                 </Flex>
             </Flex>
-            <Flex flex={1} gap='3px' align='flex-end' position='relative'>
+            <Flex
+                flex={1}
+                gap='3px'
+                align='flex-end'
+                position='relative'
+                onMouseUp={() => setDrag(false)}
+                ref={chartRef}
+                onClick={(e) => {
+                    if (chartDimensions) {
+                        const posX = e.clientX - chartDimensions.left;
+                        const offset = posX / chartDimensions.width;
+                        marginOffsetToExchangeRate(offset);
+                    }
+                }}
+                onMouseMove={(e) => {
+                    if (drag && chartDimensions) {
+                        const posX = e.clientX - chartDimensions.left;
+                        const offset = posX / chartDimensions.width;
+                        marginOffsetToExchangeRate(offset);
+                    }
+                }}>
                 {/* Your Exchange Rate Bar */}
                 <Flex
                     position='absolute'
@@ -76,8 +112,12 @@ const ExchangeRateChart: React.FC<ExchangeRateChartProps> = () => {
                     flexDir='column'
                     justify='center'
                     align='center'
-                    ml={`${percentToOffset(exchangeRate)}%`}
-                    zIndex={30}>
+                    ml={`${exchangeRateToMarginOffset()}%`}
+                    zIndex={30}
+                    onMouseDown={() => {
+                        setDrag(true);
+                    }}
+                    onMouseUp={() => setDrag(false)}>
                     <Flex w='7px' h='7px' borderRadius='5px' mb='-3px' bg='#465FF9' />
                     <Flex w='3px' flex={1} bg='#465FF9' />
                 </Flex>

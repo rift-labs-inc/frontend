@@ -102,7 +102,11 @@ const Sell = () => {
                             </Text>
                             <Flex gap='8px' align='center'>
                                 <Image src='/images/icons/Ethereum.svg' h='26px' />
-                                <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='30px' letterSpacing='-4px'>
+                                <Text
+                                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                                    fontSize='50px'
+                                    letterSpacing='-8px'
+                                    fontWeight='normal'>
                                     323,249.00
                                 </Text>
                             </Flex>
