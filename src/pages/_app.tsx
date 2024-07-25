@@ -1,7 +1,7 @@
 import { ChakraProvider, Flex, Text } from '@chakra-ui/react';
 import theme from '../theme';
 import Head from 'next/head';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../store';
 import { AppProps } from 'next/app';
 import '../styles/custom-fonts.css';
@@ -15,6 +15,9 @@ import { WagmiProvider } from 'wagmi';
 import { mainnet, polygon, optimism, arbitrum, base } from 'wagmi/chains';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { getDefaultConfig, RainbowKitProvider, darkTheme, Theme } from '@rainbow-me/rainbowkit';
+import { ethers } from 'ethers';
+import { useDepositVaults } from '../hooks/useDepositVaults';
+import { rpcURL, riftExchangeContractAddress } from '../utils/dappHelper';
 
 const config = getDefaultConfig({
     appName: 'My RainbowKit App',
@@ -80,17 +83,31 @@ const myCustomTheme = {
 };
 
 function MyApp({ Component, pageProps }: AppProps) {
-    const setActivityData = useStore((state) => state.setActivityData);
-    const setLiquidityData = useStore((state) => state.setLiquidityData);
-    const setAvailableAssets = useStore((state) => state.setAvailableAssets);
     const queryClient = new QueryClient();
+    const setActivityData = useStore((state) => state.setActivityData);
+    const setAvailableAssets = useStore((state) => state.setAvailableAssets);
+    const ethersProvider = useStore((state) => state.ethersProvider);
+    const setEthersProvider = useStore((state) => state.setEthersProvider);
+    const [depositVaultsLength, setDepositVaultsLength] = useState(null);
+
+    const { allUserDepositVaults, loading, error } = useDepositVaults(ethersProvider, riftExchangeContractAddress);
+
+    useEffect(() => {
+        // setup provider
+        setEthersProvider(new ethers.providers.JsonRpcProvider(rpcURL));
+    }, []);
+
+    useEffect(() => {
+        if (allUserDepositVaults) {
+            console.log('allUserDepositVaults:', allUserDepositVaults);
+        }
+    }, [allUserDepositVaults]);
 
     useEffect(() => {
         // TODO: populate all real data from smart contracts
         setActivityData(testData.activity);
-        setLiquidityData(testData.liquidity);
         setAvailableAssets(assets.avalible_assets);
-    }, [setActivityData, setLiquidityData, setAvailableAssets]);
+    }, [setActivityData, setAvailableAssets]);
 
     return (
         <WagmiProvider config={config}>

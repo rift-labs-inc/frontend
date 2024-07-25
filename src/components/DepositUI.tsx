@@ -18,6 +18,9 @@ import { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { colors } from '../utils/colors';
 import { BTCSVG, ETHSVG, InfoSVG } from './SVGs';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useAccount, useChainId } from 'wagmi';
+import { contractChainID } from '../utils/dappHelper';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -26,6 +29,13 @@ export const DepositUI = ({}) => {
     const isMobileView = width < 600;
     const router = useRouter();
     const fontSize = isMobileView ? '20px' : '20px';
+
+    const { openConnectModal } = useConnectModal();
+    const { address, isConnected } = useAccount();
+    const chainId = useChainId();
+
+    // const { chain } = useNetwork();
+    // const { chains, error, isLoading, pendingChainId, switchNetwork } = useSwitchNetwork();
 
     // price data
     const [bitcoinPriceUSD, setBitcoinPriceUSD] = useState();
@@ -94,7 +104,7 @@ export const DepositUI = ({}) => {
             }
             // Calculate the profit amount in USD
 
-            const profitAmountUSD = `≈ ${(
+            const profitAmountUSD = `${(
                 ((parseFloat(ethDepositAmount) * parseFloat(profitPercentage)) / 100) *
                 parseFloat(ethPriceUSD)
             ).toLocaleString('en-US', {
@@ -290,7 +300,7 @@ export const DepositUI = ({}) => {
                                 letterSpacing={'-1px'}
                                 fontWeight={'normal'}
                                 fontFamily={'Aux'}>
-                                {profitAmountUSD}
+                                ≈ {profitAmountUSD}
                             </Text>
                         </Flex>
                         <Spacer />
@@ -389,18 +399,30 @@ export const DepositUI = ({}) => {
                         {/* TODO: ADD LOADING INDICATOR AND ADDRESS VALIDATION CHECK CIRCLE HERE */}
                     </Flex>
                     {/* Deposit Button */}
+
                     <Flex
                         bg={
-                            ethDepositAmount && bitcoinOutputAmount && payoutBTCAddress
-                                ? colors.purpleBackground
-                                : colors.purpleBackgroundDisabled
+                            isConnected
+                                ? ethDepositAmount && bitcoinOutputAmount && payoutBTCAddress
+                                    ? colors.purpleBackground
+                                    : colors.purpleBackgroundDisabled
+                                : colors.purpleBackground
                         }
                         _hover={{ bg: colors.purpleHover }}
                         w='100%'
                         mt='15px'
                         transition={'0.2s'}
                         h='45px'
-                        onClick={ethDepositAmount && bitcoinOutputAmount && payoutBTCAddress ? () => handleNavigation('/') : null}
+                        onClick={async () => {
+                            if (!isConnected) {
+                                openConnectModal();
+                            } else if (chainId !== contractChainID) {
+                                // await switchNetwork(chainId);
+                                console.log('Switching network');
+                            } else if (ethDepositAmount && bitcoinOutputAmount && payoutBTCAddress) {
+                                handleNavigation('/');
+                            }
+                        }}
                         fontSize={'15px'}
                         align={'center'}
                         userSelect={'none'}
@@ -408,16 +430,22 @@ export const DepositUI = ({}) => {
                         borderRadius={'10px'}
                         justify={'center'}
                         border={
-                            ethDepositAmount && bitcoinOutputAmount && payoutBTCAddress
-                                ? '3px solid #445BCB'
-                                : '3px solid #3242a8'
+                            isConnected
+                                ? ethDepositAmount && bitcoinOutputAmount && payoutBTCAddress
+                                    ? '3px solid #445BCB'
+                                    : '3px solid #3242a8'
+                                : '3px solid #445BCB'
                         }>
                         <Text
                             color={
-                                ethDepositAmount && bitcoinOutputAmount && payoutBTCAddress ? colors.offWhite : colors.darkerGray
+                                isConnected
+                                    ? ethDepositAmount && bitcoinOutputAmount && payoutBTCAddress
+                                        ? colors.offWhite
+                                        : colors.darkerGray
+                                    : colors.offWhite
                             }
                             fontFamily='Nostromo'>
-                            Deposit Liquidity
+                            {isConnected ? 'Deposit Liquidity' : 'Connect Wallet'}
                         </Text>
                     </Flex>
                 </Flex>
