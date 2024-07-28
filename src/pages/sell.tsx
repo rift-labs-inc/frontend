@@ -3,8 +3,6 @@ import { useRouter } from 'next/router';
 import { OpenGraph } from '../components/background/OpenGraph';
 import HorizontalButtonSelector from '../components/HorizontalButtonSelector';
 import OrangeText from '../components/OrangeText';
-import { SwapUI } from '../components/SwapUI';
-import BlueText from '../components/BlueText';
 import WhiteText from '../components/WhiteText';
 import { DepositUI } from '../components/DepositUI';
 import { Navbar } from '../components/Navbar';
@@ -13,33 +11,15 @@ import useWindowSize from '../hooks/useWindowSize';
 import { colors } from '../utils/colors';
 import { FONT_FAMILIES } from '../utils/font';
 import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
-import { useEffect } from 'react';
-import ExchangeRateChart from '../components/charts/ExchangeRateChart';
-
-const SortByFeesIcon = ({ sortLowestFee }: { sortLowestFee: boolean }) => {
-    const color = sortLowestFee ? 'red' : '#2CAD39';
-    const BAR_HEIGHT = '3px';
-
-    return (
-        <Flex gap='5px' w='24px' flexDir='column' mr='10px'>
-            <Flex
-                w={sortLowestFee ? '100%' : '50%'}
-                h={BAR_HEIGHT}
-                borderRadius='10px'
-                bg={color}
-                transition='0.2s all ease-in-out'
-            />
-            <Flex w={'75%'} h={BAR_HEIGHT} borderRadius='10px' bg={color} transition='0.2s all ease-in-out' />
-            <Flex
-                w={sortLowestFee ? '50%' : '100%'}
-                h={BAR_HEIGHT}
-                borderRadius='10px'
-                bg={color}
-                transition='0.2s all ease-in-out'
-            />
-        </Flex>
-    );
-};
+import { useEffect, useState } from 'react';
+import { getDepositVaults, getLiquidityProvider } from '../utils/dataAggregation';
+import riftExchangeABI from '../abis/RiftExchange.json';
+import { ethers } from 'ethers';
+import { useStore } from '../store';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useAccount, useChainId } from 'wagmi';
+import { contractChainID, riftExchangeContractAddress, weiToEth, satsToBtc } from '../utils/dappHelper';
+import { DepositVault } from '../types';
 
 const Sell = () => {
     const { height, width } = useWindowSize();
@@ -49,6 +29,37 @@ const Sell = () => {
         router.push(route);
     };
     const { options, selected, setSelected } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
+    const allUserDepositVaults = useStore((state) => state.allUserDepositVaults);
+
+    const ethersProvider = useStore((state) => state.ethersProvider);
+    const { openConnectModal } = useConnectModal();
+    const { address, isConnected } = useAccount();
+    const chainId = useChainId();
+    const [myDepositVaults, setMyDepositVaults] = useState<DepositVault[]>([]);
+
+    useEffect(() => {
+        if (isConnected && Array.isArray(allUserDepositVaults) && address) {
+            getLiquidityProvider(ethersProvider, riftExchangeABI.abi, riftExchangeContractAddress, address)
+                .then((result) => {
+                    const stringIndexes = result.depositVaultIndexes.map((index) => index.toString());
+                    const filteredVaults = allUserDepositVaults
+                        .filter((vault, index) => stringIndexes.includes(index.toString()))
+                        .map((vault, index) => {
+                            if (stringIndexes.includes(index.toString())) {
+                                return { ...vault, index: index };
+                            }
+                            return vault;
+                        });
+
+                    console.log('All User Deposit Vaults:', allUserDepositVaults);
+                    console.log('My Deposit Vaults:', filteredVaults);
+                    setMyDepositVaults(filteredVaults);
+                })
+                .catch((error) => {
+                    console.error('Failed to fetch deposit vault indexes:', error);
+                });
+        }
+    }, [isConnected, allUserDepositVaults, address, ethersProvider]);
 
     return (
         <>
@@ -91,13 +102,8 @@ const Sell = () => {
                         border='3px solid'
                         borderColor={colors.borderGray}>
                         <Flex w='50%' h='100%' flexDir='column' p='20px'>
-                            {/* ADVAITH WORK HERE */}
-                            <Text
-                                fontFamily={FONT_FAMILIES.AUX_MONO}
-                                color={colors.textGray}
-                                fontSize='0.8rem'
-                                fontWeight='300'
-                                letterSpacing='-0.5px'>
+                            {/* Liquidity Distribution Chart */}
+                            <Text fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray} fontSize='0.8rem'>
                                 Total Liquidity
                             </Text>
                             <Flex gap='8px' align='center'>
@@ -126,14 +132,53 @@ const Sell = () => {
                             color={'#c3c3c3'}
                             fontWeight={'normal'}
                             gap={'0px'}>
-                            {/* TRISTAN WORK HERE */}
-
-                            <Text fontSize={'12px'} letterSpacing={'-1px'} textAlign={'center'}>
-                                Create a sell order by setting your <WhiteText>Exchange Rate</WhiteText>. Get payed out in
-                                <OrangeText> BTC</OrangeText> when your order is filled. Withdraw unreserved liquidity anytime.
-                            </Text>
-
-                            <DepositUI />
+                            {/* Create a Vault */}
+                            {selected == 'Create a Vault' ? (
+                                <>
+                                    <Text fontSize={'12px'} letterSpacing={'-1px'} textAlign={'center'}>
+                                        Create a sell order by setting your <WhiteText>Exchange Rate</WhiteText>. Get payed out in
+                                        <OrangeText> BTC</OrangeText> when your order is filled. Withdraw unreserved liquidity
+                                        anytime.
+                                    </Text>
+                                    <DepositUI />
+                                </>
+                            ) : (
+                                // MANAGE VAULTS
+                                <>
+                                    <Text fontSize={'12px'} letterSpacing={'-1px'} mb='15px' textAlign={'center'}>
+                                        Manage your <WhiteText>Vault</WhiteText> by setting your{' '}
+                                        <WhiteText>Exchange Rate</WhiteText> and
+                                        <OrangeText> Reserve Ratio</OrangeText>. Withdraw unreserved liquidity anytime.
+                                    </Text>
+                                    {myDepositVaults ? (
+                                        myDepositVaults.map((vault: DepositVault, index: number) => (
+                                            <Flex
+                                                bg={colors.offBlack}
+                                                w='100%'
+                                                h='50px'
+                                                py='10px'
+                                                mb='10px'
+                                                px='15px'
+                                                key={vault.index}
+                                                align='center'
+                                                justify='space-between'
+                                                borderRadius={'10px'}
+                                                border='2px solid '
+                                                borderColor={colors.borderGray}>
+                                                <Text fontWeight='bold'>{vault.index}</Text>
+                                                <Text fontWeight='bold'>{weiToEth(vault.initialBalance)} ETH</Text>
+                                                {/* <Text>{vault.unreservedBalance.toString()} ETH</Text> */}
+                                                <Text>1 BTC ≈ {(1 / satsToBtc(vault.btcExchangeRate)).toFixed(8)} ETH</Text>
+                                                <Text isTruncated maxWidth='200px'>
+                                                    {vault.btcPayoutLockingScript.substring(0, 20)}
+                                                </Text>
+                                            </Flex>
+                                        ))
+                                    ) : (
+                                        <Text>No deposit vaults found</Text>
+                                    )}
+                                </>
+                            )}
                         </Flex>
                     </Flex>
                 </Flex>

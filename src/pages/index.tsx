@@ -8,10 +8,6 @@ import { OpenGraph } from '../components/background/OpenGraph';
 import { FONT_FAMILIES } from '../utils/font';
 import BlueText from '../components/BlueText';
 import OrangeText from '../components/OrangeText';
-import { useEffect } from 'react';
-import { getDepositVaults } from '../utils/data_agg';
-import depositVaultABI from '../contracts/out/DepositVaultsData.sol/DepositVaultsData.json';
-import { ethers } from 'ethers';
 
 const Home = () => {
     const { height, width } = useWindowSize();
@@ -20,18 +16,6 @@ const Home = () => {
     const handleNavigation = (route: string) => {
         router.push(route);
     };
-
-    useEffect(() => {
-        const bytecode = depositVaultABI.bytecode;
-        const abi = depositVaultABI.abi;
-        const rift_exchange_contract = '0x4E5084F645BAFE38dEC0F19dd3419c7a627a6738';
-        getDepositVaults(
-            new ethers.providers.JsonRpcProvider('https://ethereum-sepolia.blockpi.network/v1/rpc/public'),
-            bytecode.object,
-            abi,
-            rift_exchange_contract,
-        );
-    }, []);
 
     const RiftSVG = () => {
         return (
