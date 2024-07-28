@@ -14,7 +14,7 @@ import {
 } from '@chakra-ui/react';
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, ChangeEvent } from 'react';
 import styled from 'styled-components';
 import { colors } from '../utils/colors';
 import { BTCSVG, ETHSVG, InfoSVG } from './SVGs';
@@ -84,18 +84,88 @@ export const DepositUI = ({}) => {
         router.push(route);
     };
 
-    const lastBitcoinOutputAmount = useRef('');
-
     useEffect(() => {
-        if (bitcoinPriceUSD && ethPriceUSD && ethDepositAmount && profitPercentage) {
-            const profitAmount = parseFloat(ethDepositAmount) * (parseFloat(profitPercentage) / 100);
-            const totalEthUSD = parseFloat(ethDepositAmount) * ethPriceUSD + profitAmount * ethPriceUSD;
+        const fetchPriceData = async () => {
+            // TODO: get this data from uniswap
+            try {
+                const response = await fetch(
+                    'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,weth&vs_currencies=usd,eth',
+                );
+                const data = await response.json();
+                if (data.bitcoin && data.bitcoin.usd) {
+                    setBitcoinPriceUSD(data.bitcoin.usd); // Bitcoin price in USD
+                }
+                if (data.ethereum && data.ethereum.usd) {
+                    setEthPriceUSD(data.ethereum.usd); // Ethereum price in USD
+                }
+                if (data.weth && data.weth.usd) {
+                    setWrappedEthPriceUSD(data.weth.usd); // Wrapped Ethereum price in USD
+                }
+                if (data.bitcoin && data.bitcoin.eth) {
+                    setBtcToEthExchangeRate(data.bitcoin.eth); // exchange rate of Bitcoin in Ethereum
+                }
+            } catch (error) {
+                console.error('Failed to fetch prices and exchange rate:', error);
+            }
+        };
+
+        fetchPriceData();
+    }, []);
+
+    // useEffect(() => {
+    //     if (bitcoinPriceUSD && ethPriceUSD && ethDepositAmount && profitPercentage) {
+    // const profitAmount = parseFloat(ethDepositAmount) * (parseFloat(profitPercentage) / 100);
+    // const totalEthUSD = parseFloat(ethDepositAmount) * ethPriceUSD + profitAmount * ethPriceUSD;
+    // const newBitcoinOutputAmount = totalEthUSD / bitcoinPriceUSD > 0 ? totalEthUSD / bitcoinPriceUSD : 0;
+    // const formattedBitcoinOutputAmount = newBitcoinOutputAmount == 0 ? '0.0' : newBitcoinOutputAmount.toFixed(7);
+
+    // if (formattedBitcoinOutputAmount !== lastBitcoinOutputAmount.current) {
+    //     setBitcoinOutputAmount(formattedBitcoinOutputAmount);
+    //     lastBitcoinOutputAmount.current = formattedBitcoinOutputAmount; // Update the ref
+    // }
+    //         // Calculate the profit amount in USD
+
+    //         const profitAmountUSD = `≈ ${(
+    //             ((parseFloat(ethDepositAmount) * parseFloat(profitPercentage)) / 100) *
+    //             parseFloat(ethPriceUSD)
+    //         ).toLocaleString('en-US', {
+    //             style: 'currency',
+    //             currency: 'USD',
+    //         })}`;
+    //         setProfitAmountUSD(profitAmountUSD);
+
+    //         // Calculate and update the deposit amount in USD
+    //         const ethDepositAmountUSD =
+    //             ethPriceUSD && ethDepositAmount
+    //                 ? (ethPriceUSD * parseFloat(ethDepositAmount)).toLocaleString('en-US', {
+    //                       style: 'currency',
+    //                       currency: 'USD',
+    //                   })
+    //                 : '$0.00';
+    //         setEthDepositAmountUSD(ethDepositAmountUSD);
+    //     }
+
+    //     // Calculate and update the Bitcoin output amount in USD
+    //     const bitcoinOutputAmountUSD =
+    //         bitcoinPriceUSD && bitcoinOutputAmount
+    //             ? (bitcoinPriceUSD * parseFloat(bitcoinOutputAmount)).toLocaleString('en-US', {
+    //                   style: 'currency',
+    //                   currency: 'USD',
+    //               })
+    //             : '$0.00';
+    //     setBitcoinOutputAmountUSD(bitcoinOutputAmountUSD);
+    // }, [ethDepositAmount, profitPercentage, bitcoinOutputAmount, bitcoinPriceUSD, ethPriceUSD]);
+
+    const calculateBitcoinAmount = (newEthDepositAmount: string | undefined, newProfitPercentage: string | undefined) => {
+        if (ethPriceUSD && bitcoinPriceUSD) {
+            const profitAmount =
+                parseFloat(newEthDepositAmount ?? ethDepositAmount) * (parseFloat(newProfitPercentage ?? profitPercentage) / 100);
+            const totalEthUSD = parseFloat(newEthDepositAmount ?? ethDepositAmount) * ethPriceUSD + profitAmount * ethPriceUSD;
             const newBitcoinOutputAmount = totalEthUSD / bitcoinPriceUSD > 0 ? totalEthUSD / bitcoinPriceUSD : 0;
             const formattedBitcoinOutputAmount = newBitcoinOutputAmount == 0 ? '0.0' : newBitcoinOutputAmount.toFixed(7);
 
-            if (formattedBitcoinOutputAmount !== lastBitcoinOutputAmount.current) {
+            if (validateBitcoinOutputAmount(formattedBitcoinOutputAmount)) {
                 setBitcoinOutputAmount(formattedBitcoinOutputAmount);
-                lastBitcoinOutputAmount.current = formattedBitcoinOutputAmount; // Update the ref
             }
             // Calculate the profit amount in USD
 
@@ -118,8 +188,47 @@ export const DepositUI = ({}) => {
                     : '$0.00';
             setEthDepositAmountUSD(ethDepositAmountUSD);
         }
+    };
 
-        // Calculate and update the Bitcoin output amount in USD
+    const calculatePercentAmount = (bitcoinAmount: string) => {
+        const startValue = parseFloat(ethDepositAmount);
+        const endValue = parseFloat(bitcoinAmount) * btcToEthExchangeRate;
+        const newProfitPercentage = (((endValue - startValue) / startValue) * 100).toFixed(2);
+
+        if (validateProfitPercentage(newProfitPercentage)) {
+            setProfitPercentage(newProfitPercentage);
+        }
+    };
+
+    useEffect(() => {
+        // Calculate the profit amount in USD
+        const profitAmountUSD = `${(
+            ((parseFloat(ethDepositAmount) * parseFloat(profitPercentage)) / 100) *
+            ethPriceUSD
+        ).toLocaleString('en-US', {
+            style: 'currency',
+            currency: 'USD',
+        })}`;
+        setProfitAmountUSD(!profitPercentage || !ethDepositAmount || profitPercentage == '-' ? '$0.00' : profitAmountUSD);
+
+        // Run function to calculate bitcoin amount
+        // setBitcoinOutputAmount(calculateBitcoinAmount());
+    }, [ethDepositAmount, profitPercentage]);
+
+    // Calculate and update the deposit amount in USD
+    useEffect(() => {
+        const ethDepositAmountUSD =
+            ethPriceUSD && ethDepositAmount
+                ? (ethPriceUSD * parseFloat(ethDepositAmount)).toLocaleString('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                  })
+                : '$0.00';
+        setEthDepositAmountUSD(ethDepositAmountUSD);
+    }, [ethDepositAmount]);
+
+    // Calculate and update the Bitcoin output amount in USD
+    useEffect(() => {
         const bitcoinOutputAmountUSD =
             bitcoinPriceUSD && bitcoinOutputAmount
                 ? (bitcoinPriceUSD * parseFloat(bitcoinOutputAmount)).toLocaleString('en-US', {
@@ -128,11 +237,11 @@ export const DepositUI = ({}) => {
                   })
                 : '$0.00';
         setBitcoinOutputAmountUSD(bitcoinOutputAmountUSD);
-    }, [ethDepositAmount, profitPercentage, bitcoinOutputAmount, bitcoinPriceUSD, ethPriceUSD]);
+    }, [bitcoinOutputAmount]);
 
     // deposit amount
-    const handleEthDepositChange = (value) => {
-        const ethValue = value;
+    const handleEthDepositChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const ethValue = e.target.value;
         const validateEthDepositChange = (value) => {
             if (value === '') return true;
             const regex = /^\d*\.?\d*$/;
@@ -141,33 +250,36 @@ export const DepositUI = ({}) => {
 
         if (validateEthDepositChange(ethValue)) {
             setEthDepositAmount(ethValue);
+            calculateBitcoinAmount(ethValue, undefined);
         }
     };
 
+    const validateProfitPercentage = (value) => {
+        if (value === '') return true;
+        const regex = /^-?\d*(\.\d{0,2})?$/;
+        return regex.test(value);
+    };
+
     // profit percentage
-    const handleProfitPercentageChange = (value) => {
-        console.log('value', value);
-        const profitPercentageValue = value.replace('%', '');
-        const validateProfitPercentage = (value) => {
-            if (value === '') return true;
-            const regex = /^-?\d*(\.\d{0,2})?$/;
-            return regex.test(value);
-        };
+    const handleProfitPercentageChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const profitPercentageValue = e.target.value.replace('%', '');
 
         if (validateProfitPercentage(profitPercentageValue)) {
             setProfitPercentage(profitPercentageValue);
+            calculateBitcoinAmount(undefined, profitPercentageValue);
         } else {
             console.log('Invalid profit percentage');
         }
     };
 
-    const handleProfitPercentageFocus = (value) => {
+    const handleProfitPercentageFocus = (value: string) => {
         let ProfitPercentageValue = value.replace('%', '').replace(/^\+/, '');
         setProfitPercentage(ProfitPercentageValue);
     };
 
     const handleProfitPercentageBlur = () => {
-        if (profitPercentage !== '') {
+        if (profitPercentage === '-') setProfitPercentage('');
+        else if (profitPercentage !== '') {
             let formattedProfitPercentage = profitPercentage;
             if (!formattedProfitPercentage.startsWith('-') && /^[0-9]/.test(formattedProfitPercentage)) {
                 // Check if it's numeric and not negative
@@ -178,20 +290,18 @@ export const DepositUI = ({}) => {
     };
 
     // bitcoin amount out
-    const handleBitcoinOutputAmountChange = (e) => {
+    const validateBitcoinOutputAmount = (value: string) => {
+        if (value === '') return true;
+        const regex = /^\d*\.?\d*$/;
+        return regex.test(value);
+    };
+
+    const handleBitcoinOutputAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
         const bitcoinOutputAmountValue = e.target.value;
-        const validateBitcoinOutputAmount = (value) => {
-            if (value === '') return true;
-            const regex = /^\d*\.?\d*$/;
-            return regex.test(value);
-        };
 
         if (validateBitcoinOutputAmount(bitcoinOutputAmountValue)) {
             setBitcoinOutputAmount(bitcoinOutputAmountValue);
-            const newProfitPercentage =
-                (bitcoinOutputAmountValue * btcToEthExchangeRate - parseFloat(ethDepositAmount) / parseFloat(ethDepositAmount)) *
-                100;
-            handleProfitPercentageChange(newProfitPercentage.toFixed(2));
+            calculatePercentAmount(bitcoinOutputAmountValue);
         }
     };
 
@@ -269,7 +379,7 @@ export const DepositUI = ({}) => {
                                 <Input
                                     value={ethDepositAmount}
                                     onChange={(e) => {
-                                        handleEthDepositChange(e.target.value);
+                                        handleEthDepositChange(e);
                                     }}
                                     fontFamily={'Aux'}
                                     border='none'
@@ -323,7 +433,7 @@ export const DepositUI = ({}) => {
                                 <Input
                                     value={profitPercentage}
                                     onChange={(e) => {
-                                        handleProfitPercentageChange(e.target.value);
+                                        handleProfitPercentageChange(e);
                                     }}
                                     onBlur={handleProfitPercentageBlur}
                                     onFocus={() => handleProfitPercentageFocus(profitPercentage)}

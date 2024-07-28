@@ -31,6 +31,7 @@ import { BigNumber } from 'ethers';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
 import { BTCSVG, ETH_Icon, ETH_Logo, ETHSVG } from '../components/SVGs';
 import { ManageVaults } from '../components/ManageVaults';
+import ExchangeRateChart from '../components/charts/ExchangeRateChart';
 
 const Sell = () => {
     const { height, width } = useWindowSize();
@@ -149,11 +150,17 @@ const Sell = () => {
                             </Text>
                             <Flex gap='8px' align='center'>
                                 <Image src='/images/icons/Ethereum.svg' h='26px' />
-                                <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='30px'>
+                                <Text
+                                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                                    fontSize='50px'
+                                    letterSpacing='-8px'
+                                    fontWeight='normal'>
                                     323,249.00
                                 </Text>
                             </Flex>
-                            <Flex flex={1} w='100%' />
+                            <Flex flex={1} w='100%'>
+                                <ExchangeRateChart />
+                            </Flex>
                         </Flex>
                         {/* Deposit & Manage Vaults */}
                         {selectedButton === 'Create a Vault' ? <DepositUI /> : <ManageVaults />}
