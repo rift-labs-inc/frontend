@@ -3,11 +3,14 @@ import { useRouter } from 'next/router';
 import { Flex, Spacer, Text, Box } from '@chakra-ui/react';
 import { Navbar } from '../components/Navbar';
 import { colors } from '../utils/colors';
-import { SwapUI } from '../components/SwapUI';
+import { BuyUI } from '../components/BuyUI';
 import { OpenGraph } from '../components/background/OpenGraph';
 import { FONT_FAMILIES } from '../utils/font';
 import BlueText from '../components/BlueText';
 import OrangeText from '../components/OrangeText';
+import React, { useEffect } from 'react';
+import { SwapFlow } from '../components/SwapFlow';
+import { useStore } from '../store';
 
 const Home = () => {
     const { height, width } = useWindowSize();
@@ -16,6 +19,13 @@ const Home = () => {
     const handleNavigation = (route: string) => {
         router.push(route);
     };
+
+    const swapFlowState = useStore((state) => state.swapFlowState);
+    const setSwapFlowState = useStore((state) => state.setSwapFlowState);
+
+    useEffect(() => {
+        setSwapFlowState('not-started');
+    }, []);
 
     const RiftSVG = () => {
         return (
@@ -41,72 +51,78 @@ const Home = () => {
                 backgroundSize='cover'
                 backgroundPosition='center'>
                 <Navbar />
-                <Flex direction={'column'} align='center' w='100%' mt='19vh'>
+                <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === 'not-started' ? '19vh' : '100px'}>
                     {/* LOGOS & TEXT */}
-                    <RiftSVG />
-                    <Flex
-                        sx={{
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                            WebkitBackgroundClip: 'text',
-                        }}
-                        bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
-                        letterSpacing={'2px'}
-                        mt='-25px'>
-                        <Text
-                            userSelect={'none'}
-                            fontSize='94px'
-                            fontFamily={'Klein'}
-                            fontWeight='bold'
-                            px='12px'
-                            as='h1'
-                            // dropShadow={"10px 10px 10px rgba(122, 90, 212)"} TODO: Add drop shadow to all gradient text
-                        >
-                            HyperBrid
-                        </Text>
-                        <Text
-                            userSelect={'none'}
-                            fontSize='94px'
-                            fontFamily={'Klein'}
-                            ml='-20px'
-                            fontWeight='bold'
-                            sx={{
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                                WebkitBackgroundClip: 'text',
-                            }}
-                            as='h1'>
-                            ge
-                        </Text>
-                    </Flex>
-                    <Flex
-                        flexDir={'column'}
-                        textAlign={'center'}
-                        userSelect={'none'}
-                        fontSize={'14px'}
-                        mt={'8px'}
-                        fontFamily={FONT_FAMILIES.AUX_MONO}
-                        color={'#c3c3c3'}
-                        fontWeight={'normal'}
-                        gap={'0px'}>
-                        <Text>Trustless cross-chain swaps between</Text>
-
-                        <Text>
-                            <OrangeText>Bitcoin</OrangeText> and <BlueText>Ethereum</BlueText>. See{' '}
-                            <Box
-                                as='span'
-                                // go to https://rift.exchange
-                                onClick={() => (window.location.href = 'https://rift.exchange')}
-                                style={{
-                                    textDecoration: 'underline',
-                                    cursor: 'pointer !important',
+                    {swapFlowState != 'not-started' ? (
+                        <SwapFlow />
+                    ) : (
+                        <>
+                            <RiftSVG />
+                            <Flex
+                                sx={{
+                                    WebkitTextFillColor: 'transparent',
+                                    backgroundClip: 'text',
+                                    WebkitBackgroundClip: 'text',
                                 }}
-                                fontWeight={'bold'}>
-                                how it works
-                            </Box>
-                        </Text>
-                    </Flex>
-                    <SwapUI />
+                                bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
+                                letterSpacing={'2px'}
+                                mt='-25px'>
+                                <Text
+                                    userSelect={'none'}
+                                    fontSize='94px'
+                                    fontFamily={'Klein'}
+                                    fontWeight='bold'
+                                    px='12px'
+                                    as='h1'
+                                    // dropShadow={"10px 10px 10px rgba(122, 90, 212)"} TODO: Add drop shadow to all gradient text
+                                >
+                                    HyperBrid
+                                </Text>
+                                <Text
+                                    userSelect={'none'}
+                                    fontSize='94px'
+                                    fontFamily={'Klein'}
+                                    ml='-20px'
+                                    fontWeight='bold'
+                                    sx={{
+                                        WebkitTextFillColor: 'transparent',
+                                        backgroundClip: 'text',
+                                        WebkitBackgroundClip: 'text',
+                                    }}
+                                    as='h1'>
+                                    ge
+                                </Text>
+                            </Flex>
+                            <Flex
+                                flexDir={'column'}
+                                textAlign={'center'}
+                                userSelect={'none'}
+                                fontSize={'14px'}
+                                mt={'8px'}
+                                fontFamily={FONT_FAMILIES.AUX_MONO}
+                                color={'#c3c3c3'}
+                                fontWeight={'normal'}
+                                gap={'0px'}>
+                                <Text>Trustless cross-chain swaps between</Text>
+
+                                <Text>
+                                    <OrangeText>Bitcoin</OrangeText> and <BlueText>Ethereum</BlueText>. See{' '}
+                                    <Box
+                                        as='span'
+                                        // go to https://rift.exchange
+                                        onClick={() => (window.location.href = 'https://rift.exchange')}
+                                        style={{
+                                            textDecoration: 'underline',
+                                            cursor: 'pointer !important',
+                                        }}
+                                        fontWeight={'bold'}>
+                                        how it works
+                                    </Box>
+                                </Text>
+                            </Flex>
+                            <BuyUI />
+                        </>
+                    )}
                 </Flex>
             </Flex>
         </>

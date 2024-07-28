@@ -12,7 +12,7 @@ import { colors } from '../utils/colors';
 import toast, { ToastBar, Toaster } from 'react-hot-toast';
 import '@rainbow-me/rainbowkit/styles.css';
 import { WagmiProvider } from 'wagmi';
-import { mainnet, polygon, optimism, arbitrum, base } from 'wagmi/chains';
+import { mainnet, sepolia, polygon, optimism, arbitrum, base } from 'wagmi/chains';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { getDefaultConfig, RainbowKitProvider, darkTheme, Theme } from '@rainbow-me/rainbowkit';
 import { ethers } from 'ethers';
@@ -22,7 +22,7 @@ import { rpcURL, riftExchangeContractAddress } from '../utils/dappHelper';
 const config = getDefaultConfig({
     appName: 'My RainbowKit App',
     projectId: 'YOUR_PROJECT_ID',
-    chains: [mainnet],
+    chains: [mainnet, sepolia],
     ssr: true, // If your dApp uses server side rendering (SSR)
 });
 
@@ -89,6 +89,14 @@ function MyApp({ Component, pageProps }: AppProps) {
     const ethersProvider = useStore((state) => state.ethersProvider);
     const setEthersProvider = useStore((state) => state.setEthersProvider);
     const [depositVaultsLength, setDepositVaultsLength] = useState(null);
+    const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
+    const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
+    const ethPriceUSD = useStore((state) => state.ethPriceUSD);
+    const setEthPriceUSD = useStore((state) => state.setEthPriceUSD);
+    const wrappedEthPriceUSD = useStore((state) => state.wrappedEthPriceUSD);
+    const setWrappedEthPriceUSD = useStore((state) => state.setWrappedEthPriceUSD);
+    const btcToEthExchangeRate = useStore((state) => state.btcToEthExchangeRate);
+    const setBtcToEthExchangeRate = useStore((state) => state.setBtcToEthExchangeRate);
 
     const { allUserDepositVaults, loading, error } = useDepositVaults(ethersProvider, riftExchangeContractAddress);
 
@@ -108,6 +116,35 @@ function MyApp({ Component, pageProps }: AppProps) {
         setActivityData(testData.activity);
         setAvailableAssets(assets.avalible_assets);
     }, [setActivityData, setAvailableAssets]);
+
+    useEffect(() => {
+        const fetchPriceData = async () => {
+            // TODO: get this data from uniswap
+            try {
+                const response = await fetch(
+                    'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,weth&vs_currencies=usd,eth',
+                );
+                const data = await response.json();
+                if (data.bitcoin && data.bitcoin.usd) {
+                    setBitcoinPriceUSD(data.bitcoin.usd); // Bitcoin price in USD
+                }
+                if (data.ethereum && data.ethereum.usd) {
+                    setEthPriceUSD(data.ethereum.usd); // Ethereum price in USD
+                }
+                if (data.weth && data.weth.usd) {
+                    setWrappedEthPriceUSD(data.weth.usd); // Wrapped Ethereum price in USD
+                }
+                if (data.bitcoin && data.bitcoin.eth) {
+                    setBtcToEthExchangeRate(data.bitcoin.eth); // exchange rate of Bitcoin in Ethereum
+                    console.log('data.bitcoin.eth:', data.bitcoin.eth);
+                }
+            } catch (error) {
+                console.error('Failed to fetch prices and exchange rate:', error);
+            }
+        };
+
+        fetchPriceData();
+    }, []);
 
     return (
         <WagmiProvider config={config}>

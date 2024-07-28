@@ -1,4 +1,4 @@
-import { Flex, Image, Text } from '@chakra-ui/react';
+import { Flex, Image, Text, Button, Box, IconButton, Icon, Spacer } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { OpenGraph } from '../components/background/OpenGraph';
 import HorizontalButtonSelector from '../components/HorizontalButtonSelector';
@@ -18,8 +18,19 @@ import { ethers } from 'ethers';
 import { useStore } from '../store';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId } from 'wagmi';
-import { contractChainID, riftExchangeContractAddress, weiToEth, satsToBtc } from '../utils/dappHelper';
+import {
+    contractChainID,
+    riftExchangeContractAddress,
+    weiToEth,
+    satsToBtc,
+    calculateAmountBitcoinOutput,
+    calculateFillPercentage,
+} from '../utils/dappHelper';
 import { DepositVault } from '../types';
+import { BigNumber } from 'ethers';
+import { ChevronLeftIcon } from '@chakra-ui/icons';
+import { BTCSVG, ETH_Icon, ETH_Logo, ETHSVG } from '../components/SVGs';
+import { ManageVaults } from '../components/ManageVaults';
 
 const Sell = () => {
     const { height, width } = useWindowSize();
@@ -28,14 +39,22 @@ const Sell = () => {
     const handleNavigation = (route: string) => {
         router.push(route);
     };
-    const { options, selected, setSelected } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
+    const {
+        options: optionsButton,
+        selected: selectedButton,
+        setSelected: setSelectedButton,
+    } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
+
     const allUserDepositVaults = useStore((state) => state.allUserDepositVaults);
+    const setMyActiveDepositVaults = useStore((state) => state.setMyActiveDepositVaults);
+    const setMyCompletedDepositVaults = useStore((state) => state.setMyCompletedDepositVaults);
+    const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
+    const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
 
     const ethersProvider = useStore((state) => state.ethersProvider);
     const { openConnectModal } = useConnectModal();
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
-    const [myDepositVaults, setMyDepositVaults] = useState<DepositVault[]>([]);
 
     useEffect(() => {
         if (isConnected && Array.isArray(allUserDepositVaults) && address) {
@@ -53,13 +72,35 @@ const Sell = () => {
 
                     console.log('All User Deposit Vaults:', allUserDepositVaults);
                     console.log('My Deposit Vaults:', filteredVaults);
-                    setMyDepositVaults(filteredVaults);
+
+                    // Separate active and completed vaults
+                    const active: DepositVault[] = [];
+                    const completed: DepositVault[] = [];
+
+                    filteredVaults.forEach((vault) => {
+                        console.log('Vault:', vault);
+                        const fillPercentage = calculateFillPercentage(vault);
+                        if (fillPercentage < 100) {
+                            active.push(vault);
+                        } else {
+                            completed.push(vault);
+                        }
+                    });
+
+                    setMyActiveDepositVaults(active);
+                    setMyCompletedDepositVaults(completed);
                 })
                 .catch((error) => {
                     console.error('Failed to fetch deposit vault indexes:', error);
                 });
         }
     }, [isConnected, allUserDepositVaults, address, ethersProvider]);
+
+    useEffect(() => {
+        if (selectedButton !== 'Manage Vaults') {
+            setSelectedVaultToManage(null);
+        }
+    }, [selectedButton]);
 
     return (
         <>
@@ -91,7 +132,7 @@ const Sell = () => {
                     </Flex>
                     {/* Horizontal Button Selector */}
                     <Flex mt={'14px'}>
-                        <HorizontalButtonSelector options={options} onSelectItem={setSelected} />
+                        <HorizontalButtonSelector options={optionsButton} onSelectItem={setSelectedButton} />
                     </Flex>
                     <Flex
                         w='1300px'
@@ -101,8 +142,8 @@ const Sell = () => {
                         mt='14px'
                         border='3px solid'
                         borderColor={colors.borderGray}>
+                        {/* Liquidity Distribution Chart */}
                         <Flex w='50%' h='100%' flexDir='column' p='20px'>
-                            {/* Liquidity Distribution Chart */}
                             <Text fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray} fontSize='0.8rem'>
                                 Total Liquidity
                             </Text>
@@ -114,66 +155,8 @@ const Sell = () => {
                             </Flex>
                             <Flex flex={1} w='100%' />
                         </Flex>
-                        <Flex
-                            w='50%'
-                            h='100%'
-                            px='30px'
-                            py='28px'
-                            flexDir={'column'}
-                            userSelect={'none'}
-                            fontSize={'12px'}
-                            fontFamily={FONT_FAMILIES.AUX_MONO}
-                            color={'#c3c3c3'}
-                            fontWeight={'normal'}
-                            gap={'0px'}>
-                            {/* Create a Vault */}
-                            {selected == 'Create a Vault' ? (
-                                <>
-                                    <Text fontSize={'12px'} letterSpacing={'-1px'} textAlign={'center'}>
-                                        Create a sell order by setting your <WhiteText>Exchange Rate</WhiteText>. Get payed out in
-                                        <OrangeText> BTC</OrangeText> when your order is filled. Withdraw unreserved liquidity
-                                        anytime.
-                                    </Text>
-                                    <DepositUI />
-                                </>
-                            ) : (
-                                // MANAGE VAULTS
-                                <>
-                                    <Text fontSize={'12px'} letterSpacing={'-1px'} mb='15px' textAlign={'center'}>
-                                        Manage your <WhiteText>Vault</WhiteText> by setting your{' '}
-                                        <WhiteText>Exchange Rate</WhiteText> and
-                                        <OrangeText> Reserve Ratio</OrangeText>. Withdraw unreserved liquidity anytime.
-                                    </Text>
-                                    {myDepositVaults ? (
-                                        myDepositVaults.map((vault: DepositVault, index: number) => (
-                                            <Flex
-                                                bg={colors.offBlack}
-                                                w='100%'
-                                                h='50px'
-                                                py='10px'
-                                                mb='10px'
-                                                px='15px'
-                                                key={vault.index}
-                                                align='center'
-                                                justify='space-between'
-                                                borderRadius={'10px'}
-                                                border='2px solid '
-                                                borderColor={colors.borderGray}>
-                                                <Text fontWeight='bold'>{vault.index}</Text>
-                                                <Text fontWeight='bold'>{weiToEth(vault.initialBalance)} ETH</Text>
-                                                {/* <Text>{vault.unreservedBalance.toString()} ETH</Text> */}
-                                                <Text>1 BTC ≈ {(1 / satsToBtc(vault.btcExchangeRate)).toFixed(8)} ETH</Text>
-                                                <Text isTruncated maxWidth='200px'>
-                                                    {vault.btcPayoutLockingScript.substring(0, 20)}
-                                                </Text>
-                                            </Flex>
-                                        ))
-                                    ) : (
-                                        <Text>No deposit vaults found</Text>
-                                    )}
-                                </>
-                            )}
-                        </Flex>
+                        {/* Deposit & Manage Vaults */}
+                        {selectedButton === 'Create a Vault' ? <DepositUI /> : <ManageVaults />}
                     </Flex>
                 </Flex>
             </Flex>

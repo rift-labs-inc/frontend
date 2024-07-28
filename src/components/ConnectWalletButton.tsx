@@ -46,20 +46,30 @@ export const ConnectWalletButton = ({}) => {
 
                             if (chain.unsupported) {
                                 return (
-                                    <button onClick={openChainModal} type='button'>
+                                    <Button
+                                        onClick={openChainModal}
+                                        bg={colors.purpleBackground}
+                                        cursor={'pointer'}
+                                        color={colors.offWhite}
+                                        _active={{ bg: colors.purpleBackground }}
+                                        _hover={{ bg: colors.purpleHover }}
+                                        borderRadius={'10px'}
+                                        border={`2.4px solid ${colors.purpleBorder}`}
+                                        type='button'
+                                        pt='2px'>
                                         Wrong network
-                                    </button>
+                                    </Button>
                                 );
                             }
 
                             return (
                                 <div style={{ display: 'flex', gap: 8 }}>
                                     <Button
-                                        bg={colors.purpleBackground}
                                         border={`2.4px solid ${colors.purpleBorder}`}
                                         h='36px'
                                         color={colors.offWhite}
                                         pt='2px'
+                                        bg={colors.purpleBackground}
                                         mr='2px'
                                         _hover={{ bg: colors.purpleHover }}
                                         _active={{ bg: colors.purpleBackground }}
