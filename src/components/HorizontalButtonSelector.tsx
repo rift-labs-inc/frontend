@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Flex, Button, FlexProps } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import { colors } from '../utils/colors';
@@ -10,6 +10,7 @@ type InferArrayElements<T> = T extends ReadonlyArray<infer U> ? U : never;
 
 interface HorizontalButtonSelectorProps<T extends ReadonlyArray<string> = string[]> extends FlexProps {
     options?: T;
+    selectedItem?: InferArrayElements<T>;
     onSelectItem?: (s: InferArrayElements<T>) => void;
     buttonWidth?: string | number;
 }
@@ -17,13 +18,20 @@ interface HorizontalButtonSelectorProps<T extends ReadonlyArray<string> = string
 const HorizontalButtonSelector = <T extends ReadonlyArray<string> = string[]>({
     options = [] as unknown as T,
     buttonWidth = '200px',
+    selectedItem,
     onSelectItem,
     ...props
 }: HorizontalButtonSelectorProps<T>) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
 
     const numOptions = options.length;
+    const numOptionItems = numOptions - 1;
     const optionWidth = 100 / numOptions;
+
+    useEffect(() => {
+        const validIndex = options.findIndex((x) => x == selectedItem);
+        setSelectedIndex(validIndex < 0 ? 0 : validIndex > numOptionItems ? numOptionItems : validIndex);
+    }, [selectedItem]);
 
     return (
         <Flex
