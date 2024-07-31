@@ -126,11 +126,12 @@ export async function getSwapReservations(
     const retryEthCall = async <T>(fn: () => Promise<T>): Promise<T> => {
         return fn();
     };
-    const result = await retryEthCall(() => provider.call({ data: deployTransaction.data as string }));
 
+    const result = await retryEthCall(() => provider.call({ data: deployTransaction.data as string }));
     const decodedResults = decodeSwapReservations(result);
     return decodedResults;
 }
+
 export function decodeSwapReservations(data: string): SwapReservation[] {
     const abiCoder = new ethers.utils.AbiCoder();
     console.log('Raw data to decode:', data);

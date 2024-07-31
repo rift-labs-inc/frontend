@@ -20,7 +20,7 @@ const Activity = () => {
     const handleNavigation = (route: string) => {
         router.push(route);
     };
-    const activityData = useStore((state) => state.activityData);
+    // const activityData = useStore((state) => state.activityData);
 
     const [showMyActivity, setShowMyActivity] = useState(false);
 
@@ -207,7 +207,7 @@ const Activity = () => {
                                             'scrollbar-width': 'none',
                                         }}
                                         overflow='scroll'>
-                                        {activityData.map((order, index) => (
+                                        {/* {activityData.map((order, index) => (
                                             <Flex
                                                 align='start'
                                                 py='10px'
@@ -332,7 +332,7 @@ const Activity = () => {
                                                     <Text color={colors.offerWhite}>{timeAgo(order.timestamp)}</Text>
                                                 </Flex>
                                             </Flex>
-                                        ))}
+                                        ))} */}
                                     </Flex>
                                 </Flex>
                             </Flex>
