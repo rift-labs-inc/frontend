@@ -74,6 +74,7 @@ export const DepositUI = ({}) => {
     const setWrappedEthPriceUSD = useStore((state) => state.setWrappedEthPriceUSD);
     const btcToEthExchangeRate = useStore((state) => state.btcToEthExchangeRate);
     const setBtcToEthExchangeRate = useStore((state) => state.setBtcToEthExchangeRate);
+    const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
 
     const [ethDepositAmount, setEthDepositAmount] = useState('');
     const [ethDepositAmountUSD, setEthDepositAmountUSD] = useState('0.00');

@@ -58,7 +58,7 @@ const Sell = () => {
     useEffect(() => {
         if (showManageDepositVaultsScreen) {
             setSelectedButton('Manage Vaults');
-            console.log('Switching to manage vaults screen');
+            console.log('Switching to manage vaults screen', selectedButton);
             setShowManageDepositVaultsScreen(false);
         }
     }, [showManageDepositVaultsScreen, selectedButton]);
@@ -111,33 +111,33 @@ const Sell = () => {
         }
     }, [selectedButton]);
 
-    useEffect(() => {
-        const handleHashChange = () => {
-            const hash = window.location.hash.slice(1);
-            if (hash === 'manage') {
-                setSelectedButton('Manage Vaults');
-            } else if (hash === 'create') {
-                setSelectedButton('Create a Vault');
-            } else {
-                // default to create a vault
-                router.push('#create', undefined, { shallow: true });
-                setSelectedButton('Create a Vault');
-            }
-        };
-        handleHashChange();
-        window.addEventListener('hashchange', handleHashChange);
+    // useEffect(() => {
+    //     const handleHashChange = () => {
+    //         const hash = window.location.hash.slice(1);
+    //         if (hash === 'manage') {
+    //             setSelectedButton('Manage Vaults');
+    //         } else if (hash === 'create') {
+    //             setSelectedButton('Create a Vault');
+    //         } else {
+    //             // default to create a vault
+    //             router.push('#create', undefined, { shallow: true });
+    //             setSelectedButton('Create a Vault');
+    //         }
+    //     };
+    //     handleHashChange();
+    //     window.addEventListener('hashchange', handleHashChange);
 
-        return () => {
-            window.removeEventListener('hashchange', handleHashChange);
-        };
-    }, [setSelectedButton, router]);
+    //     return () => {
+    //         window.removeEventListener('hashchange', handleHashChange);
+    //     };
+    // }, [setSelectedButton, router]);
 
     const handleButtonSelection = (selection) => {
-        if (selection === 'Manage Vaults') {
-            router.push('#manage', undefined, { shallow: true });
-        } else if (selection === 'Create a Vault') {
-            router.push('#create', undefined, { shallow: true });
-        }
+        // if (selection === 'Manage Vaults') {
+        //     router.push('#manage', undefined, { shallow: true });
+        // } else if (selection === 'Create a Vault') {
+        //     router.push('#create', undefined, { shallow: true });
+        // }
         setSelectedButton(selection);
     };
 
