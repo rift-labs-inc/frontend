@@ -173,8 +173,8 @@ const Sell = () => {
                     <Flex mt={'14px'}>
                         <HorizontalButtonSelector
                             options={optionsButton}
+                            selectedItem={selectedButton}
                             onSelectItem={handleButtonSelection}
-                            _selected={selectedButton}
                         />
                     </Flex>
                     <Flex
