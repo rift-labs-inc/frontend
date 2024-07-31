@@ -20,12 +20,12 @@ import {
     ModalFooter,
     useDisclosure,
 } from '@chakra-ui/react';
-import useWindowSize from '../hooks/useWindowSize';
+import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
-import { colors } from '../utils/colors';
-import { BTCSVG, ETHSVG, InfoSVG } from './SVGs';
+import { colors } from '../../utils/colors';
+import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi';
 import {
@@ -36,17 +36,20 @@ import {
     findVaultIndexWithSameExchangeRate,
     satsToBtc,
     calculateFillPercentage,
-} from '../utils/dappHelper';
-import { contractChainID, riftExchangeContractAddress, wethAddress } from '../utils/constants';
-import riftExchangeABI from '../abis/RiftExchange.json';
+} from '../../utils/dappHelper';
+import { contractChainID, riftExchangeContractAddress, wethAddress } from '../../utils/constants';
+import riftExchangeABI from '../../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
-import { useStore } from '../store';
-import HorizontalButtonSelector from './HorizontalButtonSelector';
-import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
-import { DepositVault } from '../types';
-import { FONT_FAMILIES } from '../utils/font';
+import { useStore } from '../../store';
+import HorizontalButtonSelector from '../HorizontalButtonSelector';
+import useHorizontalSelectorInput from '../../hooks/useHorizontalSelectorInput';
+import { DepositVault } from '../../types';
+import { FONT_FAMILIES } from '../../utils/font';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
-import { useWithdrawLiquidity } from '../hooks/contract/useWithdrawLiquidity';
+import { useWithdrawLiquidity, WithdrawStatus } from '../../hooks/contract/useWithdrawLiquidity';
+import WithdrawStatusModal from './WithdrawStatusModal';
+import { getLiquidityProvider } from '../../utils/contractReadFunctions';
+import { useUserDepositVaults } from '../../hooks/contract/useUserDepositVaults';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -67,19 +70,20 @@ export const ManageVaults = ({}) => {
     const { data: walletClient } = useWalletClient();
     const { chains, error, switchChain } = useSwitchChain();
     const ethersProvider = useStore((state) => state.ethersProvider);
-    const myActiveDepositVaults = useStore((state) => state.myActiveDepositVaults);
-    const myCompletedDepositVaults = useStore((state) => state.myCompletedDepositVaults);
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
+    type TabType = 'Active' | 'Completed';
 
-    const vaultsToDisplay = selectedButtonActiveVsCompleted === 'Active' ? myActiveDepositVaults : myCompletedDepositVaults;
+    const [activeTab, setActiveTab] = useState<TabType>('Active');
+    const {
+        myActiveDepositVaults,
+        myCompletedDepositVaults,
+        isLoading,
+        error: useUserDepositVaultsError,
+        refreshUserDepositData,
+    } = useUserDepositVaults();
 
     const { isOpen, onOpen, onClose } = useDisclosure();
-
-    const handleNavigation = (route: string) => {
-        router.push(route);
-    };
-
     const {
         withdrawLiquidity,
         status: withdrawLiquidityStatus,
@@ -88,21 +92,67 @@ export const ManageVaults = ({}) => {
         resetWithdrawState,
     } = useWithdrawLiquidity();
 
+    const handleNavigation = (route: string) => {
+        router.push(route);
+    };
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
     const [withdrawAmount, setWithdrawAmount] = useState('');
+    const vaultsToDisplay = selectedButtonActiveVsCompleted === 'Active' ? myActiveDepositVaults : myCompletedDepositVaults;
+    const [refreshKey, setRefreshKey] = useState(0);
 
+    const handleGoBack = () => {
+        // clear selected vault
+        setSelectedVaultToManage(null);
+        console.log('selectedButtonActiveVsCompleted:', selectedButtonActiveVsCompleted);
+    };
+
+    // open withdraw modal
+    const handleOpenWithdrawModal = () => {
+        setIsWithdrawModalOpen(true);
+        setWithdrawAmount('');
+        resetWithdrawState();
+    };
+
+    // update activeTab when the selected button changes
+    useEffect(() => {
+        setActiveTab(selectedButtonActiveVsCompleted);
+        console.log('selectedButtonActiveVsCompleted:', selectedButtonActiveVsCompleted);
+    }, [selectedButtonActiveVsCompleted]);
+
+    // handle withdraw liquidity
     const handleWithdraw = async () => {
-        if (window.ethereum && selectedVaultToManage) {
-            resetWithdrawState();
-            setIsWithdrawModalOpen(true);
+        if (!window.ethereum || !selectedVaultToManage) {
+            console.error('Ethereum provider or selected vault not available');
+            return;
+        }
 
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-            const ethWithdrawAmountWei = ethers.utils.parseEther(withdrawAmount);
+        resetWithdrawState();
 
-            // TODO: Calculate these correctly
-            const globalVaultIndex = selectedVaultToManage.index;
-            const localVaultIndex = 0;
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const ethWithdrawAmountWei = ethers.utils.parseEther(withdrawAmount);
+
+        const globalVaultIndex = selectedVaultToManage.index;
+
+        try {
+            // get the liquidity provider's data
+            const liquidityProviderData = await getLiquidityProvider(
+                provider,
+                riftExchangeABI.abi,
+                riftExchangeContractAddress,
+                await signer.getAddress(),
+            );
+
+            // convert the depositVaultIndexes to strings for comparison
+            const stringIndexes = liquidityProviderData.depositVaultIndexes.map((index) => index.toString());
+
+            // find the local index of the globalVaultIndex in the depositVaultIndexes array
+            const localVaultIndex = stringIndexes.findIndex((index) => index === globalVaultIndex.toString());
+
+            if (localVaultIndex === -1) {
+                throw new Error("Selected vault not found in user's deposit vaults");
+            }
+
             const expiredReservationIndexes = [];
 
             await withdrawLiquidity({
@@ -114,8 +164,40 @@ export const ManageVaults = ({}) => {
                 amountToWithdraw: ethWithdrawAmountWei,
                 expiredReservationIndexes,
             });
+
+            console.log('Withdrawal successful');
+            await refreshUserDepositData();
+            const updatedVault = myActiveDepositVaults.find((vault) => vault.index === selectedVaultToManage.index);
+            if (updatedVault) {
+                setSelectedVaultToManage(updatedVault);
+            }
+            setRefreshKey((prevKey) => prevKey + 1);
+        } catch (error) {
+            console.error('Failed to process withdrawal:', error);
         }
     };
+
+    // update selected vault with new data
+    useEffect(() => {
+        if (selectedVaultToManage) {
+            console.log('selectedVaultToManage:', BigNumber.from(selectedVaultToManage.unreservedBalance).toString());
+
+            const selectedVaultIndex = selectedVaultToManage.index.toString();
+
+            // check both active and completed vaults
+            const updatedVault =
+                myActiveDepositVaults.find((vault) => vault.index.toString() === selectedVaultIndex) ||
+                myCompletedDepositVaults.find((vault) => vault.index.toString() === selectedVaultIndex);
+
+            console.log('updatedVault:', updatedVault);
+
+            if (updatedVault) {
+                setSelectedVaultToManage(updatedVault);
+            } else {
+                console.warn(`Vault with index ${selectedVaultIndex} not found in active or completed vaults.`);
+            }
+        }
+    }, [myActiveDepositVaults, myCompletedDepositVaults, selectedVaultToManage]);
 
     return selectedVaultToManage ? (
         <Flex
@@ -138,13 +220,13 @@ export const ManageVaults = ({}) => {
             fontWeight={'normal'}
             gap={'0px'}>
             <Flex w='100%' mt='-10px' ml='0px'>
-                <Button bg='none' w='12px' _hover={{ bg: colors.borderGrayLight }} onClick={() => setSelectedVaultToManage(null)}>
+                <Button bg='none' w='12px' _hover={{ bg: colors.borderGrayLight }} onClick={() => handleGoBack()}>
                     <ChevronLeftIcon width={'40px'} height={'40px'} bg='none' color={colors.offWhite} />
                 </Button>
             </Flex>
             <Flex direction='column' align='center' mt='-24px' mb='20px' w='100%'>
                 <Text fontSize='22px' color={colors.offWhite} textAlign='center' mt='-12px' flex='1'>
-                    Manage Deposit Vault #{selectedVaultToManage.index}
+                    Manage Deposit Vault #{selectedVaultToManage.index.toString()}
                 </Text>
                 <Text
                     fontSize='12px'
@@ -229,6 +311,7 @@ export const ManageVaults = ({}) => {
                         border='3px solid #303F9F'
                         borderRadius={'14px'}
                         px='15px'
+                        key={refreshKey}
                         align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
                             {weiToEth(selectedVaultToManage.unreservedBalance)}
@@ -288,10 +371,11 @@ export const ManageVaults = ({}) => {
                         px='15px'
                         align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {(
-                                satsToBtc(BigNumber.from(selectedVaultToManage.btcExchangeRate).toNumber()) *
-                                weiToEth(selectedVaultToManage.unreservedBalance)
-                            ).toFixed(8)}
+                            {selectedVaultToManage.btcExchangeRate &&
+                                (
+                                    satsToBtc(BigNumber.from(selectedVaultToManage.btcExchangeRate).toNumber()) *
+                                    weiToEth(selectedVaultToManage.unreservedBalance)
+                                ).toFixed(8)}
                         </Text>
 
                         <Spacer />
@@ -324,7 +408,8 @@ export const ManageVaults = ({}) => {
                             1 BTC =
                             <span style={{ color: colors.offWhite }}>
                                 {' '}
-                                {1 / satsToBtc(BigNumber.from(selectedVaultToManage.btcExchangeRate).toNumber())}
+                                {selectedVaultToManage.btcExchangeRate &&
+                                    1 / satsToBtc(BigNumber.from(selectedVaultToManage.btcExchangeRate).toNumber())}
                             </span>{' '}
                             WETH
                         </Text>
@@ -378,7 +463,7 @@ export const ManageVaults = ({}) => {
                 <Flex mt='35px' justify='center'>
                     <Button
                         h='45px'
-                        onClick={onOpen}
+                        onClick={handleOpenWithdrawModal}
                         _hover={{ bg: colors.redHover }}
                         bg={colors.redBackground}
                         color={colors.offWhite}
@@ -390,60 +475,18 @@ export const ManageVaults = ({}) => {
                     </Button>
                 </Flex>
 
-                <Modal isOpen={isOpen} onClose={onClose} isCentered motionPreset='slideInBottom'>
-                    <ModalOverlay />
-                    <ModalContent
-                        w='550px'
-                        pb={'20px'}
-                        borderRadius={'20px'}
-                        bg={colors.offBlack}
-                        borderWidth={3}
-                        borderColor={colors.borderGray}
-                        mx={'4px'}>
-                        <ModalHeader alignSelf={'center'} fontSize='24px' mt='-4px' color={colors.red}>
-                            Withdraw Liquidity
-                        </ModalHeader>
-                        <ModalCloseButton marginTop={'6px'} />
-                        <ModalBody>
-                            <Text ml='0px' mb='8px' w='100%' fontSize='18px' color={colors.offWhite}>
-                                Amount
-                            </Text>
-                            <Input
-                                bg={colors.borderGray}
-                                borderWidth={2}
-                                _focus={{ borderColor: colors.darkerGray, boxShadow: 'none' }}
-                                _hover={{ borderColor: colors.darkerGray }}
-                                _selected={{ border: 'none' }}
-                                borderColor={colors.borderGrayLight}
-                                placeholder='0.0'
-                                value={withdrawAmount}
-                                color={colors.offWhite}
-                                fontFamily={FONT_FAMILIES.AUX_MONO}
-                                letterSpacing={'-2px'}
-                                fontSize={'22px'}
-                                h='48px'
-                                _placeholder={{ color: colors.textGray }}
-                                onChange={(e) => setWithdrawAmount(e.target.value)}
-                                mb={4}
-                            />
-                        </ModalBody>
-
-                        <ModalFooter>
-                            <Button
-                                h='45px'
-                                onClick={handleWithdraw}
-                                _hover={{ bg: colors.redHover }}
-                                bg={colors.redBackground}
-                                color={colors.offWhite}
-                                border={`3px solid ${colors.red}`}
-                                borderRadius='10px'
-                                fontSize='15px'
-                                w='full'>
-                                Confirm Withdraw
-                            </Button>
-                        </ModalFooter>
-                    </ModalContent>
-                </Modal>
+                {/* Withdraw Status Modal */}
+                <WithdrawStatusModal
+                    isOpen={isWithdrawModalOpen}
+                    onClose={() => setIsWithdrawModalOpen(false)}
+                    status={withdrawLiquidityStatus}
+                    error={withdrawLiquidityError}
+                    txHash={withdrawTxHash}
+                    withdrawAmount={withdrawAmount}
+                    setWithdrawAmount={setWithdrawAmount}
+                    handleWithdraw={handleWithdraw}
+                    clearError={resetWithdrawState}
+                />
             </>
         </Flex>
     ) : (
@@ -510,6 +553,7 @@ export const ManageVaults = ({}) => {
 
                         return (
                             <Flex
+                                key={vault.index}
                                 _hover={{ bg: colors.purpleBackground, borderColor: colors.purpleBorder }}
                                 onClick={() => setSelectedVaultToManage(vault)}
                                 cursor={'pointer'}
@@ -520,25 +564,25 @@ export const ManageVaults = ({}) => {
                                 py='10px'
                                 mb='10px'
                                 px='15px'
-                                key={vault.index}
                                 align='center'
                                 justify='flex-start'
                                 borderRadius={'10px'}
                                 border='2px solid '
                                 borderColor={colors.borderGrayLight}>
                                 <Text width='6%' fontWeight='bold'>
-                                    #{vault.index}
+                                    #{vault.index.toString()}
                                 </Text>
                                 <Text width='12%' fontWeight='bold'>
-                                    {weiToEth(vault.initialBalance)}
+                                    {weiToEth(vault.initialBalance).toString()}
                                 </Text>
                                 <Text width='14%' ml='-8px' mr='9px'>
                                     <ETHSVG />
                                 </Text>
                                 <Text width='36%'>
-                                    {'1 BTC ≈ ' +
-                                        (1 / satsToBtc(BigNumber.from(vault.btcExchangeRate).toNumber())).toFixed(8) +
-                                        ' WETH'}
+                                    {vault.btcExchangeRate &&
+                                        `1 BTC ≈ ${(1 / satsToBtc(BigNumber.from(vault.btcExchangeRate).toNumber())).toFixed(
+                                            8,
+                                        )} WETH`}
                                 </Text>
                                 <Text
                                     color={Number(fillPercentage) > 0 ? colors.greenOutline : colors.textGray}
@@ -574,98 +618,6 @@ export const ManageVaults = ({}) => {
                     <Text>No deposit vaults found</Text>
                 )}
             </Flex>
-            {/* <Modal
-                isOpen={isWithdrawModalOpen}
-                onClose={() => setIsWithdrawModalOpen(false)}
-                isCentered
-                motionPreset='slideInBottom'>
-                <ModalOverlay />
-                <ModalContent
-                    w='550px'
-                    pb={'20px'}
-                    borderRadius={'20px'}
-                    bg={colors.offBlack}
-                    borderWidth={3}
-                    borderColor={colors.borderGray}
-                    mx={'4px'}>
-                    <ModalHeader alignSelf={'center'} fontSize='24px' mt='-4px' color={colors.red}>
-                        Withdraw Liquidity
-                    </ModalHeader>
-                    <ModalCloseButton marginTop={'6px'} />
-                    <ModalBody>
-                        {withdrawLiquidityStatus === WithdrawStatus.Idle && (
-                            <>
-                                <Text ml='0px' mb='8px' w='100%' fontSize='18px' color={colors.offWhite}>
-                                    Amount
-                                </Text>
-                                <Input
-                                    bg={colors.borderGray}
-                                    borderWidth={2}
-                                    _focus={{ borderColor: colors.darkerGray, boxShadow: 'none' }}
-                                    _hover={{ borderColor: colors.darkerGray }}
-                                    _selected={{ border: 'none' }}
-                                    borderColor={colors.borderGrayLight}
-                                    placeholder='0.0'
-                                    value={withdrawAmount}
-                                    color={colors.offWhite}
-                                    fontFamily={FONT_FAMILIES.AUX_MONO}
-                                    letterSpacing={'-2px'}
-                                    fontSize={'22px'}
-                                    h='48px'
-                                    _placeholder={{ color: colors.textGray }}
-                                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                                    mb={4}
-                                />
-                            </>
-                        )}
-                        {withdrawLiquidityStatus === WithdrawStatus.WaitingForWalletConfirmation && (
-                            <Text color={colors.offWhite}>Waiting for wallet confirmation...</Text>
-                        )}
-                        {withdrawLiquidityStatus === WithdrawStatus.WithdrawingLiquidity && (
-                            <Text color={colors.offWhite}>Withdrawing liquidity...</Text>
-                        )}
-                        {withdrawLiquidityStatus === WithdrawStatus.Confirmed && (
-                            <Text color={colors.greenOutline}>Withdrawal confirmed! Transaction hash: {withdrawTxHash}</Text>
-                        )}
-                        {withdrawLiquidityStatus === WithdrawStatus.Error && (
-                            <Text color={colors.red}>Error: {withdrawLiquidityError}</Text>
-                        )}
-                    </ModalBody>
-
-                    <ModalFooter>
-                        {withdrawLiquidityStatus === WithdrawStatus.Idle && (
-                            <Button
-                                h='45px'
-                                onClick={handleWithdraw}
-                                _hover={{ bg: colors.redHover }}
-                                bg={colors.redBackground}
-                                color={colors.offWhite}
-                                border={`3px solid ${colors.red}`}
-                                borderRadius='10px'
-                                fontSize='15px'
-                                w='full'>
-                                Confirm Withdraw
-                            </Button>
-                        )}
-                        {withdrawLiquidityStatus === WithdrawStatus.Confirmed && (
-                            <Button
-                                h='45px'
-                                onClick={() => {
-                                    setIsWithdrawModalOpen(false);
-                                    resetWithdrawState();
-                                }}
-                                bg={colors.greenBackground}
-                                color={colors.offWhite}
-                                border={`3px solid ${colors.greenOutline}`}
-                                borderRadius='10px'
-                                fontSize='15px'
-                                w='full'>
-                                Close
-                            </Button>
-                        )}
-                    </ModalFooter>
-                </ModalContent>
-            </Modal> */}
         </Flex>
     );
 };

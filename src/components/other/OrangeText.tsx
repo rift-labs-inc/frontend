@@ -1,5 +1,5 @@
 import { Text, TextProps } from '@chakra-ui/react';
-import { colors } from '../utils/colors';
+import { colors } from '../../utils/colors';
 
 const OrangeText: React.FC<TextProps> = ({ children, ...props }) => {
     return (

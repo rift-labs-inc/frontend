@@ -19,6 +19,7 @@ export type ReservationState = 'None' | 'Created' | 'Unlocked' | 'ExpiredAndAdde
 export type DepositVault = {
     initialBalance: BigNumberish;
     unreservedBalance: BigNumberish;
+    calculatedUnreservedBalance?: BigNumberish;
     btcExchangeRate: BigNumberish;
     btcPayoutLockingScript: string;
     index?: number;

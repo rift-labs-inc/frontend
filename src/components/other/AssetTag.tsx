@@ -1,6 +1,6 @@
 import { Flex, Box } from '@chakra-ui/react';
-import { useStore } from '../store';
-import useWindowSize from '../hooks/useWindowSize';
+import { useStore } from '../../store';
+import useWindowSize from '../../hooks/useWindowSize';
 import { ETH_Logo, BTC_Logo } from './SVGs'; // Assuming you also have a BTC logo
 
 // Mapping of asset names to their respective SVG components
@@ -41,7 +41,15 @@ export const AssetTag = ({ assetName }: AssetTagProps) => {
             <Box w='30px' h='30px' bg={bg_color} borderRadius='full' overflow='hidden' mr='10px'>
                 <SvgIcon /> // Use the SVG component here
             </Box>
-            <Flex w='100px' h='20px' border='3px solid' borderColor={border_color} bg={bg_color} borderRadius='10px' align='center' justify='center'>
+            <Flex
+                w='100px'
+                h='20px'
+                border='3px solid'
+                borderColor={border_color}
+                bg={bg_color}
+                borderRadius='10px'
+                align='center'
+                justify='center'>
                 <Box fontSize={fontSize}>{assetName}</Box>
             </Flex>
         </Flex>

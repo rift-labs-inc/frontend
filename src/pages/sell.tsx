@@ -2,9 +2,9 @@ import { Flex, Image, Text, Button, Box, IconButton, Icon, Spacer } from '@chakr
 import { useRouter } from 'next/router';
 import { OpenGraph } from '../components/background/OpenGraph';
 import HorizontalButtonSelector from '../components/HorizontalButtonSelector';
-import OrangeText from '../components/OrangeText';
-import WhiteText from '../components/WhiteText';
-import { DepositUI } from '../components/DepositUI';
+import OrangeText from '../components/other/OrangeText';
+import WhiteText from '../components/other/WhiteText';
+import { DepositUI } from '../components/sell/DepositUI';
 import { Navbar } from '../components/Navbar';
 import { toastSuccess } from '../hooks/toast';
 import useWindowSize from '../hooks/useWindowSize';
@@ -23,8 +23,8 @@ import { contractChainID, riftExchangeContractAddress } from '../utils/constants
 import { DepositVault } from '../types';
 import { BigNumber } from 'ethers';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
-import { BTCSVG, ETH_Icon, ETH_Logo, ETHSVG } from '../components/SVGs';
-import { ManageVaults } from '../components/ManageVaults';
+import { BTCSVG, ETH_Icon, ETH_Logo, ETHSVG } from '../components/other/SVGs';
+import { ManageVaults } from '../components/sell/ManageVaults';
 import ExchangeRateChart from '../components/charts/ExchangeRateChart';
 
 const Sell = () => {
@@ -40,9 +40,8 @@ const Sell = () => {
         setSelected: setSelectedButton,
     } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
 
-    const allUserDepositVaults = useStore((state) => state.allUserDepositVaults);
-    const setMyActiveDepositVaults = useStore((state) => state.setMyActiveDepositVaults);
-    const setMyCompletedDepositVaults = useStore((state) => state.setMyCompletedDepositVaults);
+    const allDepositVaults = useStore((state) => state.allDepositVaults);
+
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
     const showManageDepositVaultsScreen = useStore((state) => state.showManageDepositVaultsScreen);
@@ -63,47 +62,6 @@ const Sell = () => {
         }
     }, [showManageDepositVaultsScreen, selectedButton]);
 
-    // retrieve and set user deposit vaults
-    useEffect(() => {
-        if (isConnected && Array.isArray(allUserDepositVaults) && address) {
-            getLiquidityProvider(ethersProvider, riftExchangeABI.abi, riftExchangeContractAddress, address)
-                .then((result) => {
-                    const stringIndexes = result.depositVaultIndexes.map((index) => index.toString());
-                    const filteredVaults = allUserDepositVaults
-                        .filter((vault, index) => stringIndexes.includes(index.toString()))
-                        .map((vault, index) => {
-                            if (stringIndexes.includes(index.toString())) {
-                                return { ...vault, index: index };
-                            }
-                            return vault;
-                        });
-
-                    console.log('All User Deposit Vaults:', allUserDepositVaults);
-                    console.log('My Deposit Vaults:', filteredVaults);
-
-                    // Separate active and completed vaults
-                    const active: DepositVault[] = [];
-                    const completed: DepositVault[] = [];
-
-                    filteredVaults.forEach((vault) => {
-                        console.log('Vault:', vault);
-                        const fillPercentage = calculateFillPercentage(vault);
-                        if (fillPercentage < 100) {
-                            active.push(vault);
-                        } else {
-                            completed.push(vault);
-                        }
-                    });
-
-                    setMyActiveDepositVaults(active);
-                    setMyCompletedDepositVaults(completed);
-                })
-                .catch((error) => {
-                    console.error('Failed to fetch deposit vault indexes:', error);
-                });
-        }
-    }, [isConnected, allUserDepositVaults, address, ethersProvider, selectedVaultToManage, selectedButton]);
-
     // reset selected vault when switching between screens
     useEffect(() => {
         if (selectedButton !== 'Manage Vaults') {
@@ -111,33 +69,7 @@ const Sell = () => {
         }
     }, [selectedButton]);
 
-    // useEffect(() => {
-    //     const handleHashChange = () => {
-    //         const hash = window.location.hash.slice(1);
-    //         if (hash === 'manage') {
-    //             setSelectedButton('Manage Vaults');
-    //         } else if (hash === 'create') {
-    //             setSelectedButton('Create a Vault');
-    //         } else {
-    //             // default to create a vault
-    //             router.push('#create', undefined, { shallow: true });
-    //             setSelectedButton('Create a Vault');
-    //         }
-    //     };
-    //     handleHashChange();
-    //     window.addEventListener('hashchange', handleHashChange);
-
-    //     return () => {
-    //         window.removeEventListener('hashchange', handleHashChange);
-    //     };
-    // }, [setSelectedButton, router]);
-
     const handleButtonSelection = (selection) => {
-        // if (selection === 'Manage Vaults') {
-        //     router.push('#manage', undefined, { shallow: true });
-        // } else if (selection === 'Create a Vault') {
-        //     router.push('#create', undefined, { shallow: true });
-        // }
         setSelectedButton(selection);
     };
 

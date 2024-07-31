@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { colors } from '../../utils/colors';
 import { useStore } from '../../store';
-import { BTCSVG, ETHSVG, InfoSVG } from '../SVGs';
+import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { FONT_FAMILIES } from '../../utils/font';
 import { ArrowRightIcon } from '@chakra-ui/icons';
 import { FaArrowRight } from 'react-icons/fa';

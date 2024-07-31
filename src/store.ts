@@ -6,8 +6,8 @@ import { ethers } from 'ethers';
 type Store = {
     availableAssets: Asset[];
     setAvailableAssets: (assets: Asset[]) => void;
-    allUserDepositVaults: any;
-    setAllUserDepositVaults: (allUserDepositVaults: DepositVault[]) => void;
+    allDepositVaults: any;
+    setAllDepositVaults: (allDepositVaults: DepositVault[]) => void;
     ethersProvider: ethers.providers.Provider | null;
     setEthersProvider: (provider: ethers.providers.Provider) => void;
     myActiveDepositVaults: DepositVault[];
@@ -41,8 +41,8 @@ type Store = {
 export const useStore = create<Store>((set) => ({
     availableAssets: [],
     setAvailableAssets: (availableAssets) => set({ availableAssets }),
-    allUserDepositVaults: {},
-    setAllUserDepositVaults: (allUserDepositVaults) => set({ allUserDepositVaults }),
+    allDepositVaults: {},
+    setAllDepositVaults: (allDepositVaults) => set({ allDepositVaults }),
     ethersProvider: null,
     setEthersProvider: (ethersProvider) => set({ ethersProvider }),
     myActiveDepositVaults: [],

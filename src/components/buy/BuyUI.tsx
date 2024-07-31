@@ -12,13 +12,13 @@ import {
     Spacer,
     Input,
 } from '@chakra-ui/react';
-import useWindowSize from '../hooks/useWindowSize';
+import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { colors } from '../utils/colors';
-import { useStore } from '../store';
-import { BTCSVG, ETHSVG, InfoSVG } from './SVGs';
+import { colors } from '../../utils/colors';
+import { useStore } from '../../store';
+import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 
 export const BuyUI = ({}) => {
     const { width } = useWindowSize();

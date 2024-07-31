@@ -35,14 +35,14 @@ export function calculateAmountBitcoinOutput(vault: DepositVault): BigNumber {
 
 export function findVaultIndexToOverwrite(): number {
     // TODO - implement this
-    // const vaultIndexToOverwrite = allUserDepositVaults.findIndex((vault) => BigNumber.from(vault.unreservedBalance).eq(0));
+    // const vaultIndexToOverwrite = allDepositVaults.findIndex((vault) => BigNumber.from(vault.unreservedBalance).eq(0));
     // return vaultIndexToOverwrite;
     return -1;
 }
 
 export function findVaultIndexWithSameExchangeRate(): number {
     // TODO - implement this
-    // const vaultIndexWithSameExchangeRate = allUserDepositVaults.findIndex((vault) => BigNumber.from(vault.btcExchangeRate).eq(allUserDepositVaults[0].btcExchangeRate));
+    // const vaultIndexWithSameExchangeRate = allDepositVaults.findIndex((vault) => BigNumber.from(vault.btcExchangeRate).eq(allDepositVaults[0].btcExchangeRate));
     // return vaultIndexWithSameExchangeRate;
     return -1;
 }

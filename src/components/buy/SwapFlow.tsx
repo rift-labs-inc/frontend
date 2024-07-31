@@ -12,16 +12,16 @@ import {
     Spacer,
     Input,
 } from '@chakra-ui/react';
-import useWindowSize from '../hooks/useWindowSize';
+import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { colors } from '../utils/colors';
-import { BTCSVG, ETHSVG, InfoSVG } from './SVGs';
-import { SwapAmounts } from './swap/SwapAmounts';
+import { colors } from '../../utils/colors';
+import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
+import { SwapAmounts } from './SwapAmounts';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
-import { useStore } from '../store';
-import { SwapStatusTimeline } from './swap/SwapStatusTimeline';
+import { useStore } from '../../store';
+import { SwapStatusTimeline } from './SwapStatusTimeline';
 
 type ActiveTab = 'swap' | 'liquidity';
 

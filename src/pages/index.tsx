@@ -3,13 +3,13 @@ import { useRouter } from 'next/router';
 import { Flex, Spacer, Text, Box } from '@chakra-ui/react';
 import { Navbar } from '../components/Navbar';
 import { colors } from '../utils/colors';
-import { BuyUI } from '../components/BuyUI';
+import { BuyUI } from '../components/buy/BuyUI';
 import { OpenGraph } from '../components/background/OpenGraph';
 import { FONT_FAMILIES } from '../utils/font';
-import BlueText from '../components/BlueText';
-import OrangeText from '../components/OrangeText';
+import BlueText from '../components/other/BlueText';
+import OrangeText from '../components/other/OrangeText';
 import React, { useEffect } from 'react';
-import { SwapFlow } from '../components/SwapFlow';
+import { SwapFlow } from '../components/buy/SwapFlow';
 import { useStore } from '../store';
 
 const Home = () => {

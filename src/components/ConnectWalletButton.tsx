@@ -1,7 +1,7 @@
 import { Flex, Box, Button, Text, Avatar } from '@chakra-ui/react';
 import { useStore } from '../store';
 import useWindowSize from '../hooks/useWindowSize';
-import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon } from './SVGs'; // Assuming you also have a BTC logo
+import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon } from './other/SVGs'; // Assuming you also have a BTC logo
 import { ConnectButton, AvatarComponent } from '@rainbow-me/rainbowkit';
 import { colors } from '../utils/colors';
 

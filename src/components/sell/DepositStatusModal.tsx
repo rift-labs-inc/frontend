@@ -13,16 +13,16 @@ import {
     Button,
     Icon,
 } from '@chakra-ui/react';
-import { DepositStatus } from '../hooks/contract/useDepositLiquidity';
-import { FONT_FAMILIES } from '../utils/font';
-import { colors } from '../utils/colors';
+import { DepositStatus } from '../../hooks/contract/useDepositLiquidity';
+import { FONT_FAMILIES } from '../../utils/font';
+import { colors } from '../../utils/colors';
 import { GooSpinner } from 'react-spinners-kit';
 import { CheckmarkCircle, AlertCircleOutline, OpenOutline } from 'react-ionicons';
 import { HiOutlineExternalLink } from 'react-icons/hi';
 import { PiVaultBold } from 'react-icons/pi';
 import { IoMdSettings } from 'react-icons/io';
-import { etherScanBaseUrl } from '../utils/constants';
-import { useStore } from '../store';
+import { etherScanBaseUrl } from '../../utils/constants';
+import { useStore } from '../../store';
 
 interface DepositStatusModalProps {
     isOpen: boolean;

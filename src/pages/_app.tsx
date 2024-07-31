@@ -16,7 +16,7 @@ import { mainnet, sepolia, polygon, optimism, arbitrum, base } from 'wagmi/chain
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { getDefaultConfig, RainbowKitProvider, darkTheme, Theme } from '@rainbow-me/rainbowkit';
 import { ethers } from 'ethers';
-import { useDepositVaults } from '../hooks/contract/useDepositVaults';
+import { useAllDepositVaults } from '../hooks/contract/useAllDepositVaults';
 import { contractChainID, contractRpcURL, riftExchangeContractAddress } from '../utils/constants';
 import { useSwapReservations } from '../hooks/contract/useSwapReservations';
 
@@ -98,7 +98,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     const btcToEthExchangeRate = useStore((state) => state.btcToEthExchangeRate);
     const setBtcToEthExchangeRate = useStore((state) => state.setBtcToEthExchangeRate);
 
-    const { allUserDepositVaults, loading, error } = useDepositVaults(ethersProvider, riftExchangeContractAddress);
+    const { allDepositVaults, loading, error } = useAllDepositVaults(ethersProvider, riftExchangeContractAddress);
     const {
         allSwapReservations,
         loading: loadingSwapReservations,
@@ -110,21 +110,23 @@ function MyApp({ Component, pageProps }: AppProps) {
         setEthersProvider(new ethers.providers.JsonRpcProvider(contractRpcURL));
     }, []);
 
+    // testing - print all user deposit vaults
     useEffect(() => {
-        if (allUserDepositVaults) {
-            console.log('allUserDepositVaults:', allUserDepositVaults);
+        if (allDepositVaults) {
+            console.log('allDepositVaults:', allDepositVaults);
         }
-    }, [allUserDepositVaults]);
+    }, [allDepositVaults]);
 
+    // testing - print all swap reservations
     useEffect(() => {
         if (allSwapReservations) {
             console.log('allSwapReservations:', allSwapReservations);
         }
     }, [allSwapReservations]);
 
+    // fetch price data - TODO: get this data from uniswap
     useEffect(() => {
         const fetchPriceData = async () => {
-            // TODO: get this data from uniswap
             try {
                 const response = await fetch(
                     'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,weth&vs_currencies=usd,eth',

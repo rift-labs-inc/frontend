@@ -12,12 +12,12 @@ import {
     Spacer,
     Input,
 } from '@chakra-ui/react';
-import useWindowSize from '../hooks/useWindowSize';
+import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef, ChangeEvent } from 'react';
 import styled from 'styled-components';
-import { colors } from '../utils/colors';
-import { BTCSVG, ETHSVG, InfoSVG } from './SVGs';
+import { colors } from '../../utils/colors';
+import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi';
 import {
@@ -27,16 +27,16 @@ import {
     findVaultIndexToOverwrite,
     findVaultIndexWithSameExchangeRate,
     satsToBtc,
-} from '../utils/dappHelper';
-import { contractChainID, riftExchangeContractAddress, wethAddress } from '../utils/constants';
-import riftExchangeABI from '../abis/RiftExchange.json';
+} from '../../utils/dappHelper';
+import { contractChainID, riftExchangeContractAddress, wethAddress } from '../../utils/constants';
+import riftExchangeABI from '../../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
-import { useStore } from '../store';
-import OrangeText from './OrangeText';
-import WhiteText from './WhiteText';
-import { FONT_FAMILIES } from '../utils/font';
-import { useDepositLiquidity } from '../hooks/contract/useDepositLiquidity';
+import { useStore } from '../../store';
+import { FONT_FAMILIES } from '../../utils/font';
+import { useDepositLiquidity } from '../../hooks/contract/useDepositLiquidity';
 import DepositStatusModal from './DepositStatusModal';
+import WhiteText from '../other/WhiteText';
+import OrangeText from '../other/OrangeText';
 
 type ActiveTab = 'swap' | 'liquidity';
 

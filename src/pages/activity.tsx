@@ -10,7 +10,7 @@ import { FaCheckSquare } from 'react-icons/fa';
 import { FaSearch } from 'react-icons/fa';
 import { useStore } from '../store';
 import { toastSuccess } from '../hooks/toast';
-import { BTCSVG, ETHArrow, WBTCSVG, BTCArrow, GreenCheck } from '../components/SVGs';
+import { BTCSVG, ETHArrow, WBTCSVG, BTCArrow, GreenCheck } from '../components/other/SVGs';
 import { OpenGraph } from '../components/background/OpenGraph';
 
 const Activity = () => {
