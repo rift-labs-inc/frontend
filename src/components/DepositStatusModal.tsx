@@ -150,7 +150,8 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen, onClose
                                     borderColor={colors.purpleBorder}
                                     fontWeight={'normal'}
                                     onClick={() => {
-                                        setShowManageDepositVaultsScreen(true), onClose();
+                                        setShowManageDepositVaultsScreen(true);
+                                        onClose();
                                     }}
                                     _hover={{ bg: colors.purpleHover }}
                                     borderRadius='md'>

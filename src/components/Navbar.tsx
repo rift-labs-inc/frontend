@@ -77,6 +77,7 @@ export const Navbar = ({}) => {
                     fontSize={'12px'}
                     justify={'cetner'}
                     right={0}
+                    pointerEvents='none'
                     left={0}
                     position={'absolute'}>
                     <Text>Current Rift Contract:</Text>

@@ -52,17 +52,18 @@ const Sell = () => {
     const { openConnectModal } = useConnectModal();
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
-    const [selectorKey, setSelectorKey] = useState(0);
+    const [initialSelection, setInitialSelection] = useState('Create a Vault');
 
+    // switch to manage vaults screen if user has just created a vault
     useEffect(() => {
         if (showManageDepositVaultsScreen) {
             setSelectedButton('Manage Vaults');
+            console.log('Switching to manage vaults screen');
             setShowManageDepositVaultsScreen(false);
-            // force re-render of HorizontalButtonSelector
-            setSelectorKey((prevKey) => prevKey + 1);
         }
-    }, [showManageDepositVaultsScreen, setSelectedButton, setShowManageDepositVaultsScreen]);
+    }, [showManageDepositVaultsScreen, selectedButton]);
 
+    // retrieve and set user deposit vaults
     useEffect(() => {
         if (isConnected && Array.isArray(allUserDepositVaults) && address) {
             getLiquidityProvider(ethersProvider, riftExchangeABI.abi, riftExchangeContractAddress, address)
@@ -103,11 +104,42 @@ const Sell = () => {
         }
     }, [isConnected, allUserDepositVaults, address, ethersProvider, selectedVaultToManage, selectedButton]);
 
+    // reset selected vault when switching between screens
     useEffect(() => {
         if (selectedButton !== 'Manage Vaults') {
             setSelectedVaultToManage(null);
         }
     }, [selectedButton]);
+
+    useEffect(() => {
+        const handleHashChange = () => {
+            const hash = window.location.hash.slice(1);
+            if (hash === 'manage') {
+                setSelectedButton('Manage Vaults');
+            } else if (hash === 'create') {
+                setSelectedButton('Create a Vault');
+            } else {
+                // default to create a vault
+                router.push('#create', undefined, { shallow: true });
+                setSelectedButton('Create a Vault');
+            }
+        };
+        handleHashChange();
+        window.addEventListener('hashchange', handleHashChange);
+
+        return () => {
+            window.removeEventListener('hashchange', handleHashChange);
+        };
+    }, [setSelectedButton, router]);
+
+    const handleButtonSelection = (selection) => {
+        if (selection === 'Manage Vaults') {
+            router.push('#manage', undefined, { shallow: true });
+        } else if (selection === 'Create a Vault') {
+            router.push('#create', undefined, { shallow: true });
+        }
+        setSelectedButton(selection);
+    };
 
     return (
         <>
@@ -139,7 +171,11 @@ const Sell = () => {
                     </Flex>
                     {/* Horizontal Button Selector */}
                     <Flex mt={'14px'}>
-                        <HorizontalButtonSelector key={selectorKey} options={optionsButton} onSelectItem={setSelectedButton} />{' '}
+                        <HorizontalButtonSelector
+                            options={optionsButton}
+                            onSelectItem={handleButtonSelection}
+                            _selected={selectedButton}
+                        />
                     </Flex>
                     <Flex
                         w='1300px'

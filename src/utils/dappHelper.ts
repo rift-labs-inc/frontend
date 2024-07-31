@@ -5,8 +5,6 @@ import { sepolia } from 'viem/chains';
 
 const SATS_PER_BTC = 100000000; // 10^8
 
-// const allUserDepositVaults = useStore((state) => state.allUserDepositVaults);
-
 // HELPER FUCTIONS
 export function weiToEth(wei: ethers.BigNumberish): number {
     return parseFloat(ethers.utils.formatEther(wei));
@@ -57,48 +55,4 @@ export function calculateFillPercentage(vault: DepositVault) {
 
     const fillPercentage = fillPercentageBigNumber.toNumber();
     return Math.min(Math.max(fillPercentage, 0), 100); // Ensure it's between 0 and 100
-}
-
-// CONTRACT FUNCTIONS TODO make into hooks
-
-export async function withdrawLiquidity(
-    signer: ethers.Signer,
-    riftExchangeAbi: ethers.ContractInterface,
-    riftExchangeContract: string,
-    globalVaultIndex: number,
-    localVaultIndex: number,
-    amountToWithdraw: BigNumberish,
-    expiredReservationIndexes: number[],
-): Promise<{ success: boolean; error?: string }> {
-    // [0] create contract instance
-    const riftExchangeContractInstance = new ethers.Contract(riftExchangeContract, riftExchangeAbi, signer);
-
-    try {
-        console.log('Withdrawing liquidity...');
-        console.log('globalVaultIndex:', globalVaultIndex);
-        console.log('localVaultIndex:', localVaultIndex);
-        console.log('amountToWithdraw:', amountToWithdraw.toString());
-        console.log('expiredReservationIndexes:', expiredReservationIndexes);
-
-        // withdraw liquidity
-        const withdrawTx = await riftExchangeContractInstance.withdrawLiquidity(
-            globalVaultIndex,
-            localVaultIndex,
-            amountToWithdraw,
-            expiredReservationIndexes,
-        );
-
-        await withdrawTx.wait();
-        console.log('Liquidity withdrawn successfully');
-
-        return {
-            success: true,
-        };
-    } catch (error) {
-        console.error('Error in withdrawLiquidity:', error);
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : String(error),
-        };
-    }
 }
