@@ -3,11 +3,6 @@ import { DepositVault } from '../types';
 import { useStore } from '../store';
 import { sepolia } from 'viem/chains';
 
-// export const contractChainID = 1; // Ethereum Mainnet
-export const contractChainID = 11155111; // Sepolia
-export const rpcURL = 'https://ethereum-sepolia.blockpi.network/v1/rpc/public';
-export const riftExchangeContractAddress = '0xc8ca5D13913d2D2686Aea5906888458E9EE7a7cE';
-export const wethAddress = '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9';
 const SATS_PER_BTC = 100000000; // 10^8
 
 // const allUserDepositVaults = useStore((state) => state.allUserDepositVaults);
@@ -64,105 +59,43 @@ export function calculateFillPercentage(vault: DepositVault) {
     return Math.min(Math.max(fillPercentage, 0), 100); // Ensure it's between 0 and 100
 }
 
-// CONTRACT FUNCTIONS
+// CONTRACT FUNCTIONS TODO make into hooks
 
-const WETH_ABI = [
-    {
-        constant: false,
-        inputs: [
-            { name: 'guy', type: 'address' },
-            { name: 'wad', type: 'uint256' },
-        ],
-        name: 'approve',
-        outputs: [{ name: '', type: 'bool' }],
-        type: 'function',
-    },
-    {
-        constant: true,
-        inputs: [
-            { name: 'owner', type: 'address' },
-            { name: 'spender', type: 'address' },
-        ],
-        name: 'allowance',
-        outputs: [{ name: '', type: 'uint256' }],
-        type: 'function',
-    },
-];
-
-export async function approveWETH(
-    signer: ethers.Signer,
-    wethAddress: string,
-    spenderAddress: string,
-    amount: ethers.BigNumberish,
-) {
-    const wethContract = new ethers.Contract(wethAddress, WETH_ABI, signer);
-
-    try {
-        const tx = await wethContract.approve(spenderAddress, amount);
-        await tx.wait();
-        console.log('WETH approval successful');
-        return true;
-    } catch (error) {
-        console.error('Error approving WETH:', error);
-        return false;
-    }
-}
-
-export async function depositLiquidity(
+export async function withdrawLiquidity(
     signer: ethers.Signer,
     riftExchangeAbi: ethers.ContractInterface,
     riftExchangeContract: string,
-    wethAddress: string,
-    btcPayoutLockingScript: string,
-    btcExchangeRate: BigNumberish,
-    vaultIndexToOverwrite: number,
-    depositAmount: BigNumberish,
-    vaultIndexWithSameExchangeRate: number,
+    globalVaultIndex: number,
+    localVaultIndex: number,
+    amountToWithdraw: BigNumberish,
+    expiredReservationIndexes: number[],
 ): Promise<{ success: boolean; error?: string }> {
-    // [0] create contract instances
-    const wethContract = new ethers.Contract(wethAddress, WETH_ABI, signer);
+    // [0] create contract instance
     const riftExchangeContractInstance = new ethers.Contract(riftExchangeContract, riftExchangeAbi, signer);
 
     try {
-        // check if the user has enough approved WETH
-        const allowance = await wethContract.allowance(await signer.getAddress(), riftExchangeContract);
-        console.log('allowance:', allowance.toString());
-        console.log('depositAmount:', depositAmount.toString());
-        console.log('bitcoinExchangeRate:', btcExchangeRate.toString());
-        console.log('bitcoinPayoutLockingScript:', btcPayoutLockingScript);
+        console.log('Withdrawing liquidity...');
+        console.log('globalVaultIndex:', globalVaultIndex);
+        console.log('localVaultIndex:', localVaultIndex);
+        console.log('amountToWithdraw:', amountToWithdraw.toString());
+        console.log('expiredReservationIndexes:', expiredReservationIndexes);
 
-        if (BigNumber.from(allowance).lt(BigNumber.from(depositAmount))) {
-            // [1] approve exact amount of WETH
-            console.log('Approving deposit WETH...');
-            const approveTx = await wethContract.approve(riftExchangeContract, depositAmount);
-            await approveTx.wait();
-            console.log('WETH approval successful');
-        }
-
-        // [2] deposit liquidity
-        console.log('Depositing liquidity...');
-        console.log('btcPayoutLockingScript:', btcPayoutLockingScript);
-        console.log('btcExchangeRate:', btcExchangeRate);
-        console.log('vaultIndexToOverwrite:', vaultIndexToOverwrite);
-        console.log('depositAmount:', depositAmount.toString());
-        console.log('vaultIndexWithSameExchangeRate:', vaultIndexWithSameExchangeRate);
-
-        const depositTx = await riftExchangeContractInstance.depositLiquidity(
-            btcPayoutLockingScript,
-            btcExchangeRate,
-            vaultIndexToOverwrite,
-            depositAmount.toString(),
-            vaultIndexWithSameExchangeRate,
+        // withdraw liquidity
+        const withdrawTx = await riftExchangeContractInstance.withdrawLiquidity(
+            globalVaultIndex,
+            localVaultIndex,
+            amountToWithdraw,
+            expiredReservationIndexes,
         );
 
-        await depositTx.wait();
-        console.log('Liquidity deposited successfully');
+        await withdrawTx.wait();
+        console.log('Liquidity withdrawn successfully');
 
         return {
             success: true,
         };
     } catch (error) {
-        console.error('Error in depositLiquidity:', error);
+        console.error('Error in withdrawLiquidity:', error);
         return {
             success: false,
             error: error instanceof Error ? error.message : String(error),

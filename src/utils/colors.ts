@@ -25,6 +25,7 @@ export const colors = {
     darkerGray: '#777777',
     offBlack: '#151515',
     offBlackLighter: '#1B1B1B',
+    offBlackLighter2: '#333',
     borderGray: '#282828',
     borderGrayLight: '#444',
     text: {

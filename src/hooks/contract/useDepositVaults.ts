@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import depositVaultAggregatorABI from '../abis/DepositVaultsAggregator.json';
-import riftExchangeABI from '../abis/RiftExchange.json';
-import { getDepositVaults, getDepositVaultsLength } from '../utils/dataAggregation';
-import { useStore } from '../store';
+import depositVaultAggregatorABI from '../../abis/DepositVaultsAggregator.json';
+import riftExchangeABI from '../../abis/RiftExchange.json';
+import { getDepositVaults, getDepositVaultsLength } from '../../utils/contractReadFunctions';
+import { useStore } from '../../store';
 
 type DepositVault = {
     address: string;

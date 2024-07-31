@@ -12,20 +12,14 @@ import { colors } from '../utils/colors';
 import { FONT_FAMILIES } from '../utils/font';
 import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
 import { useEffect, useState } from 'react';
-import { getDepositVaults, getLiquidityProvider } from '../utils/dataAggregation';
+import { getDepositVaults, getLiquidityProvider } from '../utils/contractReadFunctions';
 import riftExchangeABI from '../abis/RiftExchange.json';
 import { ethers } from 'ethers';
 import { useStore } from '../store';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId } from 'wagmi';
-import {
-    contractChainID,
-    riftExchangeContractAddress,
-    weiToEth,
-    satsToBtc,
-    calculateAmountBitcoinOutput,
-    calculateFillPercentage,
-} from '../utils/dappHelper';
+import { weiToEth, satsToBtc, calculateAmountBitcoinOutput, calculateFillPercentage } from '../utils/dappHelper';
+import { contractChainID, riftExchangeContractAddress } from '../utils/constants';
 import { DepositVault } from '../types';
 import { BigNumber } from 'ethers';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
@@ -51,11 +45,23 @@ const Sell = () => {
     const setMyCompletedDepositVaults = useStore((state) => state.setMyCompletedDepositVaults);
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
+    const showManageDepositVaultsScreen = useStore((state) => state.showManageDepositVaultsScreen);
+    const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
 
     const ethersProvider = useStore((state) => state.ethersProvider);
     const { openConnectModal } = useConnectModal();
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
+    const [selectorKey, setSelectorKey] = useState(0);
+
+    useEffect(() => {
+        if (showManageDepositVaultsScreen) {
+            setSelectedButton('Manage Vaults');
+            setShowManageDepositVaultsScreen(false);
+            // force re-render of HorizontalButtonSelector
+            setSelectorKey((prevKey) => prevKey + 1);
+        }
+    }, [showManageDepositVaultsScreen, setSelectedButton, setShowManageDepositVaultsScreen]);
 
     useEffect(() => {
         if (isConnected && Array.isArray(allUserDepositVaults) && address) {
@@ -95,7 +101,7 @@ const Sell = () => {
                     console.error('Failed to fetch deposit vault indexes:', error);
                 });
         }
-    }, [isConnected, allUserDepositVaults, address, ethersProvider]);
+    }, [isConnected, allUserDepositVaults, address, ethersProvider, selectedVaultToManage, selectedButton]);
 
     useEffect(() => {
         if (selectedButton !== 'Manage Vaults') {
@@ -133,7 +139,7 @@ const Sell = () => {
                     </Flex>
                     {/* Horizontal Button Selector */}
                     <Flex mt={'14px'}>
-                        <HorizontalButtonSelector options={optionsButton} onSelectItem={setSelectedButton} />
+                        <HorizontalButtonSelector key={selectorKey} options={optionsButton} onSelectItem={setSelectedButton} />{' '}
                     </Flex>
                     <Flex
                         w='1300px'
@@ -145,8 +151,12 @@ const Sell = () => {
                         borderColor={colors.borderGray}>
                         {/* Liquidity Distribution Chart */}
                         <Flex w='50%' h='100%' flexDir='column' p='20px'>
-                            <Text fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray} fontSize='0.8rem'>
-                                Total Liquidity
+                            <Text
+                                fontFamily={FONT_FAMILIES.AUX_MONO}
+                                fontWeight={'normal'}
+                                color={colors.textGray}
+                                fontSize='0.8rem'>
+                                {selectedButton === 'Create a Vault' ? 'Total Liquidity Distribution' : 'Your Vault Distribution'}
                             </Text>
                             <Flex gap='8px' align='center'>
                                 <Image src='/images/icons/Ethereum.svg' h='26px' />

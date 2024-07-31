@@ -11,6 +11,14 @@ import {
     Box,
     Spacer,
     Input,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalCloseButton,
+    ModalBody,
+    ModalFooter,
+    useDisclosure,
 } from '@chakra-ui/react';
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
@@ -21,18 +29,16 @@ import { BTCSVG, ETHSVG, InfoSVG } from './SVGs';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi';
 import {
-    contractChainID,
     ethToWei,
     weiToEth,
     btcToSats,
     findVaultIndexToOverwrite,
     findVaultIndexWithSameExchangeRate,
-    riftExchangeContractAddress,
-    wethAddress,
     satsToBtc,
     calculateFillPercentage,
+    withdrawLiquidity,
 } from '../utils/dappHelper';
-import { depositLiquidity } from '../utils/dappHelper';
+import { contractChainID, riftExchangeContractAddress, wethAddress } from '../utils/constants';
 import riftExchangeABI from '../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../store';
@@ -68,8 +74,57 @@ export const ManageVaults = ({}) => {
 
     const vaultsToDisplay = selectedButtonActiveVsCompleted === 'Active' ? myActiveDepositVaults : myCompletedDepositVaults;
 
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [withdrawAmount, setWithdrawAmount] = useState('');
+
+    const handleWithdraw = () => {
+        initiateWithdraw(withdrawAmount);
+        onClose();
+    };
+
     const handleNavigation = (route: string) => {
         router.push(route);
+    };
+
+    const initiateWithdraw = async (ethWithdrawAmount: string) => {
+        const globalVaultIndex = 1;
+        const localVaultIndex = 1;
+        // TODO: calculate the global and local vault indexes
+
+        if (window.ethereum) {
+            try {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                console.log('signer:', await signer.getAddress());
+
+                const ethWithdrawAmountWei = ethers.utils.parseEther(ethWithdrawAmount);
+                console.log('ethWithdrawAmountWei:', ethWithdrawAmountWei.toString());
+
+                // TODO get expired reservation indexes
+                // const expiredReservationIndexes = await getExpiredReservationIndexes();
+                const expiredReservationIndexes = [];
+
+                const result = await withdrawLiquidity(
+                    signer,
+                    riftExchangeABI.abi,
+                    riftExchangeContractAddress,
+                    globalVaultIndex,
+                    localVaultIndex,
+                    ethWithdrawAmountWei,
+                    expiredReservationIndexes,
+                );
+
+                if (result.success) {
+                    console.log('Withdrawal initiated successfully');
+                } else {
+                    console.error('Withdrawal failed:', result.error);
+                }
+            } catch (error) {
+                console.error('Error in initiateWithdraw:', error);
+            }
+        } else {
+            console.error('Ethereum object not found, do you have MetaMask installed?');
+        }
     };
 
     return selectedVaultToManage ? (
@@ -329,19 +384,77 @@ export const ManageVaults = ({}) => {
             </Flex>
 
             {/* WITHDRAW LIQUIDITY BUTTON */}
-            <Flex mt='35px' justify={'center'}>
-                <Button
-                    h='45px'
-                    _hover={{ bg: colors.redHover }}
-                    bg={colors.redBackground}
-                    color={colors.offWhite}
-                    border={`3px solid ${colors.red}`}
-                    borderRadius='10px'
-                    fontSize={'15px'}
-                    w='265px'>
-                    Withdraw Liquidity
-                </Button>
-            </Flex>
+            <>
+                <Flex mt='35px' justify='center'>
+                    <Button
+                        h='45px'
+                        onClick={onOpen}
+                        _hover={{ bg: colors.redHover }}
+                        bg={colors.redBackground}
+                        color={colors.offWhite}
+                        border={`3px solid ${colors.red}`}
+                        borderRadius='10px'
+                        fontSize='15px'
+                        w='265px'>
+                        Withdraw Liquidity
+                    </Button>
+                </Flex>
+
+                <Modal isOpen={isOpen} onClose={onClose} isCentered motionPreset='slideInBottom'>
+                    <ModalOverlay />
+                    <ModalContent
+                        w='550px'
+                        pb={'20px'}
+                        borderRadius={'20px'}
+                        bg={colors.offBlack}
+                        borderWidth={3}
+                        borderColor={colors.borderGray}
+                        mx={'4px'}>
+                        <ModalHeader alignSelf={'center'} fontSize='24px' mt='-4px' color={colors.red}>
+                            Withdraw Liquidity
+                        </ModalHeader>
+                        <ModalCloseButton marginTop={'6px'} />
+                        <ModalBody>
+                            <Text ml='0px' mb='8px' w='100%' fontSize='18px' color={colors.offWhite}>
+                                Amount
+                            </Text>
+                            <Input
+                                bg={colors.borderGray}
+                                borderWidth={2}
+                                _focus={{ borderColor: colors.darkerGray, boxShadow: 'none' }}
+                                _hover={{ borderColor: colors.darkerGray }}
+                                _selected={{ border: 'none' }}
+                                borderColor={colors.borderGrayLight}
+                                placeholder='0.0'
+                                value={withdrawAmount}
+                                color={colors.offWhite}
+                                fontFamily={FONT_FAMILIES.AUX_MONO}
+                                letterSpacing={'-2px'}
+                                fontSize={'22px'}
+                                h='48px'
+                                _placeholder={{ color: colors.textGray }}
+                                onChange={(e) => setWithdrawAmount(e.target.value)}
+                                mb={4}
+                            />
+                        </ModalBody>
+
+                        <ModalFooter>
+                            <Button
+                                h='45px'
+                                onClick={handleWithdraw}
+                                _hover={{ bg: colors.redHover }}
+                                bg={colors.redBackground}
+                                color={colors.offWhite}
+                                border={`3px solid ${colors.red}`}
+                                borderRadius='10px'
+                                fontSize='15px'
+                                w='full'>
+                                Confirm Withdraw
+                            </Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
+            </>
         </Flex>
     ) : (
         <Flex

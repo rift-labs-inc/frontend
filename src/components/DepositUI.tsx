@@ -21,23 +21,22 @@ import { BTCSVG, ETHSVG, InfoSVG } from './SVGs';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi';
 import {
-    contractChainID,
     ethToWei,
     weiToEth,
     btcToSats,
     findVaultIndexToOverwrite,
     findVaultIndexWithSameExchangeRate,
-    riftExchangeContractAddress,
-    wethAddress,
     satsToBtc,
 } from '../utils/dappHelper';
-import { depositLiquidity } from '../utils/dappHelper';
+import { contractChainID, riftExchangeContractAddress, wethAddress } from '../utils/constants';
 import riftExchangeABI from '../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../store';
 import OrangeText from './OrangeText';
 import WhiteText from './WhiteText';
 import { FONT_FAMILIES } from '../utils/font';
+import { useDepositLiquidity } from '../hooks/contract/useDepositLiquidity';
+import DepositStatusModal from './DepositStatusModal';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -53,6 +52,13 @@ export const DepositUI = ({}) => {
     const { data: walletClient } = useWalletClient();
     const { chains, error, switchChain } = useSwitchChain();
     const ethersProvider = useStore((state) => state.ethersProvider);
+    const {
+        depositLiquidity,
+        status: depositLiquidityStatus,
+        error: depositLiquidityError,
+        txHash,
+        resetDepositState,
+    } = useDepositLiquidity();
 
     // const { chain } = useNetwork();
     // const { chains, error, isLoading, pendingChainId, switchNetwork } = useSwitchNetwork();
@@ -79,6 +85,7 @@ export const DepositUI = ({}) => {
     const [bitcoinOutputAmountUSD, setBitcoinOutputAmountUSD] = useState('0.00');
 
     const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -112,49 +119,44 @@ export const DepositUI = ({}) => {
         fetchPriceData();
     }, []);
 
-    // useEffect(() => {
-    //     if (bitcoinPriceUSD && ethPriceUSD && ethDepositAmount && profitPercentage) {
-    // const profitAmount = parseFloat(ethDepositAmount) * (parseFloat(profitPercentage) / 100);
-    // const totalEthUSD = parseFloat(ethDepositAmount) * ethPriceUSD + profitAmount * ethPriceUSD;
-    // const newBitcoinOutputAmount = totalEthUSD / bitcoinPriceUSD > 0 ? totalEthUSD / bitcoinPriceUSD : 0;
-    // const formattedBitcoinOutputAmount = newBitcoinOutputAmount == 0 ? '0.0' : newBitcoinOutputAmount.toFixed(7);
+    useEffect(() => {
+        // Calculate the profit amount in USD
+        const profitAmountUSD = `${(
+            ((parseFloat(ethDepositAmount) * parseFloat(profitPercentage)) / 100) *
+            ethPriceUSD
+        ).toLocaleString('en-US', {
+            style: 'currency',
+            currency: 'USD',
+        })}`;
+        setProfitAmountUSD(!profitPercentage || !ethDepositAmount || profitPercentage == '-' ? '$0.00' : profitAmountUSD);
 
-    // if (formattedBitcoinOutputAmount !== lastBitcoinOutputAmount.current) {
-    //     setBitcoinOutputAmount(formattedBitcoinOutputAmount);
-    //     lastBitcoinOutputAmount.current = formattedBitcoinOutputAmount; // Update the ref
-    // }
-    //         // Calculate the profit amount in USD
+        // Run function to calculate bitcoin amount
+        // setBitcoinOutputAmount(calculateBitcoinAmount());
+    }, [ethDepositAmount, profitPercentage]);
 
-    //         const profitAmountUSD = `≈ ${(
-    //             ((parseFloat(ethDepositAmount) * parseFloat(profitPercentage)) / 100) *
-    //             parseFloat(ethPriceUSD)
-    //         ).toLocaleString('en-US', {
-    //             style: 'currency',
-    //             currency: 'USD',
-    //         })}`;
-    //         setProfitAmountUSD(profitAmountUSD);
+    // Calculate and update the deposit amount in USD
+    useEffect(() => {
+        const ethDepositAmountUSD =
+            ethPriceUSD && ethDepositAmount
+                ? (ethPriceUSD * parseFloat(ethDepositAmount)).toLocaleString('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                  })
+                : '$0.00';
+        setEthDepositAmountUSD(ethDepositAmountUSD);
+    }, [ethDepositAmount]);
 
-    //         // Calculate and update the deposit amount in USD
-    //         const ethDepositAmountUSD =
-    //             ethPriceUSD && ethDepositAmount
-    //                 ? (ethPriceUSD * parseFloat(ethDepositAmount)).toLocaleString('en-US', {
-    //                       style: 'currency',
-    //                       currency: 'USD',
-    //                   })
-    //                 : '$0.00';
-    //         setEthDepositAmountUSD(ethDepositAmountUSD);
-    //     }
-
-    //     // Calculate and update the Bitcoin output amount in USD
-    //     const bitcoinOutputAmountUSD =
-    //         bitcoinPriceUSD && bitcoinOutputAmount
-    //             ? (bitcoinPriceUSD * parseFloat(bitcoinOutputAmount)).toLocaleString('en-US', {
-    //                   style: 'currency',
-    //                   currency: 'USD',
-    //               })
-    //             : '$0.00';
-    //     setBitcoinOutputAmountUSD(bitcoinOutputAmountUSD);
-    // }, [ethDepositAmount, profitPercentage, bitcoinOutputAmount, bitcoinPriceUSD, ethPriceUSD]);
+    // Calculate and update the Bitcoin output amount in USD
+    useEffect(() => {
+        const bitcoinOutputAmountUSD =
+            bitcoinPriceUSD && bitcoinOutputAmount
+                ? (bitcoinPriceUSD * parseFloat(bitcoinOutputAmount)).toLocaleString('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                  })
+                : '$0.00';
+        setBitcoinOutputAmountUSD(bitcoinOutputAmountUSD);
+    }, [bitcoinOutputAmount]);
 
     const calculateBitcoinAmount = (newEthDepositAmount: string | undefined, newProfitPercentage: string | undefined) => {
         if (ethPriceUSD && bitcoinPriceUSD) {
@@ -199,45 +201,6 @@ export const DepositUI = ({}) => {
             setProfitPercentage(newProfitPercentage);
         }
     };
-
-    useEffect(() => {
-        // Calculate the profit amount in USD
-        const profitAmountUSD = `${(
-            ((parseFloat(ethDepositAmount) * parseFloat(profitPercentage)) / 100) *
-            ethPriceUSD
-        ).toLocaleString('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        })}`;
-        setProfitAmountUSD(!profitPercentage || !ethDepositAmount || profitPercentage == '-' ? '$0.00' : profitAmountUSD);
-
-        // Run function to calculate bitcoin amount
-        // setBitcoinOutputAmount(calculateBitcoinAmount());
-    }, [ethDepositAmount, profitPercentage]);
-
-    // Calculate and update the deposit amount in USD
-    useEffect(() => {
-        const ethDepositAmountUSD =
-            ethPriceUSD && ethDepositAmount
-                ? (ethPriceUSD * parseFloat(ethDepositAmount)).toLocaleString('en-US', {
-                      style: 'currency',
-                      currency: 'USD',
-                  })
-                : '$0.00';
-        setEthDepositAmountUSD(ethDepositAmountUSD);
-    }, [ethDepositAmount]);
-
-    // Calculate and update the Bitcoin output amount in USD
-    useEffect(() => {
-        const bitcoinOutputAmountUSD =
-            bitcoinPriceUSD && bitcoinOutputAmount
-                ? (bitcoinPriceUSD * parseFloat(bitcoinOutputAmount)).toLocaleString('en-US', {
-                      style: 'currency',
-                      currency: 'USD',
-                  })
-                : '$0.00';
-        setBitcoinOutputAmountUSD(bitcoinOutputAmountUSD);
-    }, [bitcoinOutputAmount]);
 
     // deposit amount
     const handleEthDepositChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -318,29 +281,30 @@ export const DepositUI = ({}) => {
         return parseFloat(BitcoinExchangeRate.toFixed(7));
     }
 
-    const initateDeposit = async () => {
-        if (walletClient && btcToEthExchangeRate) {
+    const initiateDeposit = async () => {
+        if (window.ethereum && btcToEthExchangeRate) {
+            // Reset the deposit state before starting a new deposit
+            resetDepositState();
+
+            setIsModalOpen(true);
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            console.log('signer:', signer.getAddress());
             const vaultIndexToOverwrite = findVaultIndexToOverwrite();
             const ethDepositAmountWei = ethToWei(parseFloat(ethDepositAmount));
             const vaultIndexWithSameExchangeRate = findVaultIndexWithSameExchangeRate();
-            console.log('btcToEthExchangeRate:', btcToEthExchangeRate);
             const exchangeRate = btcToSats(btcToEthExchangeRate);
-            console.log('exchangeRate:', exchangeRate);
 
-            depositLiquidity(
-                signer, // signer: ethers.Signer,
-                riftExchangeABI.abi, // riftExchangeAbi: ethers.ContractInterface,
-                riftExchangeContractAddress, // riftExchangeContract: string,
-                wethAddress, // wethAddress: string,
-                payoutBTCAddress, // btcPayoutLockingScript: string, // TODO: convert to actual locking script
-                exchangeRate, // btcExchangeRate: BigNumberish,
-                vaultIndexToOverwrite, // vaultIndexToOverwrite: number,
-                ethDepositAmountWei, // depositAmount: BigNumberish,
-                vaultIndexWithSameExchangeRate, // vaultIndexWithSameExchangeRate: number,
-            );
+            await depositLiquidity({
+                signer,
+                riftExchangeAbi: riftExchangeABI.abi,
+                riftExchangeContract: riftExchangeContractAddress,
+                wethAddress,
+                btcPayoutLockingScript: payoutBTCAddress,
+                btcExchangeRate: exchangeRate,
+                vaultIndexToOverwrite,
+                depositAmount: ethDepositAmountWei,
+                vaultIndexWithSameExchangeRate,
+            });
         }
     };
 
@@ -551,7 +515,7 @@ export const DepositUI = ({}) => {
                                     fontFamily={'Aux'}
                                     border='none'
                                     mt='1px'
-                                    mr='110px'
+                                    mr='195px'
                                     p='0px'
                                     letterSpacing={'-5px'}
                                     color={colors.offWhite}
@@ -587,7 +551,7 @@ export const DepositUI = ({}) => {
                                     console.log('Switching network');
                                     // switchChain(contractChainID); TODO: switch chains
                                 } else if (ethDepositAmount && bitcoinOutputAmount && payoutBTCAddress && btcToEthExchangeRate) {
-                                    initateDeposit();
+                                    initiateDeposit();
                                 }
                             }}
                             fontSize={'15px'}
@@ -618,6 +582,13 @@ export const DepositUI = ({}) => {
                     </Flex>
                 </Flex>
             </Flex>
+            <DepositStatusModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                status={depositLiquidityStatus}
+                error={depositLiquidityError}
+                txHash={txHash}
+            />
         </Flex>
     );
 };

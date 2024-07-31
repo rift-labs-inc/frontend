@@ -5,6 +5,8 @@ import { useRouter } from 'next/router';
 import { IoMenu } from 'react-icons/io5';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { ConnectWalletButton } from './ConnectWalletButton';
+import { contractChainID, riftExchangeContractAddress } from '../utils/constants';
+import { FONT_FAMILIES } from '../utils/font';
 
 export const Navbar = ({}) => {
     const { height, width } = useWindowSize();
@@ -67,6 +69,29 @@ export const Navbar = ({}) => {
                 {navItem('Sell', '/sell')}
                 {navItem('Activity', '/activity')}
                 {navItem('About', '/about')}
+                <Spacer />
+                <Flex
+                    direction={'column'}
+                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                    align='center'
+                    fontSize={'12px'}
+                    justify={'cetner'}
+                    right={0}
+                    left={0}
+                    position={'absolute'}>
+                    <Text>Current Rift Contract:</Text>
+                    <Text
+                        cursor={'pointer'}
+                        onClick={() => {
+                            navigator.clipboard.writeText(riftExchangeContractAddress);
+                        }}
+                        color={'blue.300'}>
+                        {riftExchangeContractAddress}
+                    </Text>
+                    <Text>
+                        Chain ID: {contractChainID === 11155111 ? 'Sepolia' : contractChainID === 1 ? 'ETH' : contractChainID}{' '}
+                    </Text>
+                </Flex>
                 <Spacer />
                 <Flex mb='-5px' pr='5px'>
                     <ConnectWalletButton />

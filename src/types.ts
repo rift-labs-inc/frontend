@@ -1,15 +1,20 @@
 import { BigNumberish } from 'ethers';
 
-export type Swap = {
-    timestamp: number;
-    from_address: string;
-    to_address: string;
-    txn_hash: string;
-    lp_fee: string;
-    amount: string;
-    asset: string;
-    status: string;
+export type SwapReservation = {
+    confirmationBlockHeight: number;
+    reservationTimestamp: number;
+    unlockTimestamp: number;
+    state: ReservationState;
+    ethPayoutAddress: string;
+    lpReservationHash: string;
+    nonce: string;
+    totalSwapAmount: BigNumberish;
+    prepaidFeeAmount: BigNumberish;
+    vaultIndexes: number[];
+    amountsToReserve: BigNumberish[];
 };
+
+export type ReservationState = 'None' | 'Created' | 'Unlocked' | 'ExpiredAndAddedBackToVault' | 'Completed';
 
 export type DepositVault = {
     initialBalance: BigNumberish;

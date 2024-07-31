@@ -33,12 +33,12 @@
     />
 <defs>
 <linearGradient id="paint0_linear_4489_656" x1="108" y1="3" x2="108" y2="67" gradientUnits="userSpaceOnUse">
-<stop stop-color="#2E40B7" />
-<stop offset="1" stop-color="#2E45B0" />
+<stop stopColor="#2E40B7" />
+<stop offset="1" stopColor="#2E45B0" />
 </linearGradient>
 <linearGradient id="paint1_linear_4489_656" x1="3378.92" y1="-0.740762" x2="3378.92" y2="6760.01" gradientUnits="userSpaceOnUse">
-<stop stop-color="#F9AA4B" />
-<stop offset="1" stop-color="#F7931A" />
+<stop stopColor="#F9AA4B" />
+<stop offset="1" stopColor="#F7931A" />
 </linearGradient>
 </defs>
 </svg>

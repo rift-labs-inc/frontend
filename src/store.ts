@@ -1,11 +1,9 @@
 import { create } from 'zustand';
 import { useEffect } from 'react';
-import { Swap, Asset, DepositVault } from './types';
+import { Asset, DepositVault, SwapReservation } from './types';
 import { ethers } from 'ethers';
 
 type Store = {
-    activityData: Swap[];
-    setActivityData: (activity: Swap[]) => void;
     availableAssets: Asset[];
     setAvailableAssets: (assets: Asset[]) => void;
     allUserDepositVaults: any;
@@ -34,11 +32,13 @@ type Store = {
     setEthOutputSwapAmount: (amount: string) => void;
     selectedVaultToManage: DepositVault | null;
     setSelectedVaultToManage: (vault: DepositVault | null) => void;
+    allSwapReservations: SwapReservation[];
+    setAllSwapReservations: (reservations: SwapReservation[]) => void;
+    showManageDepositVaultsScreen: boolean;
+    setShowManageDepositVaultsScreen: (show: boolean) => void;
 };
 
 export const useStore = create<Store>((set) => ({
-    activityData: [],
-    setActivityData: (activityData) => set({ activityData }),
     availableAssets: [],
     setAvailableAssets: (availableAssets) => set({ availableAssets }),
     allUserDepositVaults: {},
@@ -65,4 +65,8 @@ export const useStore = create<Store>((set) => ({
     setEthOutputSwapAmount: (ethOutputSwapAmount) => set({ ethOutputSwapAmount }),
     selectedVaultToManage: null,
     setSelectedVaultToManage: (selectedVaultToManage) => set({ selectedVaultToManage }),
+    allSwapReservations: [],
+    setAllSwapReservations: (allSwapReservations) => set({ allSwapReservations }),
+    showManageDepositVaultsScreen: false,
+    setShowManageDepositVaultsScreen: (showManageDepositVaultsScreen) => set({ showManageDepositVaultsScreen }),
 }));

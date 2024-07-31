@@ -25,8 +25,8 @@ export const WBTCSVG = () => {
             />
             <defs>
                 <linearGradient id='paint0_linear_4723_44' x1='84.5' y1='2' x2='84.5' y2='44' gradientUnits='userSpaceOnUse'>
-                    <stop stop-color='#C16C21' />
-                    <stop offset='1' stop-color='#C46816' />
+                    <stop stopColor='#C16C21' />
+                    <stop offset='1' stopColor='#C46816' />
                 </linearGradient>
                 <linearGradient
                     id='paint1_linear_4723_44'
@@ -35,8 +35,8 @@ export const WBTCSVG = () => {
                     x2='2287.13'
                     y2='4576.27'
                     gradientUnits='userSpaceOnUse'>
-                    <stop stop-color='#F9AA4B' />
-                    <stop offset='1' stop-color='#F7931A' />
+                    <stop stopColor='#F9AA4B' />
+                    <stop offset='1' stopColor='#F7931A' />
                 </linearGradient>
             </defs>
         </svg>
@@ -76,8 +76,8 @@ export const BTCSVG = ({ width = '100', height = '20', viewBox = '0 0 200 46' })
                     x2='72.8891'
                     y2='44.3162'
                     gradientUnits='userSpaceOnUse'>
-                    <stop stop-color='#C16C21' />
-                    <stop offset='1' stop-color='#C46816' />
+                    <stop stopColor='#C16C21' />
+                    <stop offset='1' stopColor='#C46816' />
                 </linearGradient>
                 <linearGradient
                     id='paint1_linear_4628_619'
@@ -86,8 +86,8 @@ export const BTCSVG = ({ width = '100', height = '20', viewBox = '0 0 200 46' })
                     x2='2287.91'
                     y2='4576.27'
                     gradientUnits='userSpaceOnUse'>
-                    <stop stop-color='#F9AA4B' />
-                    <stop offset='1' stop-color='#F7931A' />
+                    <stop stopColor='#F9AA4B' />
+                    <stop offset='1' stopColor='#F7931A' />
                 </linearGradient>
             </defs>
         </svg>
@@ -130,8 +130,8 @@ export const ETHSVG = ({ width = '100', height = '20', viewBox = '0 0 200 46' })
                     x2='72.5503'
                     y2='44.9982'
                     gradientUnits='userSpaceOnUse'>
-                    <stop stop-color='#2E40B7' />
-                    <stop offset='1' stop-color='#2E45B0' />
+                    <stop stopColor='#2E40B7' />
+                    <stop offset='1' stopColor='#2E45B0' />
                 </linearGradient>
             </defs>
         </svg>
@@ -217,8 +217,8 @@ export const ETH_Logo = () => {
                     x2='6646.4'
                     y2='13299.4'
                     gradientUnits='userSpaceOnUse'>
-                    <stop stop-color='#F9AA4B' />
-                    <stop offset='1' stop-color='#F7931A' />
+                    <stop stopColor='#F9AA4B' />
+                    <stop offset='1' stopColor='#F7931A' />
                 </linearGradient>
             </defs>
         </svg>
@@ -257,8 +257,8 @@ export const BTC_Logo = () => {
                     x2='6646.41'
                     y2='13298.7'
                     gradientUnits='userSpaceOnUse'>
-                    <stop stop-color='#F9AA4B' />
-                    <stop offset='1' stop-color='#F7931A' />
+                    <stop stopColor='#F9AA4B' />
+                    <stop offset='1' stopColor='#F7931A' />
                 </linearGradient>
             </defs>
         </svg>

@@ -16,8 +16,9 @@ import { mainnet, sepolia, polygon, optimism, arbitrum, base } from 'wagmi/chain
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { getDefaultConfig, RainbowKitProvider, darkTheme, Theme } from '@rainbow-me/rainbowkit';
 import { ethers } from 'ethers';
-import { useDepositVaults } from '../hooks/useDepositVaults';
-import { rpcURL, riftExchangeContractAddress } from '../utils/dappHelper';
+import { useDepositVaults } from '../hooks/contract/useDepositVaults';
+import { contractChainID, contractRpcURL, riftExchangeContractAddress } from '../utils/constants';
+import { useSwapReservations } from '../hooks/contract/useSwapReservations';
 
 const config = getDefaultConfig({
     appName: 'My RainbowKit App',
@@ -84,7 +85,6 @@ const myCustomTheme = {
 
 function MyApp({ Component, pageProps }: AppProps) {
     const queryClient = new QueryClient();
-    const setActivityData = useStore((state) => state.setActivityData);
     const setAvailableAssets = useStore((state) => state.setAvailableAssets);
     const ethersProvider = useStore((state) => state.ethersProvider);
     const setEthersProvider = useStore((state) => state.setEthersProvider);
@@ -99,10 +99,15 @@ function MyApp({ Component, pageProps }: AppProps) {
     const setBtcToEthExchangeRate = useStore((state) => state.setBtcToEthExchangeRate);
 
     const { allUserDepositVaults, loading, error } = useDepositVaults(ethersProvider, riftExchangeContractAddress);
+    const {
+        allSwapReservations,
+        loading: loadingSwapReservations,
+        error: errorSwapReservations,
+    } = useSwapReservations(ethersProvider, riftExchangeContractAddress);
 
     useEffect(() => {
         // setup provider
-        setEthersProvider(new ethers.providers.JsonRpcProvider(rpcURL));
+        setEthersProvider(new ethers.providers.JsonRpcProvider(contractRpcURL));
     }, []);
 
     useEffect(() => {
@@ -112,10 +117,10 @@ function MyApp({ Component, pageProps }: AppProps) {
     }, [allUserDepositVaults]);
 
     useEffect(() => {
-        // TODO: populate all real data from smart contracts
-        setActivityData(testData.activity);
-        setAvailableAssets(assets.avalible_assets);
-    }, [setActivityData, setAvailableAssets]);
+        if (allSwapReservations) {
+            console.log('allSwapReservations:', allSwapReservations);
+        }
+    }, [allSwapReservations]);
 
     useEffect(() => {
         const fetchPriceData = async () => {
