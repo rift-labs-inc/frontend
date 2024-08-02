@@ -21,6 +21,22 @@ export const Step2 = () => {
     return (
         <>
             {isRiftExtensionInstalled ? (
+                <Flex
+                    bg={colors.offBlack}
+                    w='100%'
+                    mt='20px'
+                    borderRadius='30px'
+                    px='20px'
+                    direction='column'
+                    py='35px'
+                    align='center'
+                    borderWidth={3}
+                    borderColor={colors.borderGray}>
+                    <Text fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
+                        Chrome extension detected!
+                    </Text>
+                </Flex>
+            ) : (
                 <>
                     <Flex
                         bg={colors.offBlack}
@@ -92,22 +108,6 @@ export const Step2 = () => {
                         </Text>
                     </Flex>
                 </>
-            ) : (
-                <Flex
-                    bg={colors.offBlack}
-                    w='100%'
-                    mt='20px'
-                    borderRadius='30px'
-                    px='20px'
-                    direction='column'
-                    py='35px'
-                    align='center'
-                    borderWidth={3}
-                    borderColor={colors.borderGray}>
-                    <Text fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
-                        Chrome extension detected!
-                    </Text>
-                </Flex>
             )}
         </>
     );
