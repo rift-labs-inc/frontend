@@ -14,7 +14,7 @@ export const Step2 = () => {
     const [isRiftExtensionInstalled, setIsRiftExtensionInstalled] = useState(false);
 
     useEffect(() => {
-        setIsRiftExtensionInstalled(window.rift.connected);
+        setIsRiftExtensionInstalled(!!window.rift);
         console.log('isRiftExtensionInstalled', isRiftExtensionInstalled);
     }, []);
 
