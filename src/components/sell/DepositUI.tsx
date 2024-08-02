@@ -93,34 +93,6 @@ export const DepositUI = ({}) => {
     };
 
     useEffect(() => {
-        const fetchPriceData = async () => {
-            // TODO: get this data from uniswap
-            try {
-                const response = await fetch(
-                    'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,weth&vs_currencies=usd,eth',
-                );
-                const data = await response.json();
-                if (data.bitcoin && data.bitcoin.usd) {
-                    setBitcoinPriceUSD(data.bitcoin.usd); // Bitcoin price in USD
-                }
-                if (data.ethereum && data.ethereum.usd) {
-                    setEthPriceUSD(data.ethereum.usd); // Ethereum price in USD
-                }
-                if (data.weth && data.weth.usd) {
-                    setWrappedEthPriceUSD(data.weth.usd); // Wrapped Ethereum price in USD
-                }
-                if (data.bitcoin && data.bitcoin.eth) {
-                    setBtcToEthExchangeRate(data.bitcoin.eth); // exchange rate of Bitcoin in Ethereum
-                }
-            } catch (error) {
-                console.error('Failed to fetch prices and exchange rate:', error);
-            }
-        };
-
-        fetchPriceData();
-    }, []);
-
-    useEffect(() => {
         // Calculate the profit amount in USD
         const profitAmountUSD = `${(
             ((parseFloat(ethDepositAmount) * parseFloat(profitPercentage)) / 100) *
