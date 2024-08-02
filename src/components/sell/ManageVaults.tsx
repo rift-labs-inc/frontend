@@ -49,7 +49,6 @@ import { ChevronLeftIcon } from '@chakra-ui/icons';
 import { useWithdrawLiquidity, WithdrawStatus } from '../../hooks/contract/useWithdrawLiquidity';
 import WithdrawStatusModal from './WithdrawStatusModal';
 import { getLiquidityProvider } from '../../utils/contractReadFunctions';
-import { useUserDepositVaults } from '../../hooks/contract/useUserDepositVaults';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -73,15 +72,12 @@ export const ManageVaults = ({}) => {
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
     type TabType = 'Active' | 'Completed';
+    const myActiveDepositVaults = useStore((state) => state.myActiveDepositVaults);
+    const setMyActiveDepositVaults = useStore((state) => state.setMyActiveDepositVaults);
+    const myCompletedDepositVaults = useStore((state) => state.myCompletedDepositVaults);
+    const setMyCompletedDepositVaults = useStore((state) => state.setMyCompletedDepositVaults);
 
     const [activeTab, setActiveTab] = useState<TabType>('Active');
-    const {
-        myActiveDepositVaults,
-        myCompletedDepositVaults,
-        isLoading,
-        error: useUserDepositVaultsError,
-        refreshUserDepositData,
-    } = useUserDepositVaults();
 
     const { isOpen, onOpen, onClose } = useDisclosure();
     const {
@@ -166,7 +162,7 @@ export const ManageVaults = ({}) => {
             });
 
             console.log('Withdrawal successful');
-            await refreshUserDepositData();
+            // TODO: refresh deposit vault data in ContractDataProvider somehow - await refreshUserDepositData();
             const updatedVault = myActiveDepositVaults.find((vault) => vault.index === selectedVaultToManage.index);
             if (updatedVault) {
                 setSelectedVaultToManage(updatedVault);
@@ -314,7 +310,7 @@ export const ManageVaults = ({}) => {
                         key={refreshKey}
                         align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {weiToEth(selectedVaultToManage.unreservedBalance)}
+                            {Number(weiToEth(BigNumber.from(selectedVaultToManage.unreservedBalance)))}
                         </Text>
                         <Spacer />
                         <ETHSVG width='68' height='50' viewBox='0 0 130 52' />
@@ -338,7 +334,7 @@ export const ManageVaults = ({}) => {
                         px='15px'
                         align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {weiToEth(selectedVaultToManage.initialBalance)}
+                            {Number(weiToEth(BigNumber.from(selectedVaultToManage.initialBalance)))}
                         </Text>
                         <Spacer />
                         <ETHSVG width='68' height='50' viewBox='0 0 130 52' />
@@ -373,8 +369,8 @@ export const ManageVaults = ({}) => {
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
                             {selectedVaultToManage.btcExchangeRate &&
                                 (
-                                    satsToBtc(BigNumber.from(selectedVaultToManage.btcExchangeRate).toNumber()) *
-                                    weiToEth(selectedVaultToManage.unreservedBalance)
+                                    satsToBtc(Number(selectedVaultToManage.btcExchangeRate)) *
+                                    parseFloat(weiToEth(BigNumber.from(selectedVaultToManage.unreservedBalance)).toString())
                                 ).toFixed(8)}
                         </Text>
 
@@ -573,7 +569,7 @@ export const ManageVaults = ({}) => {
                                     #{vault.index.toString()}
                                 </Text>
                                 <Text width='12%' fontWeight='bold'>
-                                    {weiToEth(vault.initialBalance).toString()}
+                                    {weiToEth(BigNumber.from(vault.initialBalance)).toString()}
                                 </Text>
                                 <Text width='14%' ml='-8px' mr='9px'>
                                     <ETHSVG />

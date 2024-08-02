@@ -9,6 +9,7 @@ export const contractRpcURL = 'https://ethereum-sepolia.blockpi.network/v1/rpc/p
 export const etherScanBaseUrl = 'https://sepolia.etherscan.io';
 
 export const riftExchangeContractAddress = '0x421b6FaDB88281402F688010C60Cc72EB9f10135';
+export const maxSwapOutputs = 200;
 export const wethAddress = '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9';
 export const WETH_ABI = [
     {

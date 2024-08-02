@@ -14,13 +14,18 @@ import {
 } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { colors } from '../../utils/colors';
 import { useStore } from '../../store';
 import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
+import { BigNumber } from 'ethers';
+import { parseEther } from 'ethers/lib/utils';
+import { calculateLowestFeeReservation, ethToWei, weiToEth } from '../../utils/dappHelper';
+import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
+import { maxSwapOutputs } from '../../utils/constants';
 
-export const BuyUI = ({}) => {
+export const SwapUI = ({}) => {
     const { width } = useWindowSize();
     const isMobileView = width < 600;
     const router = useRouter();
@@ -29,15 +34,52 @@ export const BuyUI = ({}) => {
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const ethOutputSwapAmount = useStore((state) => state.ethOutputSwapAmount);
     const setEthOutputSwapAmount = useStore((state) => state.setEthOutputSwapAmount);
-
+    const totalAvailableLiquidity = useStore((state) => state.totalAvailableLiquidity);
+    const allDepositVaults = useStore((state) => state.allDepositVaults);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
     const ethPriceUSD = useStore((state) => state.ethPriceUSD);
     const btcToEthExchangeRate = useStore((state) => state.btcToEthExchangeRate);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
+    const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
+    const userEthAddress = useStore((state) => state.userEthAddress);
+    const [isLiquidityExceeded, setIsLiquidityExceeded] = useState(false);
 
-    const handleNavigation = (route: string) => {
-        router.push(route);
-    };
+    const checkLiquidityExceeded = useCallback(
+        (amount: string | null) => {
+            try {
+                const ethOutputInWei = !amount ? BigNumber.from(0) : ethToWei(amount);
+                return BigNumber.from(ethOutputInWei).gt(totalAvailableLiquidity);
+            } catch (error) {
+                console.error('Error in checkLiquidityExceeded:', error);
+                return false; // or handle the error as appropriate for your use case
+            }
+        },
+        [totalAvailableLiquidity],
+    );
+
+    useEffect(() => {
+        const exceeded = checkLiquidityExceeded(ethOutputSwapAmount);
+        setIsLiquidityExceeded(exceeded);
+
+        if (ethOutputSwapAmount && !exceeded) {
+            const ethOutputInWei = ethToWei(ethOutputSwapAmount);
+            const reservationPart = calculateLowestFeeReservation(
+                allDepositVaults,
+                BigNumber.from(ethOutputInWei),
+                maxSwapOutputs,
+            );
+
+            const reserveLiquidityParams: ReserveLiquidityParams = {
+                vaultIndexesToReserve: reservationPart.vaultIndexes,
+                amountsToReserve: reservationPart.amountsToReserve,
+                ethPayoutAddress: '', // this is set when user inputs their eth payout address
+                expiredSwapReservationIndexes: [], // TODO: calculated later
+            };
+            setLowestFeeReservationParams(reserveLiquidityParams);
+        } else {
+            setLowestFeeReservationParams(null);
+        }
+    }, [ethOutputSwapAmount, checkLiquidityExceeded, allDepositVaults, setLowestFeeReservationParams]);
 
     const validateSwapInput = (value) => {
         if (value === '') return true;
@@ -74,8 +116,16 @@ export const BuyUI = ({}) => {
         if (validateSwapInput(ethValue)) {
             setEthOutputSwapAmount(ethValue);
             const btcValue = ethValue && parseFloat(ethValue) > 0 ? parseFloat(ethValue) / btcToEthExchangeRate : 0;
-            setBtcInputSwapAmount(formatOutput(btcValue)); // Correctly format output
+            setBtcInputSwapAmount(formatOutput(btcValue));
+
+            // Immediately check and log liquidity status
+            const exceeded = checkLiquidityExceeded(ethValue);
+            console.log('LIQUIDITY EXCEEDED (immediate)?:', exceeded);
         }
+    };
+
+    const handleNavigation = (route: string) => {
+        router.push(route);
     };
 
     const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
@@ -198,7 +248,7 @@ export const BuyUI = ({}) => {
                                     ml='-5px'
                                     p='0px'
                                     letterSpacing={'-6px'}
-                                    color={colors.offWhite}
+                                    color={isLiquidityExceeded ? colors.red : colors.offWhite}
                                     _active={{ border: 'none', boxShadow: 'none' }}
                                     _focus={{ border: 'none', boxShadow: 'none' }}
                                     _selected={{ border: 'none', boxShadow: 'none' }}
@@ -207,14 +257,24 @@ export const BuyUI = ({}) => {
                                     _placeholder={{ color: '#5C63A3' }}
                                 />
                                 <Text
-                                    color={!ethOutputSwapAmount ? colors.offWhite : colors.textGray}
+                                    color={
+                                        isLiquidityExceeded
+                                            ? colors.redHover
+                                            : !ethOutputSwapAmount
+                                            ? colors.offWhite
+                                            : colors.textGray
+                                    }
                                     fontSize={'13px'}
                                     mt='2px'
                                     ml='1px'
-                                    letterSpacing={'-1px'}
+                                    letterSpacing={'-1.5px'}
                                     fontWeight={'normal'}
                                     fontFamily={'Aux'}>
-                                    {ethPriceUSD
+                                    {isLiquidityExceeded
+                                        ? `Exceeds Available Liquidity - ${Number(weiToEth(totalAvailableLiquidity)).toFixed(
+                                              4,
+                                          )} ETH Max`
+                                        : ethPriceUSD
                                         ? ethOutputSwapAmount
                                             ? (ethPriceUSD * parseFloat(ethOutputSwapAmount)).toLocaleString('en-US', {
                                                   style: 'currency',
@@ -295,7 +355,7 @@ export const BuyUI = ({}) => {
                         mt='15px'
                         transition={'0.2s'}
                         h='45px'
-                        onClick={ethOutputSwapAmount ? () => setSwapFlowState('reserve') : null}
+                        onClick={ethOutputSwapAmount ? () => setSwapFlowState('1-reserve-liquidity') : null}
                         fontSize={'15px'}
                         align={'center'}
                         userSelect={'none'}

@@ -46,24 +46,21 @@ export const SwapAmounts = ({}) => {
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
 
-    // TODO: format swap amounts with huge numbers #whales
-
     return (
         <Flex
-            width='750px'
             bg={colors.offBlack}
             border='3px solid'
             borderColor={colors.borderGray}
             borderRadius={'full'}
             h='88px'
-            pl={'30px'}
-            pr={'25px'}
+            pl={'35px'}
+            pr={'28px'}
             fontFamily={FONT_FAMILIES.AUX_MONO}
             fontWeight={'normal'}
             py='3px'>
             <Flex direction='column'>
                 <Flex>
-                    <Text mr='15px' maxW='205px' fontSize={'36px'} letterSpacing={'-5px'} color={colors.offWhite}>
+                    <Text mr='15px' fontSize={'36px'} letterSpacing={'-5px'} color={colors.offWhite}>
                         {btcInputSwapAmount}
                     </Text>
                     <BTCSVG width='100' height='58' viewBox='0 0 148 54' />{' '}
@@ -86,7 +83,7 @@ export const SwapAmounts = ({}) => {
             </Flex>
             <Spacer />
             <Flex align='center' ml='-10px' mt='-4px' justify={'center'}>
-                <MdArrowRight size={'50px'} color={colors.textGray} />
+                <MdArrowRight size={'50px'} color={colors.darkerGray} />
             </Flex>
             <Spacer />
             <Flex direction='column'>

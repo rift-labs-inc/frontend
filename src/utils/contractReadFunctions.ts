@@ -26,7 +26,7 @@ export async function getDepositVaultByIndex(
 
     try {
         const depositVault = await contract.getDepositVault(index);
-        console.log(`Raw deposit vault data for index ${index}:`, depositVault);
+        // console.log(`Raw deposit vault data for index ${index}:`, depositVault);
 
         if (!Array.isArray(depositVault) || depositVault.length < 4) {
             console.warn(`Deposit vault at index ${index} returned invalid data`);
@@ -119,7 +119,6 @@ export async function getSwapReservations(
     rift_exchange_contract: string,
     indexesArray: number[],
 ): Promise<SwapReservation[]> {
-    console.log('getSwapReservations called with indexes:', indexesArray);
     const factory = new ethers.ContractFactory(abi, bytecode);
     const deployTransaction = factory.getDeployTransaction(indexesArray, rift_exchange_contract);
 
@@ -128,86 +127,67 @@ export async function getSwapReservations(
     };
 
     const result = await retryEthCall(() => provider.call({ data: deployTransaction.data as string }));
-    const decodedResults = decodeSwapReservations(result);
-    return decodedResults;
-}
-
-export function decodeSwapReservations(data: string): SwapReservation[] {
-    const abiCoder = new ethers.utils.AbiCoder();
-    console.log('Raw data to decode:', data);
-
     try {
-        // decode the outer array
-        const decodedArray = abiCoder.decode(['bytes[]'], data)[0];
-        console.log('Decoded outer array:', decodedArray);
-
-        if (!Array.isArray(decodedArray) || decodedArray.length === 0) {
-            console.warn('Decoded array is empty or not an array');
-            return [];
-        }
-
-        // decode each element in the array
-        const swapReservations: SwapReservation[] = decodedArray
-            .map((item: string, index: number) => {
-                try {
-                    console.log(`Decoding item ${index}:`, item);
-
-                    const [
-                        confirmationBlockHeight,
-                        reservationTimestamp,
-                        unlockTimestamp,
-                        state,
-                        ethPayoutAddress,
-                        lpReservationHash,
-                        nonce,
-                        totalSwapAmount,
-                        prepaidFeeAmount,
-                        vaultIndexes,
-                        amountsToReserve,
-                    ] = abiCoder.decode(
-                        [
-                            'uint32',
-                            'uint32',
-                            'uint32',
-                            'uint8',
-                            'address',
-                            'bytes32',
-                            'uint256',
-                            'uint256',
-                            'uint256',
-                            'uint16[]',
-                            'uint256[]',
-                        ],
-                        item,
-                    );
-
-                    const reservation: SwapReservation = {
-                        confirmationBlockHeight,
-                        reservationTimestamp,
-                        unlockTimestamp,
-                        state: state as ReservationState,
-                        ethPayoutAddress,
-                        lpReservationHash: ethers.utils.hexlify(lpReservationHash),
-                        nonce: nonce.toString(),
-                        totalSwapAmount,
-                        prepaidFeeAmount,
-                        vaultIndexes,
-                        amountsToReserve,
-                    };
-
-                    console.log(`Successfully decoded item ${index}:`, reservation);
-                    return reservation;
-                } catch (error) {
-                    console.error(`Error decoding item ${index}:`, error);
-                    return null;
-                }
-            })
-            .filter((reservation): reservation is SwapReservation => reservation !== null);
-
-        console.log('Final decoded reservations:', swapReservations);
-        return swapReservations;
-    } catch (error) {
-        console.error('Error in decodeSwapReservations:', error);
+        const decodedResults = decodeSwapReservations(result);
+        return decodedResults;
+    } catch (err) {
+        console.error('Error in getSwapReservations:', err);
         return [];
     }
+}
+
+function decodeSwapReservations(data: string): SwapReservation[] {
+    const abiCoder = new ethers.utils.AbiCoder();
+    const decodedArray = abiCoder.decode(['bytes[]'], data)[0];
+
+    const swapReservations: SwapReservation[] = decodedArray.map((item: any) => {
+        const decodedResults = abiCoder.decode(
+            [
+                `tuple(
+            uint32 confirmationBlockHeight,
+            uint32 reservationTimestamp,
+            uint32 unlockTimestamp,
+            uint8 state,
+            address ethPayoutAddress,
+            bytes32 lpReservationHash,
+            bytes32 nonce,
+            uint256 totalSwapAmount,
+            int256 prepaidFeeAmount,
+            uint256[] vaultIndexes,
+            uint192[] amountsToReserve
+        )`,
+            ],
+            item,
+        );
+
+        const [
+            confirmationBlockHeight,
+            reservationTimestamp,
+            unlockTimestamp,
+            state,
+            ethPayoutAddress,
+            lpReservationHash,
+            nonce,
+            totalSwapAmount,
+            prepaidFeeAmount,
+            vaultIndexes,
+            amountsToReserve,
+        ] = decodedResults[0];
+
+        return {
+            confirmationBlockHeight,
+            reservationTimestamp,
+            unlockTimestamp,
+            state: state as ReservationState,
+            ethPayoutAddress,
+            lpReservationHash,
+            nonce: nonce,
+            totalSwapAmount: totalSwapAmount,
+            prepaidFeeAmount: prepaidFeeAmount,
+            vaultIndexes: vaultIndexes,
+            amountsToReserve: amountsToReserve,
+        };
+    });
+
+    return swapReservations;
 }

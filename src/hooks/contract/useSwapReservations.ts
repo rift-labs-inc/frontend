@@ -19,8 +19,6 @@ export function useSwapReservations(
     const [allSwapReservations, setAllSwapReservations] = useState<SwapReservation[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
-
-    // Use a try-catch block when accessing the store
     const store = useStore();
     const storeSwapReservations = store ? store.allSwapReservations : [];
     const storeSetSwapReservations = store ? store.setAllSwapReservations : null;
@@ -36,6 +34,8 @@ export function useSwapReservations(
                 riftExchangeContractAddress,
                 Array.from({ length: swapReservationsLength }).map((_, i) => i),
             );
+
+            // console.log('ALL swapReservations:', swapReservations);
 
             setAllSwapReservations(swapReservations);
             if (storeSetSwapReservations) {

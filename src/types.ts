@@ -1,6 +1,21 @@
-import { BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 
-export type SwapReservation = {
+export enum ReservationState {
+    None,
+    Created,
+    Unlocked,
+    ExpiredAndAddedBackToVault,
+    Completed,
+}
+
+export interface ReserveLiquidityParams {
+    vaultIndexesToReserve: number[];
+    amountsToReserve: BigNumberish[];
+    ethPayoutAddress: string;
+    expiredSwapReservationIndexes: number[];
+}
+
+export interface SwapReservation {
     confirmationBlockHeight: number;
     reservationTimestamp: number;
     unlockTimestamp: number;
@@ -8,18 +23,16 @@ export type SwapReservation = {
     ethPayoutAddress: string;
     lpReservationHash: string;
     nonce: string;
-    totalSwapAmount: BigNumberish;
-    prepaidFeeAmount: BigNumberish;
-    vaultIndexes: number[];
-    amountsToReserve: BigNumberish[];
-};
-
-export type ReservationState = 'None' | 'Created' | 'Unlocked' | 'ExpiredAndAddedBackToVault' | 'Completed';
+    totalSwapAmount: BigNumber;
+    prepaidFeeAmount: BigNumber;
+    vaultIndexes: BigNumber[];
+    amountsToReserve: BigNumber[];
+}
 
 export type DepositVault = {
     initialBalance: BigNumberish;
     unreservedBalance: BigNumberish;
-    calculatedUnreservedBalance?: BigNumberish;
+    calculatedTrueUnreservedBalance?: BigNumberish;
     btcExchangeRate: BigNumberish;
     btcPayoutLockingScript: string;
     index?: number;

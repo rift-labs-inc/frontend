@@ -14,14 +14,23 @@ import {
 } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { colors } from '../../utils/colors';
 import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { SwapAmounts } from './SwapAmounts';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
+import riftExchangeABI from '../../abis/RiftExchange.json';
 import { useStore } from '../../store';
 import { SwapStatusTimeline } from './SwapStatusTimeline';
+import { FONT_FAMILIES } from '../../utils/font';
+import { weiToEth } from '../../utils/dappHelper';
+import { BigNumber, ethers } from 'ethers';
+import { useReserveLiquidity } from '../../hooks/contract/useReserveLiquidity';
+import { riftExchangeContractAddress } from '../../utils/constants';
+import ReservationStatusModal from './ReservationStatusModal';
+import { Step1 } from './Step1';
+import { Step2 } from './Step2';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -38,18 +47,27 @@ export const SwapFlow = ({}) => {
     const borderColor = `2px solid ${actualBorderColor}`;
     const swapFlowState = useStore((state) => state.swapFlowState);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
+    const [ethPayoutAddress, setethPayoutAddress] = useState('');
+    const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
+    const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
+
+    useEffect(() => {
+        console.log('swapFlowState', swapFlowState);
+    }, [swapFlowState]);
 
     return (
-        <Flex width='900px' align={'center'} direction={'column'}>
+        <Flex width='1000px' align={'center'} direction={'column'}>
             <SwapAmounts />
             <Flex w='100%' mt='-69px' ml='0px'>
-                <Button bg='none' w='12px' _hover={{ bg: colors.borderGray }} onClick={() => setSwapFlowState('not-started')}>
+                <Button bg='none' w='12px' _hover={{ bg: colors.borderGray }} onClick={() => setSwapFlowState('0-not-started')}>
                     <ChevronLeftIcon width={'40px'} height={'40px'} bg='none' color={colors.offWhite} />
                 </Button>
             </Flex>
-            <Flex justify={'center'} bg='blue' w='100%' mt='50px'>
+            <Flex justify={'center'} w='100%' mt='50px'>
                 <SwapStatusTimeline />
             </Flex>
+            {swapFlowState === '1-reserve-liquidity' && <Step1 />}
+            {swapFlowState === '2-send-bitcoin' && <Step2 />}
         </Flex>
     );
 };

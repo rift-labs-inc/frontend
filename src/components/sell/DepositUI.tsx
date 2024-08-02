@@ -291,7 +291,7 @@ export const DepositUI = ({}) => {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
             const vaultIndexToOverwrite = findVaultIndexToOverwrite();
-            const ethDepositAmountWei = ethToWei(parseFloat(ethDepositAmount));
+            const ethDepositAmountWei = ethToWei(ethDepositAmount);
             const vaultIndexWithSameExchangeRate = findVaultIndexWithSameExchangeRate();
             const exchangeRate = btcToSats(btcToEthExchangeRate);
 

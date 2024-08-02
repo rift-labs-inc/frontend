@@ -1,17 +1,17 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers';
-import { DepositVault } from '../types';
+import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
 import { sepolia } from 'viem/chains';
 
 const SATS_PER_BTC = 100000000; // 10^8
 
 // HELPER FUCTIONS
-export function weiToEth(wei: ethers.BigNumberish): number {
-    return parseFloat(ethers.utils.formatEther(wei));
+export function weiToEth(wei: BigNumber): BigNumberish {
+    return ethers.utils.formatEther(wei);
 }
 
-export function ethToWei(eth: number): BigNumber {
-    return ethers.utils.parseEther(eth.toString());
+export function ethToWei(eth: string): BigNumber {
+    return ethers.utils.parseEther(eth);
 }
 
 export function satsToBtc(sats: number): number {
@@ -55,4 +55,41 @@ export function calculateFillPercentage(vault: DepositVault) {
 
     const fillPercentage = fillPercentageBigNumber.toNumber();
     return Math.min(Math.max(fillPercentage, 0), 100); // Ensure it's between 0 and 100
+}
+
+export function calculateLowestFeeReservation(
+    depositVaults: DepositVault[],
+    ethSwapOutputAmount: BigNumber,
+    maxLpOutputs: number,
+): { vaultIndexes: number[]; amountsToReserve: BigNumber[] } {
+    const vaultIndexes: number[] = [];
+    const amountsToReserve: BigNumber[] = [];
+    // sort vaults by exchange rate, largest to smallest
+    try {
+        const sortedVaults = [...depositVaults]
+            .map((vault, index) => ({ ...vault, index }))
+            .sort((a, b) => BigNumber.from(b.btcExchangeRate).sub(BigNumber.from(a.btcExchangeRate)).toNumber());
+
+        let remainingAmount = ethSwapOutputAmount;
+
+        for (const vault of sortedVaults) {
+            if (vaultIndexes.length >= maxLpOutputs || remainingAmount.lte(0)) break;
+
+            const availableAmount = BigNumber.from(vault.unreservedBalance);
+            const amountToReserve = remainingAmount.lt(availableAmount) ? remainingAmount : availableAmount;
+
+            if (amountToReserve.gt(0)) {
+                vaultIndexes.push(vault.index!);
+                amountsToReserve.push(amountToReserve);
+                remainingAmount = remainingAmount.sub(amountToReserve);
+            }
+        }
+    } catch (error) {
+        console.log('error', error);
+    }
+
+    return {
+        vaultIndexes,
+        amountsToReserve,
+    };
 }

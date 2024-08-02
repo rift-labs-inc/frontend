@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { Flex, Spacer, Text, Box } from '@chakra-ui/react';
 import { Navbar } from '../components/Navbar';
 import { colors } from '../utils/colors';
-import { BuyUI } from '../components/buy/BuyUI';
+import { SwapUI } from '../components/buy/SwapUI';
 import { OpenGraph } from '../components/background/OpenGraph';
 import { FONT_FAMILIES } from '../utils/font';
 import BlueText from '../components/other/BlueText';
@@ -24,7 +24,7 @@ const Home = () => {
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
 
     useEffect(() => {
-        setSwapFlowState('not-started');
+        setSwapFlowState('0-not-started');
     }, []);
 
     const RiftSVG = () => {
@@ -51,9 +51,9 @@ const Home = () => {
                 backgroundSize='cover'
                 backgroundPosition='center'>
                 <Navbar />
-                <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === 'not-started' ? '19vh' : '100px'}>
+                <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === '0-not-started' ? '19vh' : '100px'}>
                     {/* LOGOS & TEXT */}
-                    {swapFlowState != 'not-started' ? (
+                    {swapFlowState != '0-not-started' ? (
                         <SwapFlow />
                     ) : (
                         <>
@@ -120,7 +120,7 @@ const Home = () => {
                                     </Box>
                                 </Text>
                             </Flex>
-                            <BuyUI />
+                            <SwapUI />
                         </>
                     )}
                 </Flex>

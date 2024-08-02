@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { useEffect } from 'react';
-import { Asset, DepositVault, SwapReservation } from './types';
-import { ethers } from 'ethers';
+import { Asset, DepositVault, ReserveLiquidityParams, SwapReservation } from './types';
+import { BigNumber, ethers } from 'ethers';
 
 type Store = {
     availableAssets: Asset[];
@@ -22,9 +22,9 @@ type Store = {
     setWrappedEthPriceUSD: (price: number) => void;
     btcToEthExchangeRate: number;
     setBtcToEthExchangeRate: (rate: number) => void;
-    swapFlowState: 'not-started' | 'reserve' | 'chrome-extension' | 'send-bitcoin' | 'receive-eth' | 'completed';
+    swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed';
     setSwapFlowState: (
-        state: 'not-started' | 'reserve' | 'chrome-extension' | 'send-bitcoin' | 'receive-eth' | 'completed',
+        state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed',
     ) => void;
     btcInputSwapAmount: string;
     setBtcInputSwapAmount: (amount: string) => void;
@@ -36,6 +36,16 @@ type Store = {
     setAllSwapReservations: (reservations: SwapReservation[]) => void;
     showManageDepositVaultsScreen: boolean;
     setShowManageDepositVaultsScreen: (show: boolean) => void;
+    totalAvailableLiquidity: BigNumber;
+    setTotalAvailableLiquidity: (liquidity: BigNumber) => void;
+    totalExpiredReservations: number;
+    setTotalExpiredReservations: (totalExpiredReservations: number) => void;
+    lowestFeeReservationParams: ReserveLiquidityParams | null;
+    setLowestFeeReservationParams: (reservation: ReserveLiquidityParams | null) => void;
+    userEthAddress: string;
+    setUserEthAddress: (address: string) => void;
+    showManageReservationScreen: boolean;
+    setShowManageReservationScreen: (show: boolean) => void;
 };
 
 export const useStore = create<Store>((set) => ({
@@ -57,7 +67,7 @@ export const useStore = create<Store>((set) => ({
     setWrappedEthPriceUSD: (wrappedEthPriceUSD) => set({ wrappedEthPriceUSD }),
     btcToEthExchangeRate: 0,
     setBtcToEthExchangeRate: (btcToEthExchangeRate) => set({ btcToEthExchangeRate }),
-    swapFlowState: 'not-started',
+    swapFlowState: '0-not-started',
     setSwapFlowState: (swapFlowState) => set({ swapFlowState }),
     btcInputSwapAmount: '',
     setBtcInputSwapAmount: (btcInputSwapAmount) => set({ btcInputSwapAmount }),
@@ -69,4 +79,14 @@ export const useStore = create<Store>((set) => ({
     setAllSwapReservations: (allSwapReservations) => set({ allSwapReservations }),
     showManageDepositVaultsScreen: false,
     setShowManageDepositVaultsScreen: (showManageDepositVaultsScreen) => set({ showManageDepositVaultsScreen }),
+    totalAvailableLiquidity: BigNumber.from(0),
+    setTotalAvailableLiquidity: (totalAvailableLiquidity) => set({ totalAvailableLiquidity }),
+    totalExpiredReservations: 0,
+    setTotalExpiredReservations: (totalExpiredReservations) => set({ totalExpiredReservations }),
+    lowestFeeReservationParams: null,
+    setLowestFeeReservationParams: (lowestFeeReservationParams) => set({ lowestFeeReservationParams }),
+    userEthAddress: '',
+    setUserEthAddress: (userEthAddress) => set({ userEthAddress }),
+    showManageReservationScreen: false,
+    setShowManageReservationScreen: (showManageReservationScreen) => set({ showManageReservationScreen }),
 }));

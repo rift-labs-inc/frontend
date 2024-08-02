@@ -1,4 +1,4 @@
-import { Box, Button, Flex, FlexProps, Spacer, Text } from '@chakra-ui/react';
+import { Box, Button, Flex, FlexProps, Spacer, Text, useClipboard } from '@chakra-ui/react';
 import { colors } from '../utils/colors';
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
@@ -7,12 +7,22 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { ConnectWalletButton } from './ConnectWalletButton';
 import { contractChainID, riftExchangeContractAddress } from '../utils/constants';
 import { FONT_FAMILIES } from '../utils/font';
+import { useStore } from '../store';
+import { weiToEth } from '../utils/dappHelper';
+import { BigNumber } from 'ethers';
 
 export const Navbar = ({}) => {
     const { height, width } = useWindowSize();
     const isMobileView = width < 600;
     const router = useRouter();
     const fontSize = isMobileView ? '20px' : '20px';
+    const allSwapReservations = useStore((state) => state.allSwapReservations);
+    const allDepositVaults = useStore((state) => state.allDepositVaults);
+    const myActiveDepositVaults = useStore((state) => state.myActiveDepositVaults);
+    const myCompletedDepositVaults = useStore((state) => state.myCompletedDepositVaults);
+    const totalAvailableLiquidity = useStore((state) => state.totalAvailableLiquidity);
+    const setTotalExpiredReservations = useStore((state) => state.setTotalExpiredReservations);
+    const totalExpiredReservations = useStore((state) => state.totalExpiredReservations);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -60,6 +70,36 @@ export const Navbar = ({}) => {
         );
     };
 
+    const StatCard = ({ label, value, color = colors.RiftOrange }) => (
+        <Box
+            borderWidth='1px'
+            borderColor={colors.textGray}
+            borderRadius='10px'
+            bg={colors.offBlack}
+            p={'10px'}
+            textAlign='center'>
+            <Text color={colors.textGray} fontSize='10px' mb={1}>
+                {label}
+            </Text>
+            <Text color={color} fontSize='14px' fontWeight='bold'>
+                {value}
+            </Text>
+        </Box>
+    );
+
+    const { onCopy } = useClipboard(riftExchangeContractAddress);
+
+    const getChainName = (id) => {
+        switch (id) {
+            case 11155111:
+                return 'Sepolia';
+            case 1:
+                return 'ETH';
+            default:
+                return id;
+        }
+    };
+
     return (
         <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1000}>
             <Flex direction='row' w='100%' px={'30px'} pt='25px'>
@@ -71,27 +111,32 @@ export const Navbar = ({}) => {
                 {navItem('About', '/about')}
                 <Spacer />
                 <Flex
-                    direction={'column'}
+                    direction='column'
                     fontFamily={FONT_FAMILIES.AUX_MONO}
                     align='center'
-                    fontSize={'12px'}
-                    justify={'cetner'}
-                    right={0}
-                    pointerEvents='none'
+                    fontSize='12px'
+                    position='absolute'
+                    top={0}
                     left={0}
-                    position={'absolute'}>
+                    right={0}
+                    pointerEvents='none'>
                     <Text>Current Rift Contract:</Text>
-                    <Text
-                        cursor={'pointer'}
-                        onClick={() => {
-                            navigator.clipboard.writeText(riftExchangeContractAddress);
-                        }}
-                        color={'blue.300'}>
+                    <Text cursor='pointer' onClick={onCopy} color='blue.300' _hover={{ textDecoration: 'underline' }}>
                         {riftExchangeContractAddress}
                     </Text>
-                    <Text>
-                        Chain ID: {contractChainID === 11155111 ? 'Sepolia' : contractChainID === 1 ? 'ETH' : contractChainID}{' '}
-                    </Text>
+                    <Text>Chain ID: {getChainName(contractChainID)}</Text>
+
+                    <Flex position='absolute' top={height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
+                        <StatCard
+                            label='Total Available Liquidity'
+                            value={`${weiToEth(totalAvailableLiquidity).toString()} ETH`}
+                        />
+                        <StatCard label='Total Deposits' value={allDepositVaults.length} />
+                        <StatCard label='My Active Deposits' value={myActiveDepositVaults.length} />
+                        <StatCard label='My Completed Deposits' value={myCompletedDepositVaults.length} />
+                        <StatCard label='Total Reservations' value={allSwapReservations.length} />
+                        <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />
+                    </Flex>
                 </Flex>
                 <Spacer />
                 <Flex mb='-5px' pr='5px'>
