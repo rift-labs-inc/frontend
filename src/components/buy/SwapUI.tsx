@@ -21,7 +21,7 @@ import { useStore } from '../../store';
 import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { BigNumber } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
-import { calculateLowestFeeReservation, ethToWei, weiToEth } from '../../utils/dappHelper';
+import { btcToSats, calculateLowestFeeReservation, ethToWei, weiToEth } from '../../utils/dappHelper';
 import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
 import { maxSwapOutputs } from '../../utils/constants';
 
@@ -57,6 +57,7 @@ export const SwapUI = ({}) => {
         [totalAvailableLiquidity],
     );
 
+    // calculate ideal reservation
     useEffect(() => {
         const exceeded = checkLiquidityExceeded(ethOutputSwapAmount);
         setIsLiquidityExceeded(exceeded);
@@ -70,11 +71,15 @@ export const SwapUI = ({}) => {
             );
 
             const reserveLiquidityParams: ReserveLiquidityParams = {
+                inputSwapAmountInSats: Number(btcToSats(Number(btcInputSwapAmount))),
                 vaultIndexesToReserve: reservationPart.vaultIndexes,
                 amountsToReserve: reservationPart.amountsToReserve,
                 ethPayoutAddress: '', // this is set when user inputs their eth payout address
                 expiredSwapReservationIndexes: [], // TODO: calculated later
             };
+
+            console.log('RESERVATION PARAMs:', reserveLiquidityParams);
+
             setLowestFeeReservationParams(reserveLiquidityParams);
         } else {
             setLowestFeeReservationParams(null);
@@ -106,7 +111,9 @@ export const SwapUI = ({}) => {
         const btcValue = formatDecimalInput(e.target.value);
         if (validateSwapInput(btcValue)) {
             setBtcInputSwapAmount(btcValue);
-            const ethValue = btcValue && parseFloat(btcValue) > 0 ? parseFloat(btcValue) * btcToEthExchangeRate : 0;
+            let ethValue = btcValue && parseFloat(btcValue) > 0 ? parseFloat(btcValue) * btcToEthExchangeRate : 0;
+            // subtract premium we calculate from the eth value
+            // ethValue -= calculatePremium;
             setEthOutputSwapAmount(formatOutput(ethValue)); // Correctly format output
         }
     };

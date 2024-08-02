@@ -18,9 +18,8 @@ export function satsToBtc(sats: number): number {
     return sats / SATS_PER_BTC;
 }
 
-export function btcToSats(btcRate: number): string {
-    // btc / eth
-    return (SATS_PER_BTC / btcRate).toFixed(0);
+export function btcToSats(btc: number): BigNumber {
+    return BigNumber.from(SATS_PER_BTC * btc);
 }
 
 export function calculateAmountBitcoinOutput(vault: DepositVault): BigNumber {
@@ -59,29 +58,35 @@ export function calculateFillPercentage(vault: DepositVault) {
 
 export function calculateLowestFeeReservation(
     depositVaults: DepositVault[],
-    ethSwapOutputAmount: BigNumber,
+    inputAmountInSats: BigNumber,
     maxLpOutputs: number,
 ): { vaultIndexes: number[]; amountsToReserve: BigNumber[] } {
     const vaultIndexes: number[] = [];
     const amountsToReserve: BigNumber[] = [];
-    // sort vaults by exchange rate, largest to smallest
+
     try {
         const sortedVaults = [...depositVaults]
             .map((vault, index) => ({ ...vault, index }))
             .sort((a, b) => BigNumber.from(b.btcExchangeRate).sub(BigNumber.from(a.btcExchangeRate)).toNumber());
 
-        let remainingAmount = ethSwapOutputAmount;
+        let remainingAmountInSats = inputAmountInSats;
 
         for (const vault of sortedVaults) {
-            if (vaultIndexes.length >= maxLpOutputs || remainingAmount.lte(0)) break;
+            if (vaultIndexes.length >= maxLpOutputs || remainingAmountInSats.lte(0)) break;
 
-            const availableAmount = BigNumber.from(vault.unreservedBalance);
-            const amountToReserve = remainingAmount.lt(availableAmount) ? remainingAmount : availableAmount;
+            const exchangeRate = BigNumber.from(vault.btcExchangeRate); // wei per sat
+            const availableAmountInWei = BigNumber.from(vault.calculatedTrueUnreservedBalance);
+            const availableAmountInSats = availableAmountInWei.div(exchangeRate);
 
-            if (amountToReserve.gt(0)) {
+            const amountToReserveInSats = remainingAmountInSats.lt(availableAmountInSats)
+                ? remainingAmountInSats
+                : availableAmountInSats;
+
+            if (amountToReserveInSats.gt(0)) {
+                const amountToReserveInWei = amountToReserveInSats.mul(exchangeRate);
                 vaultIndexes.push(vault.index!);
-                amountsToReserve.push(amountToReserve);
-                remainingAmount = remainingAmount.sub(amountToReserve);
+                amountsToReserve.push(amountToReserveInWei);
+                remainingAmountInSats = remainingAmountInSats.sub(amountToReserveInSats);
             }
         }
     } catch (error) {

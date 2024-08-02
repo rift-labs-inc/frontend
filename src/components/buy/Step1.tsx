@@ -46,7 +46,6 @@ export const Step1 = ({}) => {
     const swapFlowState = useStore((state) => state.swapFlowState);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const [ethPayoutAddress, setethPayoutAddress] = useState('');
-    const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
 
     // eth payout address

@@ -9,6 +9,7 @@ export enum ReservationState {
 }
 
 export interface ReserveLiquidityParams {
+    inputSwapAmountInSats: number;
     vaultIndexesToReserve: number[];
     amountsToReserve: BigNumberish[];
     ethPayoutAddress: string;

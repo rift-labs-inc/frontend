@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Flex, Text } from '@chakra-ui/react';
+import { Flex, Spinner, Text } from '@chakra-ui/react';
 import { colors } from '../../utils/colors';
 import { ChromeLogoSVG, WarningSVG } from '../other/SVGs';
 import { FONT_FAMILIES } from '../../utils/font';
+import QRCode from 'qrcode.react';
+import { useStore } from '../../store';
+import { BigNumber } from 'ethers';
 
 declare global {
     interface Window {
@@ -11,16 +14,48 @@ declare global {
 }
 
 export const Step2 = () => {
-    const [isRiftExtensionInstalled, setIsRiftExtensionInstalled] = useState(false);
+    const [address, setAddress] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
+
+    function calculateTotalSwapAmount() {
+        const totalAmount = lowestFeeReservationParams.amountsToReserve.reduce(
+            (acc: BigNumber, curr: BigNumber) => acc.add(BigNumber.from(curr)),
+            BigNumber.from(0),
+        );
+        return totalAmount;
+    }
 
     useEffect(() => {
-        setIsRiftExtensionInstalled(!!window.rift);
-        console.log('isRiftExtensionInstalled', isRiftExtensionInstalled);
+        const fetchAddress = async () => {
+            if (window.rift && window.rift.getProxyWallet) {
+                try {
+                    const walletInfo = await window.rift.getProxyWallet();
+                    if (walletInfo && walletInfo.address) {
+                        setAddress(walletInfo.address);
+                        console.log('walletInfo:', walletInfo);
+                    } else {
+                        setError('Unable to retrieve Bitcoin address from wallet info.');
+                    }
+                } catch (err) {
+                    setError('Error fetching wallet information.');
+                    console.error(err);
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                setError('Rift wallet not detected or getProxyWallet not available.');
+                setLoading(false);
+            }
+        };
+
+        fetchAddress();
     }, []);
 
     return (
         <>
-            {isRiftExtensionInstalled ? (
+            {window.rift ? (
                 <Flex
                     bg={colors.offBlack}
                     w='100%'
@@ -32,9 +67,26 @@ export const Step2 = () => {
                     align='center'
                     borderWidth={3}
                     borderColor={colors.borderGray}>
-                    <Text fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
+                    <Text fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray} mb='20px'>
                         Chrome extension detected!
                     </Text>
+                    {loading ? (
+                        <Spinner color={colors.textGray} size='xl' />
+                    ) : error ? (
+                        <Text color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                            {error}
+                        </Text>
+                    ) : (
+                        <>
+                            <QRCode value={address} size={200} />
+                            <Text mt='20px' fontSize='16px' color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                Bitcoin Address: {address}
+                            </Text>
+                            <Text mt='20px' fontSize='16px' color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                Deposit Amount: {calculateTotalSwapAmount().toString()} WEI
+                            </Text>
+                        </>
+                    )}
                 </Flex>
             ) : (
                 <>
