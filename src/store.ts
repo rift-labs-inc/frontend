@@ -6,7 +6,7 @@ import { BigNumber, ethers } from 'ethers';
 type Store = {
     availableAssets: Asset[];
     setAvailableAssets: (assets: Asset[]) => void;
-    allDepositVaults: any;
+    allDepositVaults: DepositVault[];
     setAllDepositVaults: (allDepositVaults: DepositVault[]) => void;
     ethersProvider: ethers.providers.Provider | null;
     setEthersProvider: (provider: ethers.providers.Provider) => void;
@@ -51,7 +51,7 @@ type Store = {
 export const useStore = create<Store>((set) => ({
     availableAssets: [],
     setAvailableAssets: (availableAssets) => set({ availableAssets }),
-    allDepositVaults: {},
+    allDepositVaults: [],
     setAllDepositVaults: (allDepositVaults) => set({ allDepositVaults }),
     ethersProvider: null,
     setEthersProvider: (ethersProvider) => set({ ethersProvider }),

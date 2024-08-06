@@ -3,7 +3,7 @@ import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
 import { sepolia } from 'viem/chains';
 
-const SATS_PER_BTC = 100000000; // 10^8
+export const SATS_PER_BTC = 100000000; // 10^8
 
 // HELPER FUCTIONS
 export function weiToEth(wei: BigNumber): BigNumberish {

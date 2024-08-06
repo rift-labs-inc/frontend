@@ -2,8 +2,54 @@ import { Flex, Text } from '@chakra-ui/react';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
 import { useEffect, useRef, useState } from 'react';
-interface ExchangeRateChartProps {}
-const ExchangeRateChart: React.FC<ExchangeRateChartProps> = () => {
+import { DepositVault } from '../../types';
+import { useStore } from '../../store';
+import { ethToWei, SATS_PER_BTC } from '../../utils/dappHelper';
+import { BigNumber } from 'ethers';
+import { normalize } from 'path';
+
+type GraphBar = { x: number; y: number };
+type GraphData = GraphBar[];
+
+const calculateSellChart = (depositVaults: DepositVault[]): GraphData => {
+    // Prepare market rate to WEI per SAT
+    const marketExchangeRate = useStore.getState().btcToEthExchangeRate; // ETH per BTC
+    const convertedMarketRate = ethToWei(marketExchangeRate.toString()).div(SATS_PER_BTC).toNumber(); // WEI per SAT
+
+    // Prepare data map for percent -> balance
+    const dataMap = new Map<number, number>();
+    let maxY = 0;
+
+    // Iterate vaults
+    for (const vault of depositVaults) {
+        // Get every rate and balance from each vault
+        const btcRate = parseFloat(vault.btcExchangeRate.toString());
+        const rate = Math.floor(((btcRate - convertedMarketRate) / convertedMarketRate) * 100);
+        const balance = Number(BigNumber.from(vault.calculatedTrueUnreservedBalance.toString()).div(SATS_PER_BTC));
+
+        // Update data map
+        const currentBalance = dataMap.get(rate) ?? 0;
+        const newBalance = currentBalance + balance;
+        dataMap.set(rate, newBalance);
+
+        // Update maxY for normalization
+        if (newBalance > maxY) maxY = newBalance;
+    }
+
+    // Convert data map to array and normalize in one pass
+    const normalizedDataArray: GraphData = Array.from(dataMap, ([x, y]) => ({
+        x,
+        y: (y / maxY) * 100,
+    }));
+
+    return normalizedDataArray;
+};
+
+interface ExchangeRateChartProps {
+    graphData?: { x: number; y: number }[];
+}
+
+const ExchangeRateChart: React.FC<ExchangeRateChartProps> = ({ graphData }) => {
     const rangeStart = -1;
     const rangeEnd = 10;
     const rangeInterval = 1;
@@ -12,7 +58,7 @@ const ExchangeRateChart: React.FC<ExchangeRateChartProps> = () => {
     const numRangeIntervals = Math.floor(range / rangeInterval) + 1;
     const numTotalIntervals = numRangeIntervals * 2;
 
-    const graphDataArray = [
+    const graphDataArray = graphData ?? [
         { x: -1, y: 0 },
         { x: -0.5, y: 30 },
         { x: 0, y: 80 },
@@ -45,6 +91,8 @@ const ExchangeRateChart: React.FC<ExchangeRateChartProps> = () => {
     const [drag, setDrag] = useState(false);
     const [chartDimensions, setChartDimensions] = useState<DOMRect>();
 
+    const allDepositVaults = useStore((state) => state.allDepositVaults);
+
     const chartRef = useRef<HTMLDivElement>(null);
 
     const exchangeRateToMarginOffset = () => {
@@ -63,6 +111,10 @@ const ExchangeRateChart: React.FC<ExchangeRateChartProps> = () => {
             setChartDimensions(chartRef.current.getBoundingClientRect());
         }
     }, [chartRef]);
+
+    useEffect(() => {
+        calculateSellChart(allDepositVaults);
+    }, []);
 
     return (
         <Flex w='100%' flexDir='column' position='relative' mt='20px'>
