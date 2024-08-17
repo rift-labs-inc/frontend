@@ -19,7 +19,6 @@ import { useStore } from '../store';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId } from 'wagmi';
 import { weiToEth, satsToBtc, calculateAmountBitcoinOutput, calculateFillPercentage } from '../utils/dappHelper';
-import { contractChainID, riftExchangeContractAddress } from '../utils/constants';
 import { DepositVault } from '../types';
 import { BigNumber } from 'ethers';
 import { ChevronLeftIcon } from '@chakra-ui/icons';

@@ -27,7 +27,6 @@ import { FONT_FAMILIES } from '../../utils/font';
 import { weiToEth } from '../../utils/dappHelper';
 import { BigNumber, ethers } from 'ethers';
 import { useReserveLiquidity } from '../../hooks/contract/useReserveLiquidity';
-import { riftExchangeContractAddress } from '../../utils/constants';
 import ReservationStatusModal from './ReservationStatusModal';
 import { Step1 } from './Step1';
 import { Step2 } from './Step2';

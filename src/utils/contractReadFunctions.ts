@@ -1,7 +1,8 @@
 import { ethers, BigNumberish, BigNumber } from 'ethers';
 import { JsonFragment } from '@ethersproject/abi';
 import { LiqudityProvider, ReservationState, SwapReservation } from '../types';
-import { DepositVault } from '../types';
+import { DepositVault, DepositAsset } from '../types';
+import { validDepositAssets } from './constants';
 
 // CONTRACT FUNCTIONS
 
@@ -38,6 +39,7 @@ export async function getDepositVaultByIndex(
             unreservedBalance: BigNumber.from(depositVault[1]),
             btcExchangeRate: BigNumber.from(depositVault[2]),
             btcPayoutLockingScript: depositVault[3],
+            depositAsset: validDepositAssets['USDT'],
             index: index,
         };
     } catch (error) {

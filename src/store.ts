@@ -49,6 +49,8 @@ type Store = {
     setShowManageReservationScreen: (show: boolean) => void;
     selectedDepositAsset: DepositAsset | null;
     setSelectedDepositAsset: (asset: DepositAsset | null) => void;
+    selectedSwappingAsset: DepositAsset | null;
+    setSelectedSwappingAsset: (asset: DepositAsset | null) => void;
 };
 
 export const useStore = create<Store>((set) => ({
@@ -94,4 +96,6 @@ export const useStore = create<Store>((set) => ({
     setShowManageReservationScreen: (showManageReservationScreen) => set({ showManageReservationScreen }),
     selectedDepositAsset: validDepositAssets.USDT, // Default to USDT TODO: change to null
     setSelectedDepositAsset: (selectedDepositAsset) => set({ selectedDepositAsset }),
+    selectedSwappingAsset: validDepositAssets.USDT, // Default to USDT TODO: change to null
+    setSelectedSwappingAsset: (selectedSwappingAsset) => set({ selectedSwappingAsset }),
 }));
