@@ -2,7 +2,7 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { ethers } from 'ethers';
 import { useStore } from '../../store';
 import { useSwapReservations } from '../../hooks/contract/useSwapReservations';
-import { contractRpcURL, riftExchangeContractAddress } from '../../utils/constants';
+import { validDepositAssets } from '../../utils/constants';
 import { useDepositVaults } from '../../hooks/contract/useDepositVaults';
 import { useAccount } from 'wagmi';
 
@@ -20,9 +20,10 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const setEthersProvider = useStore((state) => state.setEthersProvider);
     const { address, isConnected } = useAccount();
     const setUserEthAddress = useStore((state) => state.setUserEthAddress);
+    const selectedDepositAsset = useStore((state) => state.selectedDepositAsset); // default USDT right now
 
     React.useEffect(() => {
-        setEthersProvider(new ethers.providers.JsonRpcProvider(contractRpcURL));
+        setEthersProvider(new ethers.providers.JsonRpcProvider(selectedDepositAsset.contractRpcURL)); // TODO: update this to pull contract data from all valid deposit assets
     }, []);
 
     React.useEffect(() => {
@@ -79,14 +80,14 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         loading: vaultsLoading,
         error: vaultsError,
         refreshUserDepositData,
-    } = useDepositVaults(ethersProvider, riftExchangeContractAddress);
+    } = useDepositVaults(ethersProvider, selectedDepositAsset.riftExchangeContractAddress); // TODO: update this to pull contract data from all valid deposit assets
 
     // fetch swap reservations
     const {
         allSwapReservations,
         loading: reservationsLoading,
         error: reservationsError,
-    } = useSwapReservations(ethersProvider, riftExchangeContractAddress);
+    } = useSwapReservations(ethersProvider, selectedDepositAsset.riftExchangeContractAddress); // TODO: update this to pull contract data from all valid deposit assets
 
     const loading = vaultsLoading || reservationsLoading || vaultsLoading;
     const error = vaultsError || reservationsError || vaultsError;

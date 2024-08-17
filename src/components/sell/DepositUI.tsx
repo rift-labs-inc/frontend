@@ -28,7 +28,7 @@ import {
     findVaultIndexWithSameExchangeRate,
     satsToBtc,
 } from '../../utils/dappHelper';
-import { contractChainID, riftExchangeContractAddress, wethAddress } from '../../utils/constants';
+import { validDepositAssets } from '../../utils/constants';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../../store';
@@ -59,13 +59,6 @@ export const DepositUI = ({}) => {
         txHash,
         resetDepositState,
     } = useDepositLiquidity();
-
-    // const { chain } = useNetwork();
-    // const { chains, error, isLoading, pendingChainId, switchNetwork } = useSwitchNetwork();
-
-    // input values
-    const [lpDepositAsset, setLPDepositAsset] = useState('ETH');
-
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
     const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
     const ethPriceUSD = useStore((state) => state.ethPriceUSD);
@@ -87,6 +80,8 @@ export const DepositUI = ({}) => {
 
     const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const selectedDepositAsset = useStore((state) => state.selectedDepositAsset);
+    const setSelectedDepositAsset = useStore((state) => state.setSelectedDepositAsset);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -270,8 +265,8 @@ export const DepositUI = ({}) => {
             await depositLiquidity({
                 signer,
                 riftExchangeAbi: riftExchangeABI.abi,
-                riftExchangeContract: riftExchangeContractAddress,
-                wethAddress,
+                riftExchangeContract: selectedDepositAsset.riftExchangeContractAddress,
+                tokenAddress: selectedDepositAsset.address,
                 btcPayoutLockingScript: payoutBTCAddress,
                 btcExchangeRate: exchangeRate,
                 vaultIndexToOverwrite,
@@ -520,7 +515,7 @@ export const DepositUI = ({}) => {
                             onClick={async () => {
                                 if (!isConnected) {
                                     openConnectModal();
-                                } else if (chainId !== contractChainID) {
+                                } else if (chainId !== selectedDepositAsset.contractChainID) {
                                     console.log('Switching network');
                                     // switchChain(contractChainID); TODO: switch chains
                                 } else if (ethDepositAmount && bitcoinOutputAmount && payoutBTCAddress && btcToEthExchangeRate) {

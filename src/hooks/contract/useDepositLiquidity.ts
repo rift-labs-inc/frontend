@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ethers, BigNumber, BigNumberish } from 'ethers';
-import { WETH_ABI } from '../../utils/constants';
+import { validDepositAssets } from '../../utils/constants';
+import { useStore } from '../../store';
 
 export enum DepositStatus {
     Idle = 'idle',
@@ -15,7 +16,7 @@ interface DepositLiquidityParams {
     signer: ethers.Signer;
     riftExchangeAbi: ethers.ContractInterface;
     riftExchangeContract: string;
-    wethAddress: string;
+    tokenAddress: string;
     btcPayoutLockingScript: string;
     btcExchangeRate: BigNumberish;
     vaultIndexToOverwrite: number;
@@ -35,6 +36,7 @@ export function useDepositLiquidity() {
     const [status, setStatus] = useState<DepositStatus>(DepositStatus.Idle);
     const [error, setError] = useState<string | null>(null);
     const [txHash, setTxHash] = useState<string | null>(null);
+    const selectedDepositAsset = useStore((state) => state.selectedDepositAsset);
 
     const resetDepositState = useCallback(() => {
         if (isClient) {
@@ -53,18 +55,18 @@ export function useDepositLiquidity() {
             setTxHash(null);
 
             try {
-                const wethContract = new ethers.Contract(params.wethAddress, WETH_ABI, params.signer);
+                const tokenContract = new ethers.Contract(params.tokenAddress, selectedDepositAsset.abi, params.signer);
                 const riftExchangeContractInstance = new ethers.Contract(
                     params.riftExchangeContract,
                     params.riftExchangeAbi,
                     params.signer,
                 );
 
-                const allowance = await wethContract.allowance(await params.signer.getAddress(), params.riftExchangeContract);
+                const allowance = await tokenContract.allowance(await params.signer.getAddress(), params.riftExchangeContract);
 
                 if (BigNumber.from(allowance).lt(BigNumber.from(params.depositAmount))) {
                     setStatus(DepositStatus.ApprovingWETH);
-                    const approveTx = await wethContract.approve(params.riftExchangeContract, params.depositAmount);
+                    const approveTx = await tokenContract.approve(params.riftExchangeContract, params.depositAmount);
                     await approveTx.wait();
                 }
 

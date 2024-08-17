@@ -24,6 +24,7 @@ import { parseEther } from 'ethers/lib/utils';
 import { btcToSats, calculateLowestFeeReservation, ethToWei, weiToEth } from '../../utils/dappHelper';
 import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
 import { maxSwapOutputs } from '../../utils/constants';
+import { AssetTag } from '../other/AssetTag';
 
 export const SwapUI = ({}) => {
     const { width } = useWindowSize();
@@ -43,6 +44,8 @@ export const SwapUI = ({}) => {
     const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
     const userEthAddress = useStore((state) => state.userEthAddress);
     const [isLiquidityExceeded, setIsLiquidityExceeded] = useState(false);
+    const selectedDepositAsset = useStore((state) => state.selectedDepositAsset);
+    const setSelectedDepositAsset = useStore((state) => state.setSelectedDepositAsset);
 
     const checkLiquidityExceeded = useCallback(
         (amount: string | null) => {
@@ -203,8 +206,8 @@ export const SwapUI = ({}) => {
                                 </Text>
                             </Flex>
                             <Spacer />
-                            <Flex mt='18px' mr='-25px'>
-                                <BTCSVG width='128' height='80' viewBox='0 0 170 69' />
+                            <Flex mt='1px' mr='6px'>
+                                <AssetTag assetName='BTC' />
                             </Flex>
                         </Flex>
 
@@ -234,8 +237,16 @@ export const SwapUI = ({}) => {
                                 />
                             </svg>
                         </Flex>
-                        {/* ETH Output */}
-                        <Flex mt='5px' px='10px' bg='#161A33' w='100%' h='105px' border='2px solid #303F9F' borderRadius={'10px'}>
+                        {/* Token Output */}
+                        <Flex
+                            mt='5px'
+                            px='10px'
+                            bg={selectedDepositAsset.dark_bg_color}
+                            w='100%'
+                            h='105px'
+                            border='2px solid'
+                            borderColor={selectedDepositAsset.bg_color}
+                            borderRadius={'10px'}>
                             <Flex direction={'column'} py='10px' px='5px'>
                                 <Text
                                     color={!ethOutputSwapAmount ? colors.offWhite : colors.textGray}
@@ -261,7 +272,7 @@ export const SwapUI = ({}) => {
                                     _selected={{ border: 'none', boxShadow: 'none' }}
                                     fontSize='40px'
                                     placeholder='0.0'
-                                    _placeholder={{ color: '#5C63A3' }}
+                                    _placeholder={{ color: selectedDepositAsset.light_text_color }}
                                 />
                                 <Text
                                     color={
@@ -292,8 +303,8 @@ export const SwapUI = ({}) => {
                                 </Text>
                             </Flex>
                             <Spacer />
-                            <Flex mt='18px' mr='-25px'>
-                                <ETHSVG width='128' height='80' viewBox='0 0 170 69' />
+                            <Flex mt='1px' mr='6px'>
+                                <AssetTag assetName='USDT' />
                             </Flex>
                         </Flex>
                     </Flex>
@@ -306,7 +317,11 @@ export const SwapUI = ({}) => {
                             letterSpacing={'-1.5px'}
                             fontWeight={'normal'}
                             fontFamily={'Aux'}>
-                            1 BTC ≈ {btcToEthExchangeRate} ETH{' '}
+                            1 BTC ≈{' '}
+                            {selectedDepositAsset.exchangeRate
+                                ? BigNumber.from(selectedDepositAsset.exchangeRate).toNumber()
+                                : 'N/A'}{' '}
+                            ETH{' '}
                             <Box
                                 as='span'
                                 color={colors.textGray}

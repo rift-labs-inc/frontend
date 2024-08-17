@@ -37,7 +37,7 @@ import {
     satsToBtc,
     calculateFillPercentage,
 } from '../../utils/dappHelper';
-import { contractChainID, riftExchangeContractAddress, wethAddress } from '../../utils/constants';
+import { validDepositAssets } from '../../utils/constants';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../../store';
@@ -76,6 +76,7 @@ export const ManageVaults = ({}) => {
     const setMyActiveDepositVaults = useStore((state) => state.setMyActiveDepositVaults);
     const myCompletedDepositVaults = useStore((state) => state.myCompletedDepositVaults);
     const setMyCompletedDepositVaults = useStore((state) => state.setMyCompletedDepositVaults);
+    const selectedDepositAsset = useStore((state) => state.selectedDepositAsset);
 
     const [activeTab, setActiveTab] = useState<TabType>('Active');
 
@@ -135,7 +136,7 @@ export const ManageVaults = ({}) => {
             const liquidityProviderData = await getLiquidityProvider(
                 provider,
                 riftExchangeABI.abi,
-                riftExchangeContractAddress,
+                selectedVaultToManage.depositAsset.riftExchangeContractAddress,
                 await signer.getAddress(),
             );
 
@@ -154,7 +155,7 @@ export const ManageVaults = ({}) => {
             await withdrawLiquidity({
                 signer,
                 riftExchangeAbi: riftExchangeABI.abi,
-                riftExchangeContract: riftExchangeContractAddress,
+                riftExchangeContract: selectedVaultToManage.depositAsset.riftExchangeContractAddress,
                 globalVaultIndex,
                 localVaultIndex,
                 amountToWithdraw: ethWithdrawAmountWei,
@@ -578,7 +579,7 @@ export const ManageVaults = ({}) => {
                                     {vault.btcExchangeRate &&
                                         `1 BTC ≈ ${(1 / satsToBtc(BigNumber.from(vault.btcExchangeRate).toNumber())).toFixed(
                                             8,
-                                        )} WETH`}
+                                        )}` + vault.depositAsset.name}
                                 </Text>
                                 <Text
                                     color={Number(fillPercentage) > 0 ? colors.greenOutline : colors.textGray}

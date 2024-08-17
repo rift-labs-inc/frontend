@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { useEffect } from 'react';
-import { Asset, DepositVault, ReserveLiquidityParams, SwapReservation } from './types';
+import { DepositAsset, DepositVault, ReserveLiquidityParams, SwapReservation } from './types';
 import { BigNumber, ethers } from 'ethers';
+import { validDepositAssets } from './utils/constants';
 
 type Store = {
-    availableAssets: Asset[];
-    setAvailableAssets: (assets: Asset[]) => void;
+    availableAssets: DepositAsset[];
+    setAvailableAssets: (assets: DepositAsset[]) => void;
     allDepositVaults: any;
     setAllDepositVaults: (allDepositVaults: DepositVault[]) => void;
     ethersProvider: ethers.providers.Provider | null;
@@ -46,6 +47,8 @@ type Store = {
     setUserEthAddress: (address: string) => void;
     showManageReservationScreen: boolean;
     setShowManageReservationScreen: (show: boolean) => void;
+    selectedDepositAsset: DepositAsset | null;
+    setSelectedDepositAsset: (asset: DepositAsset | null) => void;
 };
 
 export const useStore = create<Store>((set) => ({
@@ -89,4 +92,6 @@ export const useStore = create<Store>((set) => ({
     setUserEthAddress: (userEthAddress) => set({ userEthAddress }),
     showManageReservationScreen: false,
     setShowManageReservationScreen: (showManageReservationScreen) => set({ showManageReservationScreen }),
+    selectedDepositAsset: validDepositAssets.USDT, // Default to USDT TODO: change to null
+    setSelectedDepositAsset: (selectedDepositAsset) => set({ selectedDepositAsset }),
 }));

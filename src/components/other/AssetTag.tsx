@@ -1,13 +1,10 @@
-import { Flex, Box } from '@chakra-ui/react';
-import { useStore } from '../../store';
+import { Flex, Text } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
-import { ETH_Logo, BTC_Logo } from './SVGs'; // Assuming you also have a BTC logo
-
-// Mapping of asset names to their respective SVG components
-const svgComponents = {
-    ETH: ETH_Logo,
-    BTC: BTC_Logo,
-};
+import { validDepositAssets } from '../../utils/constants';
+import { BTC_Logo } from './SVGs'; // Import BTC logo as a React component
+import React from 'react';
+import { IoIosArrowDown } from 'react-icons/io';
+import { useStore } from '../../store';
 
 interface AssetTagProps {
     assetName: string;
@@ -16,9 +13,24 @@ interface AssetTagProps {
 export const AssetTag = ({ assetName }: AssetTagProps) => {
     const { width } = useWindowSize();
     const isMobileView = width < 600;
-    const fontSize = isMobileView ? '20px' : '20px';
-    const availableAssets = useStore((state) => state.availableAssets);
-    const asset = availableAssets.find((a) => a.name === assetName);
+    const selectedDepositAsset = useStore((state) => state.selectedDepositAsset);
+
+    let asset = validDepositAssets[assetName];
+
+    if (assetName === 'selected' && selectedDepositAsset) {
+        // Use the selected deposit asset from the store
+        asset = selectedDepositAsset;
+    } else if (assetName === 'BTC') {
+        // Default values for BTC
+        asset = {
+            name: 'BTC',
+            icon_svg: BTC_Logo, // Use the imported BTC logo component
+            bg_color: '#c26920', // Default Bitcoin orange color
+            border_color: '#FFA04C',
+            dark_bg_color: '#372412',
+            light_text_color: '#7d572e',
+        } as any; // Casting as any to fit the DepositAsset structure
+    }
 
     if (!asset) {
         console.error('Asset not found for name:', assetName);
@@ -26,31 +38,28 @@ export const AssetTag = ({ assetName }: AssetTagProps) => {
     }
 
     const { icon_svg, bg_color, border_color } = asset;
-    console.log('icon_svg:', icon_svg); // Check the exact value of icon_svg
-
-    const SvgIcon = svgComponents[icon_svg]; // Retrieve the corresponding SVG component
-    console.log('SvgIcon:', SvgIcon); // This should show the function/component if found
-
-    if (!SvgIcon) {
-        console.error('SVG component not found for icon:', icon_svg);
-        return <Flex align='center'>SVG not found</Flex>;
-    }
 
     return (
         <Flex align='center'>
-            <Box w='30px' h='30px' bg={bg_color} borderRadius='full' overflow='hidden' mr='10px'>
-                <SvgIcon /> // Use the SVG component here
-            </Box>
+            <Flex w='36px' mr='-20px' zIndex={'10'}>
+                {React.createElement(icon_svg)}{' '}
+            </Flex>
             <Flex
-                w='100px'
-                h='20px'
-                border='3px solid'
+                w={assetName.length === 4 ? '100px' : assetName.length === 3 ? '87px' : '150px'}
+                h='32px'
+                pl='15px'
+                border='2px solid'
                 borderColor={border_color}
                 bg={bg_color}
-                borderRadius='10px'
+                borderRadius='9px'
                 align='center'
                 justify='center'>
-                <Box fontSize={fontSize}>{assetName}</Box>
+                <Text mt='0px' fontSize={'18px'}>
+                    {asset.name}
+                </Text>
+                {/* <Flex ml='8px'>
+                    <IoIosArrowDown size={'16px'} /> //TODO make this a dropdown and when you click on it the select asset modal pops up
+                </Flex> */}
             </Flex>
         </Flex>
     );

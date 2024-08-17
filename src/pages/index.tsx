@@ -59,6 +59,7 @@ const Home = () => {
                         <>
                             <RiftSVG />
                             <Flex
+                                userSelect={'none'}
                                 sx={{
                                     WebkitTextFillColor: 'transparent',
                                     backgroundClip: 'text',

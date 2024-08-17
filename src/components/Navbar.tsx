@@ -1,15 +1,17 @@
-import { Box, Button, Flex, FlexProps, Spacer, Text, useClipboard } from '@chakra-ui/react';
+import { Box, Button, Flex, FlexProps, Spacer, Text, useClipboard, VStack } from '@chakra-ui/react';
 import { colors } from '../utils/colors';
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { IoMenu } from 'react-icons/io5';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { ConnectWalletButton } from './ConnectWalletButton';
-import { contractChainID, riftExchangeContractAddress } from '../utils/constants';
+import { validDepositAssets } from '../utils/constants';
 import { FONT_FAMILIES } from '../utils/font';
 import { useStore } from '../store';
 import { weiToEth } from '../utils/dappHelper';
 import { BigNumber } from 'ethers';
+import { useState } from 'react';
+import { DepositAsset } from '../types';
 
 export const Navbar = ({}) => {
     const { height, width } = useWindowSize();
@@ -87,8 +89,6 @@ export const Navbar = ({}) => {
         </Box>
     );
 
-    const { onCopy } = useClipboard(riftExchangeContractAddress);
-
     const getChainName = (id) => {
         switch (id) {
             case 11155111:
@@ -110,6 +110,7 @@ export const Navbar = ({}) => {
                 {navItem('Activity', '/activity')}
                 {navItem('About', '/about')}
                 <Spacer />
+                {/* TODO: Remove below: */}
                 <Flex
                     direction='column'
                     fontFamily={FONT_FAMILIES.AUX_MONO}
@@ -120,11 +121,19 @@ export const Navbar = ({}) => {
                     left={0}
                     right={0}
                     pointerEvents='none'>
-                    <Text>Current Rift Contract:</Text>
-                    <Text cursor='pointer' onClick={onCopy} color='blue.300' _hover={{ textDecoration: 'underline' }}>
-                        {riftExchangeContractAddress}
-                    </Text>
-                    <Text>Chain ID: {getChainName(contractChainID)}</Text>
+                    <Text my='10px'>Current Rift Contracts:</Text>
+                    <VStack spacing={1} align='stretch' width='100%' maxWidth='600px'>
+                        {Object.keys(validDepositAssets).map((key) => {
+                            const asset = validDepositAssets[key];
+                            return (
+                                <Flex key={asset.address} justify='space-between'>
+                                    <Text>{asset.name}:</Text>
+                                    <Text>{asset.address}</Text>
+                                    <Text>Chain: {getChainName(asset.contractChainID)}</Text>
+                                </Flex>
+                            );
+                        })}
+                    </VStack>
 
                     <Flex position='absolute' top={height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
                         <StatCard
@@ -138,6 +147,7 @@ export const Navbar = ({}) => {
                         <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />
                     </Flex>
                 </Flex>
+                {/* TODO: Remove above */}
                 <Spacer />
                 <Flex mb='-5px' pr='5px'>
                     <ConnectWalletButton />

@@ -1,4 +1,5 @@
 import { BigNumber, BigNumberish } from 'ethers';
+import { ComponentType, ReactElement } from 'react';
 
 export enum ReservationState {
     None,
@@ -37,13 +38,23 @@ export type DepositVault = {
     btcExchangeRate: BigNumberish;
     btcPayoutLockingScript: string;
     index?: number;
+    depositAsset: DepositAsset;
 };
 
-export type Asset = {
+export type DepositAsset = {
     name: string;
-    icon_svg: string;
-    bg_color: string;
-    border_color: string;
+    address: string;
+    riftExchangeContractAddress: string;
+    exchangeRate?: BigNumber; // in smallest token unit per sat
+    decimals: number;
+    contractChainID: number;
+    contractRpcURL: string;
+    abi: any[];
+    icon_svg?: string | ComponentType<any>;
+    bg_color?: string;
+    border_color?: string;
+    dark_bg_color?: string;
+    light_text_color?: string;
 };
 
 export type LiqudityProvider = {
