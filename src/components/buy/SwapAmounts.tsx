@@ -31,9 +31,8 @@ export const SwapAmounts = ({}) => {
     const fontSize = isMobileView ? '20px' : '20px';
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
-    const ethOutputSwapAmount = useStore((state) => state.ethOutputSwapAmount);
-    const setEthOutputSwapAmount = useStore((state) => state.setEthOutputSwapAmount);
-
+    const tokenOutputSwapAmount = useStore((state) => state.tokenOutputSwapAmount);
+    const setTokenOutputSwapAmount = useStore((state) => state.setTokenOutputSwapAmount);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
     const ethPriceUSD = useStore((state) => state.ethPriceUSD);
     const btcToEthExchangeRate = useStore((state) => state.btcToEthExchangeRate);
@@ -89,7 +88,7 @@ export const SwapAmounts = ({}) => {
             <Flex direction='column'>
                 <Flex>
                     <Text mr='15px' fontSize={'36px'} letterSpacing={'-5px'} color={colors.offWhite}>
-                        {ethOutputSwapAmount}
+                        {tokenOutputSwapAmount}
                     </Text>
                     <ETHSVG width='100' height='58' viewBox='0 0 148 54' />{' '}
                 </Flex>
@@ -102,7 +101,7 @@ export const SwapAmounts = ({}) => {
                     fontWeight={'normal'}
                     fontFamily={'Aux'}>
                     ≈ $
-                    {(parseFloat(ethOutputSwapAmount) * ethPriceUSD).toLocaleString(undefined, {
+                    {(parseFloat(tokenOutputSwapAmount) * ethPriceUSD).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                     })}{' '}

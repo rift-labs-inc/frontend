@@ -10,75 +10,191 @@ export const etherScanBaseUrl = 'https://sepolia.etherscan.io';
 // export const riftExchangeContractAddress = '0x4f9182DBcCf9C6518b1D67181F4E5a6d3D223C0E'; // deployed for USDT on Sepolia
 export const maxSwapOutputs = 200; // TODO: inspect this and find real value
 
-export const validDepositAssets: Record<string, DepositAsset> = {
-    USDT: {
-        name: 'USDT',
-        address: '0x4f9182DBcCf9C6518b1D67181F4E5a6d3D223C0E', // Sepolia USDT
-        decimals: 6,
-        riftExchangeContractAddress: '0x4f9182DBcCf9C6518b1D67181F4E5a6d3D223C0E', // USDT Rift Exchange pool on Sepolia
-        contractChainID: 11155111,
-        contractRpcURL: 'https://ethereum-sepolia.blockpi.network/v1/rpc/public',
-        abi: [
+export const ERC20ABI = [
+    {
+        type: 'event',
+        name: 'Approval',
+        inputs: [
             {
-                constant: false,
-                inputs: [
-                    { name: 'guy', type: 'address' },
-                    { name: 'wad', type: 'uint256' },
-                ],
-                name: 'approve',
-                outputs: [{ name: '', type: 'bool' }],
-                type: 'function',
+                indexed: true,
+                name: 'owner',
+                type: 'address',
             },
             {
-                constant: true,
-                inputs: [
-                    { name: 'owner', type: 'address' },
-                    { name: 'spender', type: 'address' },
-                ],
-                name: 'allowance',
-                outputs: [{ name: '', type: 'uint256' }],
-                type: 'function',
+                indexed: true,
+                name: 'spender',
+                type: 'address',
+            },
+            {
+                indexed: false,
+                name: 'value',
+                type: 'uint256',
             },
         ],
-        icon_svg: USDT_Icon,
-        bg_color: '#125641',
-        border_color: '#26A17B',
-        dark_bg_color: '#041B14',
-        light_text_color: '#265C4C',
     },
-    WETH: {
-        name: 'WETH',
-        address: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9', // Sepolia WETH
-        decimals: 18,
-        riftExchangeContractAddress: '0xe6167f469152293b045838d69F9687a7Ee30aaf3', // WETH Rift Exchange pool on Sepolia
-        contractChainID: 11155111,
-        contractRpcURL: 'https://ethereum-sepolia.blockpi.network/v1/rpc/public',
-        abi: [
+    {
+        type: 'event',
+        name: 'Transfer',
+        inputs: [
             {
-                constant: false,
-                inputs: [
-                    { name: 'guy', type: 'address' },
-                    { name: 'wad', type: 'uint256' },
-                ],
-                name: 'approve',
-                outputs: [{ name: '', type: 'bool' }],
-                type: 'function',
+                indexed: true,
+                name: 'from',
+                type: 'address',
             },
             {
-                constant: true,
-                inputs: [
-                    { name: 'owner', type: 'address' },
-                    { name: 'spender', type: 'address' },
-                ],
-                name: 'allowance',
-                outputs: [{ name: '', type: 'uint256' }],
-                type: 'function',
+                indexed: true,
+                name: 'to',
+                type: 'address',
+            },
+            {
+                indexed: false,
+                name: 'value',
+                type: 'uint256',
             },
         ],
-        icon_svg: ETH_Logo,
-        bg_color: '#2E40B7',
-        border_color: '#627EEA',
-        dark_bg_color: '#161A33',
-        light_text_color: '#5b63a5',
     },
-};
+    {
+        type: 'function',
+        name: 'allowance',
+        stateMutability: 'view',
+        inputs: [
+            {
+                name: 'owner',
+                type: 'address',
+            },
+            {
+                name: 'spender',
+                type: 'address',
+            },
+        ],
+        outputs: [
+            {
+                type: 'uint256',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'approve',
+        stateMutability: 'nonpayable',
+        inputs: [
+            {
+                name: 'spender',
+                type: 'address',
+            },
+            {
+                name: 'amount',
+                type: 'uint256',
+            },
+        ],
+        outputs: [
+            {
+                type: 'bool',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'balanceOf',
+        stateMutability: 'view',
+        inputs: [
+            {
+                name: 'account',
+                type: 'address',
+            },
+        ],
+        outputs: [
+            {
+                type: 'uint256',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'decimals',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [
+            {
+                type: 'uint8',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'name',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [
+            {
+                type: 'string',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'symbol',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [
+            {
+                type: 'string',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'totalSupply',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [
+            {
+                type: 'uint256',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'transfer',
+        stateMutability: 'nonpayable',
+        inputs: [
+            {
+                name: 'recipient',
+                type: 'address',
+            },
+            {
+                name: 'amount',
+                type: 'uint256',
+            },
+        ],
+        outputs: [
+            {
+                type: 'bool',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'transferFrom',
+        stateMutability: 'nonpayable',
+        inputs: [
+            {
+                name: 'sender',
+                type: 'address',
+            },
+            {
+                name: 'recipient',
+                type: 'address',
+            },
+            {
+                name: 'amount',
+                type: 'uint256',
+            },
+        ],
+        outputs: [
+            {
+                type: 'bool',
+            },
+        ],
+    },
+];

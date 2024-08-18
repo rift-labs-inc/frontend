@@ -1,8 +1,7 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../../store';
 import { useSwapReservations } from '../../hooks/contract/useSwapReservations';
-import { validDepositAssets } from '../../utils/constants';
 import { useDepositVaults } from '../../hooks/contract/useDepositVaults';
 import { useAccount } from 'wagmi';
 
@@ -33,44 +32,57 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         }
     }, [address]);
 
-    const setAvailableAssets = useStore((state) => state.setAvailableAssets);
-    const [depositVaultsLength, setDepositVaultsLength] = React.useState(null);
-    const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
     const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
-    const ethPriceUSD = useStore((state) => state.ethPriceUSD);
-    const setEthPriceUSD = useStore((state) => state.setEthPriceUSD);
-    const wrappedEthPriceUSD = useStore((state) => state.wrappedEthPriceUSD);
-    const setWrappedEthPriceUSD = useStore((state) => state.setWrappedEthPriceUSD);
-    const btcToEthExchangeRate = useStore((state) => state.btcToEthExchangeRate);
-    const setBtcToEthExchangeRate = useStore((state) => state.setBtcToEthExchangeRate);
+    const updateExchangeRateInSmallestTokenUnitPerSat = useStore((state) => state.updateExchangeRateInSmallestTokenUnitPerSat);
+    const updateExchangeRateInTokenPerBTC = useStore((state) => state.updateExchangeRateInTokenPerBTC);
+    const updatePriceUSD = useStore((state) => state.updatePriceUSD);
 
-    // fetch price data - TODO: get this data from uniswap
+    // fetch price data - TODO: get this data from uniswap also TODO: make this so it fetches the price of all valid deposit assets, and updates the exchange rates on the asset itself
     React.useEffect(() => {
         const fetchPriceData = async () => {
             try {
                 const response = await fetch(
-                    'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,weth&vs_currencies=usd,eth',
+                    'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,tether&vs_currencies=usd',
                 );
                 const data = await response.json();
                 if (data.bitcoin && data.bitcoin.usd) {
                     setBitcoinPriceUSD(data.bitcoin.usd); // Bitcoin price in USD
                 }
-                if (data.ethereum && data.ethereum.usd) {
-                    setEthPriceUSD(data.ethereum.usd); // Ethereum price in USD
+                if (data.tether && data.tether.usd) {
+                    // USDT price in USD (should be close to 1)
+                    console.log('USDT price:', data.tether.usd);
+                    try {
+                        updatePriceUSD('USDT', data.tether.usd);
+                    } catch (error) {
+                        console.error('Failed to update USDT price:', error);
+                    }
                 }
-                if (data.weth && data.weth.usd) {
-                    setWrappedEthPriceUSD(data.weth.usd); // Wrapped Ethereum price in USD
-                }
-                if (data.bitcoin && data.bitcoin.eth) {
-                    setBtcToEthExchangeRate(data.bitcoin.eth); // exchange rate of Bitcoin in Ethereum
-                    console.log('data.bitcoin.eth:', data.bitcoin.eth);
+
+                // Calculate BTC to USDT exchange rate (in USDT buffered to 18 decimals per sat)
+                if (data.bitcoin && data.bitcoin.usd && data.tether && data.tether.usd) {
+                    const btcToUsdtRate = data.bitcoin.usd / data.tether.usd;
+                    console.log('BTC to USDT exchange rate:', btcToUsdtRate);
+                    console.log('BEFORE UPDATE', useStore.getState().validDepositAssets['USDT'].exchangeRateInTokenPerBTC);
+                    updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
+                    console.log('AFTER UPDATE', useStore.getState().validDepositAssets['USDT'].exchangeRateInTokenPerBTC);
+                    // updateExchangeRate('USDT', BigNumber.from(btcToUsdtRate));
+                    // console.log(
+                    //     'USDT exchange rate in store:',
+                    //     BigNumber.from(useStore.getState().validDepositAssets['USDT'].exchangeRate).toNumber(),
+                    // );
                 }
             } catch (error) {
-                console.error('Failed to fetch prices and exchange rate:', error);
+                console.error('Failed to fetch prices:', error);
             }
         };
 
         fetchPriceData();
+
+        // Set up an interval to fetch prices every 60 seconds
+        const intervalId = setInterval(fetchPriceData, 60000);
+
+        // Clean up the interval on component unmount
+        return () => clearInterval(intervalId);
     }, []);
 
     // fetch deposit vaults

@@ -4,8 +4,30 @@ import useWindowSize from '../hooks/useWindowSize';
 import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon } from './other/SVGs'; // Assuming you also have a BTC logo
 import { ConnectButton, AvatarComponent } from '@rainbow-me/rainbowkit';
 import { colors } from '../utils/colors';
+import { useEffect, useState } from 'react';
+import { ethers } from 'ethers';
 
 export const ConnectWalletButton = ({}) => {
+    const [usdtBalance, setUsdtBalance] = useState('0');
+    const ethersProvider = useStore((state) => state.ethersProvider);
+
+    // const fetchUsdtBalance = async (address) => {
+    //     const usdtAddress = useStore.getState().validDepositAssets['USDT'].tokenAddress;
+    //     if (!usdtAddress) {
+    //         console.warn(`No USDT address found for chain ID`);
+    //         return ethers.utils.formatEther(await ethersProvider.getBalance(address));
+    //     }
+
+    //     try {
+    //         const contract = new ethers.Contract(usdtAddress, useStore.getState().validDepositAssets['USDT'].abi, ethersProvider);
+    //         const balance = await contract.balanceOf(address);
+    //         return ethers.utils.formatUnits(balance, 6); // USDT has 6 decimal places
+    //     } catch (error) {
+    //         console.error('Error fetching USDT balance:', error);
+    //         return ethers.utils.formatEther(await ethersProvider.getBalance(address));
+    //     }
+    // };
+
     return (
         <ConnectButton.Custom>
             {({ account, chain, openAccountModal, openChainModal, openConnectModal, authenticationStatus, mounted }) => {
@@ -14,6 +36,12 @@ export const ConnectWalletButton = ({}) => {
                 const ready = mounted && authenticationStatus !== 'loading';
                 const connected =
                     ready && account && chain && (!authenticationStatus || authenticationStatus === 'authenticated');
+
+                // useEffect(() => {
+                //     if (connected && window.ethereum) {
+                //         fetchUsdtBalance(account.address).then(setUsdtBalance);
+                //     }
+                // }, [connected, account]);
 
                 return (
                     <div
@@ -64,6 +92,25 @@ export const ConnectWalletButton = ({}) => {
 
                             return (
                                 <div style={{ display: 'flex', gap: 8 }}>
+                                    <Button
+                                        border={`2.4px solid ${colors.purpleBorder}`}
+                                        h='36px'
+                                        color={colors.offWhite}
+                                        pt='2px'
+                                        bg={colors.purpleBackground}
+                                        mr='2px'
+                                        _hover={{ bg: colors.purpleHover }}
+                                        _active={{ bg: colors.purpleBackground }}
+                                        px='0'
+                                        borderRadius={'10px'}
+                                        onClick={openChainModal}
+                                        style={{ display: 'flex', alignItems: 'center' }}
+                                        cursor={'pointer'}
+                                        type='button'>
+                                        <Flex px='20px' mt='-2px' mr='-2px' fontSize={'16px'} fontFamily={'aux'}>
+                                            {`${parseFloat(usdtBalance).toFixed(2)} USDT`}
+                                        </Flex>
+                                    </Button>
                                     <Button
                                         border={`2.4px solid ${colors.purpleBorder}`}
                                         h='36px'

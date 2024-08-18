@@ -43,18 +43,20 @@ export type DepositVault = {
 
 export type DepositAsset = {
     name: string;
-    address: string;
-    riftExchangeContractAddress: string;
-    exchangeRate?: BigNumber; // in smallest token unit per sat
+    tokenAddress: string;
     decimals: number;
+    riftExchangeContractAddress: string;
     contractChainID: number;
     contractRpcURL: string;
     abi: any[];
-    icon_svg?: string | ComponentType<any>;
-    bg_color?: string;
-    border_color?: string;
-    dark_bg_color?: string;
-    light_text_color?: string;
+    icon_svg: any;
+    bg_color: string;
+    border_color: string;
+    dark_bg_color: string;
+    light_text_color: string;
+    exchangeRateInTokenPerBTC: number | null;
+    exchangeRateInSmallestTokenUnitPerSat: BigNumber | null;
+    priceUSD: number | null;
 };
 
 export type LiqudityProvider = {

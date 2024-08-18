@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import { IoMenu } from 'react-icons/io5';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { ConnectWalletButton } from './ConnectWalletButton';
-import { validDepositAssets } from '../utils/constants';
 import { FONT_FAMILIES } from '../utils/font';
 import { useStore } from '../store';
 import { weiToEth } from '../utils/dappHelper';
@@ -25,6 +24,9 @@ export const Navbar = ({}) => {
     const totalAvailableLiquidity = useStore((state) => state.totalAvailableLiquidity);
     const setTotalExpiredReservations = useStore((state) => state.setTotalExpiredReservations);
     const totalExpiredReservations = useStore((state) => state.totalExpiredReservations);
+    const [showDeveloperMode, setShowDeveloperMode] = useState(
+        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+    );
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -119,33 +121,47 @@ export const Navbar = ({}) => {
                     position='absolute'
                     top={0}
                     left={0}
-                    right={0}
-                    pointerEvents='none'>
-                    <Text my='10px'>Current Rift Contracts:</Text>
-                    <VStack spacing={1} align='stretch' width='100%' maxWidth='600px'>
-                        {Object.keys(validDepositAssets).map((key) => {
-                            const asset = validDepositAssets[key];
-                            return (
-                                <Flex key={asset.address} justify='space-between'>
-                                    <Text>{asset.name}:</Text>
-                                    <Text>{asset.address}</Text>
-                                    <Text>Chain: {getChainName(asset.contractChainID)}</Text>
-                                </Flex>
-                            );
-                        })}
-                    </VStack>
+                    right={0}>
+                    <Button
+                        position={'absolute'}
+                        top={900}
+                        _hover={{ background: 'rgba(150, 150, 150, 0.2)' }}
+                        color={colors.textGray}
+                        bg={colors.offBlack}
+                        onClick={() => {
+                            setShowDeveloperMode(!showDeveloperMode);
+                        }}>
+                        TOGGLE
+                    </Button>
+                    {showDeveloperMode && (
+                        <>
+                            <Text my='10px'>Current Rift Contracts:</Text>
+                            <VStack spacing={1} align='stretch' width='100%' maxWidth='600px'>
+                                {Object.keys(useStore.getState().validDepositAssets).map((key) => {
+                                    const asset = useStore.getState().validDepositAssets[key];
+                                    return (
+                                        <Flex key={asset.riftExchangeContractAddress} justify='space-between'>
+                                            <Text>{asset.name}:</Text>
+                                            <Text>{asset.riftExchangeContractAddress}</Text>
+                                            <Text>Chain: {getChainName(asset.contractChainID)}</Text>
+                                        </Flex>
+                                    );
+                                })}
+                            </VStack>
 
-                    <Flex position='absolute' top={height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
-                        <StatCard
-                            label='Total Available Liquidity'
-                            value={`${weiToEth(totalAvailableLiquidity).toString()} ETH`}
-                        />
-                        <StatCard label='Total Deposits' value={allDepositVaults.length} />
-                        <StatCard label='My Active Deposits' value={myActiveDepositVaults.length} />
-                        <StatCard label='My Completed Deposits' value={myCompletedDepositVaults.length} />
-                        <StatCard label='Total Reservations' value={allSwapReservations.length} />
-                        <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />
-                    </Flex>
+                            <Flex position='absolute' top={height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
+                                <StatCard
+                                    label='Total Available Liquidity'
+                                    value={`${weiToEth(totalAvailableLiquidity).toString()} ETH`}
+                                />
+                                <StatCard label='Total Deposits' value={allDepositVaults.length} />
+                                <StatCard label='My Active Deposits' value={myActiveDepositVaults.length} />
+                                <StatCard label='My Completed Deposits' value={myCompletedDepositVaults.length} />
+                                <StatCard label='Total Reservations' value={allSwapReservations.length} />
+                                <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />
+                            </Flex>
+                        </>
+                    )}
                 </Flex>
                 {/* TODO: Remove above */}
                 <Spacer />

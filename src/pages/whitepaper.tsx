@@ -22,7 +22,7 @@ const Whitepaper = () => {
                 direction='column'
                 alignItems='center'
                 justifyContent='flex-start'
-                backgroundImage={'/images/rift_background_op.webp'}
+                backgroundImage={'/images/rift_background_low.webp'}
                 backgroundSize='cover'
                 backgroundPosition='center'>
                 <Navbar />

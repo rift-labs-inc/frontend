@@ -37,7 +37,6 @@ import {
     satsToBtc,
     calculateFillPercentage,
 } from '../../utils/dappHelper';
-import { validDepositAssets } from '../../utils/constants';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../../store';

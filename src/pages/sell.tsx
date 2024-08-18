@@ -79,7 +79,7 @@ const Sell = () => {
                 h='100vh'
                 width='100%'
                 direction='column'
-                backgroundImage={'/images/rift_background_op.webp'}
+                backgroundImage={'/images/rift_background_low.webp'}
                 backgroundSize='cover'
                 backgroundPosition='center'>
                 <Navbar />

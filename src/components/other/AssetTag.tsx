@@ -1,10 +1,11 @@
 import { Flex, Text } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
-import { validDepositAssets } from '../../utils/constants';
 import { BTC_Logo } from './SVGs'; // Import BTC logo as a React component
 import React from 'react';
 import { IoIosArrowDown } from 'react-icons/io';
 import { useStore } from '../../store';
+import { FONT_FAMILIES } from '../../utils/font';
+import { colors } from '../../utils/colors';
 
 interface AssetTagProps {
     assetName: string;
@@ -15,7 +16,7 @@ export const AssetTag = ({ assetName }: AssetTagProps) => {
     const isMobileView = width < 600;
     const selectedDepositAsset = useStore((state) => state.selectedDepositAsset);
 
-    let asset = validDepositAssets[assetName];
+    let asset = useStore.getState().validDepositAssets[assetName];
 
     if (assetName === 'selected' && selectedDepositAsset) {
         // Use the selected deposit asset from the store
@@ -24,6 +25,7 @@ export const AssetTag = ({ assetName }: AssetTagProps) => {
         // Default values for BTC
         asset = {
             name: 'BTC',
+
             icon_svg: BTC_Logo, // Use the imported BTC logo component
             bg_color: '#c26920', // Default Bitcoin orange color
             border_color: '#FFA04C',
@@ -54,7 +56,7 @@ export const AssetTag = ({ assetName }: AssetTagProps) => {
                 borderRadius='9px'
                 align='center'
                 justify='center'>
-                <Text mt='0px' fontSize={'18px'}>
+                <Text mt='0px' fontWeight={'bold'} color={colors.offWhite} fontFamily={FONT_FAMILIES.NOSTROMO} fontSize={'18px'}>
                     {asset.name}
                 </Text>
                 {/* <Flex ml='8px'>

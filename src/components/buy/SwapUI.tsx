@@ -33,8 +33,8 @@ export const SwapUI = ({}) => {
     const fontSize = isMobileView ? '20px' : '20px';
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
-    const ethOutputSwapAmount = useStore((state) => state.ethOutputSwapAmount);
-    const setEthOutputSwapAmount = useStore((state) => state.setEthOutputSwapAmount);
+    const tokenOutputSwapAmount = useStore((state) => state.tokenOutputSwapAmount);
+    const setTokenOutputSwapAmount = useStore((state) => state.setTokenOutputSwapAmount);
     const totalAvailableLiquidity = useStore((state) => state.totalAvailableLiquidity);
     const allDepositVaults = useStore((state) => state.allDepositVaults);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
@@ -62,11 +62,11 @@ export const SwapUI = ({}) => {
 
     // calculate ideal reservation
     useEffect(() => {
-        const exceeded = checkLiquidityExceeded(ethOutputSwapAmount);
+        const exceeded = checkLiquidityExceeded(tokenOutputSwapAmount);
         setIsLiquidityExceeded(exceeded);
 
-        if (ethOutputSwapAmount && !exceeded) {
-            const ethOutputInWei = ethToWei(ethOutputSwapAmount);
+        if (tokenOutputSwapAmount && !exceeded) {
+            const ethOutputInWei = ethToWei(tokenOutputSwapAmount);
             const reservationPart = calculateLowestFeeReservation(
                 allDepositVaults,
                 BigNumber.from(ethOutputInWei),
@@ -87,7 +87,7 @@ export const SwapUI = ({}) => {
         } else {
             setLowestFeeReservationParams(null);
         }
-    }, [ethOutputSwapAmount, checkLiquidityExceeded, allDepositVaults, setLowestFeeReservationParams]);
+    }, [tokenOutputSwapAmount, checkLiquidityExceeded, allDepositVaults, setLowestFeeReservationParams]);
 
     const validateSwapInput = (value) => {
         if (value === '') return true;
@@ -117,14 +117,14 @@ export const SwapUI = ({}) => {
             let ethValue = btcValue && parseFloat(btcValue) > 0 ? parseFloat(btcValue) * btcToEthExchangeRate : 0;
             // subtract premium we calculate from the eth value
             // ethValue -= calculatePremium;
-            setEthOutputSwapAmount(formatOutput(ethValue)); // Correctly format output
+            setTokenOutputSwapAmount(formatOutput(ethValue)); // Correctly format output
         }
     };
 
     const handleEthSwapChange = (e) => {
         const ethValue = formatDecimalInput(e.target.value);
         if (validateSwapInput(ethValue)) {
-            setEthOutputSwapAmount(ethValue);
+            setTokenOutputSwapAmount(ethValue);
             const btcValue = ethValue && parseFloat(ethValue) > 0 ? parseFloat(ethValue) / btcToEthExchangeRate : 0;
             setBtcInputSwapAmount(formatOutput(btcValue));
 
@@ -231,9 +231,9 @@ export const SwapUI = ({}) => {
                             <svg xmlns='http://www.w3.org/2000/svg' width='20px' height='20px' viewBox='0 0 20 20'>
                                 <path
                                     fill='#909090'
-                                    fill-rule='evenodd'
+                                    fillRule='evenodd'
                                     d='M2.24 6.8a.75.75 0 0 0 1.06-.04l1.95-2.1v8.59a.75.75 0 0 0 1.5 0V4.66l1.95 2.1a.75.75 0 1 0 1.1-1.02l-3.25-3.5a.75.75 0 0 0-1.1 0L2.2 5.74a.75.75 0 0 0 .04 1.06m8 6.4a.75.75 0 0 0-.04 1.06l3.25 3.5a.75.75 0 0 0 1.1 0l3.25-3.5a.75.75 0 1 0-1.1-1.02l-1.95 2.1V6.75a.75.75 0 0 0-1.5 0v8.59l-1.95-2.1a.75.75 0 0 0-1.06-.04'
-                                    clip-rule='evenodd'
+                                    clipRule='evenodd'
                                 />
                             </svg>
                         </Flex>
@@ -249,7 +249,7 @@ export const SwapUI = ({}) => {
                             borderRadius={'10px'}>
                             <Flex direction={'column'} py='10px' px='5px'>
                                 <Text
-                                    color={!ethOutputSwapAmount ? colors.offWhite : colors.textGray}
+                                    color={!tokenOutputSwapAmount ? colors.offWhite : colors.textGray}
                                     fontSize={'13px'}
                                     letterSpacing={'-1px'}
                                     fontWeight={'normal'}
@@ -257,7 +257,7 @@ export const SwapUI = ({}) => {
                                     You Receive
                                 </Text>
                                 <Input
-                                    value={ethOutputSwapAmount}
+                                    value={tokenOutputSwapAmount}
                                     onChange={handleEthSwapChange}
                                     fontFamily={'Aux'}
                                     border='none'
@@ -278,7 +278,7 @@ export const SwapUI = ({}) => {
                                     color={
                                         isLiquidityExceeded
                                             ? colors.redHover
-                                            : !ethOutputSwapAmount
+                                            : !tokenOutputSwapAmount
                                             ? colors.offWhite
                                             : colors.textGray
                                     }
@@ -293,8 +293,8 @@ export const SwapUI = ({}) => {
                                               4,
                                           )} ETH Max`
                                         : ethPriceUSD
-                                        ? ethOutputSwapAmount
-                                            ? (ethPriceUSD * parseFloat(ethOutputSwapAmount)).toLocaleString('en-US', {
+                                        ? tokenOutputSwapAmount
+                                            ? (ethPriceUSD * parseFloat(tokenOutputSwapAmount)).toLocaleString('en-US', {
                                                   style: 'currency',
                                                   currency: 'USD',
                                               })
@@ -318,10 +318,16 @@ export const SwapUI = ({}) => {
                             fontWeight={'normal'}
                             fontFamily={'Aux'}>
                             1 BTC ≈{' '}
-                            {selectedDepositAsset.exchangeRate
-                                ? BigNumber.from(selectedDepositAsset.exchangeRate).toNumber()
+                            {selectedDepositAsset.exchangeRateInTokenPerBTC
+                                ? BigNumber.from(
+                                      useStore.getState().validDepositAssets[selectedDepositAsset.name].exchangeRateInTokenPerBTC,
+                                  )
+                                      .toNumber()
+                                      .toLocaleString('en-US', {
+                                          maximumFractionDigits: 4,
+                                      })
                                 : 'N/A'}{' '}
-                            ETH{' '}
+                            {selectedDepositAsset.name} {/* TODO: implemnt above where its based on the selected asset */}
                             <Box
                                 as='span'
                                 color={colors.textGray}
@@ -371,21 +377,21 @@ export const SwapUI = ({}) => {
                     {/* Exchange Button */}
 
                     <Flex
-                        bg={ethOutputSwapAmount ? colors.purpleBackground : colors.purpleBackgroundDisabled}
+                        bg={tokenOutputSwapAmount ? colors.purpleBackground : colors.purpleBackgroundDisabled}
                         _hover={{ bg: colors.purpleHover }}
                         w='100%'
                         mt='15px'
                         transition={'0.2s'}
                         h='45px'
-                        onClick={ethOutputSwapAmount ? () => setSwapFlowState('1-reserve-liquidity') : null}
+                        onClick={tokenOutputSwapAmount ? () => setSwapFlowState('1-reserve-liquidity') : null}
                         fontSize={'15px'}
                         align={'center'}
                         userSelect={'none'}
                         cursor={'pointer'}
                         borderRadius={'10px'}
                         justify={'center'}
-                        border={ethOutputSwapAmount ? '3px solid #445BCB' : '3px solid #3242a8'}>
-                        <Text color={ethOutputSwapAmount ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
+                        border={tokenOutputSwapAmount ? '3px solid #445BCB' : '3px solid #3242a8'}>
+                        <Text color={tokenOutputSwapAmount ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
                             Exchange
                         </Text>
                     </Flex>

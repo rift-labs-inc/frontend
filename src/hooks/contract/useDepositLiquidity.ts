@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ethers, BigNumber, BigNumberish } from 'ethers';
-import { validDepositAssets } from '../../utils/constants';
 import { useStore } from '../../store';
 
 export enum DepositStatus {

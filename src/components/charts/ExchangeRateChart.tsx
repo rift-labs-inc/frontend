@@ -2,7 +2,9 @@ import { Flex, Text } from '@chakra-ui/react';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
 import { useEffect, useRef, useState } from 'react';
+
 interface ExchangeRateChartProps {}
+
 const ExchangeRateChart: React.FC<ExchangeRateChartProps> = () => {
     const rangeStart = -1;
     const rangeEnd = 10;
@@ -122,7 +124,7 @@ const ExchangeRateChart: React.FC<ExchangeRateChartProps> = () => {
                     <Flex w='3px' flex={1} bg='#465FF9' />
                 </Flex>
                 {yAxis.map((x, i) => (
-                    <Flex w='100%' h='100%' position='relative' align='flex-end'>
+                    <Flex key={i} w='100%' h='100%' position='relative' align='flex-end'>
                         {/* Market Rate Bar */}
                         {i == 2 && (
                             <Flex position='absolute' left='0px' h='100%'>
@@ -137,7 +139,7 @@ const ExchangeRateChart: React.FC<ExchangeRateChartProps> = () => {
             <Flex h='4px' mb='2px' borderRadius='40px' bg={colors.graph.lightGreen} w='100%' />
             <Flex justify='space-between' w='100%'>
                 {xAxis.map((x) => (
-                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.9rem' color={colors.textGray}>
+                    <Text key={x} fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.9rem' color={colors.textGray}>
                         {x}%
                     </Text>
                 ))}

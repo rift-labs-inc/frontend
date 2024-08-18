@@ -22,6 +22,22 @@ export function btcToSats(btc: number): BigNumber {
     return BigNumber.from(SATS_PER_BTC * btc);
 }
 
+export function toInternalPrecision(amount, tokenDecimals) {
+    const bigAmount = BigNumber.from(amount);
+    if (tokenDecimals < 18) {
+        return bigAmount.mul(BigNumber.from(10).pow(18 - tokenDecimals));
+    }
+    return bigAmount;
+}
+
+export function fromInternalPrecision(amount, tokenDecimals) {
+    const bigAmount = BigNumber.from(amount);
+    if (tokenDecimals < 18) {
+        return bigAmount.div(BigNumber.from(10).pow(18 - tokenDecimals));
+    }
+    return bigAmount;
+}
+
 export function calculateAmountBitcoinOutput(vault: DepositVault): BigNumber {
     const btcExchangeRate = 1 / satsToBtc(BigNumber.from(vault.btcExchangeRate).toNumber());
     console.log('btcExchangeRate:', btcExchangeRate);
