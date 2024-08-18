@@ -24,9 +24,7 @@ export const Navbar = ({}) => {
     const totalAvailableLiquidity = useStore((state) => state.totalAvailableLiquidity);
     const setTotalExpiredReservations = useStore((state) => state.setTotalExpiredReservations);
     const totalExpiredReservations = useStore((state) => state.totalExpiredReservations);
-    const [showDeveloperMode, setShowDeveloperMode] = useState(
-        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
-    );
+    const [showDeveloperMode, setShowDeveloperMode] = useState(false);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -122,17 +120,19 @@ export const Navbar = ({}) => {
                     top={0}
                     left={0}
                     right={0}>
-                    <Button
-                        position={'absolute'}
-                        top={900}
-                        _hover={{ background: 'rgba(150, 150, 150, 0.2)' }}
-                        color={colors.textGray}
-                        bg={colors.offBlack}
-                        onClick={() => {
-                            setShowDeveloperMode(!showDeveloperMode);
-                        }}>
-                        TOGGLE
-                    </Button>
+                    {window.location.hostname === 'localhost' && (
+                        <Button
+                            position={'absolute'}
+                            top={900}
+                            _hover={{ background: 'rgba(150, 150, 150, 0.2)' }}
+                            color={colors.textGray}
+                            bg={colors.offBlack}
+                            onClick={() => {
+                                setShowDeveloperMode(!showDeveloperMode);
+                            }}>
+                            TOGGLE
+                        </Button>
+                    )}
                     {showDeveloperMode && (
                         <>
                             <Text my='10px'>Current Rift Contracts:</Text>
