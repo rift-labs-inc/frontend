@@ -9,7 +9,7 @@ import { FONT_FAMILIES } from '../utils/font';
 import { useStore } from '../store';
 import { weiToEth } from '../utils/dappHelper';
 import { BigNumber } from 'ethers';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DepositAsset } from '../types';
 
 export const Navbar = ({}) => {
@@ -25,6 +25,12 @@ export const Navbar = ({}) => {
     const setTotalExpiredReservations = useStore((state) => state.setTotalExpiredReservations);
     const totalExpiredReservations = useStore((state) => state.totalExpiredReservations);
     const [showDeveloperMode, setShowDeveloperMode] = useState(false);
+    const [isLocalhost, setIsLocalhost] = useState(false);
+
+    useEffect(() => {
+        const hostname = window.location.hostname;
+        setIsLocalhost(hostname === 'localhost' || hostname === '127.0.0.1');
+    }, []);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -120,7 +126,7 @@ export const Navbar = ({}) => {
                     top={0}
                     left={0}
                     right={0}>
-                    {window.location.hostname === 'localhost' && (
+                    {isLocalhost && (
                         <Button
                             position={'absolute'}
                             top={900}
