@@ -15,16 +15,16 @@ import { DepositVault, SwapReservation, ReservationState } from '../../types';
 import { calculateFillPercentage } from '../../utils/dappHelper';
 
 type UseDepositVaultsResult = {
-    allDepositVaults: DepositVault[];
-    userDepositVaults: {
+    allFetchedDepositVaults: DepositVault[];
+    userFetchedDepositVaults: {
         active: DepositVault[];
         completed: DepositVault[];
     };
+    allFetchedSwapReservations: SwapReservation[];
     loading: boolean;
     error: Error | null;
     refreshUserDepositData: () => void;
 };
-
 const EIGHT_HOURS_IN_SECONDS = 8 * 60 * 60; // 8 hours
 
 export function useDepositVaults(): UseDepositVaultsResult {
@@ -36,7 +36,10 @@ export function useDepositVaults(): UseDepositVaultsResult {
     const setMyCompletedDepositVaults = useStore((state) => state.setMyCompletedDepositVaults);
     const updateTotalAvailableLiquidity = useStore((state) => state.updateTotalAvailableLiquidity);
     const setTotalExpiredReservations = useStore((state) => state.setTotalExpiredReservations);
-    const [userDepositVaults, setUserDepositVaults] = useState<{ active: DepositVault[]; completed: DepositVault[] }>({
+    const [userFetchedDepositVaults, setUserFetchedDepositVaults] = useState<{
+        active: DepositVault[];
+        completed: DepositVault[];
+    }>({
         active: [],
         completed: [],
     });
@@ -44,7 +47,11 @@ export function useDepositVaults(): UseDepositVaultsResult {
     const [error, setError] = useState<Error | null>(null);
     const selectedAsset = useStore((state) => state.selectedAsset);
 
-    const { allSwapReservations, loading: swapReservationsLoading, error: swapReservationsError } = useSwapReservations();
+    const {
+        allSwapReservations: allFetchedSwapReservations,
+        loading: swapReservationsLoading,
+        error: swapReservationsError,
+    } = useSwapReservations();
 
     const calculateTrueUnreservedLiquidity = useCallback(
         (depositVaults: DepositVault[], swapReservations: SwapReservation[]): DepositVault[] => {
@@ -123,8 +130,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 Array.from({ length: depositVaultsLength }).map((_, i) => i),
             );
 
-            // console.log('are we getting swap reservations?', allSwapReservations);
-            const updatedDepositVaults = calculateTrueUnreservedLiquidity(depositVaults, allSwapReservations);
+            const updatedDepositVaults = calculateTrueUnreservedLiquidity(depositVaults, allFetchedSwapReservations);
             setAllDepositVaults(updatedDepositVaults);
         } catch (err) {
             console.error('Error fetching all deposit vaults:', err);
@@ -133,14 +139,14 @@ export function useDepositVaults(): UseDepositVaultsResult {
     }, [
         ethersRpcProvider,
         selectedAsset.riftExchangeContractAddress,
-        allSwapReservations,
+        allFetchedSwapReservations,
         calculateTrueUnreservedLiquidity,
         setAllDepositVaults,
     ]);
 
     const fetchUserDepositVaults = useCallback(async () => {
         if (!isConnected || !address || !ethersRpcProvider) {
-            setUserDepositVaults({ active: [], completed: [] });
+            setUserFetchedDepositVaults({ active: [], completed: [] });
             setMyActiveDepositVaults([]);
             setMyCompletedDepositVaults([]);
             return;
@@ -173,7 +179,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 }
             });
 
-            setUserDepositVaults({ active, completed });
+            setUserFetchedDepositVaults({ active, completed });
             setMyActiveDepositVaults(active);
             setMyCompletedDepositVaults(completed);
         } catch (err) {
@@ -208,13 +214,16 @@ export function useDepositVaults(): UseDepositVaultsResult {
         fetchUserDepositVaults();
     }, [fetchUserDepositVaults]);
 
-    if (swapReservationsError) {
-        setError(swapReservationsError);
-    }
+    useEffect(() => {
+        if (swapReservationsError) {
+            setError(swapReservationsError);
+        }
+    }, [swapReservationsError]);
 
     return {
-        allDepositVaults: Array.isArray(allDepositVaults) ? allDepositVaults : [],
-        userDepositVaults,
+        allFetchedDepositVaults: Array.isArray(allDepositVaults) ? allDepositVaults : [],
+        userFetchedDepositVaults,
+        allFetchedSwapReservations,
         loading: loading || swapReservationsLoading,
         error,
         refreshUserDepositData,

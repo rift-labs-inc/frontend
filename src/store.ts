@@ -8,6 +8,13 @@ import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
 
 type Store = {
+    // setup & asset data
+    userEthAddress: string;
+    setUserEthAddress: (address: string) => void;
+    ethersRpcProvider: ethers.providers.Provider | null;
+    setEthersRpcProvider: (provider: ethers.providers.Provider) => void;
+    bitcoinPriceUSD: number;
+    setBitcoinPriceUSD: (price: number) => void;
     validAssets: Record<string, ValidAsset>;
     setValidAssets: (assets: Record<string, ValidAsset>) => void;
     updateValidValidAsset: (assetKey: string, updates: Partial<ValidAsset>) => void;
@@ -17,21 +24,28 @@ type Store = {
     updateTotalAvailableLiquidity: (assetKey: string, newLiquidity: BigNumber) => void;
     updateConnectedUserBalanceRaw: (assetKey: string, newBalance: BigNumber) => void;
     updateConnectedUserBalanceFormatted: (assetKey: string, newBalance: string) => void;
+    selectedAsset: ValidAsset;
+    setSelectedAsset: (asset: ValidAsset) => void;
+
+    // contract data (deposit vaults, swap reservations)
     allDepositVaults: any;
     setAllDepositVaults: (allDepositVaults: DepositVault[]) => void;
-    ethersRpcProvider: ethers.providers.Provider | null;
-    setEthersRpcProvider: (provider: ethers.providers.Provider) => void;
     myActiveDepositVaults: DepositVault[];
     setMyActiveDepositVaults: (myActiveDepositVaults: DepositVault[]) => void;
     myCompletedDepositVaults: DepositVault[];
     setMyCompletedDepositVaults: (myCompletedDepositVaults: DepositVault[]) => void;
+    allSwapReservations: SwapReservation[];
+    setAllSwapReservations: (reservations: SwapReservation[]) => void;
+    totalExpiredReservations: number;
+    setTotalExpiredReservations: (totalExpiredReservations: number) => void;
 
-    // Bitcoin
-    bitcoinPriceUSD: number;
-    setBitcoinPriceUSD: (price: number) => void;
-    bitcoinDecimals: number;
-    setBitcoinDecimals: (decimals: number) => void;
+    // manage deposits
+    selectedVaultToManage: DepositVault | null;
+    setSelectedVaultToManage: (vault: DepositVault | null) => void;
+    showManageDepositVaultsScreen: boolean;
+    setShowManageDepositVaultsScreen: (show: boolean) => void;
 
+    // swap flow
     swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed';
     setSwapFlowState: (
         state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed',
@@ -40,22 +54,10 @@ type Store = {
     setBtcInputSwapAmount: (amount: string) => void;
     tokenOutputSwapAmount: string;
     setTokenOutputSwapAmount: (amount: string) => void;
-    selectedVaultToManage: DepositVault | null;
-    setSelectedVaultToManage: (vault: DepositVault | null) => void;
-    allSwapReservations: SwapReservation[];
-    setAllSwapReservations: (reservations: SwapReservation[]) => void;
-    showManageDepositVaultsScreen: boolean;
-    setShowManageDepositVaultsScreen: (show: boolean) => void;
-    totalExpiredReservations: number;
-    setTotalExpiredReservations: (totalExpiredReservations: number) => void;
     lowestFeeReservationParams: ReserveLiquidityParams | null;
     setLowestFeeReservationParams: (reservation: ReserveLiquidityParams | null) => void;
-    userEthAddress: string;
-    setUserEthAddress: (address: string) => void;
     showManageReservationScreen: boolean;
     setShowManageReservationScreen: (show: boolean) => void;
-    selectedAsset: ValidAsset;
-    setSelectedAsset: (asset: ValidAsset) => void;
 };
 
 export const useStore = create<Store>((set) => {
@@ -103,6 +105,13 @@ export const useStore = create<Store>((set) => {
     };
 
     return {
+        // setup & asset data
+        userEthAddress: '',
+        setUserEthAddress: (userEthAddress) => set({ userEthAddress }),
+        ethersRpcProvider: null,
+        setEthersRpcProvider: (provider) => set({ ethersRpcProvider: provider }),
+        bitcoinPriceUSD: 0,
+        setBitcoinPriceUSD: (bitcoinPriceUSD) => set({ bitcoinPriceUSD }),
         validAssets,
         setValidAssets: (assets) => set({ validAssets: assets }),
         updateValidValidAsset: (assetKey, updates) =>
@@ -154,39 +163,37 @@ export const useStore = create<Store>((set) => {
                     [assetKey]: { ...state.validAssets[assetKey], connectedUserBalanceFormatted: newBalance },
                 },
             })),
+        selectedAsset: validAssets.USDT,
+        setSelectedAsset: (selectedAsset) => set({ selectedAsset }),
+
+        // contract data (deposit vaults, swap reservations)
         allDepositVaults: {},
         setAllDepositVaults: (allDepositVaults) => set({ allDepositVaults }),
-        ethersRpcProvider: null,
-        setEthersRpcProvider: (provider) => set({ ethersRpcProvider: provider }),
         myActiveDepositVaults: [],
         setMyActiveDepositVaults: (myActiveDepositVaults) => set({ myActiveDepositVaults }),
         myCompletedDepositVaults: [],
         setMyCompletedDepositVaults: (myCompletedDepositVaults) => set({ myCompletedDepositVaults }),
-        bitcoinPriceUSD: 0,
-        setBitcoinPriceUSD: (bitcoinPriceUSD) => set({ bitcoinPriceUSD }),
-        bitcoinDecimals: 8,
-        setBitcoinDecimals: (bitcoinDecimals) => set({ bitcoinDecimals }),
+        allSwapReservations: [],
+        setAllSwapReservations: (allSwapReservations) => set({ allSwapReservations }),
+        totalExpiredReservations: 0,
+        setTotalExpiredReservations: (totalExpiredReservations) => set({ totalExpiredReservations }),
+
+        // manage deposits
+        selectedVaultToManage: null,
+        setSelectedVaultToManage: (selectedVaultToManage) => set({ selectedVaultToManage }),
+        showManageDepositVaultsScreen: false,
+        setShowManageDepositVaultsScreen: (showManageDepositVaultsScreen) => set({ showManageDepositVaultsScreen }),
+
+        // swap flow
         swapFlowState: '0-not-started',
         setSwapFlowState: (swapFlowState) => set({ swapFlowState }),
         btcInputSwapAmount: '',
         setBtcInputSwapAmount: (btcInputSwapAmount) => set({ btcInputSwapAmount }),
         tokenOutputSwapAmount: '',
         setTokenOutputSwapAmount: (tokenOutputSwapAmount) => set({ tokenOutputSwapAmount }),
-        selectedVaultToManage: null,
-        setSelectedVaultToManage: (selectedVaultToManage) => set({ selectedVaultToManage }),
-        allSwapReservations: [],
-        setAllSwapReservations: (allSwapReservations) => set({ allSwapReservations }),
-        showManageDepositVaultsScreen: false,
-        setShowManageDepositVaultsScreen: (showManageDepositVaultsScreen) => set({ showManageDepositVaultsScreen }),
-        totalExpiredReservations: 0,
-        setTotalExpiredReservations: (totalExpiredReservations) => set({ totalExpiredReservations }),
         lowestFeeReservationParams: null,
         setLowestFeeReservationParams: (lowestFeeReservationParams) => set({ lowestFeeReservationParams }),
-        userEthAddress: '',
-        setUserEthAddress: (userEthAddress) => set({ userEthAddress }),
         showManageReservationScreen: false,
         setShowManageReservationScreen: (showManageReservationScreen) => set({ showManageReservationScreen }),
-        selectedAsset: validAssets.USDT,
-        setSelectedAsset: (selectedAsset) => set({ selectedAsset }),
     };
 });

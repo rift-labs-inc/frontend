@@ -10,6 +10,7 @@ import { ERC20ABI } from '../../utils/constants';
 
 interface ContractDataContextType {
     allDepositVaults: any;
+    userDepositVaults: any;
     allSwapReservations: any;
     loading: boolean;
     error: any;
@@ -77,34 +78,20 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         return () => clearInterval(intervalId);
     }, [selectedAsset, address]);
 
-    // TODO - turn these on and fix
     // fetch deposit vaults
-    // const {
-    //     allDepositVaults,
-    //     userDepositVaults,
-    //     loading: vaultsLoading,
-    //     error: vaultsError,
-    //     refreshUserDepositData,
-    // } = useDepositVaults(selectedAsset.riftExchangeContractAddress); // TODO: update this to pull contract data from all valid deposit assets
-
-    // // fetch swap reservations
-    // const {
-    //     allSwapReservations,
-    //     loading: reservationsLoading,
-    //     error: reservationsError,
-    // } = useSwapReservations(selectedAsset.riftExchangeContractAddress); // TODO: update this to pull contract data from all valid deposit assets
-
-    // const loading = vaultsLoading || reservationsLoading || vaultsLoading;
-    // const error = vaultsError || reservationsError || vaultsError;
-
-    const allDepositVaults = [];
-    const allSwapReservations = [];
-    const loading = false;
-    const error = null;
+    const {
+        allFetchedDepositVaults,
+        userFetchedDepositVaults,
+        allFetchedSwapReservations,
+        loading,
+        error,
+        refreshUserDepositData,
+    } = useDepositVaults();
 
     const value = {
-        allDepositVaults,
-        allSwapReservations,
+        allDepositVaults: allFetchedDepositVaults,
+        userDepositVaults: userFetchedDepositVaults,
+        allSwapReservations: allFetchedSwapReservations,
         loading,
         error,
     };

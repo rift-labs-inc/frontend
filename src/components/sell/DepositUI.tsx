@@ -578,6 +578,7 @@ export const DepositUI = ({}) => {
                                     fontSize='36px'
                                     placeholder='bc1q5d7rjq7g6rd2...'
                                     _placeholder={{ color: colors.darkerGray }}
+                                    spellCheck={false}
                                 />
                                 <Text
                                     color={!payoutBTCAddress ? colors.offWhite : colors.textGray}

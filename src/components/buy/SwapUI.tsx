@@ -23,7 +23,7 @@ import { BigNumber } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
 import { btcToSats, calculateLowestFeeReservation, ethToWei, weiToEth } from '../../utils/dappHelper';
 import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
-import { maxSwapOutputs } from '../../utils/constants';
+import { bitcoinDecimals, maxSwapOutputs } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 
 export const SwapUI = ({}) => {
@@ -45,7 +45,6 @@ export const SwapUI = ({}) => {
     const setSelectedAsset = useStore((state) => state.setSelectedAsset);
     const [tokenPriceUSD, setTokenPriceUSD] = useState(0);
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
-    const bitcoinDecimals = useStore((state) => state.bitcoinDecimals);
 
     // update token price and available liquidity
     useEffect(() => {
