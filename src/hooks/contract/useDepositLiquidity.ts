@@ -1,11 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ethers, BigNumber, BigNumberish } from 'ethers';
 import { useStore } from '../../store';
+import { ERC20ABI } from '../../utils/constants';
+import { useAccount } from 'wagmi';
 
 export enum DepositStatus {
     Idle = 'idle',
     WaitingForWalletConfirmation = 'waitingForWalletConfirmation',
-    ApprovingWETH = 'approvingWETH',
+    ApprovingDepositToken = 'ApprovingDepositToken',
     DepositingLiquidity = 'depositingLiquidity',
     Confirmed = 'confirmed',
     Error = 'error',
@@ -14,12 +16,12 @@ export enum DepositStatus {
 interface DepositLiquidityParams {
     signer: ethers.Signer;
     riftExchangeAbi: ethers.ContractInterface;
-    riftExchangeContract: string;
+    riftExchangeContractAddress: string;
     tokenAddress: string;
     btcPayoutLockingScript: string;
-    btcExchangeRate: BigNumberish;
+    btcExchangeRate: BigNumber;
     vaultIndexToOverwrite: number;
-    depositAmount: BigNumberish;
+    tokenDepositAmountInSmallestTokenUnits: BigNumber;
     vaultIndexWithSameExchangeRate: number;
 }
 
@@ -36,6 +38,7 @@ export function useDepositLiquidity() {
     const [error, setError] = useState<string | null>(null);
     const [txHash, setTxHash] = useState<string | null>(null);
     const selectedAsset = useStore((state) => state.selectedAsset);
+    const userEthAddress = useStore((state) => state.userEthAddress);
 
     const resetDepositState = useCallback(() => {
         if (isClient) {
@@ -54,27 +57,31 @@ export function useDepositLiquidity() {
             setTxHash(null);
 
             try {
-                const tokenContract = new ethers.Contract(params.tokenAddress, selectedAsset.riftExchangeAbi, params.signer);
+                const tokenContract = new ethers.Contract(params.tokenAddress, ERC20ABI, params.signer);
                 const riftExchangeContractInstance = new ethers.Contract(
-                    params.riftExchangeContract,
+                    params.riftExchangeContractAddress,
                     params.riftExchangeAbi,
                     params.signer,
                 );
 
-                const allowance = await tokenContract.allowance(await params.signer.getAddress(), params.riftExchangeContract);
+                const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContractAddress);
 
-                if (BigNumber.from(allowance).lt(BigNumber.from(params.depositAmount))) {
-                    setStatus(DepositStatus.ApprovingWETH);
-                    const approveTx = await tokenContract.approve(params.riftExchangeContract, params.depositAmount);
+                if (BigNumber.from(allowance).lt(BigNumber.from(params.tokenDepositAmountInSmallestTokenUnits))) {
+                    setStatus(DepositStatus.ApprovingDepositToken);
+                    const approveTx = await tokenContract.approve(
+                        params.riftExchangeContractAddress,
+                        params.tokenDepositAmountInSmallestTokenUnits,
+                    );
                     await approveTx.wait();
                 }
 
                 setStatus(DepositStatus.DepositingLiquidity);
+
                 const depositTx = await riftExchangeContractInstance.depositLiquidity(
                     params.btcPayoutLockingScript,
                     params.btcExchangeRate,
                     params.vaultIndexToOverwrite,
-                    params.depositAmount.toString(),
+                    params.tokenDepositAmountInSmallestTokenUnits.toString(),
                     params.vaultIndexWithSameExchangeRate,
                 );
 

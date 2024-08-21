@@ -2,6 +2,7 @@ import { BigNumber, BigNumberish, ethers } from 'ethers';
 import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
 import { sepolia } from 'viem/chains';
+import * as bitcoin from 'bitcoinjs-lib';
 
 const SATS_PER_BTC = 100000000; // 10^8
 
@@ -60,6 +61,59 @@ export function findVaultIndexWithSameExchangeRate(): number {
     // const vaultIndexWithSameExchangeRate = allDepositVaults.findIndex((vault) => BigNumber.from(vault.btcExchangeRate).eq(allDepositVaults[0].btcExchangeRate));
     // return vaultIndexWithSameExchangeRate;
     return -1;
+}
+
+export function convertToBitcoinLockingScript(address: string): string {
+    // TODO - validate and test all address types with alpine
+    try {
+        let script: Buffer;
+
+        // Handle Bech32 addresses (including P2WPKH, P2WSH, and P2TR)
+        if (address.toLowerCase().startsWith('bc1')) {
+            const { data, version } = bitcoin.address.fromBech32(address);
+            if (version === 0) {
+                if (data.length === 20) {
+                    // P2WPKH
+                    script = bitcoin.script.compile([bitcoin.opcodes.OP_0, data]);
+                } else if (data.length === 32) {
+                    // P2WSH
+                    script = bitcoin.script.compile([bitcoin.opcodes.OP_0, data]);
+                }
+            } else if (version === 1 && data.length === 32) {
+                // P2TR (Taproot)
+                script = bitcoin.script.compile([bitcoin.opcodes.OP_1, data]);
+            }
+        } else {
+            // Handle legacy addresses (P2PKH and P2SH)
+            const { version, hash } = bitcoin.address.fromBase58Check(address);
+
+            // P2PKH
+            if (version === bitcoin.networks.bitcoin.pubKeyHash) {
+                script = bitcoin.script.compile([
+                    bitcoin.opcodes.OP_DUP,
+                    bitcoin.opcodes.OP_HASH160,
+                    hash,
+                    bitcoin.opcodes.OP_EQUALVERIFY,
+                    bitcoin.opcodes.OP_CHECKSIG,
+                ]);
+            }
+
+            // P2SH
+            else if (version === bitcoin.networks.bitcoin.scriptHash) {
+                script = bitcoin.script.compile([bitcoin.opcodes.OP_HASH160, hash, bitcoin.opcodes.OP_EQUAL]);
+            }
+        }
+
+        if (!script) {
+            throw new Error('Unsupported address type');
+        }
+
+        console.log('locking script:', script);
+        return '0x' + script.toString('hex');
+    } catch (error) {
+        console.error('Error converting address to locking script:', error);
+        throw error; // Re-throw the error for proper handling in the calling code
+    }
 }
 
 export function calculateFillPercentage(vault: DepositVault) {

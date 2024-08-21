@@ -28,6 +28,7 @@ import {
     findVaultIndexWithSameExchangeRate,
     satsToBtc,
     bufferTo18Decimals,
+    convertToBitcoinLockingScript,
 } from '../../utils/dappHelper';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
@@ -40,6 +41,10 @@ import OrangeText from '../other/OrangeText';
 import { AssetTag } from '../other/AssetTag';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { bitcoinDecimals } from '../../utils/constants';
+import { CheckCircleIcon, CheckIcon } from '@chakra-ui/icons';
+import { HiOutlineXCircle, HiXCircle } from 'react-icons/hi';
+import { IoCheckmarkDoneCircle } from 'react-icons/io5';
+import { IoMdCheckmarkCircle } from 'react-icons/io';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -254,54 +259,75 @@ export const DepositUI = ({}) => {
         setPayoutBTCAddress(BTCPayoutAddress);
     };
 
+    const validateBitcoinPayoutAddress = (address: string): boolean => {
+        const p2pkhRegex = /^[1][a-km-zA-HJ-NP-Z1-9]{25,34}$/; // P2PKH addresses start with 1
+        const p2shRegex = /^[3][a-km-zA-HJ-NP-Z1-9]{25,34}$/; // P2SH addresses start with 3
+        const bech32Regex = /^bc1q[a-zA-HJ-NP-Z0-9]{14,74}$/; // Bech32 addresses (SegWit) start with bc1q
+        const taprootRegex = /^bc1p[a-zA-HJ-NP-Z0-9]{14,74}$/; // Taproot addresses start with bc1p
+
+        return p2pkhRegex.test(address) || p2shRegex.test(address) || bech32Regex.test(address) || taprootRegex.test(address);
+    };
+
+    const BitcoinAddressValidation: React.FC<{ address: string }> = ({ address }) => {
+        const isValid = validateBitcoinPayoutAddress(address);
+
+        if (address.length === 0) {
+            return <Text>...</Text>;
+        }
+
+        return (
+            <Flex align='center'>
+                {isValid ? (
+                    <>
+                        <IoMdCheckmarkCircle color='green' size={16} />
+                        <Text color='green' ml={2}>
+                            Valid address
+                        </Text>
+                    </>
+                ) : (
+                    <>
+                        <HiXCircle color='red' size={16} />
+                        <Text color='red' ml={2}>
+                            Invalid address
+                        </Text>
+                    </>
+                )}
+            </Flex>
+        );
+    };
     // ---------- INITATE DEPOSIT ---------- //
     const initiateDeposit = async () => {
         if (window.ethereum) {
             // Reset the deposit state before starting a new deposit
             resetDepositState();
+            setIsModalOpen(true);
 
-            // setIsModalOpen(true);
             const vaultIndexToOverwrite = findVaultIndexToOverwrite();
             const vaultIndexWithSameExchangeRate = findVaultIndexWithSameExchangeRate();
-
             const tokenDecmials = useStore.getState().validAssets[selectedAsset.name].decimals;
             const tokenDepositAmountInSmallestTokenUnits = parseUnits(tokenDepositAmount, tokenDecmials);
-
             const tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(
                 tokenDepositAmountInSmallestTokenUnits,
                 tokenDecmials,
             );
-
             const bitcoinOutputAmountInSats = parseUnits(bitcoinOutputAmount, bitcoinDecimals);
-
             const exchangeRate = tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(bitcoinOutputAmountInSats);
             console.log('exchangeRate:', exchangeRate.toString());
+
+            const bitcoinPayoutLockingScript = convertToBitcoinLockingScript(payoutBTCAddress);
 
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
 
-            //console log the deposit parameters
-            console.log('Deposit Parameters:', {
-                signer: signer,
-                riftExchangeAbi: selectedAsset.riftExchangeAbi,
-                riftExchangeContract: selectedAsset.riftExchangeContractAddress,
-                tokenAddress: selectedAsset.tokenAddress,
-                btcPayoutLockingScript: payoutBTCAddress,
-                btcExchangeRate: exchangeRate,
-                vaultIndexToOverwrite,
-                depositAmount: tokenDepositAmountInSmallestTokenUnits,
-                vaultIndexWithSameExchangeRate,
-            });
-
             await depositLiquidity({
                 signer: signer,
                 riftExchangeAbi: selectedAsset.riftExchangeAbi,
-                riftExchangeContract: selectedAsset.riftExchangeContractAddress,
+                riftExchangeContractAddress: selectedAsset.riftExchangeContractAddress,
                 tokenAddress: selectedAsset.tokenAddress,
-                btcPayoutLockingScript: payoutBTCAddress,
+                btcPayoutLockingScript: bitcoinPayoutLockingScript,
                 btcExchangeRate: exchangeRate,
                 vaultIndexToOverwrite,
-                depositAmount: tokenDepositAmountInSmallestTokenUnits,
+                tokenDepositAmountInSmallestTokenUnits: tokenDepositAmountInSmallestTokenUnits,
                 vaultIndexWithSameExchangeRate,
             });
         }
@@ -561,8 +587,11 @@ export const DepositUI = ({}) => {
                                     letterSpacing={'-1.5px'}
                                     fontWeight={'normal'}
                                     fontFamily={'Aux'}>
-                                    {/* TODO: ADD LOADING INDICATOR AND ADDRESS VALIDATION CHECK CIRCLE HERE */}
-                                    {payoutBTCAddress.length > 0 ? 'Valid address' : '...'}
+                                    {payoutBTCAddress.length > 0 ? (
+                                        <BitcoinAddressValidation address={payoutBTCAddress} />
+                                    ) : (
+                                        '...'
+                                    )}
                                 </Text>
                             </Flex>
                         </Flex>

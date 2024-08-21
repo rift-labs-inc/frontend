@@ -107,7 +107,7 @@ export const ConnectWalletButton = ({}) => {
                                                 })()}
                                             </Flex>
                                             <Flex px='20px' mt='-2px' mr='-2px' fontSize={'16px'} fontFamily={'aux'}>
-                                                {`${localBalance} ${selectedAsset.name}`}
+                                                {`${parseFloat(localBalance).toString()} ${selectedAsset.name}`}
                                             </Flex>
                                         </>
                                     </Button>

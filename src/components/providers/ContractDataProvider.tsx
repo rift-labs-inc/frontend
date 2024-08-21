@@ -39,31 +39,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         }
     }, [selectedAsset.contractRpcURL, address, isConnected]);
 
-    // set user address & fetch selected asset balance
-    useEffect(() => {
-        const fetchSelectedAssetUserBalance = async (address) => {
-            const balance = await getTokenBalance(
-                ethersRpcProvider,
-                selectedAsset.tokenAddress,
-                selectedAsset.riftExchangeContractAddress,
-                ERC20ABI,
-            );
-
-            updateConnectedUserBalanceRaw(selectedAsset.name, balance);
-            const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedAsset.name].decimals);
-            console.log('formattedBalance:', formattedBalance.toString());
-            updateConnectedUserBalanceFormatted(selectedAsset.name, formattedBalance.toString());
-        };
-
-        if (address) {
-            setUserEthAddress(address);
-            if (selectedAsset && window.ethereum) {
-                fetchSelectedAssetUserBalance(address);
-            }
-        }
-    }, [address, selectedAsset]);
-
-    // fetch price data
+    // fetch price data, user address, & selected asset balance
     useEffect(() => {
         const fetchPriceData = async () => {
             // TESTING VALUES - TODO: get this data from uniswap
@@ -78,12 +54,28 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         };
         fetchPriceData();
 
+        const fetchSelectedAssetUserBalance = async (address) => {
+            const balance = await getTokenBalance(ethersRpcProvider, selectedAsset.tokenAddress, address, ERC20ABI);
+
+            updateConnectedUserBalanceRaw(selectedAsset.name, balance);
+            const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedAsset.name].decimals);
+            console.log('formattedBalance:', formattedBalance.toString());
+            updateConnectedUserBalanceFormatted(selectedAsset.name, formattedBalance.toString());
+        };
+
+        if (address) {
+            setUserEthAddress(address);
+            if (selectedAsset && window.ethereum) {
+                fetchSelectedAssetUserBalance(address);
+            }
+        }
+
         // Set up an interval to fetch prices every 30 seconds
         const intervalId = setInterval(fetchPriceData, 30000);
 
         // Clean up the interval on component unmount
         return () => clearInterval(intervalId);
-    }, [selectedAsset]);
+    }, [selectedAsset, address]);
 
     // TODO - turn these on and fix
     // fetch deposit vaults

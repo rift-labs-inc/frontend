@@ -50,8 +50,8 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
         switch (status) {
             case DepositStatus.WaitingForWalletConfirmation:
                 return 'Waiting for wallet confirmation...';
-            case DepositStatus.ApprovingWETH:
-                return 'Approving WETH...';
+            case DepositStatus.ApprovingDepositToken:
+                return 'Approving Deposit Token...';
             case DepositStatus.DepositingLiquidity:
                 return 'Depositing liquidity...';
             case DepositStatus.Confirmed:
