@@ -66,7 +66,7 @@ export const useStore = create<Store>((set) => {
             name: 'USDT',
             tokenAddress: '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0',
             decimals: 6,
-            riftExchangeContractAddress: '0xa9B6eC059f312875de79705ac85c39B0Aa2fFc20',
+            riftExchangeContractAddress: '0xaa9Bf8833328D4128f8aD4Ed593B9eaB3BD98112',
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: 11155111,
             contractRpcURL: 'https://sepolia.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',

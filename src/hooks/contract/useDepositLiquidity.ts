@@ -7,8 +7,10 @@ import { useAccount } from 'wagmi';
 export enum DepositStatus {
     Idle = 'idle',
     WaitingForWalletConfirmation = 'waitingForWalletConfirmation',
-    ApprovingDepositToken = 'ApprovingDepositToken',
-    DepositingLiquidity = 'depositingLiquidity',
+    WaitingForDepositTokenApproval = 'ApprovingDepositToken',
+    ApprovalPending = 'approvalPending',
+    WaitingForDepositApproval = 'WaitingForDepositApproval',
+    DepositPending = 'depositPending',
     Confirmed = 'confirmed',
     Error = 'error',
 }
@@ -66,24 +68,29 @@ export function useDepositLiquidity() {
 
                 const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContractAddress);
 
+                console.log('allowance:', allowance.toString());
+                console.log('tokenDepositAmountInSmallestTokenUnits:', params.tokenDepositAmountInSmallestTokenUnits.toString());
                 if (BigNumber.from(allowance).lt(BigNumber.from(params.tokenDepositAmountInSmallestTokenUnits))) {
-                    setStatus(DepositStatus.ApprovingDepositToken);
+                    setStatus(DepositStatus.WaitingForDepositTokenApproval);
                     const approveTx = await tokenContract.approve(
                         params.riftExchangeContractAddress,
                         params.tokenDepositAmountInSmallestTokenUnits,
                     );
+
+                    setStatus(DepositStatus.ApprovalPending);
                     await approveTx.wait();
                 }
 
-                setStatus(DepositStatus.DepositingLiquidity);
+                setStatus(DepositStatus.WaitingForDepositApproval);
 
                 const depositTx = await riftExchangeContractInstance.depositLiquidity(
-                    params.btcPayoutLockingScript,
+                    params.tokenDepositAmountInSmallestTokenUnits,
                     params.btcExchangeRate,
+                    params.btcPayoutLockingScript,
                     params.vaultIndexToOverwrite,
-                    params.tokenDepositAmountInSmallestTokenUnits.toString(),
                     params.vaultIndexWithSameExchangeRate,
                 );
+                setStatus(DepositStatus.DepositPending);
 
                 setTxHash(depositTx.hash);
                 await depositTx.wait();

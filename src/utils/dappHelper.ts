@@ -31,7 +31,7 @@ export function bufferTo18Decimals(amount, tokenDecimals) {
     return bigAmount;
 }
 
-export function unBufferTo18Decimals(amount, tokenDecimals) {
+export function unBufferFrom18Decimals(amount, tokenDecimals) {
     const bigAmount = BigNumber.from(amount);
     if (tokenDecimals < 18) {
         return bigAmount.div(BigNumber.from(10).pow(18 - tokenDecimals));

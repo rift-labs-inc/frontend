@@ -36,6 +36,7 @@ import {
     findVaultIndexWithSameExchangeRate,
     satsToBtc,
     calculateFillPercentage,
+    unBufferFrom18Decimals,
 } from '../../utils/dappHelper';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
@@ -48,6 +49,7 @@ import { ChevronLeftIcon } from '@chakra-ui/icons';
 import { useWithdrawLiquidity, WithdrawStatus } from '../../hooks/contract/useWithdrawLiquidity';
 import WithdrawStatusModal from './WithdrawStatusModal';
 import { getLiquidityProvider } from '../../utils/contractReadFunctions';
+import { formatUnits, parseUnits } from 'ethers/lib/utils';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -197,19 +199,14 @@ export const ManageVaults = ({}) => {
 
     return selectedVaultToManage ? (
         <Flex
-            // w='50%'
             h='101%'
-            mt='-3px'
+            w='100%'
+            mt='5px'
             px='30px'
-            py='28px'
+            py='30px'
             flexDir={'column'}
-            bg='#1C1C1C'
             userSelect={'none'}
             fontSize={'12px'}
-            borderTop={'3px solid'}
-            borderLeft={'3px solid'}
-            borderBottom={'3px solid'}
-            borderColor={colors.borderGray}
             borderRadius={'20px'}
             fontFamily={FONT_FAMILIES.NOSTROMO}
             color={'#c3c3c3'}
@@ -487,7 +484,7 @@ export const ManageVaults = ({}) => {
         </Flex>
     ) : (
         <Flex
-            w='50%'
+            w={'100%'}
             h='100%'
             px='30px'
             py='28px'
@@ -546,6 +543,20 @@ export const ManageVaults = ({}) => {
                 {vaultsToDisplay && vaultsToDisplay.length > 0 ? (
                     vaultsToDisplay.map((vault: DepositVault, index: number) => {
                         const fillPercentage = calculateFillPercentage(vault);
+                        console.log('vault exchange rate:', BigNumber.from(vault.btcExchangeRate).toString());
+                        console.log('vault decimals:', vault.depositAsset.decimals);
+                        console.log('initial balance:', BigNumber.from(vault.initialBalance).toString());
+                        console.log(
+                            'unbuffered initial balance:',
+                            BigNumber.from(unBufferFrom18Decimals(vault.initialBalance, vault.depositAsset.decimals)).toString(),
+                        );
+                        console.log(
+                            'formatted unbuffered initial balance:',
+                            formatUnits(
+                                unBufferFrom18Decimals(vault.initialBalance, vault.depositAsset.decimals),
+                                vault.depositAsset.decimals,
+                            ),
+                        );
 
                         return (
                             <Flex
@@ -569,16 +580,19 @@ export const ManageVaults = ({}) => {
                                     #{vault.index.toString()}
                                 </Text>
                                 <Text width='12%' fontWeight='bold'>
-                                    {weiToEth(BigNumber.from(vault.initialBalance)).toString()}
+                                    {formatUnits(
+                                        unBufferFrom18Decimals(vault.initialBalance, vault.depositAsset.decimals),
+                                        vault.depositAsset.decimals,
+                                    )}
                                 </Text>
                                 <Text width='14%' ml='-8px' mr='9px'>
                                     <ETHSVG />
                                 </Text>
                                 <Text width='36%'>
                                     {vault.btcExchangeRate &&
-                                        `1 BTC ≈ ${(1 / satsToBtc(BigNumber.from(vault.btcExchangeRate).toNumber())).toFixed(
-                                            8,
-                                        )}` + vault.depositAsset.name}
+                                        `1 BTC ≈ ${formatUnits(vault.btcExchangeRate, vault.depositAsset.decimals)}` +
+                                            ` ` +
+                                            vault.depositAsset.name}
                                 </Text>
                                 <Text
                                     color={Number(fillPercentage) > 0 ? colors.greenOutline : colors.textGray}

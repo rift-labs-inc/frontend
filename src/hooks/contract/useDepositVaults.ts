@@ -29,13 +29,16 @@ const EIGHT_HOURS_IN_SECONDS = 8 * 60 * 60; // 8 hours
 
 export function useDepositVaults(): UseDepositVaultsResult {
     const { address, isConnected } = useAccount();
-    const allDepositVaults = useStore((state) => state.allDepositVaults);
-    const setAllDepositVaults = useStore((state) => state.setAllDepositVaults);
-    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
-    const setMyActiveDepositVaults = useStore((state) => state.setMyActiveDepositVaults);
-    const setMyCompletedDepositVaults = useStore((state) => state.setMyCompletedDepositVaults);
-    const updateTotalAvailableLiquidity = useStore((state) => state.updateTotalAvailableLiquidity);
-    const setTotalExpiredReservations = useStore((state) => state.setTotalExpiredReservations);
+    const {
+        allDepositVaults,
+        setAllDepositVaults,
+        ethersRpcProvider,
+        setMyActiveDepositVaults,
+        setMyCompletedDepositVaults,
+        updateTotalAvailableLiquidity,
+        setTotalExpiredReservations,
+        selectedAsset,
+    } = useStore();
     const [userFetchedDepositVaults, setUserFetchedDepositVaults] = useState<{
         active: DepositVault[];
         completed: DepositVault[];
@@ -45,7 +48,6 @@ export function useDepositVaults(): UseDepositVaultsResult {
     });
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
-    const selectedAsset = useStore((state) => state.selectedAsset);
 
     const {
         allSwapReservations: allFetchedSwapReservations,
@@ -109,10 +111,12 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
             return updatedVaults;
         },
-        [useStore.getState().validAssets[selectedAsset.name], updateTotalAvailableLiquidity],
+        [updateTotalAvailableLiquidity, setTotalExpiredReservations, selectedAsset.name],
     );
 
     const fetchAllDepositVaults = useCallback(async () => {
+        if (!ethersRpcProvider || !selectedAsset.riftExchangeContractAddress) return;
+
         try {
             const depositVaultsLength = await getDepositVaultsLength(
                 ethersRpcProvider,
@@ -145,7 +149,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
     ]);
 
     const fetchUserDepositVaults = useCallback(async () => {
-        if (!isConnected || !address || !ethersRpcProvider) {
+        if (!isConnected || !address || !ethersRpcProvider || !selectedAsset.riftExchangeContractAddress) {
             setUserFetchedDepositVaults({ active: [], completed: [] });
             setMyActiveDepositVaults([]);
             setMyCompletedDepositVaults([]);
@@ -196,29 +200,34 @@ export function useDepositVaults(): UseDepositVaultsResult {
     ]);
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchData = async () => {
-            setLoading(true);
-            setError(null);
+            if (isMounted) setLoading(true);
+            if (isMounted) setError(null);
 
             await Promise.all([fetchAllDepositVaults(), fetchUserDepositVaults()]);
 
-            setLoading(false);
+            if (isMounted) setLoading(false);
         };
 
         if (!swapReservationsLoading) {
             fetchData();
         }
+
+        return () => {
+            isMounted = false;
+        };
     }, [fetchAllDepositVaults, fetchUserDepositVaults, swapReservationsLoading]);
-
-    const refreshUserDepositData = useCallback(() => {
-        fetchUserDepositVaults();
-    }, [fetchUserDepositVaults]);
-
     useEffect(() => {
         if (swapReservationsError) {
             setError(swapReservationsError);
         }
     }, [swapReservationsError]);
+
+    const refreshUserDepositData = useCallback(() => {
+        fetchUserDepositVaults();
+    }, [fetchUserDepositVaults]);
 
     return {
         allFetchedDepositVaults: Array.isArray(allDepositVaults) ? allDepositVaults : [],
