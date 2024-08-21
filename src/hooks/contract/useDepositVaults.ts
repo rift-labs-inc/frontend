@@ -27,16 +27,14 @@ type UseDepositVaultsResult = {
 
 const EIGHT_HOURS_IN_SECONDS = 8 * 60 * 60; // 8 hours
 
-export function useDepositVaults(
-    ethersProvider: ethers.providers.Provider,
-    riftExchangeContractAddress: string,
-): UseDepositVaultsResult {
+export function useDepositVaults(): UseDepositVaultsResult {
     const { address, isConnected } = useAccount();
     const allDepositVaults = useStore((state) => state.allDepositVaults);
     const setAllDepositVaults = useStore((state) => state.setAllDepositVaults);
+    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const setMyActiveDepositVaults = useStore((state) => state.setMyActiveDepositVaults);
     const setMyCompletedDepositVaults = useStore((state) => state.setMyCompletedDepositVaults);
-    const setTotalAvailableLiquidity = useStore((state) => state.setTotalAvailableLiquidity);
+    const updateTotalAvailableLiquidity = useStore((state) => state.updateTotalAvailableLiquidity);
     const setTotalExpiredReservations = useStore((state) => state.setTotalExpiredReservations);
     const [userDepositVaults, setUserDepositVaults] = useState<{ active: DepositVault[]; completed: DepositVault[] }>({
         active: [],
@@ -44,12 +42,9 @@ export function useDepositVaults(
     });
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
+    const selectedAsset = useStore((state) => state.selectedAsset);
 
-    const {
-        allSwapReservations,
-        loading: swapReservationsLoading,
-        error: swapReservationsError,
-    } = useSwapReservations(ethersProvider, riftExchangeContractAddress);
+    const { allSwapReservations, loading: swapReservationsLoading, error: swapReservationsError } = useSwapReservations();
 
     const calculateTrueUnreservedLiquidity = useCallback(
         (depositVaults: DepositVault[], swapReservations: SwapReservation[]): DepositVault[] => {
@@ -103,28 +98,28 @@ export function useDepositVaults(
             console.log('Total Available Liquidity:', totalAvailableLiquidity.toString());
 
             // Update the store with the new total available liquidity
-            setTotalAvailableLiquidity(totalAvailableLiquidity);
+            updateTotalAvailableLiquidity(selectedAsset.name, totalAvailableLiquidity);
 
             return updatedVaults;
         },
-        [setTotalAvailableLiquidity], // Add setTotalAvailableLiquidity to the dependency array
+        [useStore.getState().validAssets[selectedAsset.name], updateTotalAvailableLiquidity],
     );
 
     const fetchAllDepositVaults = useCallback(async () => {
         try {
             const depositVaultsLength = await getDepositVaultsLength(
-                ethersProvider,
+                ethersRpcProvider,
                 riftExchangeABI.abi,
-                riftExchangeContractAddress,
+                selectedAsset.riftExchangeContractAddress,
             );
 
             const bytecode = depositVaultAggregatorABI.bytecode;
             const abi = depositVaultAggregatorABI.abi;
             const depositVaults = await getDepositVaults(
-                ethersProvider,
+                ethersRpcProvider,
                 bytecode.object,
                 abi,
-                riftExchangeContractAddress,
+                selectedAsset.riftExchangeContractAddress,
                 Array.from({ length: depositVaultsLength }).map((_, i) => i),
             );
 
@@ -135,10 +130,16 @@ export function useDepositVaults(
             console.error('Error fetching all deposit vaults:', err);
             setError(err instanceof Error ? err : new Error('An unknown error occurred'));
         }
-    }, [ethersProvider, riftExchangeContractAddress, allSwapReservations, calculateTrueUnreservedLiquidity, setAllDepositVaults]);
+    }, [
+        ethersRpcProvider,
+        selectedAsset.riftExchangeContractAddress,
+        allSwapReservations,
+        calculateTrueUnreservedLiquidity,
+        setAllDepositVaults,
+    ]);
 
     const fetchUserDepositVaults = useCallback(async () => {
-        if (!isConnected || !address || !ethersProvider) {
+        if (!isConnected || !address || !ethersRpcProvider) {
             setUserDepositVaults({ active: [], completed: [] });
             setMyActiveDepositVaults([]);
             setMyCompletedDepositVaults([]);
@@ -146,11 +147,16 @@ export function useDepositVaults(
         }
 
         try {
-            const result = await getLiquidityProvider(ethersProvider, riftExchangeABI.abi, riftExchangeContractAddress, address);
+            const result = await getLiquidityProvider(
+                ethersRpcProvider,
+                riftExchangeABI.abi,
+                selectedAsset.riftExchangeContractAddress,
+                address,
+            );
             const vaultIndexes = result.depositVaultIndexes;
 
             const vaultPromises = vaultIndexes.map((index) =>
-                getDepositVaultByIndex(ethersProvider, riftExchangeABI.abi, riftExchangeContractAddress, index),
+                getDepositVaultByIndex(ethersRpcProvider, riftExchangeABI.abi, selectedAsset.riftExchangeContractAddress, index),
             );
 
             const myVaults = (await Promise.all(vaultPromises)).filter((vault): vault is DepositVault => vault !== null);
@@ -177,8 +183,8 @@ export function useDepositVaults(
     }, [
         isConnected,
         address,
-        ethersProvider,
-        riftExchangeContractAddress,
+        ethersRpcProvider,
+        selectedAsset.riftExchangeContractAddress,
         setMyActiveDepositVaults,
         setMyCompletedDepositVaults,
     ]);

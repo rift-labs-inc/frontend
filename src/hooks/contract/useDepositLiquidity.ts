@@ -35,7 +35,7 @@ export function useDepositLiquidity() {
     const [status, setStatus] = useState<DepositStatus>(DepositStatus.Idle);
     const [error, setError] = useState<string | null>(null);
     const [txHash, setTxHash] = useState<string | null>(null);
-    const selectedDepositAsset = useStore((state) => state.selectedDepositAsset);
+    const selectedAsset = useStore((state) => state.selectedAsset);
 
     const resetDepositState = useCallback(() => {
         if (isClient) {
@@ -54,7 +54,7 @@ export function useDepositLiquidity() {
             setTxHash(null);
 
             try {
-                const tokenContract = new ethers.Contract(params.tokenAddress, selectedDepositAsset.abi, params.signer);
+                const tokenContract = new ethers.Contract(params.tokenAddress, selectedAsset.riftExchangeAbi, params.signer);
                 const riftExchangeContractInstance = new ethers.Contract(
                     params.riftExchangeContract,
                     params.riftExchangeAbi,

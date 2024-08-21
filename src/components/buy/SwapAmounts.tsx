@@ -34,9 +34,9 @@ export const SwapAmounts = ({}) => {
     const tokenOutputSwapAmount = useStore((state) => state.tokenOutputSwapAmount);
     const setTokenOutputSwapAmount = useStore((state) => state.setTokenOutputSwapAmount);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
-    const ethPriceUSD = useStore((state) => state.ethPriceUSD);
-    const btcToEthExchangeRate = useStore((state) => state.btcToEthExchangeRate);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
+    const selectedAsset = useStore((state) => state.selectedAsset);
+
     const handleNavigation = (route: string) => {
         router.push(route);
     };
@@ -101,7 +101,9 @@ export const SwapAmounts = ({}) => {
                     fontWeight={'normal'}
                     fontFamily={'Aux'}>
                     ≈ $
-                    {(parseFloat(tokenOutputSwapAmount) * ethPriceUSD).toLocaleString(undefined, {
+                    {(
+                        parseFloat(tokenOutputSwapAmount) * useStore.getState().validAssets[selectedAsset.name].priceUSD
+                    ).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                     })}{' '}

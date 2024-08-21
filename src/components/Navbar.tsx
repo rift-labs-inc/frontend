@@ -10,7 +10,7 @@ import { useStore } from '../store';
 import { weiToEth } from '../utils/dappHelper';
 import { BigNumber } from 'ethers';
 import { useEffect, useState } from 'react';
-import { DepositAsset } from '../types';
+import { ValidAsset } from '../types';
 
 export const Navbar = ({}) => {
     const { height, width } = useWindowSize();
@@ -21,11 +21,17 @@ export const Navbar = ({}) => {
     const allDepositVaults = useStore((state) => state.allDepositVaults);
     const myActiveDepositVaults = useStore((state) => state.myActiveDepositVaults);
     const myCompletedDepositVaults = useStore((state) => state.myCompletedDepositVaults);
-    const totalAvailableLiquidity = useStore((state) => state.totalAvailableLiquidity);
     const setTotalExpiredReservations = useStore((state) => state.setTotalExpiredReservations);
     const totalExpiredReservations = useStore((state) => state.totalExpiredReservations);
     const [showDeveloperMode, setShowDeveloperMode] = useState(false);
     const [isLocalhost, setIsLocalhost] = useState(false);
+    const selectedAsset = useStore((state) => state.selectedAsset);
+
+    const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
+
+    useEffect(() => {
+        setAvailableLiquidity(useStore.getState().validAssets[selectedAsset.name]?.totalAvailableLiquidity ?? BigNumber.from(0));
+    }, [selectedAsset]);
 
     useEffect(() => {
         const hostname = window.location.hostname;
@@ -113,7 +119,7 @@ export const Navbar = ({}) => {
                 {/* {navItem('Lending', '/lending')} */}
                 {/* {navItem('OTC', '/otc')} */}
                 {navItem('Sell', '/sell')}
-                {navItem('Activity', '/activity')}
+                {/* {navItem('Activity', '/activity')} */}
                 {navItem('About', '/about')}
                 <Spacer />
                 {/* TODO: Remove below: */}
@@ -129,7 +135,7 @@ export const Navbar = ({}) => {
                     {isLocalhost && (
                         <Button
                             position={'absolute'}
-                            top={900}
+                            top={0}
                             _hover={{ background: 'rgba(150, 150, 150, 0.2)' }}
                             color={colors.textGray}
                             bg={colors.offBlack}
@@ -143,8 +149,8 @@ export const Navbar = ({}) => {
                         <>
                             <Text my='10px'>Current Rift Contracts:</Text>
                             <VStack spacing={1} align='stretch' width='100%' maxWidth='600px'>
-                                {Object.keys(useStore.getState().validDepositAssets).map((key) => {
-                                    const asset = useStore.getState().validDepositAssets[key];
+                                {Object.keys(useStore.getState().validAssets).map((key) => {
+                                    const asset = useStore.getState().validAssets[key];
                                     return (
                                         <Flex key={asset.riftExchangeContractAddress} justify='space-between'>
                                             <Text>{asset.name}:</Text>
@@ -158,7 +164,7 @@ export const Navbar = ({}) => {
                             <Flex position='absolute' top={height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
                                 <StatCard
                                     label='Total Available Liquidity'
-                                    value={`${weiToEth(totalAvailableLiquidity).toString()} ETH`}
+                                    value={`${weiToEth(availableLiquidity).toString()} ETH`}
                                 />
                                 <StatCard label='Total Deposits' value={allDepositVaults.length} />
                                 <StatCard label='My Active Deposits' value={myActiveDepositVaults.length} />

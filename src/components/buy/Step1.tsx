@@ -44,7 +44,7 @@ export const Step1 = ({}) => {
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const [ethPayoutAddress, setethPayoutAddress] = useState('');
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
-    const selectedSwappingAsset = useStore((state) => state.selectedSwappingAsset);
+    const selectedAsset = useStore((state) => state.selectedAsset);
 
     // eth payout address
     const handleETHPayoutAddressChange = (e) => {
@@ -86,7 +86,7 @@ export const Step1 = ({}) => {
             await reserveLiquidity({
                 signer,
                 riftExchangeAbi: riftExchangeABI.abi,
-                riftExchangeContract: selectedSwappingAsset.riftExchangeContractAddress,
+                riftExchangeContract: selectedAsset.riftExchangeContractAddress,
                 vaultIndexesToReserve: lowestFeeReservationParams.vaultIndexesToReserve,
                 amountsToReserve: lowestFeeReservationParams.amountsToReserve,
                 ethPayoutAddress,

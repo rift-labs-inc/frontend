@@ -14,13 +14,13 @@ interface AssetTagProps {
 export const AssetTag = ({ assetName }: AssetTagProps) => {
     const { width } = useWindowSize();
     const isMobileView = width < 600;
-    const selectedDepositAsset = useStore((state) => state.selectedDepositAsset);
+    const selectedAsset = useStore((state) => state.selectedAsset);
 
-    let asset = useStore.getState().validDepositAssets[assetName];
+    let asset = useStore.getState().validAssets[assetName];
 
-    if (assetName === 'selected' && selectedDepositAsset) {
+    if (assetName === 'selected' && selectedAsset) {
         // Use the selected deposit asset from the store
-        asset = selectedDepositAsset;
+        asset = selectedAsset;
     } else if (assetName === 'BTC') {
         // Default values for BTC
         asset = {
@@ -31,7 +31,7 @@ export const AssetTag = ({ assetName }: AssetTagProps) => {
             border_color: '#FFA04C',
             dark_bg_color: '#372412',
             light_text_color: '#7d572e',
-        } as any; // Casting as any to fit the DepositAsset structure
+        } as any; // Casting as any to fit the ValidAsset structure
     }
 
     if (!asset) {

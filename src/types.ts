@@ -38,17 +38,17 @@ export type DepositVault = {
     btcExchangeRate: BigNumberish;
     btcPayoutLockingScript: string;
     index?: number;
-    depositAsset: DepositAsset;
+    depositAsset: ValidAsset;
 };
 
-export type DepositAsset = {
+export type ValidAsset = {
     name: string;
     tokenAddress: string;
     decimals: number;
     riftExchangeContractAddress: string;
+    riftExchangeAbi: any;
     contractChainID: number;
     contractRpcURL: string;
-    abi: any[];
     icon_svg: any;
     bg_color: string;
     border_color: string;
@@ -57,6 +57,9 @@ export type DepositAsset = {
     exchangeRateInTokenPerBTC: number | null;
     exchangeRateInSmallestTokenUnitPerSat: BigNumber | null;
     priceUSD: number | null;
+    totalAvailableLiquidity?: BigNumber;
+    connectedUserBalanceRaw?: BigNumber;
+    connectedUserBalanceFormatted?: string;
 };
 
 export type LiqudityProvider = {

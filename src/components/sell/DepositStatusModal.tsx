@@ -32,7 +32,13 @@ interface DepositStatusModalProps {
     txHash: string | null;
 }
 
-const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen, onClose, status, error, txHash }) => {
+const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
+    isOpen = false,
+    onClose,
+    status = DepositStatus.WaitingForWalletConfirmation,
+    error = null,
+    txHash = null,
+}) => {
     // Add txHash here
     const isCompleted = status === DepositStatus.Confirmed;
     const isError = status === DepositStatus.Error;

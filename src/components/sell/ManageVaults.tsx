@@ -67,7 +67,7 @@ export const ManageVaults = ({}) => {
     const chainId = useChainId();
     const { data: walletClient } = useWalletClient();
     const { chains, error, switchChain } = useSwitchChain();
-    const ethersProvider = useStore((state) => state.ethersProvider);
+    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
     type TabType = 'Active' | 'Completed';
@@ -75,7 +75,7 @@ export const ManageVaults = ({}) => {
     const setMyActiveDepositVaults = useStore((state) => state.setMyActiveDepositVaults);
     const myCompletedDepositVaults = useStore((state) => state.myCompletedDepositVaults);
     const setMyCompletedDepositVaults = useStore((state) => state.setMyCompletedDepositVaults);
-    const selectedDepositAsset = useStore((state) => state.selectedDepositAsset);
+    const selectedAsset = useStore((state) => state.selectedAsset);
 
     const [activeTab, setActiveTab] = useState<TabType>('Active');
 
@@ -197,7 +197,7 @@ export const ManageVaults = ({}) => {
 
     return selectedVaultToManage ? (
         <Flex
-            w='50%'
+            // w='50%'
             h='101%'
             mt='-3px'
             px='30px'

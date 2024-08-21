@@ -1,11 +1,12 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers';
-import { DepositAsset, DepositVault } from '../types';
+import { ValidAsset, DepositVault } from '../types';
 import { useStore } from '../store';
 import { sepolia } from 'viem/chains';
 import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
 // export const contractChainID = 1; // Ethereum Mainnet
 export const etherScanBaseUrl = 'https://sepolia.etherscan.io';
+export const bitcoinDecimals = 8;
 
 // export const riftExchangeContractAddress = '0x4f9182DBcCf9C6518b1D67181F4E5a6d3D223C0E'; // deployed for USDT on Sepolia
 export const maxSwapOutputs = 200; // TODO: inspect this and find real value

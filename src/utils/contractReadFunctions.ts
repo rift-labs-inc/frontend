@@ -1,7 +1,7 @@
 import { ethers, BigNumberish, BigNumber } from 'ethers';
 import { JsonFragment } from '@ethersproject/abi';
 import { LiqudityProvider, ReservationState, SwapReservation } from '../types';
-import { DepositVault, DepositAsset } from '../types';
+import { DepositVault, ValidAsset } from '../types';
 import { useStore } from '../store';
 
 // CONTRACT FUNCTIONS
@@ -39,7 +39,7 @@ export async function getDepositVaultByIndex(
             unreservedBalance: BigNumber.from(depositVault[1]),
             btcExchangeRate: BigNumber.from(depositVault[2]),
             btcPayoutLockingScript: depositVault[3],
-            depositAsset: useStore.getState().validDepositAssets['USDT'], // TODO: get this from the contract you are reading from
+            depositAsset: useStore.getState().validAssets['USDT'], // TODO: get this from the contract you are reading from
             index: index,
         };
     } catch (error) {
@@ -67,6 +67,23 @@ export async function getLiquidityProvider(
 ): Promise<LiqudityProvider> {
     const contract = new ethers.Contract(riftExchangeContract, abi, provider);
     return await contract.getLiquidityProvider(liquidityProviderAddress);
+}
+
+export async function getTokenBalance(
+    provider: ethers.providers.Provider | ethers.Signer,
+    tokenAddress: string,
+    accountAddress: string,
+    abi: ethers.ContractInterface,
+): Promise<BigNumber> {
+    const contract = new ethers.Contract(tokenAddress, abi, provider);
+
+    try {
+        const balance: BigNumber = await contract.balanceOf(accountAddress);
+        return balance;
+    } catch (error) {
+        console.error(`Error fetching token balance for address ${accountAddress}:`, error);
+        throw error;
+    }
 }
 
 // MULTICALL

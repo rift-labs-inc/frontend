@@ -46,7 +46,7 @@ const Sell = () => {
     const showManageDepositVaultsScreen = useStore((state) => state.showManageDepositVaultsScreen);
     const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
 
-    const ethersProvider = useStore((state) => state.ethersProvider);
+    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const { openConnectModal } = useConnectModal();
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
@@ -109,15 +109,17 @@ const Sell = () => {
                         />
                     </Flex>
                     <Flex
-                        w='1300px'
-                        bg={colors.offBlack}
+                        w='800px'
                         h='650px'
+                        align={'center'}
+                        justify={'center'}
+                        bg={colors.offBlack}
                         borderRadius={'20px'}
                         mt='14px'
                         border='3px solid'
                         borderColor={colors.borderGray}>
                         {/* Liquidity Distribution Chart */}
-                        <Flex w='50%' h='100%' flexDir='column' p='20px'>
+                        {/* <Flex w='50%' h='100%' flexDir='column' p='20px'>
                             <Text
                                 fontFamily={FONT_FAMILIES.AUX_MONO}
                                 fontWeight={'normal'}
@@ -138,7 +140,7 @@ const Sell = () => {
                             <Flex flex={1} w='100%'>
                                 <ExchangeRateChart />
                             </Flex>
-                        </Flex>
+                        </Flex> */}
                         {/* Deposit & Manage Vaults */}
                         {selectedButton === 'Create a Vault' ? <DepositUI /> : <ManageVaults />}
                     </Flex>

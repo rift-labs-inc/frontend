@@ -35,101 +35,120 @@ export const SwapUI = ({}) => {
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const tokenOutputSwapAmount = useStore((state) => state.tokenOutputSwapAmount);
     const setTokenOutputSwapAmount = useStore((state) => state.setTokenOutputSwapAmount);
-    const totalAvailableLiquidity = useStore((state) => state.totalAvailableLiquidity);
     const allDepositVaults = useStore((state) => state.allDepositVaults);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
-    const ethPriceUSD = useStore((state) => state.ethPriceUSD);
-    const btcToEthExchangeRate = useStore((state) => state.btcToEthExchangeRate);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
     const userEthAddress = useStore((state) => state.userEthAddress);
     const [isLiquidityExceeded, setIsLiquidityExceeded] = useState(false);
-    const selectedDepositAsset = useStore((state) => state.selectedDepositAsset);
-    const setSelectedDepositAsset = useStore((state) => state.setSelectedDepositAsset);
+    const selectedAsset = useStore((state) => state.selectedAsset);
+    const setSelectedAsset = useStore((state) => state.setSelectedAsset);
+    const [tokenPriceUSD, setTokenPriceUSD] = useState(0);
+    const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
+    const bitcoinDecimals = useStore((state) => state.bitcoinDecimals);
+
+    // update token price and available liquidity
+    useEffect(() => {
+        setTokenPriceUSD(useStore.getState().validAssets[selectedAsset.name]?.priceUSD ?? 0);
+        setAvailableLiquidity(useStore.getState().validAssets[selectedAsset.name]?.totalAvailableLiquidity ?? BigNumber.from(0));
+    }, [selectedAsset]);
 
     const checkLiquidityExceeded = useCallback(
         (amount: string | null) => {
             try {
-                const ethOutputInWei = !amount ? BigNumber.from(0) : ethToWei(amount);
-                return BigNumber.from(ethOutputInWei).gt(totalAvailableLiquidity);
+                return BigNumber.from(tokenOutputSwapAmount).gt(availableLiquidity);
             } catch (error) {
                 console.error('Error in checkLiquidityExceeded:', error);
                 return false; // or handle the error as appropriate for your use case
             }
         },
-        [totalAvailableLiquidity],
+        [availableLiquidity],
     );
 
     // calculate ideal reservation
-    useEffect(() => {
-        const exceeded = checkLiquidityExceeded(tokenOutputSwapAmount);
-        setIsLiquidityExceeded(exceeded);
+    // useEffect(() => {
+    //     const exceeded = checkLiquidityExceeded(tokenOutputSwapAmount);
+    //     setIsLiquidityExceeded(exceeded);
 
-        if (tokenOutputSwapAmount && !exceeded) {
-            const ethOutputInWei = ethToWei(tokenOutputSwapAmount);
-            const reservationPart = calculateLowestFeeReservation(
-                allDepositVaults,
-                BigNumber.from(ethOutputInWei),
-                maxSwapOutputs,
-            );
+    //     if (tokenOutputSwapAmount && !exceeded) {
+    //         const ethOutputInWei = ethToWei(tokenOutputSwapAmount);
+    //         const reservationPart = calculateLowestFeeReservation(
+    //             allDepositVaults,
+    //             BigNumber.from(ethOutputInWei),
+    //             maxSwapOutputs,
+    //         );
 
-            const reserveLiquidityParams: ReserveLiquidityParams = {
-                inputSwapAmountInSats: Number(btcToSats(Number(btcInputSwapAmount))),
-                vaultIndexesToReserve: reservationPart.vaultIndexes,
-                amountsToReserve: reservationPart.amountsToReserve,
-                ethPayoutAddress: '', // this is set when user inputs their eth payout address
-                expiredSwapReservationIndexes: [], // TODO: calculated later
-            };
+    //         const reserveLiquidityParams: ReserveLiquidityParams = {
+    //             inputSwapAmountInSats: Number(btcToSats(Number(btcInputSwapAmount))),
+    //             vaultIndexesToReserve: reservationPart.vaultIndexes,
+    //             amountsToReserve: reservationPart.amountsToReserve,
+    //             ethPayoutAddress: '', // this is set when user inputs their eth payout address
+    //             expiredSwapReservationIndexes: [], // TODO: calculated later
+    //         };
 
-            console.log('RESERVATION PARAMs:', reserveLiquidityParams);
+    //         console.log('RESERVATION PARAMs:', reserveLiquidityParams);
 
-            setLowestFeeReservationParams(reserveLiquidityParams);
-        } else {
-            setLowestFeeReservationParams(null);
+    //         setLowestFeeReservationParams(reserveLiquidityParams);
+    //     } else {
+    //         setLowestFeeReservationParams(null);
+    //     }
+    // }, [tokenOutputSwapAmount, checkLiquidityExceeded, allDepositVaults, setLowestFeeReservationParams]);
+
+    // ----------------- BITCOIN INPUT ----------------- //
+    const handleBtcInputChange = (e) => {
+        console.log('e.target.value:', e.target.value);
+        const btcValue = validateBtcInput(e.target.value);
+        console.log('btcValue:', btcValue);
+
+        if (btcValue !== null) {
+            setBtcInputSwapAmount(btcValue);
+            let tokenOutputAmount =
+                btcValue && parseFloat(btcValue) > 0
+                    ? parseFloat(btcValue) * useStore.getState().validAssets[selectedAsset.name].exchangeRateInTokenPerBTC
+                    : 0;
+            // TODO: subtract premium we calculate from the eth value
+            // tokenOutputAmount -= calculatePremium;
+            setTokenOutputSwapAmount(formatOutput(tokenOutputAmount)); // Correctly format output
         }
-    }, [tokenOutputSwapAmount, checkLiquidityExceeded, allDepositVaults, setLowestFeeReservationParams]);
-
-    const validateSwapInput = (value) => {
-        if (value === '') return true;
-        const regex = /^\d*\.?\d*$/;
-        return regex.test(value);
     };
 
-    const formatDecimalInput = (value) => {
-        if (!value) return value;
+    const validateBtcInput = (value) => {
+        if (value === '') return '';
+        const regex = /^\d*\.?\d*$/;
+        if (!regex.test(value)) return null;
         const parts = value.split('.');
-        if (parts.length > 1 && parts[1].length > 7) {
-            return parts[0] + '.' + parts[1].slice(0, 7);
+        if (parts.length > 1 && parts[1].length > bitcoinDecimals) {
+            return parts[0] + '.' + parts[1].slice(0, bitcoinDecimals);
         }
         return value;
     };
 
     const formatOutput = (number) => {
         if (!number) return '';
-        const roundedNumber = Number(number).toFixed(7); // Use toFixed to temporarily round to 7 decimal places
+        const roundedNumber = Number(number).toFixed(selectedAsset.decimals);
         return roundedNumber.replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.$/, ''); // Remove trailing zeros and pointless decimal
     };
 
-    const handleBtcChange = (e) => {
-        const btcValue = formatDecimalInput(e.target.value);
-        if (validateSwapInput(btcValue)) {
-            setBtcInputSwapAmount(btcValue);
-            let ethValue = btcValue && parseFloat(btcValue) > 0 ? parseFloat(btcValue) * btcToEthExchangeRate : 0;
-            // subtract premium we calculate from the eth value
-            // ethValue -= calculatePremium;
-            setTokenOutputSwapAmount(formatOutput(ethValue)); // Correctly format output
-        }
-    };
+    const handleTokenOutputChange = (e) => {
+        const maxDecimals = useStore.getState().validAssets[selectedAsset.name].decimals;
+        const tokenValue = e.target.value;
 
-    const handleEthSwapChange = (e) => {
-        const ethValue = formatDecimalInput(e.target.value);
-        if (validateSwapInput(ethValue)) {
-            setTokenOutputSwapAmount(ethValue);
-            const btcValue = ethValue && parseFloat(ethValue) > 0 ? parseFloat(ethValue) / btcToEthExchangeRate : 0;
+        const validateTokenDepositChange = (value: string) => {
+            if (value === '') return true;
+            const regex = new RegExp(`^\\d*\\.?\\d{0,${maxDecimals}}$`);
+            return regex.test(value);
+        };
+
+        if (validateTokenDepositChange(tokenValue)) {
+            setTokenOutputSwapAmount(tokenValue);
+            const btcValue =
+                tokenValue && parseFloat(tokenValue) > 0
+                    ? parseFloat(tokenValue) / useStore.getState().validAssets[selectedAsset.name].exchangeRateInTokenPerBTC
+                    : 0;
             setBtcInputSwapAmount(formatOutput(btcValue));
 
             // Immediately check and log liquidity status
-            const exceeded = checkLiquidityExceeded(ethValue);
+            const exceeded = checkLiquidityExceeded(tokenValue);
             console.log('LIQUIDITY EXCEEDED (immediate)?:', exceeded);
         }
     };
@@ -171,7 +190,7 @@ export const SwapUI = ({}) => {
                                 </Text>
                                 <Input
                                     value={btcInputSwapAmount}
-                                    onChange={handleBtcChange}
+                                    onChange={handleBtcInputChange}
                                     fontFamily={'Aux'}
                                     border='none'
                                     mt='2px'
@@ -241,11 +260,11 @@ export const SwapUI = ({}) => {
                         <Flex
                             mt='5px'
                             px='10px'
-                            bg={selectedDepositAsset.dark_bg_color}
+                            bg={selectedAsset.dark_bg_color}
                             w='100%'
                             h='105px'
                             border='2px solid'
-                            borderColor={selectedDepositAsset.bg_color}
+                            borderColor={selectedAsset.bg_color}
                             borderRadius={'10px'}>
                             <Flex direction={'column'} py='10px' px='5px'>
                                 <Text
@@ -258,7 +277,7 @@ export const SwapUI = ({}) => {
                                 </Text>
                                 <Input
                                     value={tokenOutputSwapAmount}
-                                    onChange={handleEthSwapChange}
+                                    onChange={handleTokenOutputChange}
                                     fontFamily={'Aux'}
                                     border='none'
                                     mt='2px'
@@ -272,7 +291,7 @@ export const SwapUI = ({}) => {
                                     _selected={{ border: 'none', boxShadow: 'none' }}
                                     fontSize='40px'
                                     placeholder='0.0'
-                                    _placeholder={{ color: selectedDepositAsset.light_text_color }}
+                                    _placeholder={{ color: selectedAsset.light_text_color }}
                                 />
                                 <Text
                                     color={
@@ -289,12 +308,12 @@ export const SwapUI = ({}) => {
                                     fontWeight={'normal'}
                                     fontFamily={'Aux'}>
                                     {isLiquidityExceeded
-                                        ? `Exceeds Available Liquidity - ${Number(weiToEth(totalAvailableLiquidity)).toFixed(
-                                              4,
-                                          )} ETH Max`
-                                        : ethPriceUSD
+                                        ? `Exceeds available liquidity - ${Number(availableLiquidity).toFixed(
+                                              selectedAsset.decimals,
+                                          )} ${selectedAsset.name} max`
+                                        : tokenPriceUSD
                                         ? tokenOutputSwapAmount
-                                            ? (ethPriceUSD * parseFloat(tokenOutputSwapAmount)).toLocaleString('en-US', {
+                                            ? (tokenPriceUSD * parseFloat(tokenOutputSwapAmount)).toLocaleString('en-US', {
                                                   style: 'currency',
                                                   currency: 'USD',
                                               })
@@ -318,16 +337,14 @@ export const SwapUI = ({}) => {
                             fontWeight={'normal'}
                             fontFamily={'Aux'}>
                             1 BTC ≈{' '}
-                            {selectedDepositAsset.exchangeRateInTokenPerBTC
-                                ? BigNumber.from(
-                                      useStore.getState().validDepositAssets[selectedDepositAsset.name].exchangeRateInTokenPerBTC,
-                                  )
+                            {selectedAsset.exchangeRateInTokenPerBTC
+                                ? BigNumber.from(useStore.getState().validAssets[selectedAsset.name].exchangeRateInTokenPerBTC)
                                       .toNumber()
                                       .toLocaleString('en-US', {
                                           maximumFractionDigits: 4,
                                       })
                                 : 'N/A'}{' '}
-                            {selectedDepositAsset.name} {/* TODO: implemnt above where its based on the selected asset */}
+                            {selectedAsset.name} {/* TODO: implemnt above where its based on the selected asset */}
                             <Box
                                 as='span'
                                 color={colors.textGray}
