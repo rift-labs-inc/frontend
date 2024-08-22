@@ -85,6 +85,14 @@ export const DepositUI = ({}) => {
     const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const tokenPriceUSD = useStore.getState().validAssets[selectedAsset.name].priceUSD;
+    const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
+
+    useEffect(() => {
+        if (isWaitingForConnection && isConnected) {
+            setIsWaitingForConnection(false);
+            proceedWithDeposit();
+        }
+    }, [isConnected, isWaitingForConnection]);
 
     // calculate profit amount in USD
     useEffect(() => {
@@ -110,6 +118,10 @@ export const DepositUI = ({}) => {
                 : '$0.00';
         setTokenDepositAmountUSD(tokenDepositAmountUSD);
     }, [tokenDepositAmount]);
+
+    useEffect(() => {
+        console.log('IS CONNECTED:', isConnected);
+    }, [isConnected]);
 
     // calculate Bitcoin output amount in USD
     useEffect(() => {
@@ -295,8 +307,27 @@ export const DepositUI = ({}) => {
             </Flex>
         );
     };
-    // ---------- INITATE DEPOSIT ---------- //
+    // ---------- DEPOSIT ---------- //
+
     const initiateDeposit = async () => {
+        if (!isConnected) {
+            setIsWaitingForConnection(true);
+            openConnectModal();
+            return;
+        }
+
+        proceedWithDeposit();
+    };
+
+    const proceedWithDeposit = async () => {
+        console.log('Wallet connection detected!');
+
+        if (chainId !== selectedAsset.contractChainID) {
+            console.log('Switching network');
+            // TODO: Implement network switching logic here
+            throw new Error('Please switch to the correct network');
+        }
+
         if (window.ethereum) {
             // Reset the deposit state before starting a new deposit
             resetDepositState();
@@ -305,12 +336,19 @@ export const DepositUI = ({}) => {
             const vaultIndexToOverwrite = findVaultIndexToOverwrite();
             const vaultIndexWithSameExchangeRate = findVaultIndexWithSameExchangeRate();
             const tokenDecmials = useStore.getState().validAssets[selectedAsset.name].decimals;
+            console.log('tokenDecmials:', tokenDecmials);
             const tokenDepositAmountInSmallestTokenUnits = parseUnits(tokenDepositAmount, tokenDecmials);
+            console.log('tokenDepositAmountInSmallestTokenUnits:', tokenDepositAmountInSmallestTokenUnits.toString());
             const tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(
                 tokenDepositAmountInSmallestTokenUnits,
                 tokenDecmials,
             );
+            console.log(
+                'tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals:',
+                tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals.toString(),
+            );
             const bitcoinOutputAmountInSats = parseUnits(bitcoinOutputAmount, bitcoinDecimals);
+            console.log('bitcoinOutputAmountInSats:', bitcoinOutputAmountInSats.toString());
             const exchangeRate = tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(bitcoinOutputAmountInSats);
             console.log('exchangeRate:', exchangeRate.toString());
 
@@ -613,12 +651,7 @@ export const DepositUI = ({}) => {
                             transition={'0.2s'}
                             h='52px'
                             onClick={async () => {
-                                if (!isConnected) {
-                                    openConnectModal();
-                                } else if (chainId !== selectedAsset.contractChainID) {
-                                    console.log('Switching network');
-                                    // switchChain(contractChainID); TODO: switch chains
-                                } else if (tokenDepositAmount && bitcoinOutputAmount && payoutBTCAddress) {
+                                if (tokenDepositAmount && bitcoinOutputAmount && payoutBTCAddress) {
                                     initiateDeposit();
                                 }
                             }}

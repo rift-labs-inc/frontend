@@ -75,8 +75,6 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
         return `${etherScanBaseUrl}/tx/${txHash}`;
     };
 
-    console.log('status', status);
-
     return (
         <Modal isOpen={isOpen} onClose={onClose} isCentered closeOnOverlayClick={!isLoading} closeOnEsc={!isLoading}>
             <ModalOverlay />

@@ -23,7 +23,7 @@ type UseDepositVaultsResult = {
     allFetchedSwapReservations: SwapReservation[];
     loading: boolean;
     error: Error | null;
-    refreshUserDepositData: () => void;
+    refreshUserDepositData: () => Promise<void>;
 };
 const EIGHT_HOURS_IN_SECONDS = 8 * 60 * 60; // 8 hours
 
@@ -225,9 +225,14 @@ export function useDepositVaults(): UseDepositVaultsResult {
         }
     }, [swapReservationsError]);
 
-    const refreshUserDepositData = useCallback(() => {
-        fetchUserDepositVaults();
-    }, [fetchUserDepositVaults]);
+    const refreshUserDepositData = useCallback(async () => {
+        try {
+            await fetchUserDepositVaults();
+        } catch (error) {
+            console.error('Error refreshing user deposit data:', error);
+            throw error;
+        }
+    }, [fetchUserDepositVaults, userFetchedDepositVaults]);
 
     return {
         allFetchedDepositVaults: Array.isArray(allDepositVaults) ? allDepositVaults : [],

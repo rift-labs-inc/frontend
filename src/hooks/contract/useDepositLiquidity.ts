@@ -3,6 +3,7 @@ import { ethers, BigNumber, BigNumberish } from 'ethers';
 import { useStore } from '../../store';
 import { ERC20ABI } from '../../utils/constants';
 import { useAccount } from 'wagmi';
+import { useContractData } from '../../components/providers/ContractDataProvider';
 
 export enum DepositStatus {
     Idle = 'idle',
@@ -41,6 +42,7 @@ export function useDepositLiquidity() {
     const [txHash, setTxHash] = useState<string | null>(null);
     const selectedAsset = useStore((state) => state.selectedAsset);
     const userEthAddress = useStore((state) => state.userEthAddress);
+    const { refreshUserDepositData } = useContractData();
 
     const resetDepositState = useCallback(() => {
         if (isClient) {
@@ -95,6 +97,7 @@ export function useDepositLiquidity() {
                 setTxHash(depositTx.hash);
                 await depositTx.wait();
                 setStatus(DepositStatus.Confirmed);
+                refreshUserDepositData();
             } catch (err) {
                 console.error('Error in depositLiquidity:', err);
                 setError(err instanceof Error ? err.message : String(err));

@@ -14,6 +14,7 @@ interface ContractDataContextType {
     allSwapReservations: any;
     loading: boolean;
     error: any;
+    refreshUserDepositData: () => Promise<void>;
 }
 
 const ContractDataContext = createContext<ContractDataContextType | undefined>(undefined);
@@ -94,6 +95,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         allSwapReservations: allFetchedSwapReservations,
         loading,
         error,
+        refreshUserDepositData,
     };
 
     return <ContractDataContext.Provider value={value}>{children}</ContractDataContext.Provider>;
