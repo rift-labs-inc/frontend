@@ -100,7 +100,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
                 return {
                     ...vault,
-                    calculatedTrueUnreservedBalance: newCalculatedUnreservedBalance,
+                    trueUnreservedBalance: newCalculatedUnreservedBalance,
                 };
             });
 
@@ -166,10 +166,17 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const vaultIndexes = result.depositVaultIndexes;
 
             const vaultPromises = vaultIndexes.map((index) =>
-                getDepositVaultByIndex(ethersRpcProvider, riftExchangeABI.abi, selectedAsset.riftExchangeContractAddress, index),
+                getDepositVaultByIndex(
+                    ethersRpcProvider,
+                    riftExchangeABI.abi,
+                    selectedAsset.riftExchangeContractAddress,
+                    index,
+                ),
             );
 
-            const myVaults = (await Promise.all(vaultPromises)).filter((vault): vault is DepositVault => vault !== null);
+            const myVaults = (await Promise.all(vaultPromises)).filter(
+                (vault): vault is DepositVault => vault !== null,
+            );
 
             const active: DepositVault[] = [];
             const completed: DepositVault[] = [];

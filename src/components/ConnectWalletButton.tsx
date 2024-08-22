@@ -14,11 +14,21 @@ export const ConnectWalletButton = ({}) => {
     const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const { address, isConnected } = useAccount();
     const selectedAsset = useStore((state) => state.selectedAsset);
-    const localBalance = useStore((state) => state.validAssets[selectedAsset.name]?.connectedUserBalanceFormatted || '0');
+    const localBalance = useStore(
+        (state) => state.validAssets[selectedAsset.name]?.connectedUserBalanceFormatted || '0',
+    );
 
     return (
         <ConnectButton.Custom>
-            {({ account, chain, openAccountModal, openChainModal, openConnectModal, authenticationStatus, mounted }) => {
+            {({
+                account,
+                chain,
+                openAccountModal,
+                openChainModal,
+                openConnectModal,
+                authenticationStatus,
+                mounted,
+            }) => {
                 const ready = mounted && authenticationStatus !== 'loading';
                 const connected =
                     ready && account && chain && (!authenticationStatus || authenticationStatus === 'authenticated');
@@ -74,12 +84,18 @@ export const ConnectWalletButton = ({}) => {
                                 <div style={{ display: 'flex', gap: 8 }}>
                                     <Button
                                         border={`2.4px solid ${
-                                            selectedAsset.name === 'WETH' ? colors.purpleBorder : selectedAsset.border_color
+                                            selectedAsset.name === 'WETH'
+                                                ? colors.purpleBorder
+                                                : selectedAsset.border_color
                                         }`}
                                         h='37px'
                                         color={colors.offWhite}
                                         pt='2px'
-                                        bg={selectedAsset.name === 'WETH' ? colors.purpleBackground : selectedAsset.dark_bg_color}
+                                        bg={
+                                            selectedAsset.name === 'WETH'
+                                                ? colors.purpleBackground
+                                                : selectedAsset.dark_bg_color
+                                        }
                                         mr='2px'
                                         _hover={{ bg: selectedAsset.bg_color }}
                                         _active={{ bg: selectedAsset.bg_color }}
@@ -94,11 +110,21 @@ export const ConnectWalletButton = ({}) => {
                                                 {(() => {
                                                     switch (selectedAsset.name) {
                                                         case 'WETH':
-                                                            return <ETH_Icon width={'12'} height={'17'} viewBox='0 0 23 36' />;
+                                                            return (
+                                                                <ETH_Icon
+                                                                    width={'12'}
+                                                                    height={'17'}
+                                                                    viewBox='0 0 23 36'
+                                                                />
+                                                            );
                                                         case 'USDT':
                                                             return (
                                                                 <Flex mt='-2px' mr='2px'>
-                                                                    <USDT_Icon width='20' height='20' viewBox='0 0 80 80' />
+                                                                    <USDT_Icon
+                                                                        width='20'
+                                                                        height='20'
+                                                                        viewBox='0 0 80 80'
+                                                                    />
                                                                 </Flex>
                                                             );
                                                         default:

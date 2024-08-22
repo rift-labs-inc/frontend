@@ -9,9 +9,10 @@ import { colors } from '../../utils/colors';
 
 interface AssetTagProps {
     assetName: string;
+    w?: string | number;
 }
 
-export const AssetTag = ({ assetName }: AssetTagProps) => {
+export const AssetTag = ({ assetName, w }: AssetTagProps) => {
     const { width } = useWindowSize();
     const isMobileView = width < 600;
     const selectedAsset = useStore((state) => state.selectedAsset);
@@ -19,19 +20,17 @@ export const AssetTag = ({ assetName }: AssetTagProps) => {
     let asset = useStore.getState().validAssets[assetName];
 
     if (assetName === 'selected' && selectedAsset) {
-        // Use the selected deposit asset from the store
         asset = selectedAsset;
     } else if (assetName === 'BTC') {
-        // Default values for BTC
         asset = {
             name: 'BTC',
 
-            icon_svg: BTC_Logo, // Use the imported BTC logo component
-            bg_color: '#c26920', // Default Bitcoin orange color
+            icon_svg: BTC_Logo,
+            bg_color: '#c26920',
             border_color: '#FFA04C',
             dark_bg_color: '#372412',
             light_text_color: '#7d572e',
-        } as any; // Casting as any to fit the ValidAsset structure
+        } as any;
     }
 
     if (!asset) {
@@ -46,16 +45,7 @@ export const AssetTag = ({ assetName }: AssetTagProps) => {
             <Flex w='36px' mr='-20px' zIndex={'10'}>
                 {React.createElement(icon_svg)}{' '}
             </Flex>
-            <Flex
-                w={assetName.length === 4 ? '100px' : assetName.length === 3 ? '87px' : '150px'}
-                h='32px'
-                pl='15px'
-                border='2px solid'
-                borderColor={border_color}
-                bg={bg_color}
-                borderRadius='9px'
-                align='center'
-                justify='center'>
+            <Flex w={assetName.length === 4 ? '100px' : assetName.length === 3 ? '87px' : '150px'} h='32px' pl='15px' border='2px solid' borderColor={border_color} bg={bg_color} borderRadius='9px' align='center' justify='center'>
                 <Text mt='0px' fontWeight={'bold'} color={colors.offWhite} fontFamily={FONT_FAMILIES.NOSTROMO} fontSize={'18px'}>
                     {asset.name}
                 </Text>

@@ -47,9 +47,7 @@ type Store = {
 
     // swap flow
     swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed';
-    setSwapFlowState: (
-        state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed',
-    ) => void;
+    setSwapFlowState: (state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed') => void;
     btcInputSwapAmount: string;
     setBtcInputSwapAmount: (amount: string) => void;
     tokenOutputSwapAmount: string;
