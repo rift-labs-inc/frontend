@@ -33,11 +33,7 @@ const Sell = () => {
     const handleNavigation = (route: string) => {
         router.push(route);
     };
-    const {
-        options: optionsButton,
-        selected: selectedButton,
-        setSelected: setSelectedButton,
-    } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
+    const { options: optionsButton, selected: selectedButton, setSelected: setSelectedButton } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
 
     const allDepositVaults = useStore((state) => state.allDepositVaults);
 
@@ -75,13 +71,7 @@ const Sell = () => {
     return (
         <>
             <OpenGraph title='Liquidity' />
-            <Flex
-                h='100vh'
-                width='100%'
-                direction='column'
-                backgroundImage={'/images/rift_background_low.webp'}
-                backgroundSize='cover'
-                backgroundPosition='center'>
+            <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
                 <Navbar />
                 <Flex direction={'column'} align='center' w='100%' h='100%' mt='105px'>
                     {/* LOGOS & TEXT */}
@@ -96,28 +86,15 @@ const Sell = () => {
                             letterSpacing={'2px'}
                             mt='-25px'>
                             <Text userSelect={'none'} fontSize='60px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
-                                Sell Ethereum
+                                Sell for Bitcoin
                             </Text>
                         </Flex>
                     </Flex>
                     {/* Horizontal Button Selector */}
                     <Flex mt={'14px'}>
-                        <HorizontalButtonSelector
-                            options={optionsButton}
-                            selectedItem={selectedButton}
-                            onSelectItem={handleButtonSelection}
-                        />
+                        <HorizontalButtonSelector options={optionsButton} selectedItem={selectedButton} onSelectItem={handleButtonSelection} />
                     </Flex>
-                    <Flex
-                        w='800px'
-                        h='650px'
-                        align={'center'}
-                        justify={'center'}
-                        bg={colors.offBlack}
-                        borderRadius={'20px'}
-                        mt='14px'
-                        border='3px solid'
-                        borderColor={colors.borderGray}>
+                    <Flex w='800px' h='650px' align={'center'} justify={'center'} bg={colors.offBlack} borderRadius={'20px'} mt='14px' border='3px solid' borderColor={colors.borderGray}>
                         {/* Liquidity Distribution Chart */}
                         {/* <Flex w='50%' h='100%' flexDir='column' p='20px'>
                             <Text
