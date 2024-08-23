@@ -36,7 +36,7 @@ export async function getDepositVaultByIndex(
 
         return {
             initialBalance: BigNumber.from(depositVault[0]),
-            unreservedBalance: BigNumber.from(depositVault[1]),
+            unreservedBalanceFromContract: BigNumber.from(depositVault[1]),
             btcExchangeRate: BigNumber.from(depositVault[2]),
             btcPayoutLockingScript: depositVault[3],
             depositAsset: useStore.getState().validAssets['USDT'], // TODO: get this from the contract you are reading from
@@ -115,14 +115,18 @@ export function decodeDepositVaults(data: string): DepositVault[] {
 
     // decode each element in the array
     const depositVaults: DepositVault[] = decodedArray.map((item: string) => {
-        const [initialBalance, unreservedBalance, btcExchangeRate, btcPayoutLockingScript] = abiCoder.decode(
-            ['uint256', 'uint192', 'uint64', 'bytes22'],
-            item,
-        );
+        const [
+            initialBalance,
+            unreservedBalanceFromContract,
+            withdrawnAmount,
+            btcExchangeRate,
+            btcPayoutLockingScript,
+        ] = abiCoder.decode(['uint256', 'uint256', 'uint256', 'uint64', 'bytes22'], item);
 
         return {
             initialBalance,
-            unreservedBalance,
+            unreservedBalanceFromContract,
+            withdrawnAmount,
             btcExchangeRate,
             btcPayoutLockingScript: ethers.utils.hexlify(btcPayoutLockingScript),
         };

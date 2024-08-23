@@ -33,8 +33,10 @@ export interface SwapReservation {
 
 export type DepositVault = {
     initialBalance: BigNumberish;
-    unreservedBalance: BigNumberish;
+    unreservedBalanceFromContract: BigNumberish;
     trueUnreservedBalance?: BigNumberish;
+    withdrawnAmount: BigNumberish;
+    reservedBalance?: BigNumberish;
     btcExchangeRate: BigNumberish;
     btcPayoutLockingScript: string;
     index?: number;
@@ -52,6 +54,7 @@ export type ValidAsset = {
     icon_svg: any;
     bg_color: string;
     border_color: string;
+    border_color_light: string;
     dark_bg_color: string;
     light_text_color: string;
     exchangeRateInTokenPerBTC: number | null;

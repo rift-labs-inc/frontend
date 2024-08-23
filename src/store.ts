@@ -30,10 +30,10 @@ type Store = {
     // contract data (deposit vaults, swap reservations)
     allDepositVaults: any;
     setAllDepositVaults: (allDepositVaults: DepositVault[]) => void;
-    myActiveDepositVaults: DepositVault[];
-    setMyActiveDepositVaults: (myActiveDepositVaults: DepositVault[]) => void;
-    myCompletedDepositVaults: DepositVault[];
-    setMyCompletedDepositVaults: (myCompletedDepositVaults: DepositVault[]) => void;
+    userActiveDepositVaults: DepositVault[];
+    setUserActiveDepositVaults: (userActiveDepositVaults: DepositVault[]) => void;
+    userCompletedDepositVaults: DepositVault[];
+    setUserCompletedDepositVaults: (userCompletedDepositVaults: DepositVault[]) => void;
     allSwapReservations: SwapReservation[];
     setAllSwapReservations: (reservations: SwapReservation[]) => void;
     totalExpiredReservations: number;
@@ -47,7 +47,9 @@ type Store = {
 
     // swap flow
     swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed';
-    setSwapFlowState: (state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed') => void;
+    setSwapFlowState: (
+        state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed',
+    ) => void;
     btcInputSwapAmount: string;
     setBtcInputSwapAmount: (amount: string) => void;
     tokenOutputSwapAmount: string;
@@ -64,13 +66,14 @@ export const useStore = create<Store>((set) => {
             name: 'USDT',
             tokenAddress: '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0',
             decimals: 6,
-            riftExchangeContractAddress: '0xaa9Bf8833328D4128f8aD4Ed593B9eaB3BD98112',
+            riftExchangeContractAddress: '0x3c9ef17623511ae85973fdedcd883fc2fbc1e1be',
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: 11155111,
             contractRpcURL: 'https://sepolia.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
             icon_svg: USDT_Icon,
             bg_color: '#125641',
             border_color: '#26A17B',
+            border_color_light: '#2DC495',
             dark_bg_color: '#08221A',
             light_text_color: '#327661',
             exchangeRateInTokenPerBTC: null,
@@ -91,6 +94,7 @@ export const useStore = create<Store>((set) => {
             icon_svg: ETH_Logo,
             bg_color: '#2E40B7',
             border_color: '#627EEA',
+            border_color_light: '#6E85F0',
             dark_bg_color: '#161A33',
             light_text_color: '#5b63a5',
             exchangeRateInTokenPerBTC: null,
@@ -167,10 +171,10 @@ export const useStore = create<Store>((set) => {
         // contract data (deposit vaults, swap reservations)
         allDepositVaults: {},
         setAllDepositVaults: (allDepositVaults) => set({ allDepositVaults }),
-        myActiveDepositVaults: [],
-        setMyActiveDepositVaults: (myActiveDepositVaults) => set({ myActiveDepositVaults }),
-        myCompletedDepositVaults: [],
-        setMyCompletedDepositVaults: (myCompletedDepositVaults) => set({ myCompletedDepositVaults }),
+        userActiveDepositVaults: [],
+        setUserActiveDepositVaults: (userActiveDepositVaults) => set({ userActiveDepositVaults }),
+        userCompletedDepositVaults: [],
+        setUserCompletedDepositVaults: (userCompletedDepositVaults) => set({ userCompletedDepositVaults }),
         allSwapReservations: [],
         setAllSwapReservations: (allSwapReservations) => set({ allSwapReservations }),
         totalExpiredReservations: 0,

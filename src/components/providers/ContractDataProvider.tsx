@@ -10,7 +10,8 @@ import { ERC20ABI } from '../../utils/constants';
 
 interface ContractDataContextType {
     allDepositVaults: any;
-    userDepositVaults: any;
+    userActiveDepositVaults: any;
+    userCompletedDepositVaults: any;
     allSwapReservations: any;
     loading: boolean;
     error: any;
@@ -26,7 +27,9 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const setUserEthAddress = useStore((state) => state.setUserEthAddress);
     const selectedAsset = useStore((state) => state.selectedAsset);
     const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
-    const updateExchangeRateInSmallestTokenUnitPerSat = useStore((state) => state.updateExchangeRateInSmallestTokenUnitPerSat);
+    const updateExchangeRateInSmallestTokenUnitPerSat = useStore(
+        (state) => state.updateExchangeRateInSmallestTokenUnitPerSat,
+    );
     const updateExchangeRateInTokenPerBTC = useStore((state) => state.updateExchangeRateInTokenPerBTC);
     const updatePriceUSD = useStore((state) => state.updatePriceUSD);
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
@@ -82,7 +85,8 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     // fetch deposit vaults
     const {
         allFetchedDepositVaults,
-        userFetchedDepositVaults,
+        userActiveDepositVaults,
+        userCompletedDepositVaults,
         allFetchedSwapReservations,
         loading,
         error,
@@ -91,7 +95,8 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
 
     const value = {
         allDepositVaults: allFetchedDepositVaults,
-        userDepositVaults: userFetchedDepositVaults,
+        userActiveDepositVaults: userActiveDepositVaults,
+        userCompletedDepositVaults: userCompletedDepositVaults,
         allSwapReservations: allFetchedSwapReservations,
         loading,
         error,

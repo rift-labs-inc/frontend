@@ -49,36 +49,29 @@ export function calculateBtcOutputAmountFromExchangeRate(
         depositAmountFromContract,
         depositAssetDecimals,
     );
+
     console.log(
-        'depositAmountInSmallestTokenUnitsBufferedTo18Decimals:',
-        depositAmountInSmallestTokenUnitsBufferedTo18Decimals.toString(),
+        'bruh, depositAmountInSmallestTokenUnitsBufferedTo18Decimals:',
+        BigNumber.from(depositAmountInSmallestTokenUnitsBufferedTo18Decimals).toString(),
     );
+    console.log('bruh, depositAmountFromContract:', BigNumber.from(depositAmountFromContract).toString());
+    console.log('bruh, depositAssetDecimals:', BigNumber.from(depositAssetDecimals).toString());
+    console.log('bruh, exchangeRateFromContract:', BigNumber.from(exchangeRateFromContract).toString());
 
     // [1] divide by exchange rate (which is already in smallest token units buffered to 18 decimals per sat)
     const outputAmountInSats = depositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(exchangeRateFromContract);
-    console.log('outputAmountInSats:', outputAmountInSats.toString());
 
     // [2] convert output amount from sats to btc
     const outputAmountInBtc = formatUnits(outputAmountInSats, bitcoinDecimals);
-    console.log('outputAmountInBtc:', outputAmountInBtc.toString());
 
     return String(outputAmountInBtc);
 }
 
 export function formatBtcExchangeRate(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat, depositAssetDecimals) {
-    console.log(
-        'exchangeRateInSmallestTokenUnitPerSat:',
-        BigNumber.from(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat).toString(),
-    );
-
     // [0] convert to smallest token amount per btc
     const exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc = parseUnits(
         BigNumber.from(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat).toString(),
         bitcoinDecimals,
-    );
-    console.log(
-        'exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc:',
-        BigNumber.from(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc).toString(),
     );
 
     // [1] unbuffer from 18 decimals
@@ -86,11 +79,9 @@ export function formatBtcExchangeRate(exchangeRateInSmallestTokenUnitBufferedTo1
         exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc,
         depositAssetDecimals,
     );
-    console.log('exchangeRateInSmallestTokenUnitPerBtc:', exchangeRateInSmallestTokenUnitPerBtc.toString());
 
     // [2] convert to btc per smallest token amount
     const exchangeRateInStandardUnitsPerBtc = formatUnits(exchangeRateInSmallestTokenUnitPerBtc, depositAssetDecimals);
-    console.log('exchangeRateInStandardUnitsPerBtc:', exchangeRateInStandardUnitsPerBtc);
 
     return exchangeRateInStandardUnitsPerBtc;
 }
@@ -228,8 +219,9 @@ export function convertToBitcoinLockingScript(address: string): string {
 }
 
 export function calculateFillPercentage(vault: DepositVault) {
+    return 80;
     const fillPercentageBigNumber = BigNumber.from(vault.initialBalance)
-        .sub(BigNumber.from(vault.unreservedBalance))
+        .sub(BigNumber.from(vault.unreservedBalanceFromContract))
         .div(BigNumber.from(vault.initialBalance))
         .mul(100);
 

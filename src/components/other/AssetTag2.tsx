@@ -11,7 +11,7 @@ interface AssetTag2Props {
 
 export const AssetTag2: React.FC<AssetTag2Props> = ({ assetName, width, height, viewBox }) => {
     const renderAssetSVG = () => {
-        switch (assetName.toUpperCase()) {
+        switch (assetName?.toUpperCase()) {
             case 'BTC':
                 return <BTC_Tag width={width} height={height} viewBox={viewBox} />;
             case 'USDT':

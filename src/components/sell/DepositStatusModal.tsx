@@ -101,7 +101,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
                 {(isCompleted || isError) && <ModalCloseButton />}
                 <ModalBody>
                     <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
-                        {isLoading && <GooSpinner size={100} color={colors.RiftBlue} loading={true} />}
+                        {isLoading && <GooSpinner size={100} color={colors.purpleBorder} loading={true} />}
                         <Spacer />
                         <Text
                             fontSize='12px'
@@ -162,7 +162,11 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
                                     <Flex mt='-4px ' mr='8px'>
                                         <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
                                     </Flex>
-                                    <Text fontSize='14px' color={colors.offerWhite} cursor={'pointer'} fontWeight={'normal'}>
+                                    <Text
+                                        fontSize='14px'
+                                        color={colors.offerWhite}
+                                        cursor={'pointer'}
+                                        fontWeight={'normal'}>
                                         View on Etherscan
                                     </Text>
                                 </Button>

@@ -1,10 +1,13 @@
 import { useState, useCallback } from 'react';
 import { ethers, BigNumberish } from 'ethers';
+import { useContractData } from '../../components/providers/ContractDataProvider';
 
 export enum WithdrawStatus {
     Idle = 'idle',
     WaitingForWalletConfirmation = 'waitingForWalletConfirmation',
+    InitiatingWithdrawal = 'initiatingWithdrawal',
     WithdrawingLiquidity = 'withdrawingLiquidity',
+    WithdrawalPending = 'withdrawalPending',
     Confirmed = 'confirmed',
     Error = 'error',
 }
@@ -23,6 +26,7 @@ export function useWithdrawLiquidity() {
     const [status, setStatus] = useState<WithdrawStatus>(WithdrawStatus.Idle);
     const [error, setError] = useState<string | null>(null);
     const [txHash, setTxHash] = useState<string | null>(null);
+    const { refreshUserDepositData } = useContractData();
 
     const resetWithdrawState = useCallback(() => {
         setStatus(WithdrawStatus.Idle);
@@ -42,6 +46,8 @@ export function useWithdrawLiquidity() {
             console.log('amountToWithdraw:', params.amountToWithdraw.toString());
             console.log('expiredReservationIndexes:', params.expiredReservationIndexes);
 
+            setStatus(WithdrawStatus.InitiatingWithdrawal);
+
             const riftExchangeContractInstance = new ethers.Contract(
                 params.riftExchangeContract,
                 params.riftExchangeAbi,
@@ -58,10 +64,13 @@ export function useWithdrawLiquidity() {
             );
 
             setTxHash(withdrawTx.hash);
+            setStatus(WithdrawStatus.WithdrawalPending);
+
             await withdrawTx.wait();
 
             console.log('Liquidity withdrawn successfully');
             setStatus(WithdrawStatus.Confirmed);
+            refreshUserDepositData();
         } catch (err) {
             console.error('Error in withdrawLiquidity:', err);
             setError(err instanceof Error ? err.message : String(err));

@@ -11,6 +11,7 @@ import { weiToEth } from '../utils/dappHelper';
 import { BigNumber } from 'ethers';
 import { useEffect, useState } from 'react';
 import { ValidAsset } from '../types';
+import { formatUnits } from 'ethers/lib/utils';
 
 export const Navbar = ({}) => {
     const { height, width } = useWindowSize();
@@ -19,8 +20,8 @@ export const Navbar = ({}) => {
     const fontSize = isMobileView ? '20px' : '20px';
     const allSwapReservations = useStore((state) => state.allSwapReservations);
     const allDepositVaults = useStore((state) => state.allDepositVaults);
-    const myActiveDepositVaults = useStore((state) => state.myActiveDepositVaults);
-    const myCompletedDepositVaults = useStore((state) => state.myCompletedDepositVaults);
+    const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
+    const userCompletedDepositVaults = useStore((state) => state.userCompletedDepositVaults);
     const setTotalExpiredReservations = useStore((state) => state.setTotalExpiredReservations);
     const totalExpiredReservations = useStore((state) => state.totalExpiredReservations);
     const [showDeveloperMode, setShowDeveloperMode] = useState(false);
@@ -30,7 +31,9 @@ export const Navbar = ({}) => {
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
 
     useEffect(() => {
-        setAvailableLiquidity(useStore.getState().validAssets[selectedAsset.name]?.totalAvailableLiquidity ?? BigNumber.from(0));
+        setAvailableLiquidity(
+            useStore.getState().validAssets[selectedAsset.name]?.totalAvailableLiquidity ?? BigNumber.from(0),
+        );
     }, [selectedAsset]);
 
     useEffect(() => {
@@ -161,14 +164,22 @@ export const Navbar = ({}) => {
                                 })}
                             </VStack>
 
-                            <Flex position='absolute' top={height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
+                            <Flex
+                                position='absolute'
+                                top={height - 140}
+                                gap={3}
+                                flexWrap='wrap'
+                                justifyContent='center'>
                                 <StatCard
                                     label='Total Available Liquidity'
-                                    value={`${weiToEth(availableLiquidity).toString()} ETH`}
+                                    value={`${formatUnits(availableLiquidity, selectedAsset.decimals)} ${
+                                        selectedAsset.name
+                                    }`}
                                 />
+
                                 <StatCard label='Total Deposits' value={allDepositVaults.length} />
-                                <StatCard label='My Active Deposits' value={myActiveDepositVaults.length} />
-                                <StatCard label='My Completed Deposits' value={myCompletedDepositVaults.length} />
+                                <StatCard label='My Active Deposits' value={userActiveDepositVaults.length} />
+                                <StatCard label='My Completed Deposits' value={userCompletedDepositVaults.length} />
                                 <StatCard label='Total Reservations' value={allSwapReservations.length} />
                                 <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />
                             </Flex>

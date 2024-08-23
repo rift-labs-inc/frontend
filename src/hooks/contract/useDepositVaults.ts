@@ -16,10 +16,8 @@ import { calculateFillPercentage } from '../../utils/dappHelper';
 
 type UseDepositVaultsResult = {
     allFetchedDepositVaults: DepositVault[];
-    userFetchedDepositVaults: {
-        active: DepositVault[];
-        completed: DepositVault[];
-    };
+    userActiveDepositVaults: DepositVault[];
+    userCompletedDepositVaults: DepositVault[];
     allFetchedSwapReservations: SwapReservation[];
     loading: boolean;
     error: Error | null;
@@ -33,19 +31,12 @@ export function useDepositVaults(): UseDepositVaultsResult {
         allDepositVaults,
         setAllDepositVaults,
         ethersRpcProvider,
-        setMyActiveDepositVaults,
-        setMyCompletedDepositVaults,
+        setUserActiveDepositVaults,
+        setUserCompletedDepositVaults,
         updateTotalAvailableLiquidity,
         setTotalExpiredReservations,
         selectedAsset,
     } = useStore();
-    const [userFetchedDepositVaults, setUserFetchedDepositVaults] = useState<{
-        active: DepositVault[];
-        completed: DepositVault[];
-    }>({
-        active: [],
-        completed: [],
-    });
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
 
@@ -85,11 +76,13 @@ export function useDepositVaults(): UseDepositVaultsResult {
             // Now update the deposit vaults with the additional balances
             const updatedVaults = depositVaults.map((vault, vaultIndex) => {
                 const additionalBalance = additionalBalances.get(vaultIndex) || BigNumber.from(0);
-                const newCalculatedUnreservedBalance = BigNumber.from(vault.unreservedBalance).add(additionalBalance);
+                const newCalculatedUnreservedBalance = BigNumber.from(vault.unreservedBalanceFromContract).add(
+                    additionalBalance,
+                );
 
                 if (!additionalBalance.isZero()) {
                     console.log(`Updating vault ${vaultIndex}:`, {
-                        originalUnreservedBalance: vault.unreservedBalance.toString(),
+                        originalUnreservedBalance: vault.unreservedBalanceFromContract.toString(),
                         additionalBalance: additionalBalance.toString(),
                         newCalculatedUnreservedBalance: newCalculatedUnreservedBalance.toString(),
                         btcExchangeRate: vault.btcExchangeRate.toString(),
@@ -100,7 +93,12 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
                 return {
                     ...vault,
-                    trueUnreservedBalance: newCalculatedUnreservedBalance,
+                    trueUnreservedBalance: newCalculatedUnreservedBalance || vault.unreservedBalanceFromContract,
+                    reservedBalance: BigNumber.from(vault.initialBalance)
+                        .sub(newCalculatedUnreservedBalance)
+                        .sub(vault.withdrawnAmount),
+                    depositAsset: selectedAsset,
+                    index: vaultIndex,
                 };
             });
 
@@ -114,10 +112,15 @@ export function useDepositVaults(): UseDepositVaultsResult {
         [updateTotalAvailableLiquidity, setTotalExpiredReservations, selectedAsset.name],
     );
 
-    const fetchAllDepositVaults = useCallback(async () => {
-        if (!ethersRpcProvider || !selectedAsset.riftExchangeContractAddress) return;
+    const fetchDepositVaultsData = useCallback(async () => {
+        if (!ethersRpcProvider || !selectedAsset.riftExchangeContractAddress) {
+            setUserActiveDepositVaults([]);
+            setUserCompletedDepositVaults([]);
+            return;
+        }
 
         try {
+            // [0] fetch all deposit vaults
             const depositVaultsLength = await getDepositVaultsLength(
                 ethersRpcProvider,
                 riftExchangeABI.abi,
@@ -134,10 +137,47 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 Array.from({ length: depositVaultsLength }).map((_, i) => i),
             );
 
+            console.log('All Deposit Vaults:', depositVaults);
+
             const updatedDepositVaults = calculateTrueUnreservedLiquidity(depositVaults, allFetchedSwapReservations);
+            console.log('Updated Deposit Vaults:', updatedDepositVaults);
             setAllDepositVaults(updatedDepositVaults);
+
+            // [1] fetch user-specific vaults (if connected)
+            if (isConnected && address) {
+                const result = await getLiquidityProvider(
+                    ethersRpcProvider,
+                    riftExchangeABI.abi,
+                    selectedAsset.riftExchangeContractAddress,
+                    address,
+                );
+
+                const vaultIndexes = result.depositVaultIndexes.map((index) => BigNumber.from(index).toNumber());
+
+                const userVaults = updatedDepositVaults.filter((_, index) =>
+                    vaultIndexes.includes(BigNumber.from(index).toNumber()),
+                );
+
+                const active: DepositVault[] = [];
+                const completed: DepositVault[] = [];
+
+                userVaults.forEach((vault) => {
+                    const fillPercentage = calculateFillPercentage(vault);
+                    if (fillPercentage < 100) {
+                        active.push(vault);
+                    } else {
+                        completed.push(vault);
+                    }
+                });
+
+                setUserActiveDepositVaults(active);
+                setUserCompletedDepositVaults(completed);
+            } else {
+                setUserActiveDepositVaults([]);
+                setUserCompletedDepositVaults([]);
+            }
         } catch (err) {
-            console.error('Error fetching all deposit vaults:', err);
+            console.error('Error fetching deposit vaults data:', err);
             setError(err instanceof Error ? err : new Error('An unknown error occurred'));
         }
     }, [
@@ -146,64 +186,10 @@ export function useDepositVaults(): UseDepositVaultsResult {
         allFetchedSwapReservations,
         calculateTrueUnreservedLiquidity,
         setAllDepositVaults,
-    ]);
-
-    const fetchUserDepositVaults = useCallback(async () => {
-        if (!isConnected || !address || !ethersRpcProvider || !selectedAsset.riftExchangeContractAddress) {
-            setUserFetchedDepositVaults({ active: [], completed: [] });
-            setMyActiveDepositVaults([]);
-            setMyCompletedDepositVaults([]);
-            return;
-        }
-
-        try {
-            const result = await getLiquidityProvider(
-                ethersRpcProvider,
-                riftExchangeABI.abi,
-                selectedAsset.riftExchangeContractAddress,
-                address,
-            );
-            const vaultIndexes = result.depositVaultIndexes;
-
-            const vaultPromises = vaultIndexes.map((index) =>
-                getDepositVaultByIndex(
-                    ethersRpcProvider,
-                    riftExchangeABI.abi,
-                    selectedAsset.riftExchangeContractAddress,
-                    index,
-                ),
-            );
-
-            const myVaults = (await Promise.all(vaultPromises)).filter(
-                (vault): vault is DepositVault => vault !== null,
-            );
-
-            const active: DepositVault[] = [];
-            const completed: DepositVault[] = [];
-
-            myVaults.forEach((vault) => {
-                const fillPercentage = calculateFillPercentage(vault);
-                if (fillPercentage < 100) {
-                    active.push(vault);
-                } else {
-                    completed.push(vault);
-                }
-            });
-
-            setUserFetchedDepositVaults({ active, completed });
-            setMyActiveDepositVaults(active);
-            setMyCompletedDepositVaults(completed);
-        } catch (err) {
-            console.error('Failed to fetch user deposit vaults:', err);
-            setError(new Error('Failed to fetch deposit vaults. Please try again.'));
-        }
-    }, [
         isConnected,
         address,
-        ethersRpcProvider,
-        selectedAsset.riftExchangeContractAddress,
-        setMyActiveDepositVaults,
-        setMyCompletedDepositVaults,
+        setUserActiveDepositVaults,
+        setUserCompletedDepositVaults,
     ]);
 
     useEffect(() => {
@@ -213,9 +199,15 @@ export function useDepositVaults(): UseDepositVaultsResult {
             if (isMounted) setLoading(true);
             if (isMounted) setError(null);
 
-            await Promise.all([fetchAllDepositVaults(), fetchUserDepositVaults()]);
-
-            if (isMounted) setLoading(false);
+            try {
+                // fetch all deposit vaults
+                await fetchDepositVaultsData();
+            } catch (err) {
+                console.error('Error fetching data:', err);
+                if (isMounted) setError(err instanceof Error ? err : new Error('An unknown error occurred'));
+            } finally {
+                if (isMounted) setLoading(false);
+            }
         };
 
         if (!swapReservationsLoading) {
@@ -225,7 +217,8 @@ export function useDepositVaults(): UseDepositVaultsResult {
         return () => {
             isMounted = false;
         };
-    }, [fetchAllDepositVaults, fetchUserDepositVaults, swapReservationsLoading]);
+    }, [fetchDepositVaultsData, swapReservationsLoading]);
+
     useEffect(() => {
         if (swapReservationsError) {
             setError(swapReservationsError);
@@ -234,16 +227,21 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
     const refreshUserDepositData = useCallback(async () => {
         try {
-            await fetchUserDepositVaults();
+            await fetchDepositVaultsData();
         } catch (error) {
             console.error('Error refreshing user deposit data:', error);
             throw error;
         }
-    }, [fetchUserDepositVaults, userFetchedDepositVaults]);
+    }, [fetchDepositVaultsData]);
 
     return {
         allFetchedDepositVaults: Array.isArray(allDepositVaults) ? allDepositVaults : [],
-        userFetchedDepositVaults,
+        userActiveDepositVaults: Array.isArray(useStore.getState().userActiveDepositVaults)
+            ? useStore.getState().userActiveDepositVaults
+            : [],
+        userCompletedDepositVaults: Array.isArray(useStore.getState().userCompletedDepositVaults)
+            ? useStore.getState().userCompletedDepositVaults
+            : [],
         allFetchedSwapReservations,
         loading: loading || swapReservationsLoading,
         error,

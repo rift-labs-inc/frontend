@@ -54,8 +54,9 @@ import WithdrawStatusModal from './WithdrawStatusModal';
 import { getLiquidityProvider } from '../../utils/contractReadFunctions';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { FaArrowAltCircleRight, FaArrowRight, FaRegArrowAltCircleRight } from 'react-icons/fa';
-import { bitcoin_bg_color, bitcoin_border_color, bitcoinDecimals } from '../../utils/constants';
+import { bitcoin_bg_color, bitcoin_border_color, bitcoin_dark_bg_color, bitcoinDecimals } from '../../utils/constants';
 import { AssetTag2 } from '../other/AssetTag2';
+import { VaultStatusBar } from './VaultStatusBar';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -79,10 +80,10 @@ export const ManageVaults = ({}) => {
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
     type TabType = 'Active' | 'Completed';
-    const myActiveDepositVaults = useStore((state) => state.myActiveDepositVaults);
-    const setMyActiveDepositVaults = useStore((state) => state.setMyActiveDepositVaults);
-    const myCompletedDepositVaults = useStore((state) => state.myCompletedDepositVaults);
-    const setMyCompletedDepositVaults = useStore((state) => state.setMyCompletedDepositVaults);
+    const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
+    const setUserActiveDepositVaults = useStore((state) => state.setUserActiveDepositVaults);
+    const userCompletedDepositVaults = useStore((state) => state.userCompletedDepositVaults);
+    const setUserCompletedDepositVaults = useStore((state) => state.setUserCompletedDepositVaults);
     const selectedAsset = useStore((state) => state.selectedAsset);
 
     const [activeTab, setActiveTab] = useState<TabType>('Active');
@@ -102,7 +103,7 @@ export const ManageVaults = ({}) => {
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
     const [withdrawAmount, setWithdrawAmount] = useState('');
     const vaultsToDisplay =
-        selectedButtonActiveVsCompleted === 'Active' ? myActiveDepositVaults : myCompletedDepositVaults;
+        selectedButtonActiveVsCompleted === 'Active' ? userActiveDepositVaults : userCompletedDepositVaults;
     const [refreshKey, setRefreshKey] = useState(0);
 
     const handleGoBack = () => {
@@ -135,7 +136,10 @@ export const ManageVaults = ({}) => {
 
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
-        const ethWithdrawAmountWei = ethers.utils.parseEther(withdrawAmount);
+        const withdrawAmountInTokenSmallestUnit = parseUnits(
+            withdrawAmount,
+            selectedVaultToManage.depositAsset.decimals,
+        );
 
         const globalVaultIndex = selectedVaultToManage.index;
 
@@ -149,10 +153,16 @@ export const ManageVaults = ({}) => {
             );
 
             // convert the depositVaultIndexes to strings for comparison
-            const stringIndexes = liquidityProviderData.depositVaultIndexes.map((index) => index.toString());
+            console.log('liquidityProviderData:', liquidityProviderData);
+            const stringIndexes = liquidityProviderData.depositVaultIndexes.map((index) =>
+                BigNumber.from(index).toNumber(),
+            );
+            console.log('stringIndexes:', stringIndexes);
 
             // find the local index of the globalVaultIndex in the depositVaultIndexes array
-            const localVaultIndex = stringIndexes.findIndex((index) => index === globalVaultIndex.toString());
+            const localVaultIndex = stringIndexes.findIndex(
+                (index) => BigNumber.from(index).toNumber() === globalVaultIndex,
+            );
 
             if (localVaultIndex === -1) {
                 throw new Error("Selected vault not found in user's deposit vaults");
@@ -166,13 +176,12 @@ export const ManageVaults = ({}) => {
                 riftExchangeContract: selectedVaultToManage.depositAsset.riftExchangeContractAddress,
                 globalVaultIndex,
                 localVaultIndex,
-                amountToWithdraw: ethWithdrawAmountWei,
+                amountToWithdraw: withdrawAmountInTokenSmallestUnit,
                 expiredReservationIndexes,
             });
 
-            console.log('Withdrawal successful');
             // TODO: refresh deposit vault data in ContractDataProvider somehow - await refreshUserDepositData();
-            const updatedVault = myActiveDepositVaults.find((vault) => vault.index === selectedVaultToManage.index);
+            const updatedVault = userActiveDepositVaults.find((vault) => vault.index === selectedVaultToManage.index);
             if (updatedVault) {
                 setSelectedVaultToManage(updatedVault);
             }
@@ -185,14 +194,12 @@ export const ManageVaults = ({}) => {
     // update selected vault with new data
     useEffect(() => {
         if (selectedVaultToManage) {
-            console.log('selectedVaultToManage:', BigNumber.from(selectedVaultToManage.unreservedBalance).toString());
-
-            const selectedVaultIndex = selectedVaultToManage.index.toString();
+            const selectedVaultIndex = selectedVaultToManage.index;
 
             // check both active and completed vaults
             const updatedVault =
-                myActiveDepositVaults.find((vault) => vault.index.toString() === selectedVaultIndex) ||
-                myCompletedDepositVaults.find((vault) => vault.index.toString() === selectedVaultIndex);
+                userActiveDepositVaults.find((vault) => vault.index === selectedVaultIndex) ||
+                userCompletedDepositVaults.find((vault) => vault.index === selectedVaultIndex);
 
             console.log('updatedVault:', updatedVault);
 
@@ -202,14 +209,14 @@ export const ManageVaults = ({}) => {
                 console.warn(`Vault with index ${selectedVaultIndex} not found in active or completed vaults.`);
             }
         }
-    }, [myActiveDepositVaults, myCompletedDepositVaults, selectedVaultToManage]);
+    }, [userActiveDepositVaults, userCompletedDepositVaults, selectedVaultToManage]);
 
     return selectedVaultToManage ? (
         <Flex
             h='101%'
             w='100%'
-            mt='5px'
-            px='30px'
+            mt='10px'
+            px='35px'
             py='30px'
             flexDir={'column'}
             userSelect={'none'}
@@ -219,14 +226,14 @@ export const ManageVaults = ({}) => {
             color={'#c3c3c3'}
             fontWeight={'normal'}
             gap={'0px'}>
-            <Flex w='100%' mt='-10px' ml='0px'>
+            <Flex w='100%' mt='-4px' ml='0px'>
                 <Button bg='none' w='12px' _hover={{ bg: colors.borderGrayLight }} onClick={() => handleGoBack()}>
                     <ChevronLeftIcon width={'40px'} height={'40px'} bg='none' color={colors.offWhite} />
                 </Button>
             </Flex>
-            <Flex direction='column' align='center' mt='-24px' mb='20px' w='100%'>
+            <Flex direction='column' align='center' mt='-26px' mb='20px' w='100%'>
                 <Text fontSize='22px' color={colors.offWhite} textAlign='center' mt='-12px' flex='1'>
-                    Manage Deposit Vault #{selectedVaultToManage.index.toString()}
+                    Manage Deposit Vault #{selectedVaultToManage.index}
                 </Text>
                 <Text
                     fontSize='12px'
@@ -240,7 +247,7 @@ export const ManageVaults = ({}) => {
             </Flex>
 
             {/* BITCOIN PAYOUT ADDRESS */}
-            <Flex w='100%' mt='0px'>
+            <Flex w='100%' mt='20px'>
                 <Flex w='100%' direction='column'>
                     <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
                         Bitcoin Payout Address
@@ -249,9 +256,9 @@ export const ManageVaults = ({}) => {
                         h='50px'
                         mt='6px'
                         w='100%'
-                        bg='#2E1C0C'
+                        bg={colors.offBlackLighter}
                         border={'3px solid'}
-                        borderColor={'#78491F'}
+                        borderColor={colors.borderGrayLight}
                         borderRadius={'14px'}
                         px='15px'
                         align={'center'}>
@@ -269,7 +276,7 @@ export const ManageVaults = ({}) => {
             </Flex>
 
             {/* SWAP INPUT & SWAP OUTPUT */}
-            <Flex w='100%' mt='30px'>
+            <Flex w='100%' mt='20px'>
                 <Flex w='47%' direction='column'>
                     <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
                         Input
@@ -346,8 +353,8 @@ export const ManageVaults = ({}) => {
                 </Flex>
             </Flex>
             {/* ORDER STATUS & REMAINING LIQUIDITY */}
-            <Flex w='100%' mt='30px'>
-                <Flex w='47%' direction='column'>
+            <Flex w='100%' mt='20px'>
+                {/* <Flex w='47%' direction='column'>
                     <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
                         Remaining
                     </Text>
@@ -382,72 +389,18 @@ export const ManageVaults = ({}) => {
                         <AssetTag2 assetName={selectedVaultToManage.depositAsset.name} width='84px' />
                     </Flex>
                 </Flex>
-                <Spacer />
+                <Spacer /> */}
 
-                <Flex w='47%' direction='column'>
+                <Flex w='100%' direction='column'>
                     <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
                         Status
                     </Text>
-                    <Flex
-                        h='50px'
-                        mt='6px'
-                        bg={
-                            Number(calculateFillPercentage(selectedVaultToManage)) == 100
-                                ? colors.greenBackground
-                                : colors.offBlack
-                        }
-                        border={'3px solid'}
-                        borderColor={
-                            Number(calculateFillPercentage(selectedVaultToManage)) == 100
-                                ? colors.greenOutline
-                                : colors.borderGray
-                        }
-                        borderRadius={'14px'}
-                        px='15px'
-                        align={'center'}>
-                        <Text
-                            w='90%'
-                            fontSize='16px'
-                            letterSpacing={'-1px'}
-                            fontFamily={FONT_FAMILIES.AUX_MONO}
-                            color={
-                                Number(calculateFillPercentage(selectedVaultToManage)) > 0
-                                    ? colors.greenOutline
-                                    : colors.textGray
-                            }>{`${calculateFillPercentage(selectedVaultToManage)}% FILLED`}</Text>
-                        <Flex
-                            ml='0px'
-                            width='100%'
-                            bg={
-                                Number(calculateFillPercentage(selectedVaultToManage)) > 0
-                                    ? Number(calculateFillPercentage(selectedVaultToManage)) == 100
-                                        ? colors.greenOutline
-                                        : colors.greenBackground
-                                    : colors.offBlackLighter2
-                            }
-                            borderRadius='10px'
-                            height='17px'
-                            border={`2px solid`}
-                            borderColor={
-                                Number(calculateFillPercentage(selectedVaultToManage)) > 0
-                                    ? colors.greenOutline
-                                    : colors.borderGrayLight
-                            }>
-                            <Flex
-                                bg={colors.greenOutline}
-                                width={`${calculateFillPercentage(selectedVaultToManage)}%`}
-                                height='101%'
-                                zIndex={1}
-                                ml='-0.4px'
-                                borderRadius='10px'
-                            />
-                        </Flex>
-                    </Flex>
+                    <VaultStatusBar selectedVault={selectedVaultToManage} />
                 </Flex>
             </Flex>
 
             {/* EXCHANGE RATE */}
-            <Flex w='100%' mt='30px'>
+            <Flex w='100%' mt='20px'>
                 <Flex w='100%' direction='column'>
                     <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
                         Exchange Rate{' '}
@@ -456,24 +409,24 @@ export const ManageVaults = ({}) => {
                         h='50px'
                         mt='6px'
                         w='100%'
-                        bg={colors.offBlack}
+                        bg={colors.offBlackLighter}
                         border={'3px solid'}
-                        borderColor={colors.borderGray}
+                        borderColor={colors.borderGrayLight}
                         borderRadius={'14px'}
                         px='15px'
+                        fontSize={'18px'}
                         align={'center'}>
                         <Flex
-                            mt='1px'
-                            fontSize='16px'
+                            mt='2px'
                             color={colors.offWhite} // Change the default color to gray
                             letterSpacing='-1px'
                             fontFamily={FONT_FAMILIES.AUX_MONO}>
                             <Text color={bitcoin_border_color}>1 BTC</Text>
-                            <Text mx='12px' color={colors.textGray}>
+                            <Text mx='12px' color={bitcoin_border_color}>
                                 {' '}
                                 ={' '}
                             </Text>
-                            <Text color={colors.offWhite}>
+                            <Text color={selectedVaultToManage.depositAsset.border_color_light}>
                                 {' '}
                                 {selectedVaultToManage.btcExchangeRate &&
                                     Number(
@@ -486,7 +439,7 @@ export const ManageVaults = ({}) => {
                                         maximumFractionDigits: 2,
                                     })}{' '}
                             </Text>
-                            <Text ml='12px' color={selectedVaultToManage.depositAsset.border_color}>
+                            <Text ml='12px' color={selectedVaultToManage.depositAsset.border_color_light}>
                                 {' '}
                                 {selectedVaultToManage.depositAsset.name}
                             </Text>
@@ -498,16 +451,17 @@ export const ManageVaults = ({}) => {
                         <Spacer />
                         <Button
                             color={colors.offWhite}
-                            bg={colors.purpleBackground}
+                            bg={colors.purpleButtonBG}
                             borderRadius='10px'
                             border={`3px solid ${colors.purpleBorder}`}
                             px='14px'
                             _hover={{ bg: colors.purpleBorderDark }}
-                            mr='-16px'
+                            mr='-19px'
+                            mt='1px'
                             py={'16px'}
-                            h='110%'
-                            w='150px'>
-                            Edit Rate
+                            h='114%'
+                            w='280px'>
+                            Edit Exchange Rate
                         </Button>
                     </Flex>
                 </Flex>
@@ -515,7 +469,7 @@ export const ManageVaults = ({}) => {
 
             {/* WITHDRAW LIQUIDITY BUTTON */}
             <>
-                <Flex mt='35px' justify='center'>
+                <Flex mt='38px' justify='center'>
                     <Button
                         h='45px'
                         onClick={handleOpenWithdrawModal}
@@ -541,6 +495,7 @@ export const ManageVaults = ({}) => {
                     setWithdrawAmount={setWithdrawAmount}
                     handleWithdraw={handleWithdraw}
                     clearError={resetWithdrawState}
+                    selectedVaultToManage={selectedVaultToManage}
                 />
             </>
         </Flex>
@@ -585,9 +540,10 @@ export const ManageVaults = ({}) => {
                     fontWeight='bold'
                     color={colors.offWhite}>
                     {/* <Text width='6%'>ID</Text> */}
-                    <Text width='30%'>ORDER FILLED</Text>
+                    <Text width='20%'>INDEX</Text>
+                    <Text width='30%'>SWAP INPUT</Text>
+                    <Text width='39%'>SWAP OUTPUT</Text>
                     <Text width='32%'>EXCHANGE RATE</Text>
-                    <Text width='39%'>DEPOSIT AMOUNT</Text>
                 </Flex>
             )}
             <style>
@@ -613,19 +569,7 @@ export const ManageVaults = ({}) => {
                 {vaultsToDisplay && vaultsToDisplay.length > 0 ? (
                     vaultsToDisplay.map((vault: DepositVault, index: number) => {
                         const fillPercentage = calculateFillPercentage(vault);
-                        console.log('vault exchange rate:', BigNumber.from(vault.btcExchangeRate).toString());
-                        console.log('vault decimals:', vault.depositAsset.decimals);
-                        console.log('initial balance:', BigNumber.from(vault.initialBalance).toString());
-                        console.log(
-                            'unbuffered initial balance:',
-                            BigNumber.from(
-                                unBufferFrom18Decimals(vault.initialBalance, vault.depositAsset.decimals),
-                            ).toString(),
-                        );
-                        console.log(
-                            'formatted unbuffered initial balance:',
-                            formatUnits(vault.initialBalance, vault.depositAsset.decimals),
-                        );
+                        console.log('vault index:', vault.index);
 
                         return (
                             <Flex
@@ -649,11 +593,83 @@ export const ManageVaults = ({}) => {
                                 border='2px solid '
                                 color={colors.offWhite}
                                 borderColor={colors.borderGrayLight}>
-                                {/* <Text width='6%' fontWeight='bold'>
-                                    #{vault.index.toString()}
-                                    </Text> */}
+                                <Text width='6%' fontWeight='bold'>
+                                    #{vault.index}
+                                </Text>
                                 {/* <Text width='23%' ml='-8p x' mr='9px'></Text> */}
-                                <Flex width='30%'>
+                                {/* SWAP INPUT & SWAP OUTPUT */}
+                                <Flex w='100%' mt='10px'>
+                                    <Flex w='47%' direction='column'>
+                                        <Flex
+                                            h='50px'
+                                            mt='6px'
+                                            w='100%'
+                                            bg={selectedAsset.dark_bg_color}
+                                            border='3px solid'
+                                            borderColor={selectedAsset.bg_color}
+                                            borderRadius={'14px'}
+                                            pl='15px'
+                                            pr='10px'
+                                            align={'center'}>
+                                            <Text
+                                                fontSize='16px'
+                                                color={colors.offWhite}
+                                                letterSpacing={'-1px'}
+                                                fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                                {vault?.initialBalance &&
+                                                    formatUnits(
+                                                        BigNumber.from(vault.initialBalance).toString(),
+                                                        vault.depositAsset?.decimals,
+                                                    ).toString()}
+                                            </Text>
+                                            <Spacer />
+                                            <AssetTag2 assetName={vault?.depositAsset?.name} width='84px' />
+                                        </Flex>
+                                    </Flex>
+                                    <Text
+                                        mt='20px'
+                                        p='12px'
+                                        fontSize='20px'
+                                        opacity={0.9}
+                                        fontWeight={'bold'}
+                                        color={colors.offWhite}
+                                        letterSpacing={'-1px'}
+                                        fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                        <FaRegArrowAltCircleRight color={colors.RiftOrange} />
+                                    </Text>
+                                    <Spacer />
+
+                                    <Flex w='47%' direction='column'>
+                                        <Flex
+                                            h='50px'
+                                            mt='6px'
+                                            w='100%'
+                                            bg='#2E1C0C'
+                                            border={'3px solid'}
+                                            borderColor={'#78491F'}
+                                            borderRadius={'14px'}
+                                            pl='15px'
+                                            pr='10px'
+                                            align={'center'}>
+                                            <Text
+                                                fontSize='16px'
+                                                color={colors.offWhite}
+                                                letterSpacing={'-1px'}
+                                                fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                                {vault?.btcExchangeRate &&
+                                                    calculateBtcOutputAmountFromExchangeRate(
+                                                        vault.initialBalance,
+                                                        vault.depositAsset.decimals,
+                                                        vault.btcExchangeRate,
+                                                    )}
+                                            </Text>
+
+                                            <Spacer />
+                                            <AssetTag2 assetName={'BTC'} width='80px' />
+                                        </Flex>
+                                    </Flex>
+                                </Flex>
+                                {/* <Flex width='30%'>
                                     <Text
                                         color={
                                             Number(fillPercentage) > 0 ? colors.greenOutline : colors.textGray
@@ -685,7 +701,7 @@ export const ManageVaults = ({}) => {
                                             borderRadius='10px'
                                         />
                                     </Flex>
-                                </Flex>
+                                </Flex> */}
                                 <Flex width='32%'>
                                     <Text color={colors.textGray} fontWeight={'normal'} letterSpacing={'-2.5px'}>
                                         {vault &&
@@ -700,7 +716,7 @@ export const ManageVaults = ({}) => {
                                             })} ${vault.depositAsset.name}/BTC`}
                                     </Text>
                                 </Flex>
-                                <Flex width='35%' flexDirection={'row'}>
+                                {/* <Flex width='35%' flexDirection={'row'}>
                                     <Text mt='26px'>
                                         {formatUnits(vault.initialBalance, vault.depositAsset.decimals)}{' '}
                                     </Text>
@@ -708,7 +724,7 @@ export const ManageVaults = ({}) => {
                                     <Flex mt='1px' ml='18px'>
                                         <AssetTag2 width='100px' assetName={selectedAsset.name} />
                                     </Flex>
-                                </Flex>
+                                </Flex> */}
                             </Flex>
                         );
                     })
