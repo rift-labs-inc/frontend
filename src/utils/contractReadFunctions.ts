@@ -37,8 +37,9 @@ export async function getDepositVaultByIndex(
         return {
             initialBalance: BigNumber.from(depositVault[0]),
             unreservedBalanceFromContract: BigNumber.from(depositVault[1]),
-            btcExchangeRate: BigNumber.from(depositVault[2]),
-            btcPayoutLockingScript: depositVault[3],
+            withdrawnAmount: BigNumber.from(depositVault[2]),
+            btcExchangeRate: BigNumber.from(depositVault[3]),
+            btcPayoutLockingScript: depositVault[4],
             depositAsset: useStore.getState().validAssets['USDT'], // TODO: get this from the contract you are reading from
             index: index,
         };
