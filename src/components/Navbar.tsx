@@ -122,7 +122,7 @@ export const Navbar = ({}) => {
                 {/* {navItem('Lending', '/lending')} */}
                 {/* {navItem('OTC', '/otc')} */}
                 {navItem('Sell', '/sell')}
-                {/* {navItem('Activity', '/activity')} */}
+                {navItem('Activity', '/activity')}
                 {navItem('About', '/about')}
                 <Spacer />
                 {/* TODO: Remove below: */}

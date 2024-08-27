@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { BigNumber, ethers } from 'ethers';
 import { getLiquidityProvider } from '../utils/contractReadFunctions';
+import { FONT_FAMILIES } from '../utils/font';
 
 export const ConnectWalletButton = ({}) => {
     const [usdtBalance, setUsdtBalance] = useState('0');
@@ -56,7 +57,9 @@ export const ConnectWalletButton = ({}) => {
                                         borderRadius={'10px'}
                                         border={`2.4px solid ${colors.purpleBorder}`}
                                         type='button'
-                                        pt='2px'>
+                                        fontFamily={FONT_FAMILIES.NOSTROMO}
+                                        fontSize='0.8rem'
+                                        paddingX='20px'>
                                         Connect Wallet
                                     </Button>
                                 );

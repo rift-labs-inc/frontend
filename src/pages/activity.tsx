@@ -12,6 +12,7 @@ import { useStore } from '../store';
 import { toastSuccess } from '../hooks/toast';
 import { BTCSVG, ETHArrow, WBTCSVG, BTCArrow, GreenCheck } from '../components/other/SVGs';
 import { OpenGraph } from '../components/background/OpenGraph';
+import SwapTable from '../components/activity/SwapTable';
 
 const Activity = () => {
     const { height, width } = useWindowSize();
@@ -47,7 +48,13 @@ const Activity = () => {
                             bgGradient={`linear(90deg, #FF8F28, #394AFF)`}
                             letterSpacing={'2px'}
                             mt='-25px'>
-                            <Text userSelect={'none'} fontSize='46px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
+                            <Text
+                                userSelect={'none'}
+                                fontSize='46px'
+                                fontFamily={'Klein'}
+                                fontWeight='bold'
+                                px='12px'
+                                as='h1'>
                                 Activity
                             </Text>
                         </Flex>
@@ -65,6 +72,9 @@ const Activity = () => {
                             Manage current swaps and previous bridge activity.
                         </Text>
                     </Flex>
+                    <SwapTable />
+
+                    {/* TODO: Archive everything below */}
                     {/* SEARCH & ACTIVITY DATA */}
                     <Flex
                         mb='40px'
@@ -75,7 +85,7 @@ const Activity = () => {
                         border={'2px solid #282828'}
                         align={'center'}
                         direction={'column'}
-                        mt='55px'>
+                        mt='105px'>
                         <Flex w='100%' mt='-55px' mb='8px' h='44px'>
                             <Flex
                                 w='100%'
@@ -364,10 +374,6 @@ function formatAmount(amount) {
     }
     return numStr;
 }
-
-const formatAddress = (address) => {
-    return `${address.slice(0, 7)}...${address.slice(-5)}`;
-};
 
 const timeAgo = (unixTimestamp) => {
     const seconds = Math.floor(
