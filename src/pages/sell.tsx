@@ -19,7 +19,6 @@ import { useStore } from '../store';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId } from 'wagmi';
 import { weiToEth, satsToBtc, calculateAmountBitcoinOutput, calculateFillPercentage } from '../utils/dappHelper';
-import { contractChainID, riftExchangeContractAddress } from '../utils/constants';
 import { DepositVault } from '../types';
 import { BigNumber } from 'ethers';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
@@ -47,7 +46,7 @@ const Sell = () => {
     const showManageDepositVaultsScreen = useStore((state) => state.showManageDepositVaultsScreen);
     const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
 
-    const ethersProvider = useStore((state) => state.ethersProvider);
+    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const { openConnectModal } = useConnectModal();
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
@@ -80,7 +79,7 @@ const Sell = () => {
                 h='100vh'
                 width='100%'
                 direction='column'
-                backgroundImage={'/images/rift_background_op.webp'}
+                backgroundImage={'/images/rift_background_low.webp'}
                 backgroundSize='cover'
                 backgroundPosition='center'>
                 <Navbar />
@@ -95,9 +94,24 @@ const Sell = () => {
                             }}
                             bgGradient={`linear(-90deg, #394AFF, #FF8F28)`}
                             letterSpacing={'2px'}
-                            mt='-25px'>
-                            <Text userSelect={'none'} fontSize='60px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
-                                Sell Ethereum
+                            mt='-35px'>
+                            <Text
+                                userSelect={'none'}
+                                fontSize='60px'
+                                fontFamily={'Klein'}
+                                fontWeight='bold'
+                                px='12px'
+                                as='h1'>
+                                Sell f
+                            </Text>
+                            <Text
+                                userSelect={'none'}
+                                fontSize='60px'
+                                fontFamily={'Klein'}
+                                fontWeight='bold'
+                                ml='-20px'
+                                as='h1'>
+                                or Bitcoin
                             </Text>
                         </Flex>
                     </Flex>
@@ -110,15 +124,17 @@ const Sell = () => {
                         />
                     </Flex>
                     <Flex
-                        w='1300px'
-                        bg={colors.offBlack}
+                        w='800px'
                         h='650px'
+                        align={'center'}
+                        justify={'center'}
+                        bg={colors.offBlack}
                         borderRadius={'20px'}
                         mt='14px'
                         border='3px solid'
                         borderColor={colors.borderGray}>
                         {/* Liquidity Distribution Chart */}
-                        <Flex w='50%' h='100%' flexDir='column' p='20px'>
+                        {/* <Flex w='50%' h='100%' flexDir='column' p='20px'>
                             <Text
                                 fontFamily={FONT_FAMILIES.AUX_MONO}
                                 fontWeight={'normal'}
@@ -139,7 +155,7 @@ const Sell = () => {
                             <Flex flex={1} w='100%'>
                                 <ExchangeRateChart />
                             </Flex>
-                        </Flex>
+                        </Flex> */}
                         {/* Deposit & Manage Vaults */}
                         {selectedButton === 'Create a Vault' ? <DepositUI /> : <ManageVaults />}
                     </Flex>

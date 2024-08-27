@@ -1,101 +1,106 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { ethers } from 'ethers';
+import React, { createContext, useContext, ReactNode, useMemo, useEffect } from 'react';
+import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../../store';
 import { useSwapReservations } from '../../hooks/contract/useSwapReservations';
-import { contractRpcURL, riftExchangeContractAddress } from '../../utils/constants';
 import { useDepositVaults } from '../../hooks/contract/useDepositVaults';
 import { useAccount } from 'wagmi';
+import { formatUnits } from 'ethers/lib/utils';
+import { getLiquidityProvider, getTokenBalance } from '../../utils/contractReadFunctions';
+import { ERC20ABI } from '../../utils/constants';
 
 interface ContractDataContextType {
     allDepositVaults: any;
+    userActiveDepositVaults: any;
+    userCompletedDepositVaults: any;
     allSwapReservations: any;
     loading: boolean;
     error: any;
+    refreshUserDepositData: () => Promise<void>;
 }
 
 const ContractDataContext = createContext<ContractDataContextType | undefined>(undefined);
 
 export function ContractDataProvider({ children }: { children: ReactNode }) {
-    const ethersProvider = useStore((state) => state.ethersProvider);
-    const setEthersProvider = useStore((state) => state.setEthersProvider);
     const { address, isConnected } = useAccount();
+    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
+    const setEthersRpcProvider = useStore((state) => state.setEthersRpcProvider);
     const setUserEthAddress = useStore((state) => state.setUserEthAddress);
-
-    React.useEffect(() => {
-        setEthersProvider(new ethers.providers.JsonRpcProvider(contractRpcURL));
-    }, []);
-
-    React.useEffect(() => {
-        if (address) {
-            setUserEthAddress(address);
-            console.log('address:', address);
-        }
-    }, [address]);
-
-    const setAvailableAssets = useStore((state) => state.setAvailableAssets);
-    const [depositVaultsLength, setDepositVaultsLength] = React.useState(null);
-    const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
+    const selectedAsset = useStore((state) => state.selectedAsset);
     const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
-    const ethPriceUSD = useStore((state) => state.ethPriceUSD);
-    const setEthPriceUSD = useStore((state) => state.setEthPriceUSD);
-    const wrappedEthPriceUSD = useStore((state) => state.wrappedEthPriceUSD);
-    const setWrappedEthPriceUSD = useStore((state) => state.setWrappedEthPriceUSD);
-    const btcToEthExchangeRate = useStore((state) => state.btcToEthExchangeRate);
-    const setBtcToEthExchangeRate = useStore((state) => state.setBtcToEthExchangeRate);
+    const updateExchangeRateInSmallestTokenUnitPerSat = useStore(
+        (state) => state.updateExchangeRateInSmallestTokenUnitPerSat,
+    );
+    const updateExchangeRateInTokenPerBTC = useStore((state) => state.updateExchangeRateInTokenPerBTC);
+    const updatePriceUSD = useStore((state) => state.updatePriceUSD);
+    const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
+    const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
+    const updateTotalAvailableLiquidity = useStore((state) => state.updateTotalAvailableLiquidity);
 
-    // fetch price data - TODO: get this data from uniswap
-    React.useEffect(() => {
+    // set ethers provider
+    useEffect(() => {
+        // TODO: update this to pull contract data from all valid deposit assets
+        if (selectedAsset?.contractRpcURL && window.ethereum) {
+            setEthersRpcProvider(new ethers.providers.JsonRpcProvider(selectedAsset.contractRpcURL));
+        }
+    }, [selectedAsset.contractRpcURL, address, isConnected]);
+
+    // fetch price data, user address, & selected asset balance
+    useEffect(() => {
         const fetchPriceData = async () => {
-            try {
-                const response = await fetch(
-                    'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,weth&vs_currencies=usd,eth',
-                );
-                const data = await response.json();
-                if (data.bitcoin && data.bitcoin.usd) {
-                    setBitcoinPriceUSD(data.bitcoin.usd); // Bitcoin price in USD
-                }
-                if (data.ethereum && data.ethereum.usd) {
-                    setEthPriceUSD(data.ethereum.usd); // Ethereum price in USD
-                }
-                if (data.weth && data.weth.usd) {
-                    setWrappedEthPriceUSD(data.weth.usd); // Wrapped Ethereum price in USD
-                }
-                if (data.bitcoin && data.bitcoin.eth) {
-                    setBtcToEthExchangeRate(data.bitcoin.eth); // exchange rate of Bitcoin in Ethereum
-                    console.log('data.bitcoin.eth:', data.bitcoin.eth);
-                }
-            } catch (error) {
-                console.error('Failed to fetch prices and exchange rate:', error);
-            }
+            // TESTING VALUES - TODO: get this data from uniswap
+            console.log('fetching price data...');
+            const btcPriceUSD = 59072.43;
+            const usdtPriceUSD = 1;
+            const btcToUsdtRate = btcPriceUSD / usdtPriceUSD;
+
+            setBitcoinPriceUSD(btcPriceUSD);
+            updatePriceUSD('USDT', usdtPriceUSD);
+            updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
+        };
+        fetchPriceData();
+
+        const fetchSelectedAssetUserBalance = async (address) => {
+            const balance = await getTokenBalance(ethersRpcProvider, selectedAsset.tokenAddress, address, ERC20ABI);
+
+            updateConnectedUserBalanceRaw(selectedAsset.name, balance);
+            const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedAsset.name].decimals);
+            console.log('formattedBalance:', formattedBalance.toString());
+            updateConnectedUserBalanceFormatted(selectedAsset.name, formattedBalance.toString());
         };
 
-        fetchPriceData();
-    }, []);
+        if (address) {
+            setUserEthAddress(address);
+            if (selectedAsset && window.ethereum) {
+                fetchSelectedAssetUserBalance(address);
+            }
+        }
+
+        // Set up an interval to fetch prices every 30 seconds
+        const intervalId = setInterval(fetchPriceData, 30000);
+
+        // Clean up the interval on component unmount
+        return () => clearInterval(intervalId);
+    }, [selectedAsset, address]);
 
     // fetch deposit vaults
     const {
-        allDepositVaults,
-        userDepositVaults,
-        loading: vaultsLoading,
-        error: vaultsError,
-        refreshUserDepositData,
-    } = useDepositVaults(ethersProvider, riftExchangeContractAddress);
-
-    // fetch swap reservations
-    const {
-        allSwapReservations,
-        loading: reservationsLoading,
-        error: reservationsError,
-    } = useSwapReservations(ethersProvider, riftExchangeContractAddress);
-
-    const loading = vaultsLoading || reservationsLoading || vaultsLoading;
-    const error = vaultsError || reservationsError || vaultsError;
-
-    const value = {
-        allDepositVaults,
-        allSwapReservations,
+        allFetchedDepositVaults,
+        userActiveDepositVaults,
+        userCompletedDepositVaults,
+        allFetchedSwapReservations,
         loading,
         error,
+        refreshUserDepositData,
+    } = useDepositVaults();
+
+    const value = {
+        allDepositVaults: allFetchedDepositVaults,
+        userActiveDepositVaults: userActiveDepositVaults,
+        userCompletedDepositVaults: userCompletedDepositVaults,
+        allSwapReservations: allFetchedSwapReservations,
+        loading,
+        error,
+        refreshUserDepositData,
     };
 
     return <ContractDataContext.Provider value={value}>{children}</ContractDataContext.Provider>;

@@ -4,16 +4,18 @@ import { colors } from '../../utils/colors';
 import { useEffect, useRef, useState } from 'react';
 import { DepositVault } from '../../types';
 import { useStore } from '../../store';
-import { ethToWei, SATS_PER_BTC } from '../../utils/dappHelper';
+import { ethToWei } from '../../utils/dappHelper';
 import { BigNumber } from 'ethers';
 import { normalize } from 'path';
+import { SATS_PER_BTC } from '../../utils/constants';
 
 type GraphBar = { x: number; y: number };
 type GraphData = GraphBar[];
 
 const calculateSellChart = (depositVaults: DepositVault[]): GraphData => {
     // Prepare market rate to WEI per SAT
-    const marketExchangeRate = useStore.getState().btcToEthExchangeRate; // ETH per BTC
+    // const marketExchangeRate = useStore.getState().btcToEthExchangeRate; // ETH per BTC // TODO: Fix This!!
+    const marketExchangeRate = 23.99;
     const convertedMarketRate = ethToWei(marketExchangeRate.toString()).div(SATS_PER_BTC).toNumber(); // WEI per SAT
 
     // Prepare data map for percent -> balance
@@ -26,7 +28,7 @@ const calculateSellChart = (depositVaults: DepositVault[]): GraphData => {
         const btcRate = parseFloat(vault.btcExchangeRate.toString()); // WEI per SAT
         const initialRate = Math.ceil(((btcRate - convertedMarketRate) / convertedMarketRate) * 100);
         const rate = initialRate == 0 ? initialRate : -initialRate;
-        const balance = Number(BigNumber.from(vault.calculatedTrueUnreservedBalance.toString()).div(SATS_PER_BTC));
+        const balance = Number(BigNumber.from(vault.trueUnreservedBalance.toString()).div(SATS_PER_BTC));
         // console.log('Chart', rate, balance, ((btcRate - convertedMarketRate) / convertedMarketRate) * 100);
 
         // Update data map
@@ -155,19 +157,39 @@ const ExchangeRateChart: React.FC<ExchangeRateChartProps> = ({ graphData }) => {
     return (
         <Flex w='100%' flexDir='column' position='relative' mt='20px'>
             <Flex position='absolute' top='0' right='0' gap='10px' flexDir='column'>
-                <Flex bg='#420F0F' border='2px solid #B94040' borderRadius='10px' p='6px 8px' flexDir='column' textAlign='center'>
+                <Flex
+                    bg='#420F0F'
+                    border='2px solid #B94040'
+                    borderRadius='10px'
+                    p='6px 8px'
+                    flexDir='column'
+                    textAlign='center'>
                     <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.8rem' letterSpacing='-1px'>
                         Market Rate
                     </Text>
-                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.7rem' color={colors.textGray} letterSpacing='-1px'>
+                    <Text
+                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                        fontSize='0.7rem'
+                        color={colors.textGray}
+                        letterSpacing='-1px'>
                         1 BTC ≈ 18.485204 ETH
                     </Text>
                 </Flex>
-                <Flex bg='#161A33' border='2px solid #445BCB' borderRadius='10px' p='6px 8px' flexDir='column' textAlign='center'>
+                <Flex
+                    bg='#161A33'
+                    border='2px solid #445BCB'
+                    borderRadius='10px'
+                    p='6px 8px'
+                    flexDir='column'
+                    textAlign='center'>
                     <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.8rem' letterSpacing='-1px'>
                         Your Exchange Rate
                     </Text>
-                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.7rem' color={colors.textGray} letterSpacing='-1px'>
+                    <Text
+                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                        fontSize='0.7rem'
+                        color={colors.textGray}
+                        letterSpacing='-1px'>
                         1 BTC ≈ 22.1332 ETH
                     </Text>
                 </Flex>
@@ -210,11 +232,18 @@ const ExchangeRateChart: React.FC<ExchangeRateChartProps> = ({ graphData }) => {
                     <Flex w='3px' flex={1} bg='#465FF9' />
                 </Flex>
                 {yAxis.map((x, i) => (
-                    <Flex w='100%' h='100%' position='relative' align='flex-end'>
+                    <Flex key={i} w='100%' h='100%' position='relative' align='flex-end'>
                         {/* Market Rate Bar */}
                         {i == 2 && (
                             <Flex position='absolute' left='0px' h='100%'>
-                                <Flex w='11px' h='4px' borderRadius='5px' bg='#D65252' left='-4px' position='absolute' />
+                                <Flex
+                                    w='11px'
+                                    h='4px'
+                                    borderRadius='5px'
+                                    bg='#D65252'
+                                    left='-4px'
+                                    position='absolute'
+                                />
                                 <Flex w='3px' h='100%' bg='#D65252' position='absolute' />
                             </Flex>
                         )}
@@ -225,7 +254,7 @@ const ExchangeRateChart: React.FC<ExchangeRateChartProps> = ({ graphData }) => {
             <Flex h='4px' mb='2px' borderRadius='40px' bg={colors.graph.lightGreen} w='100%' />
             <Flex justify='space-between' w='100%'>
                 {xAxis.map((x) => (
-                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.9rem' color={colors.textGray}>
+                    <Text key={x} fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='0.9rem' color={colors.textGray}>
                         {x}%
                     </Text>
                 ))}

@@ -2,8 +2,9 @@ import { BigNumber, BigNumberish, ethers } from 'ethers';
 import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
 import { sepolia } from 'viem/chains';
-
-export const SATS_PER_BTC = 100000000; // 10^8
+import * as bitcoin from 'bitcoinjs-lib';
+import { formatUnits, parseUnits } from 'ethers/lib/utils';
+import { bitcoinDecimals, SATS_PER_BTC } from './constants';
 
 // HELPER FUCTIONS
 export function weiToEth(wei: BigNumber): BigNumberish {
@@ -20,6 +21,69 @@ export function satsToBtc(sats: number): number {
 
 export function btcToSats(btc: number): BigNumber {
     return BigNumber.from(SATS_PER_BTC * btc);
+}
+
+export function bufferTo18Decimals(amount, tokenDecimals) {
+    const bigAmount = BigNumber.from(amount);
+    if (tokenDecimals < 18) {
+        return bigAmount.mul(BigNumber.from(10).pow(18 - tokenDecimals));
+    }
+    return bigAmount;
+}
+
+export function unBufferFrom18Decimals(amount, tokenDecimals) {
+    const bigAmount = BigNumber.from(amount);
+    if (tokenDecimals < 18) {
+        return bigAmount.div(BigNumber.from(10).pow(18 - tokenDecimals));
+    }
+    return bigAmount;
+}
+
+export function calculateBtcOutputAmountFromExchangeRate(
+    depositAmountFromContract,
+    depositAssetDecimals,
+    exchangeRateFromContract,
+) {
+    // [0] buffer deposit amount to 18 decimals
+    const depositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(
+        depositAmountFromContract,
+        depositAssetDecimals,
+    );
+
+    console.log(
+        'bruh, depositAmountInSmallestTokenUnitsBufferedTo18Decimals:',
+        BigNumber.from(depositAmountInSmallestTokenUnitsBufferedTo18Decimals).toString(),
+    );
+    console.log('bruh, depositAmountFromContract:', BigNumber.from(depositAmountFromContract).toString());
+    console.log('bruh, depositAssetDecimals:', BigNumber.from(depositAssetDecimals).toString());
+    console.log('bruh, exchangeRateFromContract:', BigNumber.from(exchangeRateFromContract).toString());
+
+    // [1] divide by exchange rate (which is already in smallest token units buffered to 18 decimals per sat)
+    const outputAmountInSats = depositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(exchangeRateFromContract);
+
+    // [2] convert output amount from sats to btc
+    const outputAmountInBtc = formatUnits(outputAmountInSats, bitcoinDecimals);
+
+    return String(outputAmountInBtc);
+}
+
+export function formatBtcExchangeRate(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat, depositAssetDecimals) {
+    // [0] convert to smallest token amount per btc
+    const exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc = parseUnits(
+        BigNumber.from(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat).toString(),
+        bitcoinDecimals,
+    );
+
+    // [1] unbuffer from 18 decimals
+    const exchangeRateInSmallestTokenUnitPerBtc = unBufferFrom18Decimals(
+        exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc,
+        depositAssetDecimals,
+    );
+
+    // [2] convert to btc per smallest token amount
+    const exchangeRateInStandardUnitsPerBtc = formatUnits(exchangeRateInSmallestTokenUnitPerBtc, depositAssetDecimals);
+
+    return exchangeRateInStandardUnitsPerBtc;
 }
 
 export function calculateAmountBitcoinOutput(vault: DepositVault): BigNumber {
@@ -46,9 +110,118 @@ export function findVaultIndexWithSameExchangeRate(): number {
     return -1;
 }
 
+export function convertLockingScriptToBitcoinAddress(lockingScript: string): string {
+    // Remove '0x' prefix if present
+    const script = lockingScript.startsWith('0x') ? lockingScript.slice(2) : lockingScript;
+    const scriptBuffer = Buffer.from(script, 'hex');
+
+    try {
+        // P2PKH
+        if (
+            scriptBuffer.length === 25 &&
+            scriptBuffer[0] === bitcoin.opcodes.OP_DUP &&
+            scriptBuffer[1] === bitcoin.opcodes.OP_HASH160 &&
+            scriptBuffer[2] === 0x14 &&
+            scriptBuffer[23] === bitcoin.opcodes.OP_EQUALVERIFY &&
+            scriptBuffer[24] === bitcoin.opcodes.OP_CHECKSIG
+        ) {
+            const pubKeyHash = scriptBuffer.slice(3, 23);
+            return bitcoin.address.toBase58Check(pubKeyHash, bitcoin.networks.bitcoin.pubKeyHash);
+        }
+
+        // P2SH
+        if (
+            scriptBuffer.length === 23 &&
+            scriptBuffer[0] === bitcoin.opcodes.OP_HASH160 &&
+            scriptBuffer[1] === 0x14 &&
+            scriptBuffer[22] === bitcoin.opcodes.OP_EQUAL
+        ) {
+            const scriptHash = scriptBuffer.slice(2, 22);
+            return bitcoin.address.toBase58Check(scriptHash, bitcoin.networks.bitcoin.scriptHash);
+        }
+
+        // P2WPKH
+        if (scriptBuffer.length === 22 && scriptBuffer[0] === bitcoin.opcodes.OP_0 && scriptBuffer[1] === 0x14) {
+            const witnessProgram = scriptBuffer.slice(2);
+            return bitcoin.address.toBech32(witnessProgram, 0, bitcoin.networks.bitcoin.bech32);
+        }
+
+        // P2WSH
+        if (scriptBuffer.length === 34 && scriptBuffer[0] === bitcoin.opcodes.OP_0 && scriptBuffer[1] === 0x20) {
+            const witnessProgram = scriptBuffer.slice(2);
+            return bitcoin.address.toBech32(witnessProgram, 0, bitcoin.networks.bitcoin.bech32);
+        }
+
+        // P2TR (Taproot)
+        if (scriptBuffer.length === 34 && scriptBuffer[0] === bitcoin.opcodes.OP_1 && scriptBuffer[1] === 0x20) {
+            const witnessProgram = scriptBuffer.slice(2);
+            return bitcoin.address.toBech32(witnessProgram, 1, bitcoin.networks.bitcoin.bech32);
+        }
+
+        throw new Error('Unsupported locking script type');
+    } catch (error) {
+        console.error('Error converting locking script to address:', error);
+        throw error;
+    }
+}
+
+export function convertToBitcoinLockingScript(address: string): string {
+    // TODO - validate and test all address types with alpine
+    try {
+        let script: Buffer;
+
+        // Handle Bech32 addresses (including P2WPKH, P2WSH, and P2TR)
+        if (address.toLowerCase().startsWith('bc1')) {
+            const { data, version } = bitcoin.address.fromBech32(address);
+            if (version === 0) {
+                if (data.length === 20) {
+                    // P2WPKH
+                    script = bitcoin.script.compile([bitcoin.opcodes.OP_0, data]);
+                } else if (data.length === 32) {
+                    // P2WSH
+                    script = bitcoin.script.compile([bitcoin.opcodes.OP_0, data]);
+                }
+            } else if (version === 1 && data.length === 32) {
+                // P2TR (Taproot)
+                script = bitcoin.script.compile([bitcoin.opcodes.OP_1, data]);
+            }
+        } else {
+            // Handle legacy addresses (P2PKH and P2SH)
+            const { version, hash } = bitcoin.address.fromBase58Check(address);
+
+            // P2PKH
+            if (version === bitcoin.networks.bitcoin.pubKeyHash) {
+                script = bitcoin.script.compile([
+                    bitcoin.opcodes.OP_DUP,
+                    bitcoin.opcodes.OP_HASH160,
+                    hash,
+                    bitcoin.opcodes.OP_EQUALVERIFY,
+                    bitcoin.opcodes.OP_CHECKSIG,
+                ]);
+            }
+
+            // P2SH
+            else if (version === bitcoin.networks.bitcoin.scriptHash) {
+                script = bitcoin.script.compile([bitcoin.opcodes.OP_HASH160, hash, bitcoin.opcodes.OP_EQUAL]);
+            }
+        }
+
+        if (!script) {
+            throw new Error('Unsupported address type');
+        }
+
+        console.log('locking script:', script);
+        return '0x' + script.toString('hex');
+    } catch (error) {
+        console.error('Error converting address to locking script:', error);
+        throw error; // Re-throw the error for proper handling in the calling code
+    }
+}
+
 export function calculateFillPercentage(vault: DepositVault) {
+    return 80;
     const fillPercentageBigNumber = BigNumber.from(vault.initialBalance)
-        .sub(BigNumber.from(vault.unreservedBalance))
+        .sub(BigNumber.from(vault.unreservedBalanceFromContract))
         .div(BigNumber.from(vault.initialBalance))
         .mul(100);
 
@@ -75,7 +248,7 @@ export function calculateLowestFeeReservation(
             if (vaultIndexes.length >= maxLpOutputs || remainingAmountInSats.lte(0)) break;
 
             const exchangeRate = BigNumber.from(vault.btcExchangeRate); // wei per sat
-            const availableAmountInWei = BigNumber.from(vault.calculatedTrueUnreservedBalance);
+            const availableAmountInWei = BigNumber.from(vault.trueUnreservedBalance);
             const availableAmountInSats = availableAmountInWei.div(exchangeRate);
 
             const amountToReserveInSats = remainingAmountInSats.lt(availableAmountInSats)

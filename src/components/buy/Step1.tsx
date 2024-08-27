@@ -27,7 +27,6 @@ import { FONT_FAMILIES } from '../../utils/font';
 import { weiToEth } from '../../utils/dappHelper';
 import { BigNumber, ethers } from 'ethers';
 import { useReserveLiquidity } from '../../hooks/contract/useReserveLiquidity';
-import { riftExchangeContractAddress } from '../../utils/constants';
 import ReservationStatusModal from './ReservationStatusModal';
 
 export const Step1 = ({}) => {
@@ -37,8 +36,6 @@ export const Step1 = ({}) => {
     const fontSize = isMobileView ? '20px' : '20px';
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
-    const ethOutputSwapAmount = useStore((state) => state.ethOutputSwapAmount);
-    const setEthOutputSwapAmount = useStore((state) => state.setEthOutputSwapAmount);
 
     const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
@@ -47,6 +44,7 @@ export const Step1 = ({}) => {
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const [ethPayoutAddress, setethPayoutAddress] = useState('');
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
+    const selectedAsset = useStore((state) => state.selectedAsset);
 
     // eth payout address
     const handleETHPayoutAddressChange = (e) => {
@@ -88,7 +86,7 @@ export const Step1 = ({}) => {
             await reserveLiquidity({
                 signer,
                 riftExchangeAbi: riftExchangeABI.abi,
-                riftExchangeContract: riftExchangeContractAddress,
+                riftExchangeContract: selectedAsset.riftExchangeContractAddress,
                 vaultIndexesToReserve: lowestFeeReservationParams.vaultIndexesToReserve,
                 amountsToReserve: lowestFeeReservationParams.amountsToReserve,
                 ethPayoutAddress,

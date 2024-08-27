@@ -1,15 +1,17 @@
-import { Box, Button, Flex, FlexProps, Spacer, Text, useClipboard } from '@chakra-ui/react';
+import { Box, Button, Flex, FlexProps, Spacer, Text, useClipboard, VStack } from '@chakra-ui/react';
 import { colors } from '../utils/colors';
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { IoMenu } from 'react-icons/io5';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { ConnectWalletButton } from './ConnectWalletButton';
-import { contractChainID, riftExchangeContractAddress } from '../utils/constants';
 import { FONT_FAMILIES } from '../utils/font';
 import { useStore } from '../store';
 import { weiToEth } from '../utils/dappHelper';
 import { BigNumber } from 'ethers';
+import { useEffect, useState } from 'react';
+import { ValidAsset } from '../types';
+import { formatUnits } from 'ethers/lib/utils';
 
 export const Navbar = ({}) => {
     const { height, width } = useWindowSize();
@@ -18,11 +20,26 @@ export const Navbar = ({}) => {
     const fontSize = isMobileView ? '20px' : '20px';
     const allSwapReservations = useStore((state) => state.allSwapReservations);
     const allDepositVaults = useStore((state) => state.allDepositVaults);
-    const myActiveDepositVaults = useStore((state) => state.myActiveDepositVaults);
-    const myCompletedDepositVaults = useStore((state) => state.myCompletedDepositVaults);
-    const totalAvailableLiquidity = useStore((state) => state.totalAvailableLiquidity);
+    const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
+    const userCompletedDepositVaults = useStore((state) => state.userCompletedDepositVaults);
     const setTotalExpiredReservations = useStore((state) => state.setTotalExpiredReservations);
     const totalExpiredReservations = useStore((state) => state.totalExpiredReservations);
+    const [showDeveloperMode, setShowDeveloperMode] = useState(false);
+    const [isLocalhost, setIsLocalhost] = useState(false);
+    const selectedAsset = useStore((state) => state.selectedAsset);
+
+    const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
+
+    useEffect(() => {
+        setAvailableLiquidity(
+            useStore.getState().validAssets[selectedAsset.name]?.totalAvailableLiquidity ?? BigNumber.from(0),
+        );
+    }, [selectedAsset]);
+
+    useEffect(() => {
+        const hostname = window.location.hostname;
+        setIsLocalhost(hostname === 'localhost' || hostname === '127.0.0.1');
+    }, []);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -87,8 +104,6 @@ export const Navbar = ({}) => {
         </Box>
     );
 
-    const { onCopy } = useClipboard(riftExchangeContractAddress);
-
     const getChainName = (id) => {
         switch (id) {
             case 11155111:
@@ -107,9 +122,10 @@ export const Navbar = ({}) => {
                 {/* {navItem('Lending', '/lending')} */}
                 {/* {navItem('OTC', '/otc')} */}
                 {navItem('Sell', '/sell')}
-                {navItem('Activity', '/activity')}
+                {/* {navItem('Activity', '/activity')} */}
                 {navItem('About', '/about')}
                 <Spacer />
+                {/* TODO: Remove below: */}
                 <Flex
                     direction='column'
                     fontFamily={FONT_FAMILIES.AUX_MONO}
@@ -118,26 +134,59 @@ export const Navbar = ({}) => {
                     position='absolute'
                     top={0}
                     left={0}
-                    right={0}
-                    pointerEvents='none'>
-                    <Text>Current Rift Contract:</Text>
-                    <Text cursor='pointer' onClick={onCopy} color='blue.300' _hover={{ textDecoration: 'underline' }}>
-                        {riftExchangeContractAddress}
-                    </Text>
-                    <Text>Chain ID: {getChainName(contractChainID)}</Text>
+                    right={0}>
+                    {isLocalhost && (
+                        <Button
+                            position={'absolute'}
+                            top={0}
+                            _hover={{ background: 'rgba(150, 150, 150, 0.2)' }}
+                            color={colors.textGray}
+                            bg={colors.offBlack}
+                            onClick={() => {
+                                setShowDeveloperMode(!showDeveloperMode);
+                            }}>
+                            TOGGLE
+                        </Button>
+                    )}
+                    {showDeveloperMode && (
+                        <>
+                            <Text my='10px'>Current Rift Contracts:</Text>
+                            <VStack spacing={1} align='stretch' width='100%' maxWidth='600px'>
+                                {Object.keys(useStore.getState().validAssets).map((key) => {
+                                    const asset = useStore.getState().validAssets[key];
+                                    return (
+                                        <Flex key={asset.riftExchangeContractAddress} justify='space-between'>
+                                            <Text>{asset.name}:</Text>
+                                            <Text>{asset.riftExchangeContractAddress}</Text>
+                                            <Text>Chain: {getChainName(asset.contractChainID)}</Text>
+                                        </Flex>
+                                    );
+                                })}
+                            </VStack>
 
-                    <Flex position='absolute' top={height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
-                        <StatCard
-                            label='Total Available Liquidity'
-                            value={`${weiToEth(totalAvailableLiquidity).toString()} ETH`}
-                        />
-                        <StatCard label='Total Deposits' value={allDepositVaults.length} />
-                        <StatCard label='My Active Deposits' value={myActiveDepositVaults.length} />
-                        <StatCard label='My Completed Deposits' value={myCompletedDepositVaults.length} />
-                        <StatCard label='Total Reservations' value={allSwapReservations.length} />
-                        <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />
-                    </Flex>
+                            <Flex
+                                position='absolute'
+                                top={height - 140}
+                                gap={3}
+                                flexWrap='wrap'
+                                justifyContent='center'>
+                                <StatCard
+                                    label='Total Available Liquidity'
+                                    value={`${formatUnits(availableLiquidity, selectedAsset.decimals)} ${
+                                        selectedAsset.name
+                                    }`}
+                                />
+
+                                <StatCard label='Total Deposits' value={allDepositVaults.length} />
+                                <StatCard label='My Active Deposits' value={userActiveDepositVaults.length} />
+                                <StatCard label='My Completed Deposits' value={userCompletedDepositVaults.length} />
+                                <StatCard label='Total Reservations' value={allSwapReservations.length} />
+                                <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />
+                            </Flex>
+                        </>
+                    )}
                 </Flex>
+                {/* TODO: Remove above */}
                 <Spacer />
                 <Flex mb='-5px' pr='5px'>
                     <ConnectWalletButton />

@@ -32,7 +32,13 @@ interface DepositStatusModalProps {
     txHash: string | null;
 }
 
-const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen, onClose, status, error, txHash }) => {
+const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
+    isOpen = false,
+    onClose,
+    status = DepositStatus.WaitingForWalletConfirmation,
+    error = null,
+    txHash = null,
+}) => {
     // Add txHash here
     const isCompleted = status === DepositStatus.Confirmed;
     const isError = status === DepositStatus.Error;
@@ -44,10 +50,14 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen, onClose
         switch (status) {
             case DepositStatus.WaitingForWalletConfirmation:
                 return 'Waiting for wallet confirmation...';
-            case DepositStatus.ApprovingWETH:
-                return 'Approving WETH...';
-            case DepositStatus.DepositingLiquidity:
+            case DepositStatus.WaitingForDepositTokenApproval:
+                return 'Approving Deposit Token...';
+            case DepositStatus.WaitingForDepositApproval:
                 return 'Depositing liquidity...';
+            case DepositStatus.ApprovalPending:
+                return 'Confirming Approval...';
+            case DepositStatus.DepositPending:
+                return 'Confirming Deposit...';
             case DepositStatus.Confirmed:
                 return 'Deposit success!';
             case DepositStatus.Error:
@@ -56,7 +66,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen, onClose
                 }
                 return `Error: ${error}`;
             default:
-                return 'Processing...';
+                return 'Confirming...';
         }
     };
 
@@ -91,17 +101,31 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen, onClose
                 {(isCompleted || isError) && <ModalCloseButton />}
                 <ModalBody>
                     <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
-                        {isLoading && <GooSpinner size={100} color={colors.RiftBlue} loading={true} />}
+                        {isLoading && <GooSpinner size={100} color={colors.purpleBorder} loading={true} />}
                         <Spacer />
                         <Text
                             fontSize='12px'
-                            w='60%'
+                            w={
+                                status != DepositStatus.Confirmed &&
+                                status != DepositStatus.Error &&
+                                (status === DepositStatus.WaitingForWalletConfirmation ||
+                                status === DepositStatus.ApprovalPending ||
+                                status === DepositStatus.DepositPending
+                                    ? '100%'
+                                    : '60%')
+                            }
                             mt='25px'
                             mb='0px'
                             color={colors.textGray}
                             fontWeight={'normal'}
                             textAlign='center'>
-                            Please confirm the transaction in your wallet
+                            {status != DepositStatus.Confirmed &&
+                                status != DepositStatus.Error &&
+                                (status === DepositStatus.WaitingForWalletConfirmation ||
+                                status === DepositStatus.ApprovalPending ||
+                                status === DepositStatus.DepositPending
+                                    ? 'Awaiting blockchain confirmation...'
+                                    : 'Please confirm the transaction in your wallet')}
                         </Text>
                         {/* TODO: ONLY SHOW ABOVE if waiting on wallet confirmation */}
                         <Flex direction={'column'} align={'center'} w='100%' justify={'center'}>
@@ -130,15 +154,19 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen, onClose
                                 <Button
                                     bg={colors.offBlackLighter}
                                     borderWidth={'2px'}
-                                    borderColor={colors.offBlackLighter2}
+                                    borderColor={colors.borderGrayLight}
                                     _hover={{ bg: colors.borderGray }}
                                     borderRadius='md'
                                     onClick={() => window.open(getEtherscanUrl(), '_blank')}
                                     isDisabled={!txHash}>
                                     <Flex mt='-4px ' mr='8px'>
-                                        <HiOutlineExternalLink size={'17px'} color={colors.textGray} />
+                                        <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
                                     </Flex>
-                                    <Text fontSize='14px' color={colors.textGray} cursor={'pointer'} fontWeight={'normal'}>
+                                    <Text
+                                        fontSize='14px'
+                                        color={colors.offerWhite}
+                                        cursor={'pointer'}
+                                        fontWeight={'normal'}>
                                         View on Etherscan
                                     </Text>
                                 </Button>

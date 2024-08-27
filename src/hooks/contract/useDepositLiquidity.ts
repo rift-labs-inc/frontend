@@ -1,12 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ethers, BigNumber, BigNumberish } from 'ethers';
-import { WETH_ABI } from '../../utils/constants';
+import { useStore } from '../../store';
+import { ERC20ABI } from '../../utils/constants';
+import { useAccount } from 'wagmi';
+import { useContractData } from '../../components/providers/ContractDataProvider';
 
 export enum DepositStatus {
     Idle = 'idle',
     WaitingForWalletConfirmation = 'waitingForWalletConfirmation',
-    ApprovingWETH = 'approvingWETH',
-    DepositingLiquidity = 'depositingLiquidity',
+    WaitingForDepositTokenApproval = 'ApprovingDepositToken',
+    ApprovalPending = 'approvalPending',
+    WaitingForDepositApproval = 'WaitingForDepositApproval',
+    DepositPending = 'depositPending',
     Confirmed = 'confirmed',
     Error = 'error',
 }
@@ -14,12 +19,12 @@ export enum DepositStatus {
 interface DepositLiquidityParams {
     signer: ethers.Signer;
     riftExchangeAbi: ethers.ContractInterface;
-    riftExchangeContract: string;
-    wethAddress: string;
+    riftExchangeContractAddress: string;
+    tokenAddress: string;
     btcPayoutLockingScript: string;
-    btcExchangeRate: BigNumberish;
+    btcExchangeRate: BigNumber;
     vaultIndexToOverwrite: number;
-    depositAmount: BigNumberish;
+    tokenDepositAmountInSmallestTokenUnits: BigNumber;
     vaultIndexWithSameExchangeRate: number;
 }
 
@@ -35,6 +40,9 @@ export function useDepositLiquidity() {
     const [status, setStatus] = useState<DepositStatus>(DepositStatus.Idle);
     const [error, setError] = useState<string | null>(null);
     const [txHash, setTxHash] = useState<string | null>(null);
+    const selectedAsset = useStore((state) => state.selectedAsset);
+    const userEthAddress = useStore((state) => state.userEthAddress);
+    const { refreshUserDepositData } = useContractData();
 
     const resetDepositState = useCallback(() => {
         if (isClient) {
@@ -53,33 +61,46 @@ export function useDepositLiquidity() {
             setTxHash(null);
 
             try {
-                const wethContract = new ethers.Contract(params.wethAddress, WETH_ABI, params.signer);
+                const tokenContract = new ethers.Contract(params.tokenAddress, ERC20ABI, params.signer);
                 const riftExchangeContractInstance = new ethers.Contract(
-                    params.riftExchangeContract,
+                    params.riftExchangeContractAddress,
                     params.riftExchangeAbi,
                     params.signer,
                 );
 
-                const allowance = await wethContract.allowance(await params.signer.getAddress(), params.riftExchangeContract);
+                const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContractAddress);
 
-                if (BigNumber.from(allowance).lt(BigNumber.from(params.depositAmount))) {
-                    setStatus(DepositStatus.ApprovingWETH);
-                    const approveTx = await wethContract.approve(params.riftExchangeContract, params.depositAmount);
+                console.log('allowance:', allowance.toString());
+                console.log(
+                    'tokenDepositAmountInSmallestTokenUnits:',
+                    params.tokenDepositAmountInSmallestTokenUnits.toString(),
+                );
+                if (BigNumber.from(allowance).lt(BigNumber.from(params.tokenDepositAmountInSmallestTokenUnits))) {
+                    setStatus(DepositStatus.WaitingForDepositTokenApproval);
+                    const approveTx = await tokenContract.approve(
+                        params.riftExchangeContractAddress,
+                        params.tokenDepositAmountInSmallestTokenUnits,
+                    );
+
+                    setStatus(DepositStatus.ApprovalPending);
                     await approveTx.wait();
                 }
 
-                setStatus(DepositStatus.DepositingLiquidity);
+                setStatus(DepositStatus.WaitingForDepositApproval);
+
                 const depositTx = await riftExchangeContractInstance.depositLiquidity(
-                    params.btcPayoutLockingScript,
+                    params.tokenDepositAmountInSmallestTokenUnits,
                     params.btcExchangeRate,
+                    params.btcPayoutLockingScript,
                     params.vaultIndexToOverwrite,
-                    params.depositAmount.toString(),
                     params.vaultIndexWithSameExchangeRate,
                 );
+                setStatus(DepositStatus.DepositPending);
 
                 setTxHash(depositTx.hash);
                 await depositTx.wait();
                 setStatus(DepositStatus.Confirmed);
+                refreshUserDepositData();
             } catch (err) {
                 console.error('Error in depositLiquidity:', err);
                 setError(err instanceof Error ? err.message : String(err));

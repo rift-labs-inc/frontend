@@ -1,7 +1,8 @@
 import { ethers, BigNumberish, BigNumber } from 'ethers';
 import { JsonFragment } from '@ethersproject/abi';
 import { LiqudityProvider, ReservationState, SwapReservation } from '../types';
-import { DepositVault } from '../types';
+import { DepositVault, ValidAsset } from '../types';
+import { useStore } from '../store';
 
 // CONTRACT FUNCTIONS
 
@@ -35,9 +36,11 @@ export async function getDepositVaultByIndex(
 
         return {
             initialBalance: BigNumber.from(depositVault[0]),
-            unreservedBalance: BigNumber.from(depositVault[1]),
-            btcExchangeRate: BigNumber.from(depositVault[2]),
-            btcPayoutLockingScript: depositVault[3],
+            unreservedBalanceFromContract: BigNumber.from(depositVault[1]),
+            withdrawnAmount: BigNumber.from(depositVault[2]),
+            btcExchangeRate: BigNumber.from(depositVault[3]),
+            btcPayoutLockingScript: depositVault[4],
+            depositAsset: useStore.getState().validAssets['USDT'], // TODO: get this from the contract you are reading from
             index: index,
         };
     } catch (error) {
@@ -65,6 +68,23 @@ export async function getLiquidityProvider(
 ): Promise<LiqudityProvider> {
     const contract = new ethers.Contract(riftExchangeContract, abi, provider);
     return await contract.getLiquidityProvider(liquidityProviderAddress);
+}
+
+export async function getTokenBalance(
+    provider: ethers.providers.Provider | ethers.Signer,
+    tokenAddress: string,
+    accountAddress: string,
+    abi: ethers.ContractInterface,
+): Promise<BigNumber> {
+    const contract = new ethers.Contract(tokenAddress, abi, provider);
+
+    try {
+        const balance: BigNumber = await contract.balanceOf(accountAddress);
+        return balance;
+    } catch (error) {
+        console.error(`Error fetching token balance for address ${accountAddress}:`, error);
+        throw error;
+    }
 }
 
 // MULTICALL
@@ -96,14 +116,18 @@ export function decodeDepositVaults(data: string): DepositVault[] {
 
     // decode each element in the array
     const depositVaults: DepositVault[] = decodedArray.map((item: string) => {
-        const [initialBalance, unreservedBalance, btcExchangeRate, btcPayoutLockingScript] = abiCoder.decode(
-            ['uint256', 'uint192', 'uint64', 'bytes22'],
-            item,
-        );
+        const [
+            initialBalance,
+            unreservedBalanceFromContract,
+            withdrawnAmount,
+            btcExchangeRate,
+            btcPayoutLockingScript,
+        ] = abiCoder.decode(['uint256', 'uint256', 'uint256', 'uint64', 'bytes22'], item);
 
         return {
             initialBalance,
-            unreservedBalance,
+            unreservedBalanceFromContract,
+            withdrawnAmount,
             btcExchangeRate,
             btcPayoutLockingScript: ethers.utils.hexlify(btcPayoutLockingScript),
         };

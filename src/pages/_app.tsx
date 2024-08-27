@@ -15,9 +15,6 @@ import { WagmiProvider } from 'wagmi';
 import { mainnet, sepolia, polygon, optimism, arbitrum, base } from 'wagmi/chains';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { getDefaultConfig, RainbowKitProvider, darkTheme, Theme } from '@rainbow-me/rainbowkit';
-import { ethers } from 'ethers';
-import { contractChainID, contractRpcURL, riftExchangeContractAddress } from '../utils/constants';
-import { useSwapReservations } from '../hooks/contract/useSwapReservations';
 import { ContractDataProvider } from '../components/providers/ContractDataProvider';
 
 const config = getDefaultConfig({

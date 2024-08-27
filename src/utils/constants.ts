@@ -1,35 +1,206 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers';
-import { DepositVault } from '../types';
+import { ValidAsset, DepositVault } from '../types';
 import { useStore } from '../store';
 import { sepolia } from 'viem/chains';
+import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
 // export const contractChainID = 1; // Ethereum Mainnet
-export const contractChainID = 11155111; // Sepolia
-export const contractRpcURL = 'https://ethereum-sepolia.blockpi.network/v1/rpc/public';
 export const etherScanBaseUrl = 'https://sepolia.etherscan.io';
+export const bitcoinDecimals = 8;
+export const SATS_PER_BTC = 100000000; // 10^8
+export const bitcoin_bg_color = '#c26920';
+export const bitcoin_border_color = '#FFA04C';
+export const bitcoin_dark_bg_color = '#372412';
+export const bitcoin_light_text_color = '#7d572e';
 
-export const riftExchangeContractAddress = '0xe6167f469152293b045838d69F9687a7Ee30aaf3';
-export const maxSwapOutputs = 200;
-export const wethAddress = '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9';
-export const WETH_ABI = [
+// export const riftExchangeContractAddress = '0x4f9182DBcCf9C6518b1D67181F4E5a6d3D223C0E'; // deployed for USDT on Sepolia
+export const maxSwapOutputs = 200; // TODO: inspect this and find real value
+
+export const ERC20ABI = [
     {
-        constant: false,
+        type: 'event',
+        name: 'Approval',
         inputs: [
-            { name: 'guy', type: 'address' },
-            { name: 'wad', type: 'uint256' },
+            {
+                indexed: true,
+                name: 'owner',
+                type: 'address',
+            },
+            {
+                indexed: true,
+                name: 'spender',
+                type: 'address',
+            },
+            {
+                indexed: false,
+                name: 'value',
+                type: 'uint256',
+            },
         ],
-        name: 'approve',
-        outputs: [{ name: '', type: 'bool' }],
-        type: 'function',
     },
     {
-        constant: true,
+        type: 'event',
+        name: 'Transfer',
         inputs: [
-            { name: 'owner', type: 'address' },
-            { name: 'spender', type: 'address' },
+            {
+                indexed: true,
+                name: 'from',
+                type: 'address',
+            },
+            {
+                indexed: true,
+                name: 'to',
+                type: 'address',
+            },
+            {
+                indexed: false,
+                name: 'value',
+                type: 'uint256',
+            },
         ],
-        name: 'allowance',
-        outputs: [{ name: '', type: 'uint256' }],
+    },
+    {
         type: 'function',
+        name: 'allowance',
+        stateMutability: 'view',
+        inputs: [
+            {
+                name: 'owner',
+                type: 'address',
+            },
+            {
+                name: 'spender',
+                type: 'address',
+            },
+        ],
+        outputs: [
+            {
+                type: 'uint256',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'approve',
+        stateMutability: 'nonpayable',
+        inputs: [
+            {
+                name: 'spender',
+                type: 'address',
+            },
+            {
+                name: 'amount',
+                type: 'uint256',
+            },
+        ],
+        outputs: [
+            {
+                type: 'bool',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'balanceOf',
+        stateMutability: 'view',
+        inputs: [
+            {
+                name: 'account',
+                type: 'address',
+            },
+        ],
+        outputs: [
+            {
+                type: 'uint256',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'decimals',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [
+            {
+                type: 'uint8',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'name',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [
+            {
+                type: 'string',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'symbol',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [
+            {
+                type: 'string',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'totalSupply',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [
+            {
+                type: 'uint256',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'transfer',
+        stateMutability: 'nonpayable',
+        inputs: [
+            {
+                name: 'recipient',
+                type: 'address',
+            },
+            {
+                name: 'amount',
+                type: 'uint256',
+            },
+        ],
+        outputs: [
+            {
+                type: 'bool',
+            },
+        ],
+    },
+    {
+        type: 'function',
+        name: 'transferFrom',
+        stateMutability: 'nonpayable',
+        inputs: [
+            {
+                name: 'sender',
+                type: 'address',
+            },
+            {
+                name: 'recipient',
+                type: 'address',
+            },
+            {
+                name: 'amount',
+                type: 'uint256',
+            },
+        ],
+        outputs: [
+            {
+                type: 'bool',
+            },
+        ],
     },
 ];
