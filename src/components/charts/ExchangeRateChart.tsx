@@ -23,9 +23,11 @@ const calculateSellChart = (depositVaults: DepositVault[]): GraphData => {
     // Iterate vaults
     for (const vault of depositVaults) {
         // Get every rate and balance from each vault
-        const btcRate = parseFloat(vault.btcExchangeRate.toString());
-        const rate = Math.floor(((btcRate - convertedMarketRate) / convertedMarketRate) * 100);
+        const btcRate = parseFloat(vault.btcExchangeRate.toString()); // WEI per SAT
+        const initialRate = Math.ceil(((btcRate - convertedMarketRate) / convertedMarketRate) * 100);
+        const rate = initialRate == 0 ? initialRate : -initialRate;
         const balance = Number(BigNumber.from(vault.calculatedTrueUnreservedBalance.toString()).div(SATS_PER_BTC));
+        // console.log('Chart', rate, balance, ((btcRate - convertedMarketRate) / convertedMarketRate) * 100);
 
         // Update data map
         const currentBalance = dataMap.get(rate) ?? 0;
@@ -41,6 +43,40 @@ const calculateSellChart = (depositVaults: DepositVault[]): GraphData => {
         x,
         y: (y / maxY) * 100,
     }));
+
+    console.log('Chart', normalizedDataArray);
+    /*
+    [
+    {
+        "x": 0,
+        "y": 100
+    },
+    {
+        "x": 5,
+        "y": 18.75
+    },
+    {
+        "x": 3,
+        "y": 36.25
+    },
+    {
+        "x": 1,
+        "y": 1.7500000000000002
+    },
+    {
+        "x": -1,
+        "y": 1
+    },
+    {
+        "x": 10,
+        "y": 2.5
+    },
+    {
+        "x": 45,
+        "y": 3.3333333333333335
+    }
+]
+    */
 
     return normalizedDataArray;
 };
