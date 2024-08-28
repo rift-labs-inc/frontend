@@ -84,7 +84,7 @@ export const DepositUI = () => {
                 return BigNumber.from(usdtDepositAmount).gt(availableLiquidity);
             } catch (error) {
                 console.error('Error in checkLiquidityExceeded:', error);
-                return false; // or handle the error as appropriate for your use case
+                return false;
             }
         },
         [availableLiquidity],
