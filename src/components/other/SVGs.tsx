@@ -1,3 +1,5 @@
+import { CSSProperties } from 'react';
+
 export const WBTCSVG = () => {
     return (
         <svg width='100' height='20' viewBox='0 0 200 46' fill='none' xmlns='http://www.w3.org/2000/svg'>
@@ -443,9 +445,25 @@ export const USDT_Tag = ({ width = '250', height = '80', viewBox = '0 0 250 80' 
     );
 };
 
-export const WETH_Tag = ({ width = '259', height = '81', viewBox = '0 0 259 81' }) => {
+export const WETH_Tag = ({
+    width = '259',
+    height = '81',
+    viewBox = '0 0 259 81',
+    style,
+}: {
+    width?: number | string;
+    height?: number | string;
+    viewBox?: string;
+    style?: CSSProperties;
+}) => {
     return (
-        <svg width={width} height={height} viewBox={viewBox} fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <svg
+            width={width}
+            height={height}
+            viewBox={viewBox}
+            fill='none'
+            xmlns='http://www.w3.org/2000/svg'
+            style={style}>
             <rect
                 x='34.1054'
                 y='5.76018'
