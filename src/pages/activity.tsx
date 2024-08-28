@@ -83,7 +83,7 @@ const Activity = () => {
                             Manage current swaps and previous bridge activity.
                         </Text>
                     </Flex>
-                    <Flex w='100%' maxW='1200px' gap='12px'>
+                    <Flex w='100%' maxW='1200px' gap='12px' px='20px'>
                         <ActivityChartContainer title='Active Liquidity' value='329,343.32'>
                             <ActiveLiquidityRawChart />
                         </ActivityChartContainer>
@@ -99,7 +99,9 @@ const Activity = () => {
                             h='40px'
                         />
                     </Flex>
-                    <SwapTable />
+                    <Flex w='100%' maxW='1200px' gap='12px' px='20px'>
+                        <SwapTable />
+                    </Flex>
                 </Flex>
             </Flex>
         </>

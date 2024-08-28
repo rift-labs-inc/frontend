@@ -74,7 +74,6 @@ const SwapTable: React.FC<SwapTableProps> = () => {
             border={`2.5px solid ${borderColor}`}
             w='100%'
             borderRadius='16px'
-            maxW='1200px'
             p='12px'
             flexDir='column'>
             <Flex w='100%' gap='8px'>
