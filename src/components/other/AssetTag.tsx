@@ -15,12 +15,12 @@ interface AssetTagProps {
 export const AssetTag = ({ assetName, w }: AssetTagProps) => {
     const { width } = useWindowSize();
     const isMobileView = width < 600;
-    const selectedAsset = useStore((state) => state.selectedAsset);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
 
     let asset = useStore.getState().validAssets[assetName];
 
-    if (assetName === 'selected' && selectedAsset) {
-        asset = selectedAsset;
+    if (assetName === 'selected' && selectedInputAsset) {
+        asset = selectedInputAsset;
     } else if (assetName === 'BTC') {
         asset = {
             name: 'BTC',
@@ -45,8 +45,22 @@ export const AssetTag = ({ assetName, w }: AssetTagProps) => {
             <Flex w='36px' mr='-20px' zIndex={'10'}>
                 {React.createElement(icon_svg)}{' '}
             </Flex>
-            <Flex w={assetName.length === 4 ? '100px' : assetName.length === 3 ? '87px' : '150px'} h='32px' pl='15px' border='2px solid' borderColor={border_color} bg={bg_color} borderRadius='9px' align='center' justify='center'>
-                <Text mt='0px' fontWeight={'bold'} color={colors.offWhite} fontFamily={FONT_FAMILIES.NOSTROMO} fontSize={'18px'}>
+            <Flex
+                w={assetName.length === 4 ? '100px' : assetName.length === 3 ? '87px' : '150px'}
+                h='32px'
+                pl='15px'
+                border='2px solid'
+                borderColor={border_color}
+                bg={bg_color}
+                borderRadius='9px'
+                align='center'
+                justify='center'>
+                <Text
+                    mt='0px'
+                    fontWeight={'bold'}
+                    color={colors.offWhite}
+                    fontFamily={FONT_FAMILIES.NOSTROMO}
+                    fontSize={'18px'}>
                     {asset.name}
                 </Text>
                 {/* <Flex ml='8px'>

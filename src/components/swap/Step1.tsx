@@ -34,9 +34,6 @@ export const Step1 = ({}) => {
     const isMobileView = width < 600;
     const router = useRouter();
     const fontSize = isMobileView ? '20px' : '20px';
-    const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
-    const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
-
     const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
@@ -44,7 +41,7 @@ export const Step1 = ({}) => {
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const [ethPayoutAddress, setethPayoutAddress] = useState('');
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
-    const selectedAsset = useStore((state) => state.selectedAsset);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
 
     // eth payout address
     const handleETHPayoutAddressChange = (e) => {
@@ -86,7 +83,7 @@ export const Step1 = ({}) => {
             await reserveLiquidity({
                 signer,
                 riftExchangeAbi: riftExchangeABI.abi,
-                riftExchangeContract: selectedAsset.riftExchangeContractAddress,
+                riftExchangeContract: selectedInputAsset.riftExchangeContractAddress,
                 vaultIndexesToReserve: lowestFeeReservationParams.vaultIndexesToReserve,
                 amountsToReserve: lowestFeeReservationParams.amountsToReserve,
                 ethPayoutAddress,
@@ -126,15 +123,15 @@ export const Step1 = ({}) => {
                     textAlign='center'
                     mt='6px'
                     flex='1'>
-                    Initiate the swap by paying fees up front to lock the seller’s ETH. After the reservation is confirmed, you
-                    will have 6 hours to send BTC to complete the swap.
+                    Initiate the swap by paying fees up front to lock the seller’s ETH. After the reservation is
+                    confirmed, you will have 6 hours to send BTC to complete the swap.
                 </Text>
                 <Flex direction='column' my='100px' align='center' width='100%'>
                     <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mb={4}>
                         Reservation Vault Selection Visualization
                     </Text>
                     <Flex justify='center' wrap='wrap' gap={4} alignItems='center'>
-                        {lowestFeeReservationParams.vaultIndexesToReserve.map((index, i) => (
+                        {lowestFeeReservationParams?.vaultIndexesToReserve?.map((index, i) => (
                             <React.Fragment key={index}>
                                 <Box
                                     border='1px solid'
@@ -153,9 +150,9 @@ export const Step1 = ({}) => {
                                         Vault #{index}
                                     </Text>
                                     <Text fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={'-2px'} fontSize='25px'>
-                                        {Number(weiToEth(BigNumber.from(lowestFeeReservationParams.amountsToReserve[i]))).toFixed(
-                                            2,
-                                        )}{' '}
+                                        {Number(
+                                            weiToEth(BigNumber.from(lowestFeeReservationParams.amountsToReserve[i])),
+                                        ).toFixed(2)}{' '}
                                         ETH
                                     </Text>
                                 </Box>
@@ -188,7 +185,7 @@ export const Step1 = ({}) => {
                             </Text>
                             <Text fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={'-2px'} fontSize='25px'>
                                 {Number(
-                                    lowestFeeReservationParams.amountsToReserve.reduce(
+                                    lowestFeeReservationParams?.amountsToReserve.reduce(
                                         (acc, curr) => Number(acc) + Number(weiToEth(BigNumber.from(curr))),
                                         0,
                                     ),
@@ -200,7 +197,14 @@ export const Step1 = ({}) => {
                 </Flex>
 
                 {/* ETH Payout Address */}
-                <Flex mt='20px' px='10px' bg='#1C1C1C' w='100%' h='78px' border='2px solid #565656' borderRadius={'10px'}>
+                <Flex
+                    mt='20px'
+                    px='10px'
+                    bg='#1C1C1C'
+                    w='100%'
+                    h='78px'
+                    border='2px solid #565656'
+                    borderRadius={'10px'}>
                     <Flex direction={'column'}>
                         <Text
                             color={colors.offWhite}

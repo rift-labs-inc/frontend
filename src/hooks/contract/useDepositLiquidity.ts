@@ -40,7 +40,7 @@ export function useDepositLiquidity() {
     const [status, setStatus] = useState<DepositStatus>(DepositStatus.Idle);
     const [error, setError] = useState<string | null>(null);
     const [txHash, setTxHash] = useState<string | null>(null);
-    const selectedAsset = useStore((state) => state.selectedAsset);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const userEthAddress = useStore((state) => state.userEthAddress);
     const { refreshUserDepositData } = useContractData();
 

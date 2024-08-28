@@ -4,7 +4,7 @@ import { OpenGraph } from '../components/background/OpenGraph';
 import HorizontalButtonSelector from '../components/HorizontalButtonSelector';
 import OrangeText from '../components/other/OrangeText';
 import WhiteText from '../components/other/WhiteText';
-import { DepositUI } from '../components/sell/DepositUI';
+import { DepositUIOLD } from '../components/sell/DepositUIOLD';
 import { Navbar } from '../components/Navbar';
 import { toastSuccess } from '../hooks/toast';
 import useWindowSize from '../hooks/useWindowSize';
@@ -26,7 +26,7 @@ import { BTCSVG, ETH_Icon, ETH_Logo, ETHSVG } from '../components/other/SVGs';
 import { ManageVaults } from '../components/sell/ManageVaults';
 import ExchangeRateChart from '../components/charts/ExchangeRateChart';
 
-const Sell = () => {
+const Manage = () => {
     const { height, width } = useWindowSize();
     const isSmallScreen = width < 1200;
     const router = useRouter();
@@ -157,7 +157,7 @@ const Sell = () => {
                             </Flex>
                         </Flex> */}
                         {/* Deposit & Manage Vaults */}
-                        {selectedButton === 'Create a Vault' ? <DepositUI /> : <ManageVaults />}
+                        {selectedButton === 'Create a Vault' ? <DepositUIOLD /> : <ManageVaults />}
                     </Flex>
                 </Flex>
             </Flex>
@@ -165,4 +165,4 @@ const Sell = () => {
     );
 };
 
-export default Sell;
+export default Manage;

@@ -35,7 +35,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
         setUserCompletedDepositVaults,
         updateTotalAvailableLiquidity,
         setTotalExpiredReservations,
-        selectedAsset,
+        selectedInputAsset,
     } = useStore();
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
@@ -97,7 +97,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                     reservedBalance: BigNumber.from(vault.initialBalance)
                         .sub(newCalculatedUnreservedBalance)
                         .sub(vault.withdrawnAmount),
-                    depositAsset: selectedAsset,
+                    depositAsset: selectedInputAsset,
                     index: vaultIndex,
                 };
             });
@@ -105,15 +105,15 @@ export function useDepositVaults(): UseDepositVaultsResult {
             console.log('Total Available Liquidity:', totalAvailableLiquidity.toString());
 
             // Update the store with the new total available liquidity
-            updateTotalAvailableLiquidity(selectedAsset.name, totalAvailableLiquidity);
+            updateTotalAvailableLiquidity(selectedInputAsset.name, totalAvailableLiquidity);
 
             return updatedVaults;
         },
-        [updateTotalAvailableLiquidity, setTotalExpiredReservations, selectedAsset.name],
+        [updateTotalAvailableLiquidity, setTotalExpiredReservations, selectedInputAsset.name],
     );
 
     const fetchDepositVaultsData = useCallback(async () => {
-        if (!ethersRpcProvider || !selectedAsset.riftExchangeContractAddress) {
+        if (!ethersRpcProvider || !selectedInputAsset.riftExchangeContractAddress) {
             setUserActiveDepositVaults([]);
             setUserCompletedDepositVaults([]);
             return;
@@ -124,7 +124,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const depositVaultsLength = await getDepositVaultsLength(
                 ethersRpcProvider,
                 riftExchangeABI.abi,
-                selectedAsset.riftExchangeContractAddress,
+                selectedInputAsset.riftExchangeContractAddress,
             );
 
             const bytecode = depositVaultAggregatorABI.bytecode;
@@ -133,7 +133,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 ethersRpcProvider,
                 bytecode.object,
                 abi,
-                selectedAsset.riftExchangeContractAddress,
+                selectedInputAsset.riftExchangeContractAddress,
                 Array.from({ length: depositVaultsLength }).map((_, i) => i),
             );
 
@@ -148,7 +148,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 const result = await getLiquidityProvider(
                     ethersRpcProvider,
                     riftExchangeABI.abi,
-                    selectedAsset.riftExchangeContractAddress,
+                    selectedInputAsset.riftExchangeContractAddress,
                     address,
                 );
 
@@ -182,7 +182,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
         }
     }, [
         ethersRpcProvider,
-        selectedAsset.riftExchangeContractAddress,
+        selectedInputAsset.riftExchangeContractAddress,
         allFetchedSwapReservations,
         calculateTrueUnreservedLiquidity,
         setAllDepositVaults,

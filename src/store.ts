@@ -24,8 +24,8 @@ type Store = {
     updateTotalAvailableLiquidity: (assetKey: string, newLiquidity: BigNumber) => void;
     updateConnectedUserBalanceRaw: (assetKey: string, newBalance: BigNumber) => void;
     updateConnectedUserBalanceFormatted: (assetKey: string, newBalance: string) => void;
-    selectedAsset: ValidAsset;
-    setSelectedAsset: (asset: ValidAsset) => void;
+    selectedInputAsset: ValidAsset;
+    setSelectedInputAsset: (asset: ValidAsset) => void;
 
     // contract data (deposit vaults, swap reservations)
     allDepositVaults: any;
@@ -52,16 +52,29 @@ type Store = {
     ) => void;
     btcInputSwapAmount: string;
     setBtcInputSwapAmount: (amount: string) => void;
-    tokenOutputSwapAmount: string;
-    setTokenOutputSwapAmount: (amount: string) => void;
+    usdtOutputSwapAmount: string;
+    setUsdtOutputSwapAmount: (amount: string) => void;
     lowestFeeReservationParams: ReserveLiquidityParams | null;
     setLowestFeeReservationParams: (reservation: ReserveLiquidityParams | null) => void;
     showManageReservationScreen: boolean;
     setShowManageReservationScreen: (show: boolean) => void;
+    depositMode: boolean;
+    setDepositMode: (mode: boolean) => void;
 };
 
 export const useStore = create<Store>((set) => {
     const validAssets: Record<string, ValidAsset> = {
+        BTC: {
+            name: 'BTC',
+            decimals: 8,
+            icon_svg: null,
+            bg_color: '#c26920',
+            border_color: '#FFA04C',
+            border_color_light: '#FFA04C',
+            dark_bg_color: '#372412',
+            light_text_color: '#7d572e',
+            priceUSD: null,
+        },
         USDT: {
             name: 'USDT',
             tokenAddress: '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0',
@@ -165,8 +178,8 @@ export const useStore = create<Store>((set) => {
                     [assetKey]: { ...state.validAssets[assetKey], connectedUserBalanceFormatted: newBalance },
                 },
             })),
-        selectedAsset: validAssets.USDT,
-        setSelectedAsset: (selectedAsset) => set({ selectedAsset }),
+        selectedInputAsset: validAssets.USDT,
+        setSelectedInputAsset: (selectedInputAsset) => set({ selectedInputAsset }),
 
         // contract data (deposit vaults, swap reservations)
         allDepositVaults: {},
@@ -191,11 +204,13 @@ export const useStore = create<Store>((set) => {
         setSwapFlowState: (swapFlowState) => set({ swapFlowState }),
         btcInputSwapAmount: '',
         setBtcInputSwapAmount: (btcInputSwapAmount) => set({ btcInputSwapAmount }),
-        tokenOutputSwapAmount: '',
-        setTokenOutputSwapAmount: (tokenOutputSwapAmount) => set({ tokenOutputSwapAmount }),
+        usdtOutputSwapAmount: '',
+        setUsdtOutputSwapAmount: (usdtOutputSwapAmount) => set({ usdtOutputSwapAmount }),
         lowestFeeReservationParams: null,
         setLowestFeeReservationParams: (lowestFeeReservationParams) => set({ lowestFeeReservationParams }),
         showManageReservationScreen: false,
         setShowManageReservationScreen: (showManageReservationScreen) => set({ showManageReservationScreen }),
+        depositMode: false,
+        setDepositMode: (depositMode) => set({ depositMode }),
     };
 });

@@ -45,20 +45,20 @@ export type DepositVault = {
 
 export type ValidAsset = {
     name: string;
-    tokenAddress: string;
+    tokenAddress?: string;
     decimals: number;
-    riftExchangeContractAddress: string;
-    riftExchangeAbi: any;
-    contractChainID: number;
-    contractRpcURL: string;
+    riftExchangeContractAddress?: string;
+    riftExchangeAbi?: any;
+    contractChainID?: number;
+    contractRpcURL?: string;
     icon_svg: any;
     bg_color: string;
     border_color: string;
     border_color_light: string;
     dark_bg_color: string;
     light_text_color: string;
-    exchangeRateInTokenPerBTC: number | null;
-    exchangeRateInSmallestTokenUnitPerSat: BigNumber | null;
+    exchangeRateInTokenPerBTC?: number | null;
+    exchangeRateInSmallestTokenUnitPerSat?: BigNumber | null;
     priceUSD: number | null;
     totalAvailableLiquidity?: BigNumber;
     connectedUserBalanceRaw?: BigNumber;

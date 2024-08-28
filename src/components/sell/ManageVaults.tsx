@@ -84,7 +84,7 @@ export const ManageVaults = ({}) => {
     const setUserActiveDepositVaults = useStore((state) => state.setUserActiveDepositVaults);
     const userCompletedDepositVaults = useStore((state) => state.userCompletedDepositVaults);
     const setUserCompletedDepositVaults = useStore((state) => state.setUserCompletedDepositVaults);
-    const selectedAsset = useStore((state) => state.selectedAsset);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
 
     const [activeTab, setActiveTab] = useState<TabType>('Active');
 
@@ -285,9 +285,9 @@ export const ManageVaults = ({}) => {
                         h='50px'
                         mt='6px'
                         w='100%'
-                        bg={selectedAsset.dark_bg_color}
+                        bg={selectedInputAsset.dark_bg_color}
                         border='3px solid'
-                        borderColor={selectedAsset.bg_color}
+                        borderColor={selectedInputAsset.bg_color}
                         borderRadius={'14px'}
                         pl='15px'
                         pr='10px'
@@ -362,9 +362,9 @@ export const ManageVaults = ({}) => {
                         h='50px'
                         mt='6px'
                         w='100%'
-                        bg={selectedAsset.dark_bg_color}
+                        bg={selectedInputAsset.dark_bg_color}
                         border='3px solid'
-                        borderColor={selectedAsset.bg_color}
+                        borderColor={selectedInputAsset.bg_color}
                         borderRadius={'14px'}
                         pl='15px'
                         pr='10px'
@@ -533,17 +533,17 @@ export const ManageVaults = ({}) => {
                     align='center'
                     justify='flex-start'
                     borderRadius={'10px'}
-                    fontSize={'15px'}
+                    fontSize={'14px'}
                     // border={'2px solid'}
                     fontFamily={FONT_FAMILIES.NOSTROMO}
                     borderColor={colors.borderGray}
                     fontWeight='bold'
                     color={colors.offWhite}>
                     {/* <Text width='6%'>ID</Text> */}
-                    <Text width='20%'>INDEX</Text>
-                    <Text width='30%'>SWAP INPUT</Text>
-                    <Text width='39%'>SWAP OUTPUT</Text>
+                    <Text width='8.5%'>ID</Text>
+                    <Text width='37.5%'>SWAP INPUT</Text>
                     <Text width='32%'>EXCHANGE RATE</Text>
+                    <Text width='20%'>FILL STATUS</Text>
                 </Flex>
             )}
             <style>
@@ -591,22 +591,18 @@ export const ManageVaults = ({}) => {
                                 justify='flex-start'
                                 borderRadius={'10px'}
                                 border='2px solid '
-                                color={colors.offWhite}
+                                color={colors.textGray}
                                 borderColor={colors.borderGrayLight}>
-                                <Text width='6%' fontWeight='bold'>
-                                    #{vault.index}
-                                </Text>
-                                {/* <Text width='23%' ml='-8p x' mr='9px'></Text> */}
-                                {/* SWAP INPUT & SWAP OUTPUT */}
-                                <Flex w='100%' mt='10px'>
-                                    <Flex w='47%' direction='column'>
+                                <Text width='8.5%'>#{vault.index}</Text>
+                                <Flex width='38%' mt='10px'>
+                                    <Flex w='85%' direction='column'>
                                         <Flex
                                             h='50px'
-                                            mt='6px'
+                                            mt='-7px'
                                             w='100%'
-                                            bg={selectedAsset.dark_bg_color}
-                                            border='3px solid'
-                                            borderColor={selectedAsset.bg_color}
+                                            bg={selectedInputAsset.dark_bg_color}
+                                            border='2px solid'
+                                            borderColor={selectedInputAsset.bg_color}
                                             borderRadius={'14px'}
                                             pl='15px'
                                             pr='10px'
@@ -626,83 +622,8 @@ export const ManageVaults = ({}) => {
                                             <AssetTag2 assetName={vault?.depositAsset?.name} width='84px' />
                                         </Flex>
                                     </Flex>
-                                    <Text
-                                        mt='20px'
-                                        p='12px'
-                                        fontSize='20px'
-                                        opacity={0.9}
-                                        fontWeight={'bold'}
-                                        color={colors.offWhite}
-                                        letterSpacing={'-1px'}
-                                        fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                        <FaRegArrowAltCircleRight color={colors.RiftOrange} />
-                                    </Text>
-                                    <Spacer />
-
-                                    <Flex w='47%' direction='column'>
-                                        <Flex
-                                            h='50px'
-                                            mt='6px'
-                                            w='100%'
-                                            bg='#2E1C0C'
-                                            border={'3px solid'}
-                                            borderColor={'#78491F'}
-                                            borderRadius={'14px'}
-                                            pl='15px'
-                                            pr='10px'
-                                            align={'center'}>
-                                            <Text
-                                                fontSize='16px'
-                                                color={colors.offWhite}
-                                                letterSpacing={'-1px'}
-                                                fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                                {vault?.btcExchangeRate &&
-                                                    calculateBtcOutputAmountFromExchangeRate(
-                                                        vault.initialBalance,
-                                                        vault.depositAsset.decimals,
-                                                        vault.btcExchangeRate,
-                                                    )}
-                                            </Text>
-
-                                            <Spacer />
-                                            <AssetTag2 assetName={'BTC'} width='80px' />
-                                        </Flex>
-                                    </Flex>
                                 </Flex>
-                                {/* <Flex width='30%'>
-                                    <Text
-                                        color={
-                                            Number(fillPercentage) > 0 ? colors.greenOutline : colors.textGray
-                                        }>{`${fillPercentage}%`}</Text>
-                                    <Flex
-                                        ml='20px'
-                                        mt='5px'
-                                        width='60%'
-                                        px='20px'
-                                        bg={
-                                            Number(fillPercentage) > 0
-                                                ? Number(fillPercentage) == 100
-                                                    ? colors.greenOutline
-                                                    : colors.greenBackground
-                                                : colors.offBlackLighter2
-                                        }
-                                        borderRadius='10px'
-                                        height='17px'
-                                        border={`1.5px solid`}
-                                        borderColor={
-                                            Number(fillPercentage) > 0 ? colors.greenOutline : colors.borderGrayLight
-                                        }>
-                                        <Flex
-                                            bg={colors.greenOutline}
-                                            width={`${fillPercentage}%`}
-                                            height='101%'
-                                            zIndex={1}
-                                            ml='-0.4px'
-                                            borderRadius='10px'
-                                        />
-                                    </Flex>
-                                </Flex> */}
-                                <Flex width='32%'>
+                                <Flex width='33%'>
                                     <Text color={colors.textGray} fontWeight={'normal'} letterSpacing={'-2.5px'}>
                                         {vault &&
                                             `${Number(
@@ -716,15 +637,30 @@ export const ManageVaults = ({}) => {
                                             })} ${vault.depositAsset.name}/BTC`}
                                     </Text>
                                 </Flex>
-                                {/* <Flex width='35%' flexDirection={'row'}>
-                                    <Text mt='26px'>
-                                        {formatUnits(vault.initialBalance, vault.depositAsset.decimals)}{' '}
-                                    </Text>
-                                    <Spacer />
-                                    <Flex mt='1px' ml='18px'>
-                                        <AssetTag2 width='100px' assetName={selectedAsset.name} />
-                                    </Flex>
-                                </Flex> */}
+                                <Flex width='10%'>
+                                    <Text
+                                        color={
+                                            Number(fillPercentage) > 0 ? colors.greenOutline : colors.textGray
+                                        }>{`${fillPercentage}%`}</Text>
+                                    <Flex
+                                        ml='20px'
+                                        mt='5px'
+                                        width='10px'
+                                        px='20px'
+                                        bg={
+                                            Number(fillPercentage) > 0
+                                                ? Number(fillPercentage) == 100
+                                                    ? colors.greenOutline
+                                                    : colors.greenBackground
+                                                : colors.offBlackLighter2
+                                        }
+                                        borderRadius='10px'
+                                        height='17px'
+                                        border={`1.5px solid`}
+                                        borderColor={
+                                            Number(fillPercentage) > 0 ? colors.greenOutline : colors.borderGrayLight
+                                        }></Flex>
+                                </Flex>
                             </Flex>
                         );
                     })
