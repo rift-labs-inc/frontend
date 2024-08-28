@@ -1,94 +1,44 @@
-import {
-    Tabs,
-    TabList,
-    Tooltip,
-    TabPanels,
-    Tab,
-    Button,
-    Flex,
-    Text,
-    useColorModeValue,
-    Box,
-    Spacer,
-    Input,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalCloseButton,
-    ModalBody,
-    ModalFooter,
-    useDisclosure,
-} from '@chakra-ui/react';
-import useWindowSize from '../../hooks/useWindowSize';
-import { useRouter } from 'next/router';
-import { useEffect, useState, useRef } from 'react';
-import styled from 'styled-components';
+import { ChevronLeftIcon } from '@chakra-ui/icons';
+import { Button, Flex, Spacer, Text } from '@chakra-ui/react';
+import { BigNumber, ethers } from 'ethers';
+import { formatUnits, parseUnits } from 'ethers/lib/utils';
+import { useEffect, useState } from 'react';
+import { FaRegArrowAltCircleRight } from 'react-icons/fa';
+import riftExchangeABI from '../../abis/RiftExchange.json';
+import { useWithdrawLiquidity } from '../../hooks/contract/useWithdrawLiquidity';
+import useHorizontalSelectorInput from '../../hooks/useHorizontalSelectorInput';
+import { useStore } from '../../store';
+import { DepositVault } from '../../types';
 import { colors } from '../../utils/colors';
-import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi';
+import { bitcoin_border_color } from '../../utils/constants';
+import { getLiquidityProvider } from '../../utils/contractReadFunctions';
 import {
-    ethToWei,
-    weiToEth,
-    btcToSats,
-    findVaultIndexToOverwrite,
-    findVaultIndexWithSameExchangeRate,
-    satsToBtc,
-    calculateFillPercentage,
-    unBufferFrom18Decimals,
-    formatBtcExchangeRate,
     calculateBtcOutputAmountFromExchangeRate,
     convertLockingScriptToBitcoinAddress,
+    formatBtcExchangeRate,
 } from '../../utils/dappHelper';
-import riftExchangeABI from '../../abis/RiftExchange.json';
-import { BigNumber, ethers } from 'ethers';
-import { useStore } from '../../store';
-import HorizontalButtonSelector from '../HorizontalButtonSelector';
-import useHorizontalSelectorInput from '../../hooks/useHorizontalSelectorInput';
-import { DepositVault } from '../../types';
 import { FONT_FAMILIES } from '../../utils/font';
-import { ArrowRightIcon, ChevronLeftIcon } from '@chakra-ui/icons';
-import { useWithdrawLiquidity, WithdrawStatus } from '../../hooks/contract/useWithdrawLiquidity';
-import WithdrawStatusModal from './WithdrawStatusModal';
-import { getLiquidityProvider } from '../../utils/contractReadFunctions';
-import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { FaArrowAltCircleRight, FaArrowRight, FaRegArrowAltCircleRight } from 'react-icons/fa';
-import { bitcoin_bg_color, bitcoin_border_color, bitcoin_dark_bg_color, bitcoinDecimals } from '../../utils/constants';
+import HorizontalButtonSelector from '../HorizontalButtonSelector';
 import { AssetTag2 } from '../other/AssetTag2';
+import LightVault from './LightVault';
 import { VaultStatusBar } from './VaultStatusBar';
-
-type ActiveTab = 'swap' | 'liquidity';
+import WithdrawStatusModal from './WithdrawStatusModal';
+import vault from '../../utils/vault.json';
+import VaultSettings from './VaultSettings';
 
 export const ManageVaults = ({}) => {
-    const { width } = useWindowSize();
-    const isMobileView = width < 600;
-    const router = useRouter();
-    const fontSize = isMobileView ? '20px' : '20px';
     const {
         options: optionsButtoActiveVsCompleted,
         selected: selectedButtonActiveVsCompleted,
         setSelected: setSelectedButtonActiveVsCompleted,
     } = useHorizontalSelectorInput(['Active', 'Completed'] as const);
 
-    const { openConnectModal } = useConnectModal();
-    const { address, isConnected } = useAccount();
-    const chainId = useChainId();
-    const { data: walletClient } = useWalletClient();
-    const { chains, error, switchChain } = useSwitchChain();
-    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
-    type TabType = 'Active' | 'Completed';
     const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
-    const setUserActiveDepositVaults = useStore((state) => state.setUserActiveDepositVaults);
     const userCompletedDepositVaults = useStore((state) => state.userCompletedDepositVaults);
-    const setUserCompletedDepositVaults = useStore((state) => state.setUserCompletedDepositVaults);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
 
-    const [activeTab, setActiveTab] = useState<TabType>('Active');
-
-    const { isOpen, onOpen, onClose } = useDisclosure();
     const {
         withdrawLiquidity,
         status: withdrawLiquidityStatus,
@@ -97,14 +47,12 @@ export const ManageVaults = ({}) => {
         resetWithdrawState,
     } = useWithdrawLiquidity();
 
-    const handleNavigation = (route: string) => {
-        router.push(route);
-    };
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
     const [withdrawAmount, setWithdrawAmount] = useState('');
     const vaultsToDisplay =
         selectedButtonActiveVsCompleted === 'Active' ? userActiveDepositVaults : userCompletedDepositVaults;
-    const [refreshKey, setRefreshKey] = useState(0);
+    const setUserActiveDepositVaults = useStore((state) => state.setUserActiveDepositVaults);
+    const [_refreshKey, setRefreshKey] = useState(0);
 
     const handleGoBack = () => {
         // clear selected vault
@@ -118,12 +66,6 @@ export const ManageVaults = ({}) => {
         setWithdrawAmount('');
         resetWithdrawState();
     };
-
-    // update activeTab when the selected button changes
-    useEffect(() => {
-        setActiveTab(selectedButtonActiveVsCompleted);
-        console.log('selectedButtonActiveVsCompleted:', selectedButtonActiveVsCompleted);
-    }, [selectedButtonActiveVsCompleted]);
 
     // handle withdraw liquidity
     const handleWithdraw = async () => {
@@ -210,6 +152,126 @@ export const ManageVaults = ({}) => {
             }
         }
     }, [userActiveDepositVaults, userCompletedDepositVaults, selectedVaultToManage]);
+
+    useEffect(() => {
+        setUserActiveDepositVaults(vault as any);
+    }, []);
+
+    return (
+        <Flex
+            w={'100%'}
+            h='100%'
+            flexDir={'column'}
+            userSelect={'none'}
+            fontSize={'12px'}
+            fontFamily={FONT_FAMILIES.AUX_MONO}
+            color={'#c3c3c3'}
+            fontWeight={'normal'}
+            gap={'0px'}
+            align='center'
+            mt='12px'>
+            {!selectedVaultToManage && (
+                <Flex justify={'center'}>
+                    <HorizontalButtonSelector
+                        w='300px'
+                        h='40px'
+                        fontSize={'10px'}
+                        options={optionsButtoActiveVsCompleted}
+                        onSelectItem={setSelectedButtonActiveVsCompleted}
+                    />
+                </Flex>
+            )}
+            <Flex
+                w='100%'
+                maxW='800px'
+                h='650px'
+                px='24px'
+                py='12px'
+                align={'center'}
+                justify={'center'}
+                bg={colors.offBlack}
+                borderRadius={'20px'}
+                mt={selectedVaultToManage ? '56px' : '16px'}
+                border='3px solid'
+                borderColor={colors.borderGray}
+                flexDir='column'>
+                {selectedVaultToManage ? (
+                    <VaultSettings
+                        selectedVaultToManage={selectedVaultToManage}
+                        handleGoBack={handleGoBack}
+                        selectedInputAsset={selectedInputAsset}
+                        handleWithdraw={handleWithdraw}
+                    />
+                ) : (
+                    <>
+                        {vaultsToDisplay && vaultsToDisplay.length > 0 && (
+                            <Flex
+                                bg={colors.offBlack}
+                                w='100%'
+                                h='30px'
+                                py='5px'
+                                mt='5px'
+                                mb='9px'
+                                pl='18px'
+                                align='center'
+                                justify='flex-start'
+                                borderRadius={'10px'}
+                                fontSize={'14px'}
+                                // border={'2px solid'}
+                                fontFamily={FONT_FAMILIES.NOSTROMO}
+                                borderColor={colors.borderGray}
+                                fontWeight='bold'
+                                color={colors.offWhite}>
+                                {/* <Text width='6%'>ID</Text> */}
+                                <Text width='8.5%'>ID</Text>
+                                <Text width='37.5%'>SWAP INPUT</Text>
+                                <Text width='32%'>EXCHANGE RATE</Text>
+                                <Text width='20%'>FILL STATUS</Text>
+                            </Flex>
+                        )}
+                        <style>
+                            {`
+                    .flex-scroll-dark::-webkit-scrollbar {
+                        width: 12px;
+                    }
+                    .flex-scroll-dark::-webkit-scrollbar-track {
+                        background: #2D2D2D;
+                    }
+                    .flex-scroll-dark::-webkit-scrollbar-thumb {
+                        background-color: #555;
+                        border-radius: 6px;
+                        border: 3px solid #2D2D2D;
+                    }
+                    `}
+                        </style>
+                        <Flex
+                            className='flex-scroll-dark'
+                            overflowY={vaultsToDisplay && vaultsToDisplay.length > 0 ? 'scroll' : 'hidden'}
+                            direction='column'
+                            w='100%'>
+                            {' '}
+                            {vaultsToDisplay && vaultsToDisplay.length > 0 ? (
+                                vaultsToDisplay.map((vault: DepositVault, index: number) => (
+                                    <LightVault
+                                        key={index}
+                                        vault={vault}
+                                        onClick={() => setSelectedVaultToManage(vault)}
+                                        selectedInputAsset={selectedInputAsset}
+                                    />
+                                ))
+                            ) : (
+                                <Flex justify={'center'} fontSize={'16px'} alignItems={'center'}>
+                                    <Text>
+                                        No {selectedButtonActiveVsCompleted.toLocaleLowerCase()} deposit vaults found
+                                    </Text>
+                                </Flex>
+                            )}
+                        </Flex>
+                    </>
+                )}
+            </Flex>
+        </Flex>
+    );
 
     return selectedVaultToManage ? (
         <Flex
@@ -354,43 +416,6 @@ export const ManageVaults = ({}) => {
             </Flex>
             {/* ORDER STATUS & REMAINING LIQUIDITY */}
             <Flex w='100%' mt='20px'>
-                {/* <Flex w='47%' direction='column'>
-                    <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
-                        Remaining
-                    </Text>
-                    <Flex
-                        h='50px'
-                        mt='6px'
-                        w='100%'
-                        bg={selectedInputAsset.dark_bg_color}
-                        border='3px solid'
-                        borderColor={selectedInputAsset.bg_color}
-                        borderRadius={'14px'}
-                        pl='15px'
-                        pr='10px'
-                        key={refreshKey}
-                        align={'center'}>
-                        <Text
-                            fontSize='16px'
-                            color={colors.offWhite}
-                            letterSpacing={'-1px'}
-                            fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {selectedVaultToManage.trueUnreservedBalance
-                                ? formatUnits(
-                                      selectedVaultToManage.trueUnreservedBalance,
-                                      selectedVaultToManage.depositAsset.decimals,
-                                  ).toString()
-                                : formatUnits(
-                                      selectedVaultToManage.unreservedBalance,
-                                      selectedVaultToManage.depositAsset.decimals,
-                                  ).toString()}
-                        </Text>
-                        <Spacer />
-                        <AssetTag2 assetName={selectedVaultToManage.depositAsset.name} width='84px' />
-                    </Flex>
-                </Flex>
-                <Spacer /> */}
-
                 <Flex w='100%' direction='column'>
                     <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
                         Status
@@ -503,15 +528,14 @@ export const ManageVaults = ({}) => {
         <Flex
             w={'100%'}
             h='100%'
-            px='30px'
-            py='28px'
             flexDir={'column'}
             userSelect={'none'}
             fontSize={'12px'}
             fontFamily={FONT_FAMILIES.AUX_MONO}
             color={'#c3c3c3'}
             fontWeight={'normal'}
-            gap={'0px'}>
+            gap={'0px'}
+            align='center'>
             <Flex mb={'16px'} justify={'center'}>
                 <HorizontalButtonSelector
                     w='300px'
@@ -521,154 +545,81 @@ export const ManageVaults = ({}) => {
                     onSelectItem={setSelectedButtonActiveVsCompleted}
                 />
             </Flex>
-            {vaultsToDisplay && vaultsToDisplay.length > 0 && (
-                <Flex
-                    bg={colors.offBlack}
-                    w='100%'
-                    h='30px'
-                    py='5px'
-                    mt='5px'
-                    mb='9px'
-                    pl='18px'
-                    align='center'
-                    justify='flex-start'
-                    borderRadius={'10px'}
-                    fontSize={'14px'}
-                    // border={'2px solid'}
-                    fontFamily={FONT_FAMILIES.NOSTROMO}
-                    borderColor={colors.borderGray}
-                    fontWeight='bold'
-                    color={colors.offWhite}>
-                    {/* <Text width='6%'>ID</Text> */}
-                    <Text width='8.5%'>ID</Text>
-                    <Text width='37.5%'>SWAP INPUT</Text>
-                    <Text width='32%'>EXCHANGE RATE</Text>
-                    <Text width='20%'>FILL STATUS</Text>
-                </Flex>
-            )}
-            <style>
-                {`
-          .flex-scroll-dark::-webkit-scrollbar {
-            width: 12px;
-          }
-          .flex-scroll-dark::-webkit-scrollbar-track {
-            background: #2D2D2D;
-          }
-          .flex-scroll-dark::-webkit-scrollbar-thumb {
-            background-color: #555;
-            border-radius: 6px;
-            border: 3px solid #2D2D2D;
-          }
-        `}
-            </style>
             <Flex
-                className='flex-scroll-dark'
-                overflowY={vaultsToDisplay && vaultsToDisplay.length > 0 ? 'scroll' : 'hidden'}
-                direction='column'>
-                {' '}
-                {vaultsToDisplay && vaultsToDisplay.length > 0 ? (
-                    vaultsToDisplay.map((vault: DepositVault, index: number) => {
-                        const fillPercentage = calculateFillPercentage(vault);
-                        console.log('vault index:', vault.index);
-
-                        return (
-                            <Flex
-                                key={vault.index}
-                                _hover={{
-                                    bg: colors.purpleBackground,
-                                    borderColor: colors.purpleBorder,
-                                }}
-                                onClick={() => setSelectedVaultToManage(vault)}
-                                cursor={'pointer'}
-                                letterSpacing={'-2px'}
-                                bg={colors.offBlackLighter}
-                                w='100%'
-                                h='80px'
-                                mb='10px'
-                                fontSize={'18px'}
-                                pl='18px'
-                                align='center'
-                                justify='flex-start'
-                                borderRadius={'10px'}
-                                border='2px solid '
-                                color={colors.textGray}
-                                borderColor={colors.borderGrayLight}>
-                                <Text width='8.5%'>#{vault.index}</Text>
-                                <Flex width='38%' mt='10px'>
-                                    <Flex w='85%' direction='column'>
-                                        <Flex
-                                            h='50px'
-                                            mt='-7px'
-                                            w='100%'
-                                            bg={selectedInputAsset.dark_bg_color}
-                                            border='2px solid'
-                                            borderColor={selectedInputAsset.bg_color}
-                                            borderRadius={'14px'}
-                                            pl='15px'
-                                            pr='10px'
-                                            align={'center'}>
-                                            <Text
-                                                fontSize='16px'
-                                                color={colors.offWhite}
-                                                letterSpacing={'-1px'}
-                                                fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                                {vault?.initialBalance &&
-                                                    formatUnits(
-                                                        BigNumber.from(vault.initialBalance).toString(),
-                                                        vault.depositAsset?.decimals,
-                                                    ).toString()}
-                                            </Text>
-                                            <Spacer />
-                                            <AssetTag2 assetName={vault?.depositAsset?.name} width='84px' />
-                                        </Flex>
-                                    </Flex>
-                                </Flex>
-                                <Flex width='33%'>
-                                    <Text color={colors.textGray} fontWeight={'normal'} letterSpacing={'-2.5px'}>
-                                        {vault &&
-                                            `${Number(
-                                                formatBtcExchangeRate(
-                                                    vault.btcExchangeRate,
-                                                    vault.depositAsset.decimals,
-                                                ),
-                                            ).toLocaleString('en-US', {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2,
-                                            })} ${vault.depositAsset.name}/BTC`}
-                                    </Text>
-                                </Flex>
-                                <Flex width='10%'>
-                                    <Text
-                                        color={
-                                            Number(fillPercentage) > 0 ? colors.greenOutline : colors.textGray
-                                        }>{`${fillPercentage}%`}</Text>
-                                    <Flex
-                                        ml='20px'
-                                        mt='5px'
-                                        width='10px'
-                                        px='20px'
-                                        bg={
-                                            Number(fillPercentage) > 0
-                                                ? Number(fillPercentage) == 100
-                                                    ? colors.greenOutline
-                                                    : colors.greenBackground
-                                                : colors.offBlackLighter2
-                                        }
-                                        borderRadius='10px'
-                                        height='17px'
-                                        border={`1.5px solid`}
-                                        borderColor={
-                                            Number(fillPercentage) > 0 ? colors.greenOutline : colors.borderGrayLight
-                                        }></Flex>
-                                </Flex>
-                            </Flex>
-                        );
-                    })
-                ) : (
-                    <Flex justify={'center'} mt='220px' fontSize={'16px'} alignItems={'center'}>
-                        <Text>No {selectedButtonActiveVsCompleted.toLocaleLowerCase()} deposit vaults found</Text>
+                w='100%'
+                maxW='800px'
+                h='650px'
+                px='24px'
+                py='12px'
+                align={'center'}
+                justify={'center'}
+                bg={colors.offBlack}
+                borderRadius={'20px'}
+                mt='8px'
+                border='3px solid'
+                borderColor={colors.borderGray}
+                flexDir='column'>
+                {vaultsToDisplay && vaultsToDisplay.length > 0 && (
+                    <Flex
+                        bg={colors.offBlack}
+                        w='100%'
+                        h='30px'
+                        py='5px'
+                        mt='5px'
+                        mb='9px'
+                        pl='18px'
+                        align='center'
+                        justify='flex-start'
+                        borderRadius={'10px'}
+                        fontSize={'14px'}
+                        // border={'2px solid'}
+                        fontFamily={FONT_FAMILIES.NOSTROMO}
+                        borderColor={colors.borderGray}
+                        fontWeight='bold'
+                        color={colors.offWhite}>
+                        {/* <Text width='6%'>ID</Text> */}
+                        <Text width='8.5%'>ID</Text>
+                        <Text width='37.5%'>SWAP INPUT</Text>
+                        <Text width='32%'>EXCHANGE RATE</Text>
+                        <Text width='20%'>FILL STATUS</Text>
                     </Flex>
                 )}
+                <style>
+                    {`
+                    .flex-scroll-dark::-webkit-scrollbar {
+                        width: 12px;
+                    }
+                    .flex-scroll-dark::-webkit-scrollbar-track {
+                        background: #2D2D2D;
+                    }
+                    .flex-scroll-dark::-webkit-scrollbar-thumb {
+                        background-color: #555;
+                        border-radius: 6px;
+                        border: 3px solid #2D2D2D;
+                    }
+                    `}
+                </style>
+                <Flex
+                    className='flex-scroll-dark'
+                    overflowY={vaultsToDisplay && vaultsToDisplay.length > 0 ? 'scroll' : 'hidden'}
+                    direction='column'
+                    w='100%'>
+                    {' '}
+                    {vaultsToDisplay && vaultsToDisplay.length > 0 ? (
+                        vaultsToDisplay.map((vault: DepositVault, index: number) => (
+                            <LightVault
+                                key={index}
+                                vault={vault}
+                                onClick={() => setSelectedVaultToManage(vault)}
+                                selectedInputAsset={selectedInputAsset}
+                            />
+                        ))
+                    ) : (
+                        <Flex justify={'center'} fontSize={'16px'} alignItems={'center'}>
+                            <Text>No {selectedButtonActiveVsCompleted.toLocaleLowerCase()} deposit vaults found</Text>
+                        </Flex>
+                    )}
+                </Flex>
             </Flex>
         </Flex>
     );

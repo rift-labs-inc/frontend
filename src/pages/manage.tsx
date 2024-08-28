@@ -1,30 +1,17 @@
-import { Flex, Image, Text, Button, Box, IconButton, Icon, Spacer } from '@chakra-ui/react';
+import { Flex, Text } from '@chakra-ui/react';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { useAccount, useChainId } from 'wagmi';
 import { OpenGraph } from '../components/background/OpenGraph';
 import HorizontalButtonSelector from '../components/HorizontalButtonSelector';
-import OrangeText from '../components/other/OrangeText';
-import WhiteText from '../components/other/WhiteText';
-import { DepositUIOLD } from '../components/sell/DepositUIOLD';
 import { Navbar } from '../components/Navbar';
-import { toastSuccess } from '../hooks/toast';
-import useWindowSize from '../hooks/useWindowSize';
-import { colors } from '../utils/colors';
-import { FONT_FAMILIES } from '../utils/font';
-import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
-import { useEffect, useState } from 'react';
-import { getDepositVaults, getLiquidityProvider } from '../utils/contractReadFunctions';
-import riftExchangeABI from '../abis/RiftExchange.json';
-import { ethers } from 'ethers';
-import { useStore } from '../store';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { useAccount, useChainId } from 'wagmi';
-import { weiToEth, satsToBtc, calculateAmountBitcoinOutput, calculateFillPercentage } from '../utils/dappHelper';
-import { DepositVault } from '../types';
-import { BigNumber } from 'ethers';
-import { ChevronLeftIcon } from '@chakra-ui/icons';
-import { BTCSVG, ETH_Icon, ETH_Logo, ETHSVG } from '../components/other/SVGs';
+import { DepositUIOLD } from '../components/sell/DepositUIOLD';
 import { ManageVaults } from '../components/sell/ManageVaults';
-import ExchangeRateChart from '../components/charts/ExchangeRateChart';
+import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
+import useWindowSize from '../hooks/useWindowSize';
+import { useStore } from '../store';
+import { colors } from '../utils/colors';
 
 const Manage = () => {
     const { height, width } = useWindowSize();
@@ -45,12 +32,6 @@ const Manage = () => {
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
     const showManageDepositVaultsScreen = useStore((state) => state.showManageDepositVaultsScreen);
     const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
-
-    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
-    const { openConnectModal } = useConnectModal();
-    const { address, isConnected } = useAccount();
-    const chainId = useChainId();
-    const [initialSelection, setInitialSelection] = useState('Create a Vault');
 
     // switch to manage vaults screen if user has just created a vault
     useEffect(() => {
@@ -115,49 +96,8 @@ const Manage = () => {
                             </Text>
                         </Flex>
                     </Flex>
-                    {/* Horizontal Button Selector */}
-                    <Flex mt={'14px'}>
-                        <HorizontalButtonSelector
-                            options={optionsButton}
-                            selectedItem={selectedButton}
-                            onSelectItem={handleButtonSelection}
-                        />
-                    </Flex>
-                    <Flex
-                        w='800px'
-                        h='650px'
-                        align={'center'}
-                        justify={'center'}
-                        bg={colors.offBlack}
-                        borderRadius={'20px'}
-                        mt='14px'
-                        border='3px solid'
-                        borderColor={colors.borderGray}>
-                        {/* Liquidity Distribution Chart */}
-                        {/* <Flex w='50%' h='100%' flexDir='column' p='20px'>
-                            <Text
-                                fontFamily={FONT_FAMILIES.AUX_MONO}
-                                fontWeight={'normal'}
-                                color={colors.textGray}
-                                fontSize='0.8rem'>
-                                {selectedButton === 'Create a Vault' ? 'Total Liquidity Distribution' : 'Your Vault Distribution'}
-                            </Text>
-                            <Flex gap='8px' align='center'>
-                                <Image src='/images/icons/Ethereum.svg' h='26px' />
-                                <Text
-                                    fontFamily={FONT_FAMILIES.AUX_MONO}
-                                    fontSize='50px'
-                                    letterSpacing='-8px'
-                                    fontWeight='normal'>
-                                    323,249.00
-                                </Text>
-                            </Flex>
-                            <Flex flex={1} w='100%'>
-                                <ExchangeRateChart />
-                            </Flex>
-                        </Flex> */}
-                        {/* Deposit & Manage Vaults */}
-                        {selectedButton === 'Create a Vault' ? <DepositUIOLD /> : <ManageVaults />}
+                    <Flex w='100%' maxW='1200px' align={'center'} justify={'center'}>
+                        <ManageVaults />
                     </Flex>
                 </Flex>
             </Flex>
