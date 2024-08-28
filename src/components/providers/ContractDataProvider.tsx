@@ -25,7 +25,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const setEthersRpcProvider = useStore((state) => state.setEthersRpcProvider);
     const setUserEthAddress = useStore((state) => state.setUserEthAddress);
-    const selectedAsset = useStore((state) => state.selectedAsset);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
     const updateExchangeRateInSmallestTokenUnitPerSat = useStore(
         (state) => state.updateExchangeRateInSmallestTokenUnitPerSat,
@@ -39,10 +39,10 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     // set ethers provider
     useEffect(() => {
         // TODO: update this to pull contract data from all valid deposit assets
-        if (selectedAsset?.contractRpcURL && window.ethereum) {
-            setEthersRpcProvider(new ethers.providers.JsonRpcProvider(selectedAsset.contractRpcURL));
+        if (selectedInputAsset?.contractRpcURL && window.ethereum) {
+            setEthersRpcProvider(new ethers.providers.JsonRpcProvider(selectedInputAsset.contractRpcURL));
         }
-    }, [selectedAsset.contractRpcURL, address, isConnected]);
+    }, [selectedInputAsset.contractRpcURL, address, isConnected]);
 
     // fetch price data, user address, & selected asset balance
     useEffect(() => {
@@ -55,22 +55,32 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
 
             setBitcoinPriceUSD(btcPriceUSD);
             updatePriceUSD('USDT', usdtPriceUSD);
+            console.log('BRUH btcToUsdtRate:', btcToUsdtRate);
             updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
+            console.log('BRUH DID STATE UPDATE?', useStore.getState().validAssets['USDT'].exchangeRateInTokenPerBTC);
         };
         fetchPriceData();
 
         const fetchSelectedAssetUserBalance = async (address) => {
-            const balance = await getTokenBalance(ethersRpcProvider, selectedAsset.tokenAddress, address, ERC20ABI);
+            const balance = await getTokenBalance(
+                ethersRpcProvider,
+                selectedInputAsset.tokenAddress,
+                address,
+                ERC20ABI,
+            );
 
-            updateConnectedUserBalanceRaw(selectedAsset.name, balance);
-            const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedAsset.name].decimals);
+            updateConnectedUserBalanceRaw(selectedInputAsset.name, balance);
+            const formattedBalance = formatUnits(
+                balance,
+                useStore.getState().validAssets[selectedInputAsset.name].decimals,
+            );
             console.log('formattedBalance:', formattedBalance.toString());
-            updateConnectedUserBalanceFormatted(selectedAsset.name, formattedBalance.toString());
+            updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
         };
 
         if (address) {
             setUserEthAddress(address);
-            if (selectedAsset && window.ethereum) {
+            if (selectedInputAsset && window.ethereum) {
                 fetchSelectedAssetUserBalance(address);
             }
         }
@@ -80,7 +90,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
 
         // Clean up the interval on component unmount
         return () => clearInterval(intervalId);
-    }, [selectedAsset, address]);
+    }, [selectedInputAsset, address]);
 
     // fetch deposit vaults
     const {

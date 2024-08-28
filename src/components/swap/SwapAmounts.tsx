@@ -31,11 +31,11 @@ export const SwapAmounts = ({}) => {
     const fontSize = isMobileView ? '20px' : '20px';
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
-    const tokenOutputSwapAmount = useStore((state) => state.tokenOutputSwapAmount);
-    const setTokenOutputSwapAmount = useStore((state) => state.setTokenOutputSwapAmount);
+    const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
+    const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
-    const selectedAsset = useStore((state) => state.selectedAsset);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -88,7 +88,7 @@ export const SwapAmounts = ({}) => {
             <Flex direction='column'>
                 <Flex>
                     <Text mr='15px' fontSize={'36px'} letterSpacing={'-5px'} color={colors.offWhite}>
-                        {tokenOutputSwapAmount}
+                        {usdtOutputSwapAmount}
                     </Text>
                     <ETHSVG width='100' height='58' viewBox='0 0 148 54' />{' '}
                 </Flex>
@@ -102,7 +102,8 @@ export const SwapAmounts = ({}) => {
                     fontFamily={'Aux'}>
                     ≈ $
                     {(
-                        parseFloat(tokenOutputSwapAmount) * useStore.getState().validAssets[selectedAsset.name].priceUSD
+                        parseFloat(usdtOutputSwapAmount) *
+                        useStore.getState().validAssets[selectedInputAsset.name].priceUSD
                     ).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,

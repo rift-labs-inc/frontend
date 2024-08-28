@@ -13,9 +13,9 @@ export const ConnectWalletButton = ({}) => {
     const [usdtBalance, setUsdtBalance] = useState('0');
     const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const { address, isConnected } = useAccount();
-    const selectedAsset = useStore((state) => state.selectedAsset);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const localBalance = useStore(
-        (state) => state.validAssets[selectedAsset.name]?.connectedUserBalanceFormatted || '0',
+        (state) => state.validAssets[selectedInputAsset.name]?.connectedUserBalanceFormatted || '0',
     );
 
     return (
@@ -84,21 +84,21 @@ export const ConnectWalletButton = ({}) => {
                                 <div style={{ display: 'flex', gap: 8 }}>
                                     <Button
                                         border={`2.4px solid ${
-                                            selectedAsset.name === 'WETH'
+                                            selectedInputAsset.name === 'WETH'
                                                 ? colors.purpleBorder
-                                                : selectedAsset.border_color
+                                                : selectedInputAsset.border_color
                                         }`}
                                         h='37px'
                                         color={colors.offWhite}
                                         pt='2px'
                                         bg={
-                                            selectedAsset.name === 'WETH'
+                                            selectedInputAsset.name === 'WETH'
                                                 ? colors.purpleBackground
-                                                : selectedAsset.dark_bg_color
+                                                : selectedInputAsset.dark_bg_color
                                         }
                                         mr='2px'
-                                        _hover={{ bg: selectedAsset.bg_color }}
-                                        _active={{ bg: selectedAsset.bg_color }}
+                                        _hover={{ bg: selectedInputAsset.bg_color }}
+                                        _active={{ bg: selectedInputAsset.bg_color }}
                                         px='0'
                                         borderRadius={'10px'}
                                         onClick={openChainModal}
@@ -108,7 +108,7 @@ export const ConnectWalletButton = ({}) => {
                                         <>
                                             <Flex mt='-2px' mr='-10px' pl='15px'>
                                                 {(() => {
-                                                    switch (selectedAsset.name) {
+                                                    switch (selectedInputAsset.name) {
                                                         case 'WETH':
                                                             return (
                                                                 <ETH_Icon
@@ -133,7 +133,7 @@ export const ConnectWalletButton = ({}) => {
                                                 })()}
                                             </Flex>
                                             <Flex px='20px' mt='-2px' mr='-2px' fontSize={'16px'} fontFamily={'aux'}>
-                                                {`${parseFloat(localBalance).toString()} ${selectedAsset.name}`}
+                                                {`${parseFloat(localBalance).toString()} ${selectedInputAsset.name}`}
                                             </Flex>
                                         </>
                                     </Button>

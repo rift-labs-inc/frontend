@@ -26,15 +26,15 @@ export const Navbar = ({}) => {
     const totalExpiredReservations = useStore((state) => state.totalExpiredReservations);
     const [showDeveloperMode, setShowDeveloperMode] = useState(false);
     const [isLocalhost, setIsLocalhost] = useState(false);
-    const selectedAsset = useStore((state) => state.selectedAsset);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
 
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
 
     useEffect(() => {
         setAvailableLiquidity(
-            useStore.getState().validAssets[selectedAsset.name]?.totalAvailableLiquidity ?? BigNumber.from(0),
+            useStore.getState().validAssets[selectedInputAsset.name]?.totalAvailableLiquidity ?? BigNumber.from(0),
         );
-    }, [selectedAsset]);
+    }, [selectedInputAsset]);
 
     useEffect(() => {
         const hostname = window.location.hostname;
@@ -72,13 +72,13 @@ export const Navbar = ({}) => {
                         ml='1px'
                         top='29px'
                         w={
-                            router.pathname === '/sell'
+                            router.pathname === '/manage'
                                 ? '50px'
                                 : router.pathname === '/activity'
                                 ? '93px'
                                 : router.pathname === '/whitepaper'
                                 ? '134px'
-                                : '40px'
+                                : '57px'
                         }
                         height='2px'
                         bgGradient={`linear(90deg, #394AFF, #FF8F28)`}></Flex>
@@ -118,10 +118,10 @@ export const Navbar = ({}) => {
     return (
         <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1000}>
             <Flex direction='row' w='100%' px={'30px'} pt='25px'>
-                {navItem('Buy', '/')}
+                {navItem('Swap', '/')}
                 {/* {navItem('Lending', '/lending')} */}
                 {/* {navItem('OTC', '/otc')} */}
-                {navItem('Sell', '/sell')}
+                {navItem('Manage', '/manage')}
                 {/* {navItem('Activity', '/activity')} */}
                 {navItem('About', '/about')}
                 <Spacer />
@@ -172,8 +172,8 @@ export const Navbar = ({}) => {
                                 justifyContent='center'>
                                 <StatCard
                                     label='Total Available Liquidity'
-                                    value={`${formatUnits(availableLiquidity, selectedAsset.decimals)} ${
-                                        selectedAsset.name
+                                    value={`${formatUnits(availableLiquidity, selectedInputAsset.decimals)} ${
+                                        selectedInputAsset.name
                                     }`}
                                 />
 

@@ -3,13 +3,13 @@ import { useRouter } from 'next/router';
 import { Flex, Spacer, Text, Box } from '@chakra-ui/react';
 import { Navbar } from '../components/Navbar';
 import { colors } from '../utils/colors';
-import { SwapUI } from '../components/buy/SwapUI';
+import { SwapUI } from '../components/swap/SwapUI';
 import { OpenGraph } from '../components/background/OpenGraph';
 import { FONT_FAMILIES } from '../utils/font';
 import BlueText from '../components/other/BlueText';
 import OrangeText from '../components/other/OrangeText';
 import React, { useEffect } from 'react';
-import { SwapFlow } from '../components/buy/SwapFlow';
+import { SwapFlow } from '../components/swap/SwapFlow';
 import { useStore } from '../store';
 
 const Home = () => {
@@ -22,6 +22,7 @@ const Home = () => {
 
     const swapFlowState = useStore((state) => state.swapFlowState);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
+    const depositMode = useStore((state) => state.depositMode);
 
     useEffect(() => {
         setSwapFlowState('0-not-started');
@@ -51,7 +52,11 @@ const Home = () => {
                 backgroundSize='cover'
                 backgroundPosition='center'>
                 <Navbar />
-                <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === '0-not-started' ? '19vh' : '100px'}>
+                <Flex
+                    direction={'column'}
+                    align='center'
+                    w='100%'
+                    mt={swapFlowState === '0-not-started' ? '19vh' : '100px'}>
                     {/* LOGOS & TEXT */}
                     {swapFlowState != '0-not-started' ? (
                         <SwapFlow />

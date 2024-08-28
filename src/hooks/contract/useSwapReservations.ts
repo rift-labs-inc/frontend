@@ -20,7 +20,7 @@ export function useSwapReservations(): UseSwapReservationsResult {
     const store = useStore();
     const storeSwapReservations = store ? store.allSwapReservations : [];
     const storeSetSwapReservations = store ? store.setAllSwapReservations : null;
-    const selectedAsset = useStore((state) => state.selectedAsset);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
 
     async function fetchSwapReservations(swapReservationsLength: number) {
         try {
@@ -30,7 +30,7 @@ export function useSwapReservations(): UseSwapReservationsResult {
                 ethersRpcProvider,
                 bytecode.object,
                 abi,
-                selectedAsset.riftExchangeContractAddress,
+                selectedInputAsset.riftExchangeContractAddress,
                 Array.from({ length: swapReservationsLength }).map((_, i) => i),
             );
 
@@ -56,7 +56,7 @@ export function useSwapReservations(): UseSwapReservationsResult {
                 const swapReservationsLength = await getSwapReservationsLength(
                     ethersRpcProvider,
                     riftExchangeABI.abi,
-                    selectedAsset.riftExchangeContractAddress,
+                    selectedInputAsset.riftExchangeContractAddress,
                 );
                 console.log('swapReservationsLength:', swapReservationsLength);
 
@@ -67,7 +67,7 @@ export function useSwapReservations(): UseSwapReservationsResult {
                 setLoading(false);
             }
         })();
-    }, [ethersRpcProvider, selectedAsset.riftExchangeContractAddress]);
+    }, [ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress]);
 
     return {
         allSwapReservations: allSwapReservations.length > 0 ? allSwapReservations : storeSwapReservations,
