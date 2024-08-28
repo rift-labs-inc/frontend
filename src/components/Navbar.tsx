@@ -117,6 +117,11 @@ export const Navbar = ({}) => {
 
     return (
         <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1000}>
+            <Flex
+                bgGradient='linear(0deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))'
+                position='absolute'
+                w='100%'
+                h='130%'></Flex>
             <Flex direction='row' w='100%' px={'30px'} pt='25px'>
                 {navItem('Buy', '/')}
                 {/* {navItem('Lending', '/lending')} */}

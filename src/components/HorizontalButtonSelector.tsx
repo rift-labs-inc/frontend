@@ -54,7 +54,10 @@ const HorizontalButtonSelector = <T extends ReadonlyArray<string> = string[]>({
                 initial={false}
                 animate={{
                     // x: `${selectedIndex * animationWidth - 1}%`,
-                    x: selectedIndex == 0 ? '-1%' : `${selectedIndex * 100 + (selectedIndex == numOptions - 1 ? 1 : 0)}%`,
+                    x:
+                        selectedIndex == 0
+                            ? '-1%'
+                            : `${selectedIndex * 100 + (selectedIndex == numOptions - 1 ? 1 : 0)}%`,
                 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />
@@ -67,7 +70,7 @@ const HorizontalButtonSelector = <T extends ReadonlyArray<string> = string[]>({
                     }}
                     flex={1}
                     zIndex={1}
-                    fontSize={'14px'}
+                    fontSize={props.fontSize ?? '14px'}
                     variant='ghost'
                     h='100%'
                     pt='-10px'

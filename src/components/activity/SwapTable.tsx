@@ -42,6 +42,8 @@ interface SwapTableProps {}
 const SwapTable: React.FC<SwapTableProps> = () => {
     const [search, setSearch] = useState('');
 
+    const TAG_HEIGHT = '24px';
+
     const data: SwapTableItem[] = [
         {
             timestamp: '8/24/2024',
@@ -137,11 +139,11 @@ const SwapTable: React.FC<SwapTableProps> = () => {
                                     <CTd>{x.amount}</CTd>
                                     <CTd>
                                         {x.asset == 'usdt' ? (
-                                            <Image src='/images/usdt_tag.svg' height='16px' />
+                                            <Image src='/images/usdt_tag.svg' height={TAG_HEIGHT} />
                                         ) : x.asset == 'btc' ? (
-                                            <Image src='/images/btc_tag.svg' height='16px' />
+                                            <Image src='/images/btc_tag.svg' height={TAG_HEIGHT} />
                                         ) : x.asset == 'eth' ? (
-                                            <Image src='/images/ETH.svg' height='16px' />
+                                            <Image src='/images/ETH.svg' height={TAG_HEIGHT} />
                                         ) : null}
                                     </CTd>
                                     <CTd>

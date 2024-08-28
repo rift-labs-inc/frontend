@@ -36,5 +36,7 @@ export const colors = {
     graph: {
         lightGreen: '#77E088',
         darkGreen: '#1A4734',
+        pink: '#F774FD',
+        blue: '#5082F9',
     },
 };

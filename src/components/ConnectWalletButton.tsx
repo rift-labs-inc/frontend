@@ -49,7 +49,7 @@ export const ConnectWalletButton = ({}) => {
                                 return (
                                     <Button
                                         onClick={openConnectModal}
-                                        bg={colors.purpleBackground}
+                                        // bg={colors.purpleBackground}
                                         cursor={'pointer'}
                                         color={colors.offWhite}
                                         _active={{ bg: colors.purpleBackground }}
@@ -59,7 +59,9 @@ export const ConnectWalletButton = ({}) => {
                                         type='button'
                                         fontFamily={FONT_FAMILIES.NOSTROMO}
                                         fontSize='0.8rem'
-                                        paddingX='20px'>
+                                        paddingX='20px'
+                                        bg='#101746'
+                                        boxShadow='0px 0px 5px 3px rgba(18,18,18,1)'>
                                         Connect Wallet
                                     </Button>
                                 );
