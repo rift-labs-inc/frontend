@@ -62,40 +62,12 @@ export const SwapContainer = ({}) => {
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
 
-    // update token price and available liquidity
-    useEffect(() => {
-        console.log('Selected Input Asset:', selectedInputAsset);
-        console.log('Valid Assets:', validAssets);
-
-        if (selectedInputAsset && validAssets[selectedInputAsset.name]) {
-            console.log(
-                'Exchange Rate in Token per BTC:',
-                validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC,
-            );
-
-            const totalAvailableLiquidity = validAssets[selectedInputAsset.name]?.totalAvailableLiquidity;
-            console.log('Total Available Liquidity:', totalAvailableLiquidity?.toString());
-            setAvailableLiquidity(totalAvailableLiquidity ?? BigNumber.from(0));
-            setUsdtExchangeRatePerBTC(validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC);
-        }
-    }, [selectedInputAsset, validAssets]);
-
-    const DepositFlowComponent = () => {
-        switch (depositFlowState) {
-            // INITIAL DEPOSIT UI
-            case '0':
-                return <DepositUI />;
-            // DEPOSIT CONFIRMATION UI
-            case '1':
-                return <DepositConfirmation />;
-        }
-    };
-
     return (
         <Flex width='600px' mt='30px' direction={'column'} overflow={'visible'}>
             {/* Content */}
             {depositMode ? (
-                <DepositFlowComponent />
+                // DEPOSIT UI
+                <DepositUI />
             ) : (
                 // SWAP UI
                 <SwapUI />
