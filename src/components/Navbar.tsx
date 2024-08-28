@@ -51,7 +51,7 @@ export const Navbar = ({}) => {
                 _hover={{ background: 'rgba(150, 150, 150, 0.2)' }}
                 cursor='pointer'
                 borderRadius='6px'
-                mr='15px'
+                px='10px'
                 onClick={() => {
                     if (route === '/about') {
                         window.location.href = 'https://rift.exchange';
@@ -59,11 +59,13 @@ export const Navbar = ({}) => {
                         handleNavigation(route);
                     }
                 }}
-                px='10px'
                 py='2px'
                 position='relative'
                 alignItems='center'>
-                <Text color={router.pathname == route ? colors.offWhite : '#ccc'} fontSize='18px' fontFamily='Nostromo'>
+                <Text
+                    color={router.pathname == route ? colors.offWhite : '#ccc'}
+                    fontSize='1.1rem'
+                    fontFamily='Nostromo'>
                     {text}
                 </Text>
                 {router.pathname === route && (
@@ -71,17 +73,19 @@ export const Navbar = ({}) => {
                         position={'absolute'}
                         ml='1px'
                         top='29px'
-                        w={
-                            router.pathname === '/manage'
-                                ? '87px'
-                                : router.pathname === '/activity'
-                                ? '93px'
-                                : router.pathname === '/whitepaper'
-                                ? '134px'
-                                : '57px'
-                        }
+                        // w={
+                        //     router.pathname === '/manage'
+                        //         ? '87px'
+                        //         : router.pathname === '/activity'
+                        //         ? '93px'
+                        //         : router.pathname === '/whitepaper'
+                        //         ? '134px'
+                        //         : '57px'
+                        // }
+                        w='calc(100% - 20px)'
                         height='2px'
-                        bgGradient={`linear(90deg, #394AFF, #FF8F28)`}></Flex>
+                        bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
+                    />
                 )}
             </Flex>
         );
@@ -123,12 +127,14 @@ export const Navbar = ({}) => {
                 w='100%'
                 h='130%'></Flex>
             <Flex direction='row' w='100%' px={'30px'} pt='25px'>
-                {navItem('Swap', '/')}
-                {/* {navItem('Lending', '/lending')} */}
-                {/* {navItem('OTC', '/otc')} */}
-                {navItem('Manage', '/manage')}
-                {navItem('Activity', '/activity')}
-                {navItem('About', '/about')}
+                <Flex gap='12px'>
+                    {navItem('Swap', '/')}
+                    {/* {navItem('Lending', '/lending')} */}
+                    {/* {navItem('OTC', '/otc')} */}
+                    {navItem('Manage', '/manage')}
+                    {navItem('Activity', '/activity')}
+                    {navItem('About', '/about')}
+                </Flex>
                 <Spacer />
                 {/* TODO: Remove below: */}
                 <Flex

@@ -83,16 +83,7 @@ const Manage = () => {
                                 fontWeight='bold'
                                 px='12px'
                                 as='h1'>
-                                Sell f
-                            </Text>
-                            <Text
-                                userSelect={'none'}
-                                fontSize='60px'
-                                fontFamily={'Klein'}
-                                fontWeight='bold'
-                                ml='-20px'
-                                as='h1'>
-                                or Bitcoin
+                                Manage Vaults
                             </Text>
                         </Flex>
                     </Flex>

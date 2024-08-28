@@ -32,7 +32,6 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({
     handleWithdraw,
 }) => {
     const {
-        withdrawLiquidity,
         status: withdrawLiquidityStatus,
         error: withdrawLiquidityError,
         txHash: withdrawTxHash,
