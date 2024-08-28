@@ -5,13 +5,20 @@ import { useEffect, useState } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 import { OpenGraph } from '../components/background/OpenGraph';
 import HorizontalButtonSelector from '../components/HorizontalButtonSelector';
+import OrangeText from '../components/other/OrangeText';
+import WhiteText from '../components/other/WhiteText';
 import { Navbar } from '../components/Navbar';
-import { DepositUIOLD } from '../components/sell/DepositUIOLD';
-import { ManageVaults } from '../components/sell/ManageVaults';
+import { ManageVaults } from '../components/deposit/ManageVaults';
 import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
 import useWindowSize from '../hooks/useWindowSize';
 import { useStore } from '../store';
 import { colors } from '../utils/colors';
+import { weiToEth, satsToBtc, calculateAmountBitcoinOutput, calculateFillPercentage } from '../utils/dappHelper';
+import { DepositVault } from '../types';
+import { BigNumber } from 'ethers';
+import { ChevronLeftIcon } from '@chakra-ui/icons';
+import { BTCSVG, ETH_Icon, ETH_Logo, ETHSVG } from '../components/other/SVGs';
+import ExchangeRateChart from '../components/charts/ExchangeRateChart';
 
 const Manage = () => {
     const { height, width } = useWindowSize();

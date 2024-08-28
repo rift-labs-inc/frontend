@@ -37,6 +37,10 @@ export const ManageVaults = ({}) => {
     const setUserActiveDepositVaults = useStore((state) => state.setUserActiveDepositVaults);
     const [_refreshKey, setRefreshKey] = useState(0);
 
+    useEffect(() => {
+        console.log('BRUH ADVAITH GAY???', vaultsToDisplay);
+    }, [vaultsToDisplay]);
+
     const handleGoBack = () => {
         // clear selected vault
         setSelectedVaultToManage(null);

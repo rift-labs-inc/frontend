@@ -50,10 +50,14 @@ type Store = {
     setSwapFlowState: (
         state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed',
     ) => void;
+    depositFlowState: '0-not-started' | '1-confirm-deposit';
+    setDepositFlowState: (state: '0-not-started' | '1-confirm-deposit') => void;
     btcInputSwapAmount: string;
     setBtcInputSwapAmount: (amount: string) => void;
     usdtOutputSwapAmount: string;
     setUsdtOutputSwapAmount: (amount: string) => void;
+    usdtDepositAmount: string;
+    setUsdtDepositAmount: (amount: string) => void;
     lowestFeeReservationParams: ReserveLiquidityParams | null;
     setLowestFeeReservationParams: (reservation: ReserveLiquidityParams | null) => void;
     showManageReservationScreen: boolean;
@@ -202,10 +206,14 @@ export const useStore = create<Store>((set) => {
         // swap flow
         swapFlowState: '0-not-started',
         setSwapFlowState: (swapFlowState) => set({ swapFlowState }),
+        depositFlowState: '0-not-started',
+        setDepositFlowState: (depositFlowState) => set({ depositFlowState }),
         btcInputSwapAmount: '',
         setBtcInputSwapAmount: (btcInputSwapAmount) => set({ btcInputSwapAmount }),
         usdtOutputSwapAmount: '',
         setUsdtOutputSwapAmount: (usdtOutputSwapAmount) => set({ usdtOutputSwapAmount }),
+        usdtDepositAmount: '',
+        setUsdtDepositAmount: (usdtDepositAmount) => set({ usdtDepositAmount }),
         lowestFeeReservationParams: null,
         setLowestFeeReservationParams: (lowestFeeReservationParams) => set({ lowestFeeReservationParams }),
         showManageReservationScreen: false,

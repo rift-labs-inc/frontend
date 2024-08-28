@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { Flex, Spacer, Text, Box } from '@chakra-ui/react';
 import { Navbar } from '../components/Navbar';
 import { colors } from '../utils/colors';
-import { SwapUI } from '../components/swap/SwapUI';
 import { OpenGraph } from '../components/background/OpenGraph';
 import { FONT_FAMILIES } from '../utils/font';
 import BlueText from '../components/other/BlueText';
@@ -11,6 +10,9 @@ import OrangeText from '../components/other/OrangeText';
 import React, { useEffect } from 'react';
 import { SwapFlow } from '../components/swap/SwapFlow';
 import { useStore } from '../store';
+import { SwapContainer } from '../components/swap/SwapContainer';
+import { DepositUI } from '../components/swap/DepositUI';
+import { DepositConfirmation } from '../components/deposit/DepositConfirmation';
 
 const Home = () => {
     const { height, width } = useWindowSize();
@@ -21,11 +23,14 @@ const Home = () => {
     };
 
     const swapFlowState = useStore((state) => state.swapFlowState);
+    const depositFlowState = useStore((state) => state.depositFlowState);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
+    const setDepositFlowState = useStore((state) => state.setDepositFlowState);
     const depositMode = useStore((state) => state.depositMode);
 
     useEffect(() => {
         setSwapFlowState('0-not-started');
+        setDepositFlowState('0-not-started');
     }, []);
 
     const RiftSVG = () => {
@@ -57,10 +62,10 @@ const Home = () => {
                     align='center'
                     w='100%'
                     mt={swapFlowState === '0-not-started' ? '19vh' : '100px'}>
-                    {/* LOGOS & TEXT */}
                     {swapFlowState != '0-not-started' ? (
                         <SwapFlow />
                     ) : (
+                        // {/* LOGOS & TEXT */}
                         <>
                             <RiftSVG />
                             <Flex
@@ -126,7 +131,7 @@ const Home = () => {
                                     </Box>
                                 </Text>
                             </Flex>
-                            <SwapUI />
+                            <SwapContainer />
                         </>
                     )}
                 </Flex>

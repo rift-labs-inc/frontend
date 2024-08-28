@@ -41,14 +41,14 @@ import OrangeText from '../other/OrangeText';
 import { AssetTag } from '../other/AssetTag';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { bitcoinDecimals } from '../../utils/constants';
-import { CheckCircleIcon, CheckIcon } from '@chakra-ui/icons';
+import { CheckCircleIcon, CheckIcon, ChevronLeftIcon } from '@chakra-ui/icons';
 import { HiOutlineXCircle, HiXCircle } from 'react-icons/hi';
 import { IoCheckmarkDoneCircle } from 'react-icons/io5';
 import { IoMdCheckmarkCircle } from 'react-icons/io';
 
 type ActiveTab = 'swap' | 'liquidity';
 
-export const DepositUIOLD = ({}) => {
+export const DepositConfirmation = ({}) => {
     const { width } = useWindowSize();
     const isMobileView = width < 600;
     const router = useRouter();
@@ -84,8 +84,13 @@ export const DepositUIOLD = ({}) => {
 
     const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const usdtPriceUSDT = useStore.getState().validAssets[selectedInputAsset.name].priceUSD;
     const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
+    const usdtPriceUSDT = useStore.getState().validAssets[selectedInputAsset.name].priceUSD;
+    const [editExchangeRateMode, setEditExchangeRateMode] = useState(false);
+    const setDepositFlowState = useStore((state) => state.setDepositFlowState);
+    const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
+    const actualBorderColor = '#323232';
+    const borderColor = `2px solid ${actualBorderColor}`;
 
     useEffect(() => {
         if (isWaitingForConnection && isConnected) {
@@ -389,16 +394,32 @@ export const DepositUIOLD = ({}) => {
         <Flex
             w='100%'
             h='100%'
-            px='30px'
-            py='28px'
             flexDir={'column'}
             userSelect={'none'}
             fontSize={'12px'}
             fontFamily={FONT_FAMILIES.AUX_MONO}
             color={'#c3c3c3'}
             fontWeight={'normal'}
+            overflow={'visible'}
             gap={'0px'}>
-            <Text fontSize={'13px'} letterSpacing={'-1px'} textAlign={'center'}>
+            <Flex w='100%' mt='-25px' mb='-20px' ml='-90px' overflow={'visible'}>
+                <Button
+                    bg={colors.offBlackLighter}
+                    border={borderColor}
+                    w='12px'
+                    overflow={'visible'}
+                    _hover={{ bg: colors.borderGray }}
+                    onClick={() => setDepositFlowState('0-not-started')}>
+                    <ChevronLeftIcon
+                        overflow={'visible'}
+                        width={'30px'}
+                        height={'40px'}
+                        bg='none'
+                        color={colors.offWhite}
+                    />
+                </Button>
+            </Flex>
+            <Text fontSize={'12px'} letterSpacing={'-1px'} textAlign={'center'}>
                 Create a sell order by setting your <WhiteText>Exchange Rate</WhiteText>. Get payed out in
                 <OrangeText> BTC</OrangeText> when your order is filled. Withdraw unreserved liquidity anytime.
             </Text>
@@ -406,199 +427,95 @@ export const DepositUIOLD = ({}) => {
                 {/* Content */}
                 <Flex direction='column' align='center' overflow={'visible'}>
                     <Flex w='100%' overflow={'visible'} direction={'column'}>
-                        {/* Deposit Input */}
-                        <Flex
-                            mt='0px'
-                            px='10px'
-                            bg={selectedInputAsset.dark_bg_color}
-                            w='100%'
-                            h='105px'
-                            border='2px solid'
-                            borderColor={selectedInputAsset.bg_color}
-                            borderRadius={'10px'}>
-                            <Flex direction={'column'} py='10px' px='5px'>
-                                <Text
-                                    color={!tokenDepositAmount ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    You Deposit
-                                </Text>
-                                <Input
-                                    value={tokenDepositAmount}
-                                    onChange={(e) => {
-                                        handleTokenDepositChange(e);
-                                    }}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='2px'
-                                    mr='-100px'
-                                    ml='-5px'
-                                    p='0px'
-                                    letterSpacing={'-6px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='40px'
-                                    placeholder='0.0'
-                                    _placeholder={{ color: selectedInputAsset.light_text_color }}
-                                />
-                                <Text
-                                    color={!tokenDepositAmount ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    mt='2px'
-                                    ml='1px'
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    {tokenDepositAmountUSD}
-                                </Text>
-                            </Flex>
-                            <Spacer />
-                            <Flex mt='1px' mr='6px'>
-                                <AssetTag assetName={selectedInputAsset.name} />
-                            </Flex>
-                        </Flex>
                         {/* Profit Percentage Input */}
-                        <Flex
-                            mt='10px'
-                            px='10px'
-                            bg='#161A33'
-                            w='100%'
-                            h='105px'
-                            border='2px solid #303F9F'
-                            borderRadius={'10px'}>
-                            <Flex direction={'column'} py='10px' px='5px'>
-                                <Text
-                                    color={!profitPercentage ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    Your Profit %
-                                </Text>
-                                <Input
-                                    value={profitPercentage}
-                                    onChange={(e) => {
-                                        handleProfitPercentageChange(e);
-                                    }}
-                                    onBlur={handleProfitPercentageBlur}
-                                    onFocus={() => handleProfitPercentageFocus(profitPercentage)}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='2px'
-                                    mr='-120px'
-                                    ml='-5px'
-                                    p='0px'
-                                    letterSpacing={'-6px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='40px'
-                                    placeholder='0.0'
-                                    _placeholder={{ color: '#5C63A3' }}
-                                />
-                                <Text
-                                    color={!profitPercentage ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    mt='2px'
-                                    ml='1px'
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    ≈ {profitAmountUSD}
-                                </Text>
-                            </Flex>
-                            <Spacer />
+                        {!editExchangeRateMode ? (
+                            <></>
+                        ) : (
                             <Flex
-                                alignSelf={'center'}
-                                mr='6px'
-                                w='220px'
-                                h='60px'
-                                bg='#222753'
-                                fontSize={'12px'}
-                                align='center'
-                                letterSpacing={'-1px'}
-                                justify='center'
-                                border='2px solid #3C4ABB'
-                                borderRadius={'10px'}
-                                textAlign='center'
-                                direction='column'>
-                                <Text color={colors.offWhite}>Your Exchange Rate</Text>
-                                <Text>
-                                    1 BTC ={' '}
-                                    {/* amount of deposit asset / amount of BTC out ) * deposit asset price in USD */}
-                                    {tokenDepositAmount && bitcoinOutputAmount
-                                        ? (
-                                              (parseFloat(tokenDepositAmount) / parseFloat(bitcoinOutputAmount)) *
-                                              usdtPriceUSDT
-                                          ).toLocaleString('en-US', {
-                                              style: 'currency',
-                                              currency: 'USD',
-                                          })
-                                        : '$0.00'}{' '}
-                                    {selectedInputAsset.name}
-                                </Text>
-                            </Flex>
-                        </Flex>
-                        {/* Bitcoin Amount Out */}
-                        <Flex
-                            mt='10px'
-                            px='10px'
-                            bg='#2E1C0C'
-                            w='100%'
-                            h='105px'
-                            border='2px solid #78491F'
-                            borderRadius={'10px'}>
-                            <Flex direction={'column'} py='10px' px='5px'>
-                                <Text
-                                    color={!bitcoinOutputAmount ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
+                                mt='10px'
+                                px='10px'
+                                bg='#161A33'
+                                w='100%'
+                                h='105px'
+                                border='2px solid #303F9F'
+                                borderRadius={'10px'}>
+                                <Flex direction={'column'} py='10px' px='5px'>
+                                    <Text
+                                        color={!profitPercentage ? colors.offWhite : colors.textGray}
+                                        fontSize={'13px'}
+                                        letterSpacing={'-1px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        Your Profit %
+                                    </Text>
+                                    <Input
+                                        value={profitPercentage}
+                                        onChange={(e) => {
+                                            handleProfitPercentageChange(e);
+                                        }}
+                                        onBlur={handleProfitPercentageBlur}
+                                        onFocus={() => handleProfitPercentageFocus(profitPercentage)}
+                                        fontFamily={'Aux'}
+                                        border='none'
+                                        mt='2px'
+                                        mr='-120px'
+                                        ml='-5px'
+                                        p='0px'
+                                        letterSpacing={'-6px'}
+                                        color={colors.offWhite}
+                                        _active={{ border: 'none', boxShadow: 'none' }}
+                                        _focus={{ border: 'none', boxShadow: 'none' }}
+                                        _selected={{ border: 'none', boxShadow: 'none' }}
+                                        fontSize='40px'
+                                        placeholder='0.0'
+                                        _placeholder={{ color: '#5C63A3' }}
+                                    />
+                                    <Text
+                                        color={!profitPercentage ? colors.offWhite : colors.textGray}
+                                        fontSize={'13px'}
+                                        mt='2px'
+                                        ml='1px'
+                                        letterSpacing={'-1px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        ≈ {profitAmountUSD}
+                                    </Text>
+                                </Flex>
+                                <Spacer />
+                                <Flex
+                                    alignSelf={'center'}
+                                    mr='6px'
+                                    w='220px'
+                                    h='60px'
+                                    bg='#222753'
+                                    fontSize={'12px'}
+                                    align='center'
                                     letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    You Recieve
-                                </Text>
-                                <Input
-                                    value={bitcoinOutputAmount}
-                                    onChange={handleBitcoinOutputAmountChange}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='2px'
-                                    mr='-5px'
-                                    ml='-5px'
-                                    p='0px'
-                                    letterSpacing={'-6px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='40px'
-                                    placeholder='0.0'
-                                    _placeholder={{ color: '#805530' }}
-                                />
-                                <Text
-                                    color={!bitcoinOutputAmount ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    mt='2px'
-                                    ml='1px'
-                                    letterSpacing={'-1.5px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    ≈ {bitcoinOutputAmountUSD}
-                                </Text>
+                                    justify='center'
+                                    border='2px solid #3C4ABB'
+                                    borderRadius={'10px'}
+                                    textAlign='center'
+                                    direction='column'>
+                                    <Text color={colors.offWhite}>Your Exchange Rate</Text>
+                                    <Text>
+                                        1 BTC ={' '}
+                                        {/* amount of deposit asset / amount of BTC out ) * deposit asset price in USD */}
+                                        {tokenDepositAmount && bitcoinOutputAmount
+                                            ? (
+                                                  (parseFloat(tokenDepositAmount) / parseFloat(bitcoinOutputAmount)) *
+                                                  usdtPriceUSDT
+                                              ).toLocaleString('en-US', {
+                                                  style: 'currency',
+                                                  currency: 'USD',
+                                              })
+                                            : '$0.00'}{' '}
+                                        {selectedInputAsset.name}
+                                    </Text>
+                                </Flex>
                             </Flex>
-                            <Spacer />
-                            <Flex mt='1px' mr='6px'>
-                                <AssetTag assetName='BTC' />
-                            </Flex>
-                        </Flex>
+                        )}
                         {/* BTC Payout Address */}
                         <Flex
-                            mt='10px'
                             px='10px'
                             bg='#1C1C1C'
                             border='2px solid #565656'
@@ -649,7 +566,17 @@ export const DepositUIOLD = ({}) => {
                                 </Text>
                             </Flex>
                         </Flex>
-
+                        <Button
+                            alignSelf={'center'}
+                            bg={colors.offBlackLighter2}
+                            w='150px'
+                            h='28px'
+                            mt='10px'
+                            fontSize={'8px'}
+                            color={colors.offWhite}
+                            onClick={() => setEditExchangeRateMode(!editExchangeRateMode)}>
+                            Edit Exchange Rate
+                        </Button>
                         {/* Deposit Button */}
                         <Flex
                             alignSelf={'center'}
