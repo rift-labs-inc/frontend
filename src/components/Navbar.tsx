@@ -73,7 +73,7 @@ export const Navbar = ({}) => {
                         top='29px'
                         w={
                             router.pathname === '/manage'
-                                ? '50px'
+                                ? '87px'
                                 : router.pathname === '/activity'
                                 ? '93px'
                                 : router.pathname === '/whitepaper'
