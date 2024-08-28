@@ -14,313 +14,64 @@ import {
 } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef, ChangeEvent, use } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { colors } from '../../utils/colors';
-import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi';
-import {
-    ethToWei,
-    weiToEth,
-    btcToSats,
-    findVaultIndexToOverwrite,
-    findVaultIndexWithSameExchangeRate,
-    satsToBtc,
-    bufferTo18Decimals,
-    convertToBitcoinLockingScript,
-} from '../../utils/dappHelper';
-import riftExchangeABI from '../../abis/RiftExchange.json';
-import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../../store';
-import { FONT_FAMILIES } from '../../utils/font';
-import { useDepositLiquidity } from '../../hooks/contract/useDepositLiquidity';
-import DepositStatusModal from '../sell/DepositStatusModal';
-import WhiteText from '../other/WhiteText';
-import OrangeText from '../other/OrangeText';
-import { AssetTag } from '../other/AssetTag';
-import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { bitcoinDecimals } from '../../utils/constants';
-import { CheckCircleIcon, CheckIcon } from '@chakra-ui/icons';
-import { HiOutlineXCircle, HiXCircle } from 'react-icons/hi';
-import { IoCheckmarkDoneCircle } from 'react-icons/io5';
-import { IoMdCheckmarkCircle } from 'react-icons/io';
+import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
+import { BigNumber } from 'ethers';
+import { parseEther } from 'ethers/lib/utils';
+import { btcToSats, calculateLowestFeeReservation, ethToWei, weiToEth } from '../../utils/dappHelper';
+import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
+import { bitcoinDecimals, maxSwapOutputs } from '../../utils/constants';
+import { AssetTag2 } from '../other/AssetTag2';
+import { useAccount } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { DepositConfirmation } from '../deposit/DepositConfirmation';
 
-type ActiveTab = 'swap' | 'liquidity';
-
-export const DepositUI = ({}) => {
+export const DepositUI = () => {
     const { width } = useWindowSize();
     const isMobileView = width < 600;
     const router = useRouter();
     const fontSize = isMobileView ? '20px' : '20px';
-
-    const { openConnectModal } = useConnectModal();
-    const { address, isConnected } = useAccount();
-    const chainId = useChainId();
-    const { data: walletClient } = useWalletClient();
-    const { chains, error, switchChain } = useSwitchChain();
-    const {
-        depositLiquidity,
-        status: depositLiquidityStatus,
-        error: depositLiquidityError,
-        txHash,
-        resetDepositState,
-    } = useDepositLiquidity();
-    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
+    const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
+    const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
+    const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
+    const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
+    const allDepositVaults = useStore((state) => state.allDepositVaults);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
-    const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
-    const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
+    const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
+    const userEthAddress = useStore((state) => state.userEthAddress);
+    const [isLiquidityExceeded, setIsLiquidityExceeded] = useState(false);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
-
-    const [tokenDepositAmount, setTokenDepositAmount] = useState('');
-    const [tokenDepositAmountUSD, setTokenDepositAmountUSD] = useState('0.00');
-
-    const [profitPercentage, setProfitPercentage] = useState('');
-    const [profitAmountUSD, setProfitAmountUSD] = useState('0.00');
-
-    const [bitcoinOutputAmount, setBitcoinOutputAmount] = useState('');
-    const [bitcoinOutputAmountUSD, setBitcoinOutputAmountUSD] = useState('0.00');
-
-    const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const usdtPriceUSD = useStore.getState().validAssets[selectedInputAsset.name].priceUSD;
+    const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
+    const [usdtExchangeRatePerBTC, setUsdtExchangeRatePerBTC] = useState(0);
+    const depositMode = useStore((state) => state.depositMode);
+    const setDepositMode = useStore((state) => state.setDepositMode);
+    const validAssets = useStore((state) => state.validAssets);
+    const { address, isConnected } = useAccount();
+    const { openConnectModal } = useConnectModal();
+    const depositFlowState = useStore((state) => state.depositFlowState);
+    const setDepositFlowState = useStore((state) => state.setDepositFlowState);
+    const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
-    const usdtPriceUSDT = useStore.getState().validAssets[selectedInputAsset.name].priceUSD;
+    const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
+    const actualBorderColor = '#323232';
+    const borderColor = `2px solid ${actualBorderColor}`;
 
-    useEffect(() => {
-        if (isWaitingForConnection && isConnected) {
-            setIsWaitingForConnection(false);
-            proceedWithDeposit();
-        }
-    }, [isConnected, isWaitingForConnection]);
-
-    // calculate profit amount in USD
-    useEffect(() => {
-        const profitAmountUSD = `${(
-            ((parseFloat(tokenDepositAmount) * parseFloat(profitPercentage)) / 100) *
-            (usdtPriceUSDT ?? 0)
-        ).toLocaleString('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        })}`;
-
-        setProfitAmountUSD(
-            !profitPercentage || !tokenDepositAmount || profitPercentage == '-' ? '$0.00' : profitAmountUSD,
-        );
-    }, [tokenDepositAmount, profitPercentage]);
-
-    // calculate deposit amount in USD
-    useEffect(() => {
-        const tokenDepositAmountUSD =
-            usdtPriceUSDT && tokenDepositAmount
-                ? (usdtPriceUSDT * parseFloat(tokenDepositAmount)).toLocaleString('en-US', {
-                      style: 'currency',
-                      currency: 'USD',
-                  })
-                : '$0.00';
-        setTokenDepositAmountUSD(tokenDepositAmountUSD);
-    }, [tokenDepositAmount]);
-
-    useEffect(() => {
-        console.log('IS CONNECTED:', isConnected);
-    }, [isConnected]);
-
-    // calculate Bitcoin output amount in USD
-    useEffect(() => {
-        console.log('bitcoinPriceUSD:', bitcoinPriceUSD);
-        const bitcoinOutputAmountUSD =
-            bitcoinPriceUSD && bitcoinOutputAmount
-                ? (bitcoinPriceUSD * parseFloat(bitcoinOutputAmount)).toLocaleString('en-US', {
-                      style: 'currency',
-                      currency: 'USD',
-                  })
-                : '$0.00';
-        setBitcoinOutputAmountUSD(bitcoinOutputAmountUSD);
-    }, [bitcoinOutputAmount]);
-
-    // ---------- DEPOSIT TOKEN AMOUNT ---------- //
-    const handleTokenDepositChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const maxDecimals = useStore.getState().validAssets[selectedInputAsset.name].decimals;
-        const tokenValue = e.target.value;
-
-        const validateTokenDepositChange = (value: string) => {
-            if (value === '') return true;
-            const regex = new RegExp(`^\\d*\\.?\\d{0,${maxDecimals}}$`);
-            return regex.test(value);
-        };
-
-        if (validateTokenDepositChange(tokenValue)) {
-            setTokenDepositAmount(tokenValue);
-            calculateBitcoinOutputAmount(tokenValue, undefined);
-        }
-    };
-
-    // ---------- PROFIT PERCENTAGE ---------- //
-    const handleProfitPercentageChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const profitPercentageValue = e.target.value.replace('%', '');
-
-        if (validateProfitPercentage(profitPercentageValue)) {
-            setProfitPercentage(profitPercentageValue);
-            calculateBitcoinOutputAmount(undefined, profitPercentageValue);
-        } else {
-            console.log('Invalid profit percentage');
-        }
-    };
-
-    const handleProfitPercentageFocus = (value: string) => {
-        // remove percentage sign and plus/minus sign on focus
-        let ProfitPercentageValue = value.replace('%', '').replace(/^\+/, '');
-        setProfitPercentage(ProfitPercentageValue);
-    };
-
-    const handleProfitPercentageBlur = () => {
-        // add percentage sign and plus/minus sign on blur
-        if (profitPercentage === '-') setProfitPercentage('');
-        else if (profitPercentage !== '') {
-            let formattedProfitPercentage = profitPercentage;
-            if (!formattedProfitPercentage.endsWith('%')) {
-                if (!formattedProfitPercentage.startsWith('-') && /^[0-9]/.test(formattedProfitPercentage)) {
-                    // Check if it's numeric and not negative
-                    formattedProfitPercentage = '+' + formattedProfitPercentage;
-                }
-                formattedProfitPercentage += '%';
+    const checkLiquidityExceeded = useCallback(
+        (amount: string | null) => {
+            try {
+                return BigNumber.from(usdtOutputSwapAmount).gt(availableLiquidity);
+            } catch (error) {
+                console.error('Error in checkLiquidityExceeded:', error);
+                return false; // or handle the error as appropriate for your use case
             }
-            setProfitPercentage(formattedProfitPercentage);
-        }
-    };
-
-    const calculateProfitPercent = (bitcoinAmount: string) => {
-        const startValue = parseFloat(tokenDepositAmount);
-        const endValue =
-            parseFloat(bitcoinAmount) *
-            useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC;
-
-        const newProfitPercentage = (((endValue - startValue) / startValue) * 100).toFixed(2);
-        if (validateProfitPercentage(newProfitPercentage)) {
-            let formattedProfitPercentage = newProfitPercentage;
-            if (!formattedProfitPercentage.startsWith('-') && /^[0-9]/.test(formattedProfitPercentage)) {
-                // Check if it's numeric and not negative
-                formattedProfitPercentage = '+' + formattedProfitPercentage;
-            }
-            formattedProfitPercentage += '%';
-            setProfitPercentage(formattedProfitPercentage);
-        }
-    };
-
-    const validateProfitPercentage = (value) => {
-        // max 2 decimal places and optional minus sign
-        if (value === '') return true;
-        const regex = /^-?\d*(\.\d{0,2})?$/;
-        return regex.test(value);
-    };
-
-    // ---------- BITCOIN OUTPUT AMOUNT ---------- //
-    const handleBitcoinOutputAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const bitcoinOutputAmountValue = e.target.value;
-
-        if (validateBitcoinOutputAmount(bitcoinOutputAmountValue)) {
-            setBitcoinOutputAmount(bitcoinOutputAmountValue === '0.0' ? '' : bitcoinOutputAmountValue);
-            calculateProfitPercent(bitcoinOutputAmountValue);
-        }
-    };
-
-    const calculateBitcoinOutputAmount = (
-        newEthDepositAmount: string | undefined,
-        newProfitPercentage: string | undefined,
-    ) => {
-        if (usdtPriceUSDT && bitcoinPriceUSD) {
-            console.log('newProfitPercentage:', newProfitPercentage);
-            const profitAmountInToken =
-                parseFloat(newEthDepositAmount ?? tokenDepositAmount) *
-                (parseFloat(newProfitPercentage ?? profitPercentage) / 100);
-            const totalTokenUSD =
-                parseFloat(newEthDepositAmount ?? tokenDepositAmount) * usdtPriceUSDT +
-                profitAmountInToken * usdtPriceUSDT;
-            const newBitcoinOutputAmount = totalTokenUSD / bitcoinPriceUSD > 0 ? totalTokenUSD / bitcoinPriceUSD : 0;
-            const formattedBitcoinOutputAmount =
-                newBitcoinOutputAmount == 0 ? '0.0' : newBitcoinOutputAmount.toFixed(7);
-
-            if (validateBitcoinOutputAmount(formattedBitcoinOutputAmount)) {
-                setBitcoinOutputAmount(formattedBitcoinOutputAmount === '0.0' ? '' : formattedBitcoinOutputAmount);
-            }
-            // Calculate the profit amount in USD
-
-            const profitAmountUSD = `${(
-                ((parseFloat(tokenDepositAmount) * parseFloat(newProfitPercentage ?? profitPercentage)) / 100) *
-                usdtPriceUSDT
-            ).toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD',
-            })}`;
-            setProfitAmountUSD(profitAmountUSD);
-
-            // Calculate and update the deposit amount in USD
-            console.log('tokenDepositAmount:', tokenDepositAmount);
-            const tokenDepositAmountUSD =
-                usdtPriceUSDT && tokenDepositAmount
-                    ? (usdtPriceUSDT * parseFloat(tokenDepositAmount)).toLocaleString('en-US', {
-                          style: 'currency',
-                          currency: 'USD',
-                      })
-                    : '$0.00';
-            setTokenDepositAmountUSD(tokenDepositAmountUSD);
-        }
-    };
-
-    const validateBitcoinOutputAmount = (value: string) => {
-        if (value === '') return true;
-        const regex = /^\d*\.?\d*$/;
-        return regex.test(value);
-    };
-
-    // ---------- BTC PAYOUT ADDRESS ---------- //
-    const handleBTCPayoutAddressChange = (e) => {
-        const BTCPayoutAddress = e.target.value;
-        setPayoutBTCAddress(BTCPayoutAddress);
-    };
-
-    const validateBitcoinPayoutAddress = (address: string): boolean => {
-        const p2pkhRegex = /^[1][a-km-zA-HJ-NP-Z1-9]{25,34}$/; // P2PKH addresses start with 1
-        const p2shRegex = /^[3][a-km-zA-HJ-NP-Z1-9]{25,34}$/; // P2SH addresses start with 3
-        const bech32Regex = /^bc1q[a-zA-HJ-NP-Z0-9]{14,74}$/; // Bech32 addresses (SegWit) start with bc1q
-        const taprootRegex = /^bc1p[a-zA-HJ-NP-Z0-9]{14,74}$/; // Taproot addresses start with bc1p
-
-        return (
-            p2pkhRegex.test(address) ||
-            p2shRegex.test(address) ||
-            bech32Regex.test(address) ||
-            taprootRegex.test(address)
-        );
-    };
-
-    const BitcoinAddressValidation: React.FC<{ address: string }> = ({ address }) => {
-        const isValid = validateBitcoinPayoutAddress(address);
-
-        if (address.length === 0) {
-            return <Text>...</Text>;
-        }
-
-        return (
-            <Flex align='center'>
-                {isValid ? (
-                    <>
-                        <IoMdCheckmarkCircle color='green' size={16} />
-                        <Text color='green' ml={2}>
-                            Valid address
-                        </Text>
-                    </>
-                ) : (
-                    <>
-                        <HiXCircle color='red' size={16} />
-                        <Text color='red' ml={2}>
-                            Invalid address
-                        </Text>
-                    </>
-                )}
-            </Flex>
-        );
-    };
-    // ---------- DEPOSIT ---------- //
+        },
+        [availableLiquidity],
+    );
 
     const initiateDeposit = async () => {
         if (!isConnected) {
@@ -329,382 +80,338 @@ export const DepositUI = ({}) => {
             return;
         }
 
-        proceedWithDeposit();
+        setDepositFlowState('1-confirm-deposit');
     };
 
-    const proceedWithDeposit = async () => {
-        console.log('Wallet connection detected!');
+    // ----------------- BITCOIN INPUT ----------------- //
 
-        if (chainId !== selectedInputAsset.contractChainID) {
-            console.log('Switching network');
-            // TODO: Implement network switching logic here
-            throw new Error('Please switch to the correct network');
-        }
+    const handleBtcInputChange = (e) => {
+        console.log('e.target.value:', e.target.value);
+        const btcValue = validateBtcInput(e.target.value);
+        console.log('btcValue:', btcValue);
 
-        if (window.ethereum) {
-            // Reset the deposit state before starting a new deposit
-            resetDepositState();
-            setIsModalOpen(true);
-
-            const vaultIndexToOverwrite = findVaultIndexToOverwrite();
-            const vaultIndexWithSameExchangeRate = findVaultIndexWithSameExchangeRate();
-            const tokenDecmials = useStore.getState().validAssets[selectedInputAsset.name].decimals;
-            console.log('tokenDecmials:', tokenDecmials);
-            const tokenDepositAmountInSmallestTokenUnits = parseUnits(tokenDepositAmount, tokenDecmials);
-            console.log('tokenDepositAmountInSmallestTokenUnits:', tokenDepositAmountInSmallestTokenUnits.toString());
-            const tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(
-                tokenDepositAmountInSmallestTokenUnits,
-                tokenDecmials,
-            );
-            console.log(
-                'tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals:',
-                tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals.toString(),
-            );
-            const bitcoinOutputAmountInSats = parseUnits(bitcoinOutputAmount, bitcoinDecimals);
-            console.log('bitcoinOutputAmountInSats:', bitcoinOutputAmountInSats.toString());
-            const exchangeRate =
-                tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(bitcoinOutputAmountInSats);
-            console.log('exchangeRate:', exchangeRate.toString());
-
-            const bitcoinPayoutLockingScript = convertToBitcoinLockingScript(payoutBTCAddress);
-
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-
-            await depositLiquidity({
-                signer: signer,
-                riftExchangeAbi: selectedInputAsset.riftExchangeAbi,
-                riftExchangeContractAddress: selectedInputAsset.riftExchangeContractAddress,
-                tokenAddress: selectedInputAsset.tokenAddress,
-                btcPayoutLockingScript: bitcoinPayoutLockingScript,
-                btcExchangeRate: exchangeRate,
-                vaultIndexToOverwrite,
-                tokenDepositAmountInSmallestTokenUnits: tokenDepositAmountInSmallestTokenUnits,
-                vaultIndexWithSameExchangeRate,
-            });
+        if (btcValue !== null) {
+            setBtcInputSwapAmount(btcValue);
+            let btcOutputAmount =
+                btcValue && parseFloat(btcValue) > 0
+                    ? parseFloat(btcValue) *
+                      useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC
+                    : 0;
+            // TODO: subtract premium we calculate from the eth value
+            // btcOutputAmount -= calculatePremium;
+            setUsdtOutputSwapAmount(formatOutput(btcOutputAmount)); // Correctly format output
         }
     };
 
+    const validateBtcInput = (value) => {
+        if (value === '') return '';
+        const regex = /^\d*\.?\d*$/;
+        if (!regex.test(value)) return null;
+        const parts = value.split('.');
+        if (parts.length > 1 && parts[1].length > bitcoinDecimals) {
+            return parts[0] + '.' + parts[1].slice(0, bitcoinDecimals);
+        }
+        return value;
+    };
+
+    const formatOutput = (number) => {
+        if (!number) return '';
+        const roundedNumber = Number(number).toFixed(selectedInputAsset.decimals);
+        return roundedNumber.replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.$/, ''); // Remove trailing zeros and pointless decimal
+    };
+
+    const handleUsdtOutputChange = (e) => {
+        const maxDecimals = useStore.getState().validAssets[selectedInputAsset.name].decimals;
+        const usdtValue = e.target.value;
+
+        const validateUsdtOutputChange = (value: string) => {
+            if (value === '') return true;
+            const regex = new RegExp(`^\\d*\\.?\\d{0,${maxDecimals}}$`);
+            return regex.test(value);
+        };
+
+        if (validateUsdtOutputChange(usdtValue)) {
+            setUsdtOutputSwapAmount(usdtValue);
+            const btcValue =
+                usdtValue && parseFloat(usdtValue) > 0
+                    ? parseFloat(usdtValue) /
+                      useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC
+                    : 0;
+            setBtcInputSwapAmount(formatOutput(btcValue));
+
+            // Immediately check and log liquidity status
+            const exceeded = checkLiquidityExceeded(usdtValue);
+            console.log('LIQUIDITY EXCEEDED (immediate)?:', exceeded);
+        }
+    };
+
+    // DEPOSIT INPUTS UI
     return (
         <Flex
-            w='100%'
-            h='100%'
-            px='30px'
-            py='28px'
-            flexDir={'column'}
-            userSelect={'none'}
-            fontSize={'12px'}
-            fontFamily={FONT_FAMILIES.AUX_MONO}
-            color={'#c3c3c3'}
-            fontWeight={'normal'}
-            gap={'0px'}>
-            <Text fontSize={'13px'} letterSpacing={'-1px'} textAlign={'center'}>
-                Create a sell order by setting your <WhiteText>Exchange Rate</WhiteText>. Get payed out in
-                <OrangeText> BTC</OrangeText> when your order is filled. Withdraw unreserved liquidity anytime.
-            </Text>
-            <Flex mt='25px' direction={'column'} overflow={'visible'}>
-                {/* Content */}
-                <Flex direction='column' align='center' overflow={'visible'}>
-                    <Flex w='100%' overflow={'visible'} direction={'column'}>
-                        {/* Deposit Input */}
-                        <Flex
-                            mt='0px'
-                            px='10px'
-                            bg={selectedInputAsset.dark_bg_color}
-                            w='100%'
-                            h='105px'
-                            border='2px solid'
-                            borderColor={selectedInputAsset.bg_color}
-                            borderRadius={'10px'}>
-                            <Flex direction={'column'} py='10px' px='5px'>
-                                <Text
-                                    color={!tokenDepositAmount ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    You Deposit
-                                </Text>
-                                <Input
-                                    value={tokenDepositAmount}
-                                    onChange={(e) => {
-                                        handleTokenDepositChange(e);
+            direction='column'
+            align='center'
+            py='25px'
+            borderRadius='20px'
+            {...backgroundColor}
+            borderBottom={borderColor}
+            borderLeft={borderColor}
+            borderTop={borderColor}
+            borderRight={borderColor}>
+            <Flex w='90%' direction={'column'}>
+                {depositFlowState === '1-confirm-deposit' ? (
+                    <DepositConfirmation />
+                ) : (
+                    <>
+                        <Flex w='100%' flexDir='column' position='relative'>
+                            {/* BTC Output */}
+                            <Flex
+                                px='10px'
+                                bg={selectedInputAsset.dark_bg_color}
+                                w='100%'
+                                h='105px'
+                                border='2px solid'
+                                borderColor={selectedInputAsset.bg_color}
+                                borderRadius={'10px'}>
+                                <Flex direction={'column'} py='10px' px='5px'>
+                                    <Text
+                                        color={!usdtOutputSwapAmount ? colors.offWhite : colors.textGray}
+                                        fontSize={'13px'}
+                                        letterSpacing={'-1px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        You Receive
+                                    </Text>
+                                    <Input
+                                        value={usdtOutputSwapAmount}
+                                        onChange={handleUsdtOutputChange}
+                                        fontFamily={'Aux'}
+                                        border='none'
+                                        mt='2px'
+                                        mr='-150px'
+                                        ml='-5px'
+                                        p='0px'
+                                        letterSpacing={'-6px'}
+                                        color={isLiquidityExceeded ? colors.red : colors.offWhite}
+                                        _active={{ border: 'none', boxShadow: 'none' }}
+                                        _focus={{ border: 'none', boxShadow: 'none' }}
+                                        _selected={{ border: 'none', boxShadow: 'none' }}
+                                        fontSize='40px'
+                                        placeholder='0.0'
+                                        _placeholder={{ color: selectedInputAsset.light_text_color }}
+                                    />
+                                    <Text
+                                        color={
+                                            isLiquidityExceeded
+                                                ? colors.redHover
+                                                : !usdtOutputSwapAmount
+                                                ? colors.offWhite
+                                                : colors.textGray
+                                        }
+                                        fontSize={'13px'}
+                                        mt='2px'
+                                        ml='1px'
+                                        letterSpacing={'-1.5px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        {isLiquidityExceeded
+                                            ? `Exceeds available liquidity - ${Number(availableLiquidity).toFixed(
+                                                  selectedInputAsset.decimals,
+                                              )} ${selectedInputAsset.name} max`
+                                            : usdtPriceUSD
+                                            ? usdtOutputSwapAmount
+                                                ? (usdtPriceUSD * parseFloat(usdtOutputSwapAmount)).toLocaleString(
+                                                      'en-US',
+                                                      {
+                                                          style: 'currency',
+                                                          currency: 'USD',
+                                                      },
+                                                  )
+                                                : '$0.00'
+                                            : '$0.00'}
+                                    </Text>
+                                </Flex>
+                                <Spacer />
+                                <Flex mt='9px' mr='6px'>
+                                    <AssetTag2 assetName='USDT' />
+                                </Flex>
+                            </Flex>
+                            {/* Switch Button */}
+                            <Flex
+                                w='30px'
+                                h='30px'
+                                borderRadius={'20%'}
+                                alignSelf={'center'}
+                                align={'center'}
+                                justify={'center'}
+                                cursor={'pointer'}
+                                _hover={{ bg: '#232323' }}
+                                onClick={() => setDepositMode(false)}
+                                position={'absolute'}
+                                bg='#161616'
+                                border='2px solid #323232'
+                                top='50%'
+                                left='50%'
+                                transform='translate(-50%, -50%)'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='20px' height='20px' viewBox='0 0 20 20'>
+                                    <path
+                                        fill='#909090'
+                                        fillRule='evenodd'
+                                        d='M2.24 6.8a.75.75 0 0 0 1.06-.04l1.95-2.1v8.59a.75.75 0 0 0 1.5 0V4.66l1.95 2.1a.75.75 0 1 0 1.1-1.02l-3.25-3.5a.75.75 0 0 0-1.1 0L2.2 5.74a.75.75 0 0 0 .04 1.06m8 6.4a.75.75 0 0 0-.04 1.06l3.25 3.5a.75.75 0 0 0 1.1 0l3.25-3.5a.75.75 0 1 0-1.1-1.02l-1.95 2.1V6.75a.75.75 0 0 0-1.5 0v8.59l-1.95-2.1a.75.75 0 0 0-1.06-.04'
+                                        clipRule='evenodd'
+                                    />
+                                </svg>
+                            </Flex>
+                            {/* USDT Input */}
+                            <Flex
+                                mt={'5px'}
+                                px='10px'
+                                bg='#2E1C0C'
+                                w='100%'
+                                h='105px'
+                                border='2px solid #78491F'
+                                borderRadius={'10px'}>
+                                <Flex direction={'column'} py='10px' px='5px'>
+                                    <Text
+                                        color={!btcInputSwapAmount ? colors.offWhite : colors.textGray}
+                                        fontSize={'13px'}
+                                        letterSpacing={'-1px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        You Send
+                                    </Text>
+                                    <Input
+                                        value={btcInputSwapAmount}
+                                        onChange={handleBtcInputChange}
+                                        fontFamily={'Aux'}
+                                        border='none'
+                                        mt='2px'
+                                        mr='-150px'
+                                        ml='-5px'
+                                        p='0px'
+                                        letterSpacing={'-6px'}
+                                        color={colors.offWhite}
+                                        _active={{ border: 'none', boxShadow: 'none' }}
+                                        _focus={{ border: 'none', boxShadow: 'none' }}
+                                        _selected={{ border: 'none', boxShadow: 'none' }}
+                                        fontSize='40px'
+                                        placeholder='0.0'
+                                        _placeholder={{ color: '#805530' }}
+                                    />
+                                    <Text
+                                        color={!btcInputSwapAmount ? colors.offWhite : colors.textGray}
+                                        fontSize={'13px'}
+                                        mt='2px'
+                                        ml='1px'
+                                        letterSpacing={'-1px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        {bitcoinPriceUSD
+                                            ? btcInputSwapAmount
+                                                ? (bitcoinPriceUSD * parseFloat(btcInputSwapAmount)).toLocaleString(
+                                                      'en-US',
+                                                      {
+                                                          style: 'currency',
+                                                          currency: 'USD',
+                                                      },
+                                                  )
+                                                : '$0.00'
+                                            : '$0.00'}
+                                    </Text>
+                                </Flex>
+                                <Spacer />
+                                <Flex mt='9px' mr='6px'>
+                                    <AssetTag2 assetName='BTC' />
+                                </Flex>
+                            </Flex>
+                        </Flex>{' '}
+                        {/* Rate/Liquidity Details */}
+                        <Flex mt='12px'>
+                            <Text
+                                color={colors.textGray}
+                                fontSize={'13px'}
+                                ml='3px'
+                                letterSpacing={'-1.5px'}
+                                fontWeight={'normal'}
+                                fontFamily={'Aux'}>
+                                1 BTC ≈{' '}
+                                {usdtExchangeRatePerBTC
+                                    ? usdtExchangeRatePerBTC.toLocaleString('en-US', {
+                                          maximumFractionDigits: 4,
+                                      })
+                                    : 'N/A'}{' '}
+                                {selectedInputAsset.name}{' '}
+                                {/* TODO: implemnt above where its based on the selected asset */}
+                                <Box
+                                    as='span'
+                                    color={colors.textGray}
+                                    _hover={{
+                                        cursor: 'pointer',
+                                        //open popup about fee info
                                     }}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='2px'
-                                    mr='-100px'
-                                    ml='-5px'
-                                    p='0px'
-                                    letterSpacing={'-6px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='40px'
-                                    placeholder='0.0'
-                                    _placeholder={{ color: selectedInputAsset.light_text_color }}
-                                />
-                                <Text
-                                    color={!tokenDepositAmount ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    mt='2px'
-                                    ml='1px'
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    {tokenDepositAmountUSD}
-                                </Text>
-                            </Flex>
-                            <Spacer />
-                            <Flex mt='1px' mr='6px'>
-                                <AssetTag assetName={selectedInputAsset.name} />
-                            </Flex>
-                        </Flex>
-                        {/* Profit Percentage Input */}
-                        <Flex
-                            mt='10px'
-                            px='10px'
-                            bg='#161A33'
-                            w='100%'
-                            h='105px'
-                            border='2px solid #303F9F'
-                            borderRadius={'10px'}>
-                            <Flex direction={'column'} py='10px' px='5px'>
-                                <Text
-                                    color={!profitPercentage ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    Your Profit %
-                                </Text>
-                                <Input
-                                    value={profitPercentage}
-                                    onChange={(e) => {
-                                        handleProfitPercentageChange(e);
-                                    }}
-                                    onBlur={handleProfitPercentageBlur}
-                                    onFocus={() => handleProfitPercentageFocus(profitPercentage)}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='2px'
-                                    mr='-120px'
-                                    ml='-5px'
-                                    p='0px'
-                                    letterSpacing={'-6px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='40px'
-                                    placeholder='0.0'
-                                    _placeholder={{ color: '#5C63A3' }}
-                                />
-                                <Text
-                                    color={!profitPercentage ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    mt='2px'
-                                    ml='1px'
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    ≈ {profitAmountUSD}
-                                </Text>
-                            </Flex>
+                                    letterSpacing={'-1.5px'}
+                                    style={{
+                                        textDecoration: 'underline',
+                                        textUnderlineOffset: '6px',
+                                    }}></Box>
+                            </Text>
                             <Spacer />
                             <Flex
-                                alignSelf={'center'}
-                                mr='6px'
-                                w='220px'
-                                h='60px'
-                                bg='#222753'
-                                fontSize={'12px'}
-                                align='center'
-                                letterSpacing={'-1px'}
-                                justify='center'
-                                border='2px solid #3C4ABB'
-                                borderRadius={'10px'}
-                                textAlign='center'
-                                direction='column'>
-                                <Text color={colors.offWhite}>Your Exchange Rate</Text>
-                                <Text>
-                                    1 BTC ={' '}
-                                    {/* amount of deposit asset / amount of BTC out ) * deposit asset price in USD */}
-                                    {tokenDepositAmount && bitcoinOutputAmount
-                                        ? (
-                                              (parseFloat(tokenDepositAmount) / parseFloat(bitcoinOutputAmount)) *
-                                              usdtPriceUSDT
-                                          ).toLocaleString('en-US', {
-                                              style: 'currency',
-                                              currency: 'USD',
-                                          })
-                                        : '$0.00'}{' '}
-                                    {selectedInputAsset.name}
-                                </Text>
-                            </Flex>
-                        </Flex>
-                        {/* Bitcoin Amount Out */}
-                        <Flex
-                            mt='10px'
-                            px='10px'
-                            bg='#2E1C0C'
-                            w='100%'
-                            h='105px'
-                            border='2px solid #78491F'
-                            borderRadius={'10px'}>
-                            <Flex direction={'column'} py='10px' px='5px'>
-                                <Text
-                                    color={!bitcoinOutputAmount ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    You Recieve
-                                </Text>
-                                <Input
-                                    value={bitcoinOutputAmount}
-                                    onChange={handleBitcoinOutputAmountChange}
+                                ml='-3px'
+                                color={colors.textGray}
+                                fontSize={'13px'}
+                                mr='3px'
+                                letterSpacing={'-1.5px'}
+                                fontWeight={'normal'}
+                                fontFamily={'Aux'}>
+                                <Tooltip
                                     fontFamily={'Aux'}
-                                    border='none'
-                                    mt='2px'
-                                    mr='-5px'
-                                    ml='-5px'
-                                    p='0px'
-                                    letterSpacing={'-6px'}
+                                    letterSpacing={'-0.5px'}
                                     color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='40px'
-                                    placeholder='0.0'
-                                    _placeholder={{ color: '#805530' }}
-                                />
-                                <Text
-                                    color={!bitcoinOutputAmount ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    mt='2px'
-                                    ml='1px'
-                                    letterSpacing={'-1.5px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    ≈ {bitcoinOutputAmountUSD}
-                                </Text>
-                            </Flex>
-                            <Spacer />
-                            <Flex mt='1px' mr='6px'>
-                                <AssetTag assetName='BTC' />
+                                    bg={'#121212'}
+                                    fontSize={'12px'}
+                                    label='Exchange rate includes the hypernode, protocol, and LP Fees. There are no additional or hidden fees.'
+                                    aria-label='A tooltip'>
+                                    <Flex ml='8px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
+                                        <Text
+                                            color={colors.textGray}
+                                            fontSize={'13px'}
+                                            mr='8px'
+                                            mt='1px'
+                                            letterSpacing={'-1.5px'}
+                                            fontWeight={'normal'}
+                                            fontFamily={'Aux'}>
+                                            Including Fees
+                                        </Text>
+                                        <InfoSVG width='13' />
+                                    </Flex>
+                                </Tooltip>
                             </Flex>
                         </Flex>
-                        {/* BTC Payout Address */}
+                        {/* Exchange Button */}
                         <Flex
-                            mt='10px'
-                            px='10px'
-                            bg='#1C1C1C'
-                            border='2px solid #565656'
-                            w='100%'
-                            h='105px'
-                            borderRadius={'10px'}>
-                            <Flex direction={'column'} py='10px' px='5px'>
-                                <Text
-                                    color={!payoutBTCAddress ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    Bitcoin Payout Address
-                                </Text>
-                                <Input
-                                    value={payoutBTCAddress}
-                                    onChange={handleBTCPayoutAddressChange}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='2px'
-                                    mr='190px'
-                                    ml='-5px'
-                                    p='0px'
-                                    letterSpacing={'-6px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='36px'
-                                    placeholder='bc1q5d7rjq7g6rd2...'
-                                    _placeholder={{ color: colors.darkerGray }}
-                                    spellCheck={false}
-                                />
-                                <Text
-                                    color={!payoutBTCAddress ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    mt='2px'
-                                    ml='1px'
-                                    letterSpacing={'-1.5px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    {payoutBTCAddress.length > 0 ? (
-                                        <BitcoinAddressValidation address={payoutBTCAddress} />
-                                    ) : (
-                                        '...'
-                                    )}
-                                </Text>
-                            </Flex>
-                        </Flex>
-
-                        {/* Deposit Button */}
-                        <Flex
-                            alignSelf={'center'}
-                            bg={
-                                isConnected
-                                    ? tokenDepositAmount && bitcoinOutputAmount && payoutBTCAddress
-                                        ? colors.purpleBackground
-                                        : colors.purpleBackgroundDisabled
-                                    : colors.purpleBackground
-                            }
+                            bg={usdtOutputSwapAmount ? colors.purpleBackground : colors.purpleBackgroundDisabled}
                             _hover={{ bg: colors.purpleHover }}
-                            w='60%'
-                            mt='22px'
+                            w='100%'
+                            mt='15px'
                             transition={'0.2s'}
-                            h='52px'
-                            onClick={async () => {
-                                if (tokenDepositAmount && bitcoinOutputAmount && payoutBTCAddress) {
-                                    initiateDeposit();
-                                }
-                            }}
-                            fontSize={'17px'}
+                            h='45px'
+                            onClick={usdtOutputSwapAmount ? () => initiateDeposit() : null}
+                            fontSize={'15px'}
                             align={'center'}
                             userSelect={'none'}
                             cursor={'pointer'}
                             borderRadius={'10px'}
                             justify={'center'}
-                            border={
-                                isConnected
-                                    ? tokenDepositAmount && bitcoinOutputAmount && payoutBTCAddress
-                                        ? '3px solid #445BCB'
-                                        : '3px solid #3242a8'
-                                    : '3px solid #445BCB'
-                            }>
+                            border={usdtOutputSwapAmount ? '3px solid #445BCB' : '3px solid #3242a8'}>
                             <Text
-                                color={
-                                    isConnected
-                                        ? tokenDepositAmount && bitcoinOutputAmount && payoutBTCAddress
-                                            ? colors.offWhite
-                                            : colors.darkerGray
-                                        : colors.offWhite
-                                }
+                                color={usdtOutputSwapAmount ? colors.offWhite : colors.darkerGray}
                                 fontFamily='Nostromo'>
-                                {isConnected ? 'Deposit Liquidity' : 'Connect Wallet'}
+                                {isConnected ? 'Create Sell Order' : 'Connect Wallet'}
                             </Text>
                         </Flex>
-                    </Flex>
-                </Flex>
+                    </>
+                )}
             </Flex>
-            <DepositStatusModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                status={depositLiquidityStatus}
-                error={depositLiquidityError}
-                txHash={txHash}
-            />
         </Flex>
     );
 };

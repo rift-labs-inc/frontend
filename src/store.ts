@@ -50,6 +50,8 @@ type Store = {
     setSwapFlowState: (
         state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed',
     ) => void;
+    depositFlowState: '0-not-started' | '1-confirm-deposit';
+    setDepositFlowState: (state: '0-not-started' | '1-confirm-deposit') => void;
     btcInputSwapAmount: string;
     setBtcInputSwapAmount: (amount: string) => void;
     usdtOutputSwapAmount: string;
@@ -202,6 +204,8 @@ export const useStore = create<Store>((set) => {
         // swap flow
         swapFlowState: '0-not-started',
         setSwapFlowState: (swapFlowState) => set({ swapFlowState }),
+        depositFlowState: '0-not-started',
+        setDepositFlowState: (depositFlowState) => set({ depositFlowState }),
         btcInputSwapAmount: '',
         setBtcInputSwapAmount: (btcInputSwapAmount) => set({ btcInputSwapAmount }),
         usdtOutputSwapAmount: '',

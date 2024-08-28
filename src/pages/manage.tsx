@@ -4,7 +4,6 @@ import { OpenGraph } from '../components/background/OpenGraph';
 import HorizontalButtonSelector from '../components/HorizontalButtonSelector';
 import OrangeText from '../components/other/OrangeText';
 import WhiteText from '../components/other/WhiteText';
-import { DepositUIOLD } from '../components/sell/DepositUIOLD';
 import { Navbar } from '../components/Navbar';
 import { toastSuccess } from '../hooks/toast';
 import useWindowSize from '../hooks/useWindowSize';
@@ -23,7 +22,7 @@ import { DepositVault } from '../types';
 import { BigNumber } from 'ethers';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
 import { BTCSVG, ETH_Icon, ETH_Logo, ETHSVG } from '../components/other/SVGs';
-import { ManageVaults } from '../components/sell/ManageVaults';
+import { ManageVaults } from '../components/deposit/ManageVaults';
 import ExchangeRateChart from '../components/charts/ExchangeRateChart';
 
 const Manage = () => {
@@ -157,7 +156,7 @@ const Manage = () => {
                             </Flex>
                         </Flex> */}
                         {/* Deposit & Manage Vaults */}
-                        {selectedButton === 'Create a Vault' ? <DepositUIOLD /> : <ManageVaults />}
+                        {selectedButton === 'Create a Vault' ? <></> : <ManageVaults />}
                     </Flex>
                 </Flex>
             </Flex>

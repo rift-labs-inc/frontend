@@ -106,6 +106,10 @@ export const ManageVaults = ({}) => {
         selectedButtonActiveVsCompleted === 'Active' ? userActiveDepositVaults : userCompletedDepositVaults;
     const [refreshKey, setRefreshKey] = useState(0);
 
+    useEffect(() => {
+        console.log('BRUH ADVAITH GAY???', vaultsToDisplay);
+    }, [vaultsToDisplay]);
+
     const handleGoBack = () => {
         // clear selected vault
         setSelectedVaultToManage(null);
