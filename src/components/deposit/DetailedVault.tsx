@@ -4,7 +4,7 @@ import { DepositVault, ValidAsset } from '../../types';
 import { BigNumber } from 'ethers';
 import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
-import { AssetTag2 } from '../other/AssetTag2';
+import { AssetTag } from '../other/AssetTag';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { FaRegArrowAltCircleRight } from 'react-icons/fa';
 import VaultStatusBar from './VaultStatusBar';
@@ -69,7 +69,7 @@ const DetailedVault: React.FC<DetailedVaultProps> = ({ vault, onClick, selectedI
                                         ).toString()}
                                 </Text>
                                 <Spacer />
-                                <AssetTag2 assetName={vault?.depositAsset?.name} width='84px' />
+                                <AssetTag assetName={vault?.depositAsset?.name} width='84px' />
                             </Flex>
                         </Flex>
                         <Flex mt='0px' fontSize='20px' opacity={0.9}>
@@ -98,7 +98,7 @@ const DetailedVault: React.FC<DetailedVaultProps> = ({ vault, onClick, selectedI
                                         ).toString()}
                                 </Text>
                                 <Spacer />
-                                <AssetTag2 assetName={'BTC'} width='80px' />
+                                <AssetTag assetName={'BTC'} width='80px' />
                             </Flex>
                         </Flex>
                     </Flex>

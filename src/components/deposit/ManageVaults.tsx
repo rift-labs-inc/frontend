@@ -10,7 +10,7 @@ import { DepositVault } from '../../types';
 import { colors } from '../../utils/colors';
 import { getLiquidityProvider } from '../../utils/contractReadFunctions';
 import { FONT_FAMILIES } from '../../utils/font';
-import vault from '../../utils/vault.json';
+// import vault from '../../utils/vault.json';
 import HorizontalButtonSelector from '../HorizontalButtonSelector';
 import DetailedVault from './DetailedVault';
 import VaultSettings from './VaultSettings';
@@ -133,9 +133,9 @@ export const ManageVaults = ({}) => {
         }
     }, [userActiveDepositVaults, userCompletedDepositVaults, selectedVaultToManage]);
 
-    useEffect(() => {
-        if (userActiveDepositVaults.length == 0) setUserActiveDepositVaults(vault as any);
-    }, [userActiveDepositVaults]);
+    // useEffect(() => {
+    //     if (userActiveDepositVaults.length == 0) setUserActiveDepositVaults(vault as any);
+    // }, [userActiveDepositVaults]);
 
     return (
         <Flex
