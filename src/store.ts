@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { useEffect } from 'react';
-import { DepositVault, ReserveLiquidityParams, SwapReservation } from './types';
+import { CurrencyModalTitle, DepositVault, ReserveLiquidityParams, SwapReservation } from './types';
 import { BigNumber, ethers } from 'ethers';
 import { USDT_Icon, ETH_Icon, ETH_Logo } from './components/other/SVGs';
 import { ERC20ABI } from './utils/constants';
@@ -47,9 +47,7 @@ type Store = {
 
     // swap flow
     swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed';
-    setSwapFlowState: (
-        state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed',
-    ) => void;
+    setSwapFlowState: (state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed') => void;
     depositFlowState: '0-not-started' | '1-confirm-deposit';
     setDepositFlowState: (state: '0-not-started' | '1-confirm-deposit') => void;
     btcInputSwapAmount: string;
@@ -68,6 +66,10 @@ type Store = {
     setDepositMode: (mode: boolean) => void;
     withdrawAmount: string;
     setWithdrawAmount: (amount: string) => void;
+
+    // modals
+    currencyModalTitle: CurrencyModalTitle;
+    setCurrencyModalTitle: (x: CurrencyModalTitle) => void;
 };
 
 export const useStore = create<Store>((set) => {
@@ -228,5 +230,7 @@ export const useStore = create<Store>((set) => {
         setDepositMode: (depositMode) => set({ depositMode }),
         withdrawAmount: '',
         setWithdrawAmount: (withdrawAmount) => set({ withdrawAmount }),
+        currencyModalTitle: null,
+        setCurrencyModalTitle: (x) => set({ currencyModalTitle: x }),
     };
 });

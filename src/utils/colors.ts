@@ -40,13 +40,39 @@ export const colors = {
         blue: '#5082F9',
     },
     currencyCard: {
-        bitcoin: {
+        btc: {
             background: '#2E1C0C',
             border: '#78491F',
         },
         usdt: {
             background: '#08221A',
             border: '#125641',
+        },
+        eth: {
+            background: '#161A33',
+            border: '#303F9F',
+        },
+        weth: {
+            background: '#1B1C22',
+            border: '#505770',
+        },
+    },
+    assetTag: {
+        btc: {
+            background: '#C16C21',
+            border: '#FFA04C',
+        },
+        usdt: {
+            background: '#125641',
+            border: '#26A17B',
+        },
+        eth: {
+            background: '#2E40B7',
+            border: '#627EEA',
+        },
+        weth: {
+            background: '#3B3D4A',
+            border: '#646C8C',
         },
     },
 };

@@ -14,6 +14,7 @@ import { bitcoinDecimals, maxSwapOutputs } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
+import WebAssetTag from '../other/WebAssetTag';
 
 export const SwapUI = () => {
     const { width } = useWindowSize();
@@ -40,6 +41,14 @@ export const SwapUI = () => {
     const { address, isConnected } = useAccount();
     const { openConnectModal } = useConnectModal();
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
+<<<<<<< HEAD
+=======
+    const depositFlowState = useStore((state) => state.depositFlowState);
+    const setDepositFlowState = useStore((state) => state.setDepositFlowState);
+    const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
+    const setCurrencyModalTitle = useStore((state) => state.setCurrencyModalTitle);
+
+>>>>>>> 8dc32258d3ee657f0ea712025657f4322bbda2de
     const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
@@ -199,8 +208,8 @@ export const SwapUI = () => {
                             </Text>
                         </Flex>
                         <Spacer />
-                        <Flex mt='9px' mr='6px'>
-                            <AssetTag assetName='BTC' />
+                        <Flex mr='6px'>
+                            <WebAssetTag asset='BTC' onDropDown={() => setCurrencyModalTitle('send')} />
                         </Flex>
                     </Flex>
 
@@ -247,7 +256,8 @@ export const SwapUI = () => {
                                 fontSize={'13px'}
                                 letterSpacing={'-1px'}
                                 fontWeight={'normal'}
-                                fontFamily={'Aux'}>
+                                fontFamily={'Aux'}
+                                userSelect='none'>
                                 You Receive
                             </Text>
                             <Input
@@ -308,8 +318,8 @@ export const SwapUI = () => {
                             </Flex>
                         </Flex>
                         <Spacer />
-                        <Flex mt='9px' mr='6px'>
-                            <AssetTag assetName='USDT' />
+                        <Flex mr='6px'>
+                            <WebAssetTag asset='USDT' onDropDown={() => setCurrencyModalTitle('receipt')} />
                         </Flex>
                     </Flex>
                 </Flex>

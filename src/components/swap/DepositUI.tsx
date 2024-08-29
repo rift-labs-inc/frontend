@@ -15,6 +15,7 @@ import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
 import { connectorsForWallets, useConnectModal } from '@rainbow-me/rainbowkit';
 import { DepositConfirmation } from '../deposit/DepositConfirmation';
+import WebAssetTag from '../other/WebAssetTag';
 
 export const DepositUI = () => {
     const { width } = useWindowSize();
@@ -41,6 +42,8 @@ export const DepositUI = () => {
     const depositFlowState = useStore((state) => state.depositFlowState);
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
+    const setCurrencyModalTitle = useStore((state) => state.setCurrencyModalTitle);
+    const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
     const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
@@ -177,7 +180,8 @@ export const DepositUI = () => {
                                             fontSize={'13px'}
                                             letterSpacing={'-1px'}
                                             fontWeight={'normal'}
-                                            fontFamily={'Aux'}>
+                                            fontFamily={'Aux'}
+                                            userSelect='none'>
                                             You Deposit
                                         </Text>
                                         <Input
@@ -256,8 +260,8 @@ export const DepositUI = () => {
                                         </Flex>
                                     </Flex>
                                     <Spacer />
-                                    <Flex mt='9px' mr='6px'>
-                                        <AssetTag assetName='USDT' />
+                                    <Flex mr='6px'>
+                                        <WebAssetTag asset='USDT' onDropDown={() => setCurrencyModalTitle('deposit')} />
                                     </Flex>
                                 </Flex>
                                 {/* Switch Button */}
@@ -294,8 +298,9 @@ export const DepositUI = () => {
                                             fontSize={'13px'}
                                             letterSpacing={'-1px'}
                                             fontWeight={'normal'}
-                                            fontFamily={'Aux'}>
-                                            You Recieve
+                                            fontFamily={'Aux'}
+                                            userSelect='none'>
+                                            You Receive
                                         </Text>
                                         <Input
                                             value={btcOutputAmount}
@@ -334,8 +339,8 @@ export const DepositUI = () => {
                                         </Text>
                                     </Flex>
                                     <Spacer />
-                                    <Flex mt='9px' mr='6px'>
-                                        <AssetTag assetName='BTC' />
+                                    <Flex mr='6px'>
+                                        <WebAssetTag asset='BTC' onDropDown={() => setCurrencyModalTitle('receipt')} />
                                     </Flex>
                                 </Flex>
                             </Flex>{' '}

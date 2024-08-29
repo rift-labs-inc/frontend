@@ -13,6 +13,7 @@ import { useStore } from '../store';
 import { SwapContainer } from '../components/swap/SwapContainer';
 import { DepositUI } from '../components/swap/DepositUI';
 import { DepositConfirmation } from '../components/deposit/DepositConfirmation';
+import CurrencyModal from '../components/swap/CurrencyModal';
 
 const Home = () => {
     const { height, width } = useWindowSize();
@@ -148,6 +149,7 @@ const Home = () => {
                         </>
                     )}
                 </Flex>
+                <CurrencyModal />
             </Flex>
         </>
     );
