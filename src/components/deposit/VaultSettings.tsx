@@ -10,7 +10,7 @@ import {
     formatBtcExchangeRate,
 } from '../../utils/dappHelper';
 import { FONT_FAMILIES } from '../../utils/font';
-import { AssetTag2 } from '../other/AssetTag2';
+import { AssetTag } from '../other/AssetTag';
 import VaultStatusBar from './VaultStatusBar';
 import WithdrawStatusModal from './WithdrawStatusModal';
 import { DepositVault, ValidAsset } from '../../types';
@@ -139,7 +139,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({
                             ).toString()}
                         </Text>
                         <Spacer />
-                        <AssetTag2 assetName={selectedVaultToManage.depositAsset.name} width='84px' />
+                        <AssetTag assetName={selectedVaultToManage.depositAsset.name} width='84px' />
                     </Flex>
                 </Flex>
                 <Text
@@ -184,7 +184,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({
                         </Text>
 
                         <Spacer />
-                        <AssetTag2 assetName={'BTC'} width='80px' />
+                        <AssetTag assetName={'BTC'} width='80px' />
                     </Flex>
                 </Flex>
             </Flex>
@@ -243,7 +243,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({
                                 {selectedVaultToManage.depositAsset.name}
                             </Text>
                             {/* <Flex mt='-29px' ml='12px'>
-                                <AssetTag2 assetName={selectedVaultToManage.depositAsset.name} width='76px' />
+                                <AssetTag assetName={selectedVaultToManage.depositAsset.name} width='76px' />
                             </Flex> */}
                         </Flex>
 
