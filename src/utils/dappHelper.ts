@@ -1,10 +1,11 @@
-import { BigNumber, BigNumberish, ethers } from 'ethers';
+import { BigNumber, BigNumberish, ethers, FixedNumber } from 'ethers';
 import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
 import { sepolia } from 'viem/chains';
 import * as bitcoin from 'bitcoinjs-lib';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { bitcoinDecimals, SATS_PER_BTC } from './constants';
+import { bitcoinDecimals, maxSwapOutputs, SATS_PER_BTC } from './constants';
+import { format } from 'path';
 
 // HELPER FUCTIONS
 export function weiToEth(wei: BigNumber): BigNumberish {
@@ -39,21 +40,11 @@ export function unBufferFrom18Decimals(amount, tokenDecimals) {
     return bigAmount;
 }
 
-export function calculateBtcOutputAmountFromExchangeRate(
-    depositAmountFromContract,
-    depositAssetDecimals,
-    exchangeRateFromContract,
-) {
+export function calculateBtcOutputAmountFromExchangeRate(depositAmountFromContract, depositAssetDecimals, exchangeRateFromContract) {
     // [0] buffer deposit amount to 18 decimals
-    const depositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(
-        depositAmountFromContract,
-        depositAssetDecimals,
-    );
+    const depositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(depositAmountFromContract, depositAssetDecimals);
 
-    console.log(
-        'bruh, depositAmountInSmallestTokenUnitsBufferedTo18Decimals:',
-        BigNumber.from(depositAmountInSmallestTokenUnitsBufferedTo18Decimals).toString(),
-    );
+    console.log('bruh, depositAmountInSmallestTokenUnitsBufferedTo18Decimals:', BigNumber.from(depositAmountInSmallestTokenUnitsBufferedTo18Decimals).toString());
     console.log('bruh, depositAmountFromContract:', BigNumber.from(depositAmountFromContract).toString());
     console.log('bruh, depositAssetDecimals:', BigNumber.from(depositAssetDecimals).toString());
     console.log('bruh, exchangeRateFromContract:', BigNumber.from(exchangeRateFromContract).toString());
@@ -75,10 +66,7 @@ export function formatBtcExchangeRate(exchangeRateInSmallestTokenUnitBufferedTo1
     );
 
     // [1] unbuffer from 18 decimals
-    const exchangeRateInSmallestTokenUnitPerBtc = unBufferFrom18Decimals(
-        exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc,
-        depositAssetDecimals,
-    );
+    const exchangeRateInSmallestTokenUnitPerBtc = unBufferFrom18Decimals(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc, depositAssetDecimals);
 
     // [2] convert to btc per smallest token amount
     const exchangeRateInStandardUnitsPerBtc = formatUnits(exchangeRateInSmallestTokenUnitPerBtc, depositAssetDecimals);
@@ -130,12 +118,7 @@ export function convertLockingScriptToBitcoinAddress(lockingScript: string): str
         }
 
         // P2SH
-        if (
-            scriptBuffer.length === 23 &&
-            scriptBuffer[0] === bitcoin.opcodes.OP_HASH160 &&
-            scriptBuffer[1] === 0x14 &&
-            scriptBuffer[22] === bitcoin.opcodes.OP_EQUAL
-        ) {
+        if (scriptBuffer.length === 23 && scriptBuffer[0] === bitcoin.opcodes.OP_HASH160 && scriptBuffer[1] === 0x14 && scriptBuffer[22] === bitcoin.opcodes.OP_EQUAL) {
             const scriptHash = scriptBuffer.slice(2, 22);
             return bitcoin.address.toBase58Check(scriptHash, bitcoin.networks.bitcoin.scriptHash);
         }
@@ -191,13 +174,7 @@ export function convertToBitcoinLockingScript(address: string): string {
 
             // P2PKH
             if (version === bitcoin.networks.bitcoin.pubKeyHash) {
-                script = bitcoin.script.compile([
-                    bitcoin.opcodes.OP_DUP,
-                    bitcoin.opcodes.OP_HASH160,
-                    hash,
-                    bitcoin.opcodes.OP_EQUALVERIFY,
-                    bitcoin.opcodes.OP_CHECKSIG,
-                ]);
+                script = bitcoin.script.compile([bitcoin.opcodes.OP_DUP, bitcoin.opcodes.OP_HASH160, hash, bitcoin.opcodes.OP_EQUALVERIFY, bitcoin.opcodes.OP_CHECKSIG]);
             }
 
             // P2SH
@@ -225,54 +202,86 @@ export const formatAmountToString = (selectedInputAsset, number) => {
 };
 
 export function calculateFillPercentage(vault: DepositVault) {
+    // return 80;
     const fillPercentageBigNumber = BigNumber.from(vault.initialBalance)
         .sub(BigNumber.from(vault.unreservedBalanceFromContract))
         .div(BigNumber.from(vault.initialBalance))
         .mul(100);
 
     const fillPercentage = fillPercentageBigNumber.toNumber();
-    return Math.min(Math.max(fillPercentage, 0), 100); // Ensure it's between 0 and 100
+    return Math.min(Math.max(fillPercentage, 0), 100);
 }
 
-export function calculateLowestFeeReservation(
-    depositVaults: DepositVault[],
-    inputAmountInSats: BigNumber,
-    maxLpOutputs: number,
-): { vaultIndexes: number[]; amountsToReserve: BigNumber[] } {
-    const vaultIndexes: number[] = [];
-    const amountsToReserve: BigNumber[] = [];
-
-    try {
-        const sortedVaults = [...depositVaults]
-            .map((vault, index) => ({ ...vault, index }))
-            .sort((a, b) => BigNumber.from(b.btcExchangeRate).sub(BigNumber.from(a.btcExchangeRate)).toNumber());
-
-        let remainingAmountInSats = inputAmountInSats;
-
-        for (const vault of sortedVaults) {
-            if (vaultIndexes.length >= maxLpOutputs || remainingAmountInSats.lte(0)) break;
-
-            const exchangeRate = BigNumber.from(vault.btcExchangeRate); // wei per sat
-            const availableAmountInWei = BigNumber.from(vault.trueUnreservedBalance);
-            const availableAmountInSats = availableAmountInWei.div(exchangeRate);
-
-            const amountToReserveInSats = remainingAmountInSats.lt(availableAmountInSats)
-                ? remainingAmountInSats
-                : availableAmountInSats;
-
-            if (amountToReserveInSats.gt(0)) {
-                const amountToReserveInWei = amountToReserveInSats.mul(exchangeRate);
-                vaultIndexes.push(vault.index!);
-                amountsToReserve.push(amountToReserveInWei);
-                remainingAmountInSats = remainingAmountInSats.sub(amountToReserveInSats);
-            }
-        }
-    } catch (error) {
-        console.log('error', error);
+export function calculateBestVaultsForBitcoinInput(depositVaults, bitcoinAmountInSats, maxLpOutputs = maxSwapOutputs) {
+    // [0] validate inputs
+    if (!depositVaults || depositVaults.length === 0 || bitcoinAmountInSats.lte(0)) {
+        return null;
     }
 
-    return {
-        vaultIndexes,
-        amountsToReserve,
-    };
+    // [1] preprocess deposit vaults
+    const filteredVaults = depositVaults.filter((vault) => vault.trueUnreservedBalance && BigNumber.from(vault.trueUnreservedBalance).gt(0));
+    if (filteredVaults.length === 0) return null;
+
+    // [2] sort vaults based on exchange rate (high -> low)
+    const sortedVaults = filteredVaults.sort((a, b) => b.btcExchangeRate.sub(a.btcExchangeRate).toNumber());
+
+    // [3] setup variables to track results
+    let totalBitcoinAmountInSatsUsed = BigNumber.from(0);
+    let totalμUSDTObtained = BigNumber.from(0);
+    let vaultsUsed = [];
+    let remainingVaults = maxLpOutputs;
+
+    // [4] iterate through the sorted vaults and calculate optimal combo
+    for (let vault of sortedVaults) {
+        if (remainingVaults <= 0 || bitcoinAmountInSats.lte(0)) break;
+
+        // [0] calculate amount of USDT to take from current vault based on remaining bitcoin amount
+        const bufferedμUSDTStillNeeded = vault.btcExchangeRate.mul(bitcoinAmountInSats);
+        const μUsdtStillNeeded = unBufferFrom18Decimals(bufferedμUSDTStillNeeded, vault.depositAsset.decimals);
+        const usdtStillNeeded = formatUnits(μUsdtStillNeeded, vault.depositAsset.decimals);
+        console.log('god usdtStillNeeded:', usdtStillNeeded.toString());
+
+        // [1] if we need more USDT than is in the vault, take all of it otherwise take remaining amount needed
+        const μUsdtToTakeFromVault = μUsdtStillNeeded.gt(vault.trueUnreservedBalance) ? vault.trueUnreservedBalance : parseUnits(usdtStillNeeded, vault.depositAsset.decimals);
+        const bufferedμUSDTToTakeFromVault = bufferTo18Decimals(μUsdtToTakeFromVault, vault.depositAsset.decimals);
+        console.log('god bufferedμUSDTToTakeFromVault:', BigNumber.from(bufferedμUSDTToTakeFromVault).toString());
+        console.log('god exchangeRate:', vault.btcExchangeRate.toString());
+
+        // // [2] update tracked amounts
+        totalμUSDTObtained = totalμUSDTObtained.add(μUsdtToTakeFromVault);
+
+        console.log('god totalUSDTObtained:', formatUnits(totalμUSDTObtained, vault.depositAsset.decimals).toString());
+
+        const fixedNumberBufferedμUSDTToTakeFromVault = FixedNumber.from(bufferedμUSDTToTakeFromVault);
+        const fixedNumberExchangeRate = FixedNumber.from(vault.btcExchangeRate);
+
+        const satsUsed = Math.round(fixedNumberBufferedμUSDTToTakeFromVault.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
+
+        // const satsUsed = bufferedμUSDTToTakeFromVault.div(vault.btcExchangeRate).toNumber();
+        console.log('brutal satsUsed:', satsUsed);
+        // const roundedSatsUsed = Math.round(satsUsed);
+        console.log('brutal roundedSatsUsed:', satsUsed);
+        console.log('god satsUsed:', satsUsed.toString());
+        totalBitcoinAmountInSatsUsed = totalBitcoinAmountInSatsUsed.add(satsUsed);
+        console.log('god totalBitcoinAmountInSatsUsed:', totalBitcoinAmountInSatsUsed.toString());
+        vaultsUsed.push({ vault, μUsdtToTakeFromVault });
+        bitcoinAmountInSats = bitcoinAmountInSats.sub(satsUsed);
+        remainingVaults--;
+    }
+
+    // // Step 6: Optimize vault selection to fit within maxLpOutputs if needed
+    // if (vaultsUsed.length > maxLpOutputs) {
+    //     vaultsUsed = vaultsUsed.sort((a, b) => a.usdtToUse.sub(b.usdtToUse).toNumber()).slice(0, maxLpOutputs);
+
+    //     // Recalculate totals based on optimized vaults selection
+    //     totalBitcoinUsed = vaultsUsed.reduce((acc, { vault, usdtToUse }) => acc.add(usdtToUse.div(vault.btcExchangeRate)), BigNumber.from(0));
+    //     totalUSDTObtained = vaultsUsed.reduce((acc, { usdtToUse }) => acc.add(usdtToUse), BigNumber.from(0));
+    // }
+
+    // // Step 7: Return results
+    // return {
+    //     totalBitcoinUsed,
+    //     totalUSDTObtained,
+    //     vaultsUsed,
+    // };
 }

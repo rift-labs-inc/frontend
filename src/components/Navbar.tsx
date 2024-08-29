@@ -27,14 +27,14 @@ export const Navbar = ({}) => {
     const [showDeveloperMode, setShowDeveloperMode] = useState(false);
     const [isLocalhost, setIsLocalhost] = useState(false);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
+    const validAssets = useStore((state) => state.validAssets);
 
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
 
     useEffect(() => {
-        setAvailableLiquidity(
-            useStore.getState().validAssets[selectedInputAsset.name]?.totalAvailableLiquidity ?? BigNumber.from(0),
-        );
-    }, [selectedInputAsset]);
+        const totalAvailableLiquidity = validAssets[selectedInputAsset.name]?.totalAvailableLiquidity;
+        setAvailableLiquidity(totalAvailableLiquidity ?? BigNumber.from(0));
+    }, [validAssets]);
 
     useEffect(() => {
         const hostname = window.location.hostname;

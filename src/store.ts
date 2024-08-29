@@ -100,7 +100,7 @@ export const useStore = create<Store>((set) => {
             exchangeRateInTokenPerBTC: null,
             exchangeRateInSmallestTokenUnitPerSat: null, // always 18 decimals
             priceUSD: null,
-            totalAvailableLiquidity: BigNumber.from(1223243432432),
+            totalAvailableLiquidity: BigNumber.from(0),
             connectedUserBalanceRaw: BigNumber.from(0),
             connectedUserBalanceFormatted: '0',
         },

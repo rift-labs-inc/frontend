@@ -34,7 +34,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const updatePriceUSD = useStore((state) => state.updatePriceUSD);
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
-    const updateTotalAvailableLiquidity = useStore((state) => state.updateTotalAvailableLiquidity);
 
     // set ethers provider
     useEffect(() => {

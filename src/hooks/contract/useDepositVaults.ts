@@ -13,6 +13,7 @@ import { useStore } from '../../store';
 import { useSwapReservations } from './useSwapReservations';
 import { DepositVault, SwapReservation, ReservationState } from '../../types';
 import { calculateFillPercentage } from '../../utils/dappHelper';
+import { formatUnits } from 'ethers/lib/utils';
 
 type UseDepositVaultsResult = {
     allFetchedDepositVaults: DepositVault[];
@@ -102,9 +103,6 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 };
             });
 
-            console.log('Total Available Liquidity:', totalAvailableLiquidity.toString());
-
-            // Update the store with the new total available liquidity
             updateTotalAvailableLiquidity(selectedInputAsset.name, totalAvailableLiquidity);
 
             return updatedVaults;
