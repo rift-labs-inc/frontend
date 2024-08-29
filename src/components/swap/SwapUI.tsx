@@ -41,14 +41,11 @@ export const SwapUI = () => {
     const { address, isConnected } = useAccount();
     const { openConnectModal } = useConnectModal();
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
-<<<<<<< HEAD
-=======
     const depositFlowState = useStore((state) => state.depositFlowState);
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
     const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
     const setCurrencyModalTitle = useStore((state) => state.setCurrencyModalTitle);
 
->>>>>>> 8dc32258d3ee657f0ea712025657f4322bbda2de
     const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
