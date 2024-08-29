@@ -66,6 +66,8 @@ type Store = {
     setShowManageReservationScreen: (show: boolean) => void;
     depositMode: boolean;
     setDepositMode: (mode: boolean) => void;
+    withdrawAmount: string;
+    setWithdrawAmount: (amount: string) => void;
 };
 
 export const useStore = create<Store>((set) => {
@@ -224,5 +226,7 @@ export const useStore = create<Store>((set) => {
         setShowManageReservationScreen: (showManageReservationScreen) => set({ showManageReservationScreen }),
         depositMode: false,
         setDepositMode: (depositMode) => set({ depositMode }),
+        withdrawAmount: '',
+        setWithdrawAmount: (withdrawAmount) => set({ withdrawAmount }),
     };
 });

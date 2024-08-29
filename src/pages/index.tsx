@@ -26,11 +26,22 @@ const Home = () => {
     const depositFlowState = useStore((state) => state.depositFlowState);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
+    const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
+    const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
+    const usdtDepositAmount = useStore((state) => state.usdtDepositAmount);
+    const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);
+    const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
+    const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
+    const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
     const depositMode = useStore((state) => state.depositMode);
 
     useEffect(() => {
         setSwapFlowState('0-not-started');
         setDepositFlowState('0-not-started');
+        setUsdtDepositAmount('');
+        setBtcInputSwapAmount('');
+        setUsdtOutputSwapAmount('');
+        setBtcOutputAmount('');
     }, []);
 
     const RiftSVG = () => {
@@ -104,33 +115,35 @@ const Home = () => {
                                     ge
                                 </Text>
                             </Flex>
-                            <Flex
-                                flexDir={'column'}
-                                textAlign={'center'}
-                                userSelect={'none'}
-                                fontSize={'14px'}
-                                mt={'8px'}
-                                fontFamily={FONT_FAMILIES.AUX_MONO}
-                                color={'#c3c3c3'}
-                                fontWeight={'normal'}
-                                gap={'0px'}>
-                                <Text>Trustless cross-chain swaps between</Text>
+                            {depositFlowState === '0-not-started' && (
+                                <Flex
+                                    flexDir={'column'}
+                                    textAlign={'center'}
+                                    userSelect={'none'}
+                                    fontSize={'14px'}
+                                    mt={'8px'}
+                                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                                    color={'#c3c3c3'}
+                                    fontWeight={'normal'}
+                                    gap={'0px'}>
+                                    <Text>Trustless cross-chain swaps between</Text>
 
-                                <Text>
-                                    <OrangeText>Bitcoin</OrangeText> and <BlueText>Ethereum</BlueText>. See{' '}
-                                    <Box
-                                        as='span'
-                                        // go to https://rift.exchange
-                                        onClick={() => (window.location.href = 'https://rift.exchange')}
-                                        style={{
-                                            textDecoration: 'underline',
-                                            cursor: 'pointer !important',
-                                        }}
-                                        fontWeight={'bold'}>
-                                        how it works
-                                    </Box>
-                                </Text>
-                            </Flex>
+                                    <Text>
+                                        <OrangeText>Bitcoin</OrangeText> and <BlueText>Ethereum</BlueText>. See{' '}
+                                        <Box
+                                            as='span'
+                                            // go to https://rift.exchange
+                                            onClick={() => (window.location.href = 'https://rift.exchange')}
+                                            style={{
+                                                textDecoration: 'underline',
+                                                cursor: 'pointer !important',
+                                            }}
+                                            fontWeight={'bold'}>
+                                            how it works
+                                        </Box>
+                                    </Text>
+                                </Flex>
+                            )}
                             <SwapContainer />
                         </>
                     )}

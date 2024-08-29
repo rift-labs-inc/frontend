@@ -23,6 +23,7 @@ import { PiVaultBold } from 'react-icons/pi';
 import { IoMdSettings } from 'react-icons/io';
 import { etherScanBaseUrl } from '../../utils/constants';
 import { useStore } from '../../store';
+import { useRouter } from 'next/router';
 
 interface DepositStatusModalProps {
     isOpen: boolean;
@@ -45,13 +46,19 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
     const isLoading = !isCompleted && !isError;
     const showManageDepositVaultsScreen = useStore((state) => state.showManageDepositVaultsScreen);
     const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
+    const router = useRouter();
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
+
+    const handleNavigation = (route: string) => {
+        router.push(route);
+    };
 
     const getStatusMessage = () => {
         switch (status) {
             case DepositStatus.WaitingForWalletConfirmation:
                 return 'Waiting for wallet confirmation...';
             case DepositStatus.WaitingForDepositTokenApproval:
-                return 'Approving Deposit Token...';
+                return 'Approving ' + selectedInputAsset.name + '...';
             case DepositStatus.WaitingForDepositApproval:
                 return 'Depositing liquidity...';
             case DepositStatus.ApprovalPending:
@@ -127,10 +134,9 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
                                     ? 'Awaiting blockchain confirmation...'
                                     : 'Please confirm the transaction in your wallet')}
                         </Text>
-                        {/* TODO: ONLY SHOW ABOVE if waiting on wallet confirmation */}
                         <Flex direction={'column'} align={'center'} w='100%' justify={'center'}>
                             {isCompleted && (
-                                <Flex mt='6px' ml='4px'>
+                                <Flex mt='-20px' ml='4px'>
                                     <CheckmarkCircle width='38px' height={'38px'} color={colors.greenOutline} />
                                 </Flex>
                             )}
@@ -143,7 +149,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
                                 overflowWrap={'anywhere'}
                                 color={isCompleted ? colors.greenOutline : colors.offWhite}
                                 fontSize={getStatusMessage().length > 40 ? '12px' : '20px'}
-                                mt={isLoading ? '20px' : isCompleted ? '5px' : '20px'}
+                                mt={isLoading ? '25px' : isCompleted ? '5px' : '20px'}
                                 fontWeight='normal'
                                 textAlign='center'>
                                 {getStatusMessage()}
@@ -165,9 +171,10 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
                                     <Text
                                         fontSize='14px'
                                         color={colors.offerWhite}
+                                        fontFamily={FONT_FAMILIES.NOSTROMO}
                                         cursor={'pointer'}
                                         fontWeight={'normal'}>
-                                        View on Etherscan
+                                        Etherscan
                                     </Text>
                                 </Button>
 
@@ -178,7 +185,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
                                     borderColor={colors.purpleBorder}
                                     fontWeight={'normal'}
                                     onClick={() => {
-                                        setShowManageDepositVaultsScreen(true);
+                                        handleNavigation('/manage');
                                         onClose();
                                     }}
                                     _hover={{ bg: colors.purpleHover }}
@@ -186,7 +193,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
                                     <Flex mt='-2px ' mr='8px'>
                                         <IoMdSettings size={'17px'} color={colors.offWhite} />
                                     </Flex>
-                                    <Text fontSize='14px' color={colors.offWhite}>
+                                    <Text fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                                         Manage Deposit Vaults
                                     </Text>
                                 </Button>

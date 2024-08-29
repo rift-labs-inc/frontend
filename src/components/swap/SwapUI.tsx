@@ -21,7 +21,13 @@ import { useStore } from '../../store';
 import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { BigNumber } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
-import { btcToSats, calculateLowestFeeReservation, ethToWei, weiToEth } from '../../utils/dappHelper';
+import {
+    btcToSats,
+    calculateLowestFeeReservation,
+    ethToWei,
+    formatAmountToString,
+    weiToEth,
+} from '../../utils/dappHelper';
 import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
 import { bitcoinDecimals, maxSwapOutputs } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
@@ -59,6 +65,8 @@ export const SwapUI = () => {
     const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
+    const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);
+    const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
 
     const checkLiquidityExceeded = useCallback(
         (amount: string | null) => {
@@ -104,20 +112,20 @@ export const SwapUI = () => {
     // ----------------- BITCOIN INPUT ----------------- //
 
     const handleBtcInputChange = (e) => {
-        console.log('e.target.value:', e.target.value);
         const btcValue = validateBtcInput(e.target.value);
-        console.log('btcValue:', btcValue);
 
         if (btcValue !== null) {
             setBtcInputSwapAmount(btcValue);
-            let btcOutputAmount =
+            setBtcOutputAmount(btcValue);
+            let usdtValue =
                 btcValue && parseFloat(btcValue) > 0
                     ? parseFloat(btcValue) *
                       useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC
                     : 0;
             // TODO: subtract premium we calculate from the eth value
             // btcOutputAmount -= calculatePremium;
-            setUsdtOutputSwapAmount(formatOutput(btcOutputAmount)); // Correctly format output
+            setUsdtOutputSwapAmount(formatAmountToString(selectedInputAsset, usdtValue));
+            setUsdtDepositAmount(formatAmountToString(selectedInputAsset, usdtValue));
         }
     };
 
@@ -132,11 +140,7 @@ export const SwapUI = () => {
         return value;
     };
 
-    const formatOutput = (number) => {
-        if (!number) return '';
-        const roundedNumber = Number(number).toFixed(selectedInputAsset.decimals);
-        return roundedNumber.replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.$/, ''); // Remove trailing zeros and pointless decimal
-    };
+    // ----------------- USDT OUTPUT ----------------- //
 
     const handleUsdtOutputChange = (e) => {
         const maxDecimals = useStore.getState().validAssets[selectedInputAsset.name].decimals;
@@ -150,13 +154,14 @@ export const SwapUI = () => {
 
         if (validateUsdtOutputChange(usdtValue)) {
             setUsdtOutputSwapAmount(usdtValue);
+            setUsdtDepositAmount(usdtValue);
             const btcValue =
                 usdtValue && parseFloat(usdtValue) > 0
                     ? parseFloat(usdtValue) /
                       useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC
                     : 0;
-            setBtcInputSwapAmount(formatOutput(btcValue));
-
+            setBtcInputSwapAmount(formatAmountToString(selectedInputAsset, btcValue));
+            setBtcOutputAmount(formatAmountToString(selectedInputAsset, btcValue));
             // Immediately check and log liquidity status
             const exceeded = checkLiquidityExceeded(usdtValue);
             console.log('LIQUIDITY EXCEEDED (immediate)?:', exceeded);
@@ -232,14 +237,14 @@ export const SwapUI = () => {
 
                     {/* Switch Button */}
                     <Flex
-                        w='30px'
-                        h='30px'
+                        w='32px'
+                        h='32px'
                         borderRadius={'20%'}
                         alignSelf={'center'}
                         align={'center'}
                         justify={'center'}
                         cursor={'pointer'}
-                        _hover={{ bg: '#232323' }}
+                        _hover={{ bg: '#333' }}
                         onClick={() => setDepositMode(true)}
                         position={'absolute'}
                         bg='#161616'
@@ -305,7 +310,7 @@ export const SwapUI = () => {
                                 fontSize={'13px'}
                                 mt='2px'
                                 ml='1px'
-                                letterSpacing={'-1.5px'}
+                                letterSpacing={'-1px'}
                                 fontWeight={'normal'}
                                 fontFamily={'Aux'}>
                                 {isLiquidityExceeded

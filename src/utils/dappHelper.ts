@@ -218,8 +218,13 @@ export function convertToBitcoinLockingScript(address: string): string {
     }
 }
 
+export const formatAmountToString = (selectedInputAsset, number) => {
+    if (!number) return '';
+    const roundedNumber = Number(number).toFixed(selectedInputAsset.decimals);
+    return roundedNumber.replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.$/, ''); // Remove trailing zeros and pointless decimal
+};
+
 export function calculateFillPercentage(vault: DepositVault) {
-    // return 80;
     const fillPercentageBigNumber = BigNumber.from(vault.initialBalance)
         .sub(BigNumber.from(vault.unreservedBalanceFromContract))
         .div(BigNumber.from(vault.initialBalance))

@@ -1,9 +1,6 @@
 import { Flex, Text } from '@chakra-ui/react';
-import { BigNumber, ethers } from 'ethers';
 import { parseUnits } from 'ethers/lib/utils';
 import { useEffect, useState } from 'react';
-import riftExchangeABI from '../../abis/RiftExchange.json';
-import { useWithdrawLiquidity } from '../../hooks/contract/useWithdrawLiquidity';
 import useHorizontalSelectorInput from '../../hooks/useHorizontalSelectorInput';
 import { useStore } from '../../store';
 import { DepositVault } from '../../types';
@@ -28,89 +25,17 @@ export const ManageVaults = ({}) => {
     const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
     const userCompletedDepositVaults = useStore((state) => state.userCompletedDepositVaults);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-
-    const { withdrawLiquidity, resetWithdrawState } = useWithdrawLiquidity();
-
-    const [withdrawAmount, setWithdrawAmount] = useState('');
+    const withdrawAmount = useStore((state) => state.withdrawAmount);
+    const setWithdrawAmount = useStore((state) => state.setWithdrawAmount);
     const vaultsToDisplay =
         selectedButtonActiveVsCompleted === 'Active' ? userActiveDepositVaults : userCompletedDepositVaults;
     const setUserActiveDepositVaults = useStore((state) => state.setUserActiveDepositVaults);
     const [_refreshKey, setRefreshKey] = useState(0);
 
-    useEffect(() => {
-        console.log('BRUH ADVAITH GAY???', vaultsToDisplay);
-    }, [vaultsToDisplay]);
-
     const handleGoBack = () => {
         // clear selected vault
         setSelectedVaultToManage(null);
         console.log('selectedButtonActiveVsCompleted:', selectedButtonActiveVsCompleted);
-    };
-
-    // handle withdraw liquidity
-    const handleWithdraw = async () => {
-        if (!window.ethereum || !selectedVaultToManage) {
-            console.error('Ethereum provider or selected vault not available');
-            return;
-        }
-
-        resetWithdrawState();
-
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const withdrawAmountInTokenSmallestUnit = parseUnits(
-            withdrawAmount,
-            selectedVaultToManage.depositAsset.decimals,
-        );
-
-        const globalVaultIndex = selectedVaultToManage.index;
-
-        try {
-            // get the liquidity provider's data
-            const liquidityProviderData = await getLiquidityProvider(
-                provider,
-                riftExchangeABI.abi,
-                selectedVaultToManage.depositAsset.riftExchangeContractAddress,
-                await signer.getAddress(),
-            );
-
-            // convert the depositVaultIndexes to strings for comparison
-            console.log('liquidityProviderData:', liquidityProviderData);
-            const stringIndexes = liquidityProviderData.depositVaultIndexes.map((index) =>
-                BigNumber.from(index).toNumber(),
-            );
-            console.log('stringIndexes:', stringIndexes);
-
-            // find the local index of the globalVaultIndex in the depositVaultIndexes array
-            const localVaultIndex = stringIndexes.findIndex(
-                (index) => BigNumber.from(index).toNumber() === globalVaultIndex,
-            );
-
-            if (localVaultIndex === -1) {
-                throw new Error("Selected vault not found in user's deposit vaults");
-            }
-
-            const expiredReservationIndexes = [];
-
-            await withdrawLiquidity({
-                signer,
-                riftExchangeAbi: riftExchangeABI.abi,
-                riftExchangeContract: selectedVaultToManage.depositAsset.riftExchangeContractAddress,
-                globalVaultIndex,
-                localVaultIndex,
-                amountToWithdraw: withdrawAmountInTokenSmallestUnit,
-                expiredReservationIndexes,
-            });
-
-            // TODO: refresh deposit vault data in ContractDataProvider somehow - await refreshUserDepositData();
-            const updatedVault = userActiveDepositVaults.find((vault) => vault.index === selectedVaultToManage.index);
-            if (updatedVault) {
-                setSelectedVaultToManage(updatedVault);
-            }
-            setRefreshKey((prevKey) => prevKey + 1);
-        } catch (error) {
-            console.error('Failed to process withdrawal:', error);
-        }
     };
 
     // update selected vault with new data
@@ -168,7 +93,6 @@ export const ManageVaults = ({}) => {
                 px='24px'
                 py='12px'
                 align={'center'}
-                justify={'center'}
                 bg={colors.offBlack}
                 borderRadius={'20px'}
                 mt={selectedVaultToManage ? '56px' : '16px'}
@@ -180,7 +104,6 @@ export const ManageVaults = ({}) => {
                         selectedVaultToManage={selectedVaultToManage}
                         handleGoBack={handleGoBack}
                         selectedInputAsset={selectedInputAsset}
-                        handleWithdraw={handleWithdraw}
                     />
                 ) : (
                     <>
