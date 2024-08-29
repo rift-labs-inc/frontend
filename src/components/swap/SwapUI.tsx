@@ -24,7 +24,7 @@ import { parseEther } from 'ethers/lib/utils';
 import { btcToSats, calculateLowestFeeReservation, ethToWei, weiToEth } from '../../utils/dappHelper';
 import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
 import { bitcoinDecimals, maxSwapOutputs } from '../../utils/constants';
-import { AssetTag2 } from '../other/AssetTag2';
+import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 
@@ -226,7 +226,7 @@ export const SwapUI = () => {
                         </Flex>
                         <Spacer />
                         <Flex mt='9px' mr='6px'>
-                            <AssetTag2 assetName='BTC' />
+                            <AssetTag assetName='BTC' />
                         </Flex>
                     </Flex>
 
@@ -324,7 +324,7 @@ export const SwapUI = () => {
                         </Flex>
                         <Spacer />
                         <Flex mt='9px' mr='6px'>
-                            <AssetTag2 assetName='USDT' />
+                            <AssetTag assetName='USDT' />
                         </Flex>
                     </Flex>
                 </Flex>

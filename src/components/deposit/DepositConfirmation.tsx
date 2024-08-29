@@ -38,7 +38,6 @@ import { useDepositLiquidity } from '../../hooks/contract/useDepositLiquidity';
 import DepositStatusModal from './DepositStatusModal';
 import WhiteText from '../other/WhiteText';
 import OrangeText from '../other/OrangeText';
-import { AssetTag } from '../other/AssetTag';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { bitcoinDecimals } from '../../utils/constants';
 import { CheckCircleIcon, CheckIcon, ChevronLeftIcon } from '@chakra-ui/icons';

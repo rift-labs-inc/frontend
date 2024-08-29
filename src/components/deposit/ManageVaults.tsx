@@ -55,7 +55,7 @@ import { getLiquidityProvider } from '../../utils/contractReadFunctions';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { FaArrowAltCircleRight, FaArrowRight, FaRegArrowAltCircleRight } from 'react-icons/fa';
 import { bitcoin_bg_color, bitcoin_border_color, bitcoin_dark_bg_color, bitcoinDecimals } from '../../utils/constants';
-import { AssetTag2 } from '../other/AssetTag2';
+import { AssetTag } from '../other/AssetTag';
 import { VaultStatusBar } from './VaultStatusBar';
 
 type ActiveTab = 'swap' | 'liquidity';
@@ -307,7 +307,7 @@ export const ManageVaults = ({}) => {
                             ).toString()}
                         </Text>
                         <Spacer />
-                        <AssetTag2 assetName={selectedVaultToManage.depositAsset.name} width='84px' />
+                        <AssetTag assetName={selectedVaultToManage.depositAsset.name} width='84px' />
                     </Flex>
                 </Flex>
                 <Text
@@ -352,7 +352,7 @@ export const ManageVaults = ({}) => {
                         </Text>
 
                         <Spacer />
-                        <AssetTag2 assetName={'BTC'} width='80px' />
+                        <AssetTag assetName={'BTC'} width='80px' />
                     </Flex>
                 </Flex>
             </Flex>
@@ -390,7 +390,7 @@ export const ManageVaults = ({}) => {
                                   ).toString()}
                         </Text>
                         <Spacer />
-                        <AssetTag2 assetName={selectedVaultToManage.depositAsset.name} width='84px' />
+                        <AssetTag assetName={selectedVaultToManage.depositAsset.name} width='84px' />
                     </Flex>
                 </Flex>
                 <Spacer /> */}
@@ -448,7 +448,7 @@ export const ManageVaults = ({}) => {
                                 {selectedVaultToManage.depositAsset.name}
                             </Text>
                             {/* <Flex mt='-29px' ml='12px'>
-                                <AssetTag2 assetName={selectedVaultToManage.depositAsset.name} width='76px' />
+                                <AssetTag assetName={selectedVaultToManage.depositAsset.name} width='76px' />
                             </Flex> */}
                         </Flex>
 
@@ -623,7 +623,7 @@ export const ManageVaults = ({}) => {
                                                     ).toString()}
                                             </Text>
                                             <Spacer />
-                                            <AssetTag2 assetName={vault?.depositAsset?.name} width='84px' />
+                                            <AssetTag assetName={vault?.depositAsset?.name} width='84px' />
                                         </Flex>
                                     </Flex>
                                 </Flex>

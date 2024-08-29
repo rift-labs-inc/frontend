@@ -20,7 +20,7 @@ import { GooSpinner } from 'react-spinners-kit';
 import { CheckmarkCircle, AlertCircleOutline } from 'react-ionicons';
 import { HiOutlineExternalLink, HiXCircle } from 'react-icons/hi';
 import { etherScanBaseUrl } from '../../utils/constants';
-import { AssetTag2 } from '../other/AssetTag2';
+import { AssetTag } from '../other/AssetTag';
 import { DepositVault } from '../../types';
 import { BigNumber } from 'ethers';
 import { formatUnits } from 'ethers/lib/utils';
