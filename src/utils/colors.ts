@@ -1,4 +1,4 @@
-import { border } from '@chakra-ui/react';
+import { background, border } from '@chakra-ui/react';
 
 export const colors = {
     RiftOrange: '#FF8F28',
@@ -38,5 +38,15 @@ export const colors = {
         darkGreen: '#1A4734',
         pink: '#F774FD',
         blue: '#5082F9',
+    },
+    currencyCard: {
+        bitcoin: {
+            background: '#2E1C0C',
+            border: '#78491F',
+        },
+        usdt: {
+            background: '#08221A',
+            border: '#125641',
+        },
     },
 };

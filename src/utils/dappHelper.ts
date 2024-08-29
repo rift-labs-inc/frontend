@@ -219,7 +219,7 @@ export function convertToBitcoinLockingScript(address: string): string {
 }
 
 export function calculateFillPercentage(vault: DepositVault) {
-    return 80;
+    // return 80;
     const fillPercentageBigNumber = BigNumber.from(vault.initialBalance)
         .sub(BigNumber.from(vault.unreservedBalanceFromContract))
         .div(BigNumber.from(vault.initialBalance))
