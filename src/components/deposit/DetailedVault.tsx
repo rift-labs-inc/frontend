@@ -79,9 +79,9 @@ const DetailedVault: React.FC<DetailedVaultProps> = ({ vault, onClick, selectedI
                             <Flex
                                 h='50px'
                                 w='100%'
-                                bg={colors.currencyCard.bitcoin.background}
+                                bg={colors.currencyCard.btc.background}
                                 border='2px solid'
-                                borderColor={colors.currencyCard.bitcoin.border}
+                                borderColor={colors.currencyCard.btc.border}
                                 borderRadius={'14px'}
                                 pl='15px'
                                 pr='10px'

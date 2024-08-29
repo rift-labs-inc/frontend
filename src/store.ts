@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { useEffect } from 'react';
-import { DepositVault, ReserveLiquidityParams, SwapReservation } from './types';
+import { CurrencyModalTitle, DepositVault, ReserveLiquidityParams, SwapReservation } from './types';
 import { BigNumber, ethers } from 'ethers';
 import { USDT_Icon, ETH_Icon, ETH_Logo } from './components/other/SVGs';
 import { ERC20ABI } from './utils/constants';
@@ -64,6 +64,10 @@ type Store = {
     setShowManageReservationScreen: (show: boolean) => void;
     depositMode: boolean;
     setDepositMode: (mode: boolean) => void;
+
+    // modals
+    currencyModalTitle: CurrencyModalTitle;
+    setCurrencyModalTitle: (x: CurrencyModalTitle) => void;
 };
 
 export const useStore = create<Store>((set) => {
@@ -220,5 +224,7 @@ export const useStore = create<Store>((set) => {
         setShowManageReservationScreen: (showManageReservationScreen) => set({ showManageReservationScreen }),
         depositMode: false,
         setDepositMode: (depositMode) => set({ depositMode }),
+        currencyModalTitle: null,
+        setCurrencyModalTitle: (x) => set({ currencyModalTitle: x }),
     };
 });

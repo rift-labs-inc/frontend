@@ -68,3 +68,7 @@ export type ValidAsset = {
 export type LiqudityProvider = {
     depositVaultIndexes: number[];
 };
+
+export type AssetType = 'BTC' | 'USDT' | 'ETH' | 'WETH' | 'WBTC';
+
+export type CurrencyModalTitle = 'send' | 'receipt' | 'deposit' | null;

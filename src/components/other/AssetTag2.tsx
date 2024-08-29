@@ -3,7 +3,7 @@ import { BTC_Logo, BTC_Tag, ETH_Icon, USDT_Tag } from './SVGs';
 import { Flex, Text } from '@chakra-ui/react';
 
 interface AssetTag2Props {
-    assetName: string;
+    assetName: 'BTC' | 'USDT' | string;
     width?: string;
     height?: string;
     viewBox?: string;
