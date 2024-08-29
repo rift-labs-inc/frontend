@@ -73,13 +73,16 @@ export const DepositConfirmation = ({}) => {
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
 
-    const [tokenDepositAmount, setTokenDepositAmount] = useState('');
+    const usdtDepositAmount = useStore((state) => state.usdtDepositAmount);
+    const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);
+    const btcOutputAmount = useStore((state) => state.btcOutputAmount);
+    const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
+
     const [tokenDepositAmountUSD, setTokenDepositAmountUSD] = useState('0.00');
 
     const [profitPercentage, setProfitPercentage] = useState('');
     const [profitAmountUSD, setProfitAmountUSD] = useState('0.00');
 
-    const [bitcoinOutputAmount, setBitcoinOutputAmount] = useState('');
     const [bitcoinOutputAmountUSD, setBitcoinOutputAmountUSD] = useState('0.00');
 
     const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
@@ -102,7 +105,7 @@ export const DepositConfirmation = ({}) => {
     // calculate profit amount in USD
     useEffect(() => {
         const profitAmountUSD = `${(
-            ((parseFloat(tokenDepositAmount) * parseFloat(profitPercentage)) / 100) *
+            ((parseFloat(usdtDepositAmount) * parseFloat(profitPercentage)) / 100) *
             (usdtPriceUSDT ?? 0)
         ).toLocaleString('en-US', {
             style: 'currency',
@@ -110,21 +113,21 @@ export const DepositConfirmation = ({}) => {
         })}`;
 
         setProfitAmountUSD(
-            !profitPercentage || !tokenDepositAmount || profitPercentage == '-' ? '$0.00' : profitAmountUSD,
+            !profitPercentage || !usdtDepositAmount || profitPercentage == '-' ? '$0.00' : profitAmountUSD,
         );
-    }, [tokenDepositAmount, profitPercentage]);
+    }, [usdtDepositAmount, profitPercentage]);
 
     // calculate deposit amount in USD
     useEffect(() => {
         const tokenDepositAmountUSD =
-            usdtPriceUSDT && tokenDepositAmount
-                ? (usdtPriceUSDT * parseFloat(tokenDepositAmount)).toLocaleString('en-US', {
+            usdtPriceUSDT && usdtDepositAmount
+                ? (usdtPriceUSDT * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
                       style: 'currency',
                       currency: 'USD',
                   })
                 : '$0.00';
         setTokenDepositAmountUSD(tokenDepositAmountUSD);
-    }, [tokenDepositAmount]);
+    }, [usdtDepositAmount]);
 
     useEffect(() => {
         console.log('IS CONNECTED:', isConnected);
@@ -134,14 +137,14 @@ export const DepositConfirmation = ({}) => {
     useEffect(() => {
         console.log('bitcoinPriceUSD:', bitcoinPriceUSD);
         const bitcoinOutputAmountUSD =
-            bitcoinPriceUSD && bitcoinOutputAmount
-                ? (bitcoinPriceUSD * parseFloat(bitcoinOutputAmount)).toLocaleString('en-US', {
+            bitcoinPriceUSD && btcOutputAmount
+                ? (bitcoinPriceUSD * parseFloat(btcOutputAmount)).toLocaleString('en-US', {
                       style: 'currency',
                       currency: 'USD',
                   })
                 : '$0.00';
         setBitcoinOutputAmountUSD(bitcoinOutputAmountUSD);
-    }, [bitcoinOutputAmount]);
+    }, [btcOutputAmount]);
 
     // ---------- DEPOSIT TOKEN AMOUNT ---------- //
     const handleTokenDepositChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -155,7 +158,7 @@ export const DepositConfirmation = ({}) => {
         };
 
         if (validateTokenDepositChange(tokenValue)) {
-            setTokenDepositAmount(tokenValue);
+            setUsdtDepositAmount(tokenValue);
             calculateBitcoinOutputAmount(tokenValue, undefined);
         }
     };
@@ -195,7 +198,7 @@ export const DepositConfirmation = ({}) => {
     };
 
     const calculateProfitPercent = (bitcoinAmount: string) => {
-        const startValue = parseFloat(tokenDepositAmount);
+        const startValue = parseFloat(usdtDepositAmount);
         const endValue =
             parseFloat(bitcoinAmount) *
             useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC;
@@ -224,7 +227,7 @@ export const DepositConfirmation = ({}) => {
         const bitcoinOutputAmountValue = e.target.value;
 
         if (validateBitcoinOutputAmount(bitcoinOutputAmountValue)) {
-            setBitcoinOutputAmount(bitcoinOutputAmountValue === '0.0' ? '' : bitcoinOutputAmountValue);
+            setBtcOutputAmount(bitcoinOutputAmountValue === '0.0' ? '' : bitcoinOutputAmountValue);
             calculateProfitPercent(bitcoinOutputAmountValue);
         }
     };
@@ -236,22 +239,22 @@ export const DepositConfirmation = ({}) => {
         if (usdtPriceUSDT && bitcoinPriceUSD) {
             console.log('newProfitPercentage:', newProfitPercentage);
             const profitAmountInToken =
-                parseFloat(newEthDepositAmount ?? tokenDepositAmount) *
+                parseFloat(newEthDepositAmount ?? usdtDepositAmount) *
                 (parseFloat(newProfitPercentage ?? profitPercentage) / 100);
             const totalTokenUSD =
-                parseFloat(newEthDepositAmount ?? tokenDepositAmount) * usdtPriceUSDT +
+                parseFloat(newEthDepositAmount ?? usdtDepositAmount) * usdtPriceUSDT +
                 profitAmountInToken * usdtPriceUSDT;
             const newBitcoinOutputAmount = totalTokenUSD / bitcoinPriceUSD > 0 ? totalTokenUSD / bitcoinPriceUSD : 0;
             const formattedBitcoinOutputAmount =
                 newBitcoinOutputAmount == 0 ? '0.0' : newBitcoinOutputAmount.toFixed(7);
 
             if (validateBitcoinOutputAmount(formattedBitcoinOutputAmount)) {
-                setBitcoinOutputAmount(formattedBitcoinOutputAmount === '0.0' ? '' : formattedBitcoinOutputAmount);
+                setBtcOutputAmount(formattedBitcoinOutputAmount === '0.0' ? '' : formattedBitcoinOutputAmount);
             }
             // Calculate the profit amount in USD
 
             const profitAmountUSD = `${(
-                ((parseFloat(tokenDepositAmount) * parseFloat(newProfitPercentage ?? profitPercentage)) / 100) *
+                ((parseFloat(usdtDepositAmount) * parseFloat(newProfitPercentage ?? profitPercentage)) / 100) *
                 usdtPriceUSDT
             ).toLocaleString('en-US', {
                 style: 'currency',
@@ -260,10 +263,10 @@ export const DepositConfirmation = ({}) => {
             setProfitAmountUSD(profitAmountUSD);
 
             // Calculate and update the deposit amount in USD
-            console.log('tokenDepositAmount:', tokenDepositAmount);
+            console.log('tokenDepositAmount:', usdtDepositAmount);
             const tokenDepositAmountUSD =
-                usdtPriceUSDT && tokenDepositAmount
-                    ? (usdtPriceUSDT * parseFloat(tokenDepositAmount)).toLocaleString('en-US', {
+                usdtPriceUSDT && usdtDepositAmount
+                    ? (usdtPriceUSDT * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
                           style: 'currency',
                           currency: 'USD',
                       })
@@ -355,7 +358,7 @@ export const DepositConfirmation = ({}) => {
             const vaultIndexWithSameExchangeRate = findVaultIndexWithSameExchangeRate();
             const tokenDecmials = useStore.getState().validAssets[selectedInputAsset.name].decimals;
             console.log('tokenDecmials:', tokenDecmials);
-            const tokenDepositAmountInSmallestTokenUnits = parseUnits(tokenDepositAmount, tokenDecmials);
+            const tokenDepositAmountInSmallestTokenUnits = parseUnits(usdtDepositAmount, tokenDecmials);
             console.log('tokenDepositAmountInSmallestTokenUnits:', tokenDepositAmountInSmallestTokenUnits.toString());
             const tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(
                 tokenDepositAmountInSmallestTokenUnits,
@@ -365,7 +368,7 @@ export const DepositConfirmation = ({}) => {
                 'tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals:',
                 tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals.toString(),
             );
-            const bitcoinOutputAmountInSats = parseUnits(bitcoinOutputAmount, bitcoinDecimals);
+            const bitcoinOutputAmountInSats = parseUnits(btcOutputAmount, bitcoinDecimals);
             console.log('bitcoinOutputAmountInSats:', bitcoinOutputAmountInSats.toString());
             const exchangeRate =
                 tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(bitcoinOutputAmountInSats);
@@ -500,9 +503,9 @@ export const DepositConfirmation = ({}) => {
                                     <Text>
                                         1 BTC ={' '}
                                         {/* amount of deposit asset / amount of BTC out ) * deposit asset price in USD */}
-                                        {tokenDepositAmount && bitcoinOutputAmount
+                                        {usdtDepositAmount && btcOutputAmount
                                             ? (
-                                                  (parseFloat(tokenDepositAmount) / parseFloat(bitcoinOutputAmount)) *
+                                                  (parseFloat(usdtDepositAmount) / parseFloat(btcOutputAmount)) *
                                                   usdtPriceUSDT
                                               ).toLocaleString('en-US', {
                                                   style: 'currency',
@@ -582,18 +585,19 @@ export const DepositConfirmation = ({}) => {
                             alignSelf={'center'}
                             bg={
                                 isConnected
-                                    ? tokenDepositAmount && bitcoinOutputAmount && payoutBTCAddress
+                                    ? usdtDepositAmount && btcOutputAmount && payoutBTCAddress
                                         ? colors.purpleBackground
                                         : colors.purpleBackgroundDisabled
                                     : colors.purpleBackground
                             }
                             _hover={{ bg: colors.purpleHover }}
-                            w='60%'
+                            w='290px'
                             mt='22px'
                             transition={'0.2s'}
-                            h='52px'
+                            h='45px'
                             onClick={async () => {
-                                if (tokenDepositAmount && bitcoinOutputAmount && payoutBTCAddress) {
+                                console.log('isConnected:', isConnected);
+                                if (usdtDepositAmount && btcOutputAmount && payoutBTCAddress) {
                                     initiateDeposit();
                                 }
                             }}
@@ -605,7 +609,7 @@ export const DepositConfirmation = ({}) => {
                             justify={'center'}
                             border={
                                 isConnected
-                                    ? tokenDepositAmount && bitcoinOutputAmount && payoutBTCAddress
+                                    ? usdtDepositAmount && btcOutputAmount && payoutBTCAddress
                                         ? '3px solid #445BCB'
                                         : '3px solid #3242a8'
                                     : '3px solid #445BCB'
@@ -613,7 +617,7 @@ export const DepositConfirmation = ({}) => {
                             <Text
                                 color={
                                     isConnected
-                                        ? tokenDepositAmount && bitcoinOutputAmount && payoutBTCAddress
+                                        ? usdtDepositAmount && btcOutputAmount && payoutBTCAddress
                                             ? colors.offWhite
                                             : colors.darkerGray
                                         : colors.offWhite

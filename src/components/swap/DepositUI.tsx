@@ -26,7 +26,7 @@ import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../..
 import { bitcoinDecimals, maxSwapOutputs } from '../../utils/constants';
 import { AssetTag2 } from '../other/AssetTag2';
 import { useAccount } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { connectorsForWallets, useConnectModal } from '@rainbow-me/rainbowkit';
 import { DepositConfirmation } from '../deposit/DepositConfirmation';
 
 export const DepositUI = () => {
@@ -60,6 +60,8 @@ export const DepositUI = () => {
     const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
+    const [userUsdtBalance, setUserUsdtBalance] = useState('0.00');
+
     // update token price and available liquidity
     useEffect(() => {
         console.log('Selected Input Asset:', selectedInputAsset);
@@ -75,20 +77,13 @@ export const DepositUI = () => {
             console.log('Total Available Liquidity:', totalAvailableLiquidity?.toString());
             setAvailableLiquidity(totalAvailableLiquidity ?? BigNumber.from(0));
             setUsdtExchangeRatePerBTC(validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC);
+            setUserUsdtBalance(validAssets[selectedInputAsset.name].connectedUserBalanceFormatted);
         }
     }, [selectedInputAsset, validAssets]);
 
-    const checkLiquidityExceeded = useCallback(
-        (amount: string | null) => {
-            try {
-                return BigNumber.from(usdtDepositAmount).gt(availableLiquidity);
-            } catch (error) {
-                console.error('Error in checkLiquidityExceeded:', error);
-                return false;
-            }
-        },
-        [availableLiquidity],
-    );
+    const checkLiquidityExceeded = (amount: number) => {
+        return amount > parseFloat(userUsdtBalance);
+    };
 
     const initiateDeposit = async () => {
         if (!isConnected) {
@@ -135,17 +130,17 @@ export const DepositUI = () => {
         return roundedNumber.replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.$/, ''); // Remove trailing zeros and pointless decimal
     };
 
-    const handleUsdtInputChange = (e) => {
+    const handleUsdtInputChange = (e, amount = null) => {
         const maxDecimals = useStore.getState().validAssets[selectedInputAsset.name].decimals;
-        const usdtValue = e.target.value;
+        const usdtValue = amount !== null ? amount : e.target.value;
 
-        const validateUsdtOutputChange = (value: string) => {
+        const validateUsdtInputChange = (value: string) => {
             if (value === '') return true;
             const regex = new RegExp(`^\\d*\\.?\\d{0,${maxDecimals}}$`);
             return regex.test(value);
         };
 
-        if (validateUsdtOutputChange(usdtValue)) {
+        if (validateUsdtInputChange(usdtValue)) {
             setUsdtDepositAmount(usdtValue);
             const btcValue =
                 usdtValue && parseFloat(usdtValue) > 0
@@ -155,8 +150,11 @@ export const DepositUI = () => {
             setBtcInputSwapAmount(formatOutput(btcValue));
 
             // Immediately check and log liquidity status
-            const exceeded = checkLiquidityExceeded(usdtValue);
-            console.log('LIQUIDITY EXCEEDED (immediate)?:', exceeded);
+            if (isConnected) {
+                setIsLiquidityExceeded(checkLiquidityExceeded(usdtValue));
+            } else {
+                setIsLiquidityExceeded(false);
+            }
         }
     };
 
@@ -215,36 +213,82 @@ export const DepositUI = () => {
                                             placeholder='0.0'
                                             _placeholder={{ color: selectedInputAsset.light_text_color }}
                                         />
-                                        <Text
-                                            color={
-                                                isLiquidityExceeded
-                                                    ? colors.redHover
-                                                    : !usdtDepositAmount
-                                                    ? colors.offWhite
-                                                    : colors.textGray
-                                            }
-                                            fontSize={'13px'}
-                                            mt='2px'
-                                            ml='1px'
-                                            letterSpacing={'-1.5px'}
-                                            fontWeight={'normal'}
-                                            fontFamily={'Aux'}>
-                                            {isLiquidityExceeded
-                                                ? `Exceeds available liquidity - ${Number(availableLiquidity).toFixed(
-                                                      selectedInputAsset.decimals,
-                                                  )} ${selectedInputAsset.name} max`
-                                                : usdtPriceUSD
-                                                ? usdtDepositAmount
-                                                    ? (usdtPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString(
-                                                          'en-US',
-                                                          {
-                                                              style: 'currency',
-                                                              currency: 'USD',
-                                                          },
-                                                      )
-                                                    : '$0.00'
-                                                : '$0.00'}
-                                        </Text>
+                                        <Flex>
+                                            <Text
+                                                color={
+                                                    isLiquidityExceeded
+                                                        ? colors.redHover
+                                                        : !usdtDepositAmount
+                                                        ? colors.offWhite
+                                                        : colors.textGray
+                                                }
+                                                fontSize={'13px'}
+                                                mt='2px'
+                                                ml='1px'
+                                                mr='8px'
+                                                letterSpacing={'-1.5px'}
+                                                fontWeight={'normal'}
+                                                fontFamily={'Aux'}>
+                                                {isLiquidityExceeded
+                                                    ? `Exceeds available liquidity - `
+                                                    : usdtPriceUSD
+                                                    ? usdtDepositAmount
+                                                        ? (usdtPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString(
+                                                              'en-US',
+                                                              {
+                                                                  style: 'currency',
+                                                                  currency: 'USD',
+                                                              },
+                                                          )
+                                                        : '$0.00'
+                                                    : '$0.00'}{' '}
+                                            </Text>
+                                            {!isLiquidityExceeded && isConnected && (
+                                                <>
+                                                    <Spacer />
+                                                    <Text
+                                                        align={'right'}
+                                                        color={
+                                                            isLiquidityExceeded
+                                                                ? selectedInputAsset.border_color_light
+                                                                : !usdtDepositAmount
+                                                                ? colors.offWhite
+                                                                : colors.textGray
+                                                        }
+                                                        fontSize={'13px'}
+                                                        onClick={() => handleUsdtInputChange(-1, userUsdtBalance)}
+                                                        _hover={{ textDecoration: 'underline' }}
+                                                        mt='2px'
+                                                        mr='6px'
+                                                        letterSpacing={'-1.5px'}
+                                                        fontWeight={'normal'}
+                                                        fontFamily={'Aux'}>
+                                                        {parseFloat(userUsdtBalance).toFixed(2)}{' '}
+                                                        {selectedInputAsset.name}
+                                                    </Text>
+                                                </>
+                                            )}
+                                            {isConnected && (
+                                                <Text
+                                                    fontSize={'13px'}
+                                                    mt='2px'
+                                                    mr='-116px'
+                                                    zIndex={'10'}
+                                                    color={selectedInputAsset.border_color_light}
+                                                    cursor='pointer'
+                                                    onClick={() => handleUsdtInputChange(null, userUsdtBalance)}
+                                                    _hover={{ textDecoration: 'underline' }}
+                                                    letterSpacing={'-1.5px'}
+                                                    fontWeight={'normal'}
+                                                    fontFamily={'Aux'}>
+                                                    {isLiquidityExceeded
+                                                        ? `${parseFloat(userUsdtBalance).toFixed(2)} ${
+                                                              selectedInputAsset.name
+                                                          } Max`
+                                                        : 'Max'}
+                                                </Text>
+                                            )}
+                                        </Flex>
                                     </Flex>
                                     <Spacer />
                                     <Flex mt='9px' mr='6px'>
