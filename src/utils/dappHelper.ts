@@ -44,11 +44,6 @@ export function calculateBtcOutputAmountFromExchangeRate(depositAmountFromContra
     // [0] buffer deposit amount to 18 decimals
     const depositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(depositAmountFromContract, depositAssetDecimals);
 
-    console.log('bruh, depositAmountInSmallestTokenUnitsBufferedTo18Decimals:', BigNumber.from(depositAmountInSmallestTokenUnitsBufferedTo18Decimals).toString());
-    console.log('bruh, depositAmountFromContract:', BigNumber.from(depositAmountFromContract).toString());
-    console.log('bruh, depositAssetDecimals:', BigNumber.from(depositAssetDecimals).toString());
-    console.log('bruh, exchangeRateFromContract:', BigNumber.from(exchangeRateFromContract).toString());
-
     // [1] divide by exchange rate (which is already in smallest token units buffered to 18 decimals per sat)
     const outputAmountInSats = depositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(exchangeRateFromContract);
 
@@ -224,64 +219,65 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, bitcoinAmountI
 
     // [2] sort vaults based on exchange rate (high -> low)
     const sortedVaults = filteredVaults.sort((a, b) => b.btcExchangeRate.sub(a.btcExchangeRate).toNumber());
+    console.log('sortedVaults:', sortedVaults);
 
     // [3] setup variables to track results
     let totalBitcoinAmountInSatsUsed = BigNumber.from(0);
     let totalμUSDTObtained = BigNumber.from(0);
-    let vaultsUsed = [];
+    let vaultIndexes = [];
+    let amountsToReserve = [];
     let remainingVaults = maxLpOutputs;
 
     // [4] iterate through the sorted vaults and calculate optimal combo
-    for (let vault of sortedVaults) {
+    for (let i = 0; i < sortedVaults.length; i++) {
         if (remainingVaults <= 0 || bitcoinAmountInSats.lte(0)) break;
+        const vault = sortedVaults[i];
 
         // [0] calculate amount of USDT to take from current vault based on remaining bitcoin amount
         const bufferedμUSDTStillNeeded = vault.btcExchangeRate.mul(bitcoinAmountInSats);
         const μUsdtStillNeeded = unBufferFrom18Decimals(bufferedμUSDTStillNeeded, vault.depositAsset.decimals);
         const usdtStillNeeded = formatUnits(μUsdtStillNeeded, vault.depositAsset.decimals);
-        console.log('god usdtStillNeeded:', usdtStillNeeded.toString());
+        console.log('usdtStillNeeded:', usdtStillNeeded);
 
         // [1] if we need more USDT than is in the vault, take all of it otherwise take remaining amount needed
         const μUsdtToTakeFromVault = μUsdtStillNeeded.gt(vault.trueUnreservedBalance) ? vault.trueUnreservedBalance : parseUnits(usdtStillNeeded, vault.depositAsset.decimals);
         const bufferedμUSDTToTakeFromVault = bufferTo18Decimals(μUsdtToTakeFromVault, vault.depositAsset.decimals);
-        console.log('god bufferedμUSDTToTakeFromVault:', BigNumber.from(bufferedμUSDTToTakeFromVault).toString());
-        console.log('god exchangeRate:', vault.btcExchangeRate.toString());
 
         // // [2] update tracked amounts
         totalμUSDTObtained = totalμUSDTObtained.add(μUsdtToTakeFromVault);
-
-        console.log('god totalUSDTObtained:', formatUnits(totalμUSDTObtained, vault.depositAsset.decimals).toString());
 
         const fixedNumberBufferedμUSDTToTakeFromVault = FixedNumber.from(bufferedμUSDTToTakeFromVault);
         const fixedNumberExchangeRate = FixedNumber.from(vault.btcExchangeRate);
 
         const satsUsed = Math.round(fixedNumberBufferedμUSDTToTakeFromVault.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
 
-        // const satsUsed = bufferedμUSDTToTakeFromVault.div(vault.btcExchangeRate).toNumber();
-        console.log('brutal satsUsed:', satsUsed);
-        // const roundedSatsUsed = Math.round(satsUsed);
-        console.log('brutal roundedSatsUsed:', satsUsed);
-        console.log('god satsUsed:', satsUsed.toString());
         totalBitcoinAmountInSatsUsed = totalBitcoinAmountInSatsUsed.add(satsUsed);
-        console.log('god totalBitcoinAmountInSatsUsed:', totalBitcoinAmountInSatsUsed.toString());
-        vaultsUsed.push({ vault, μUsdtToTakeFromVault });
+        vaultIndexes.push(vault.index); // Store the index of the vault used
+        amountsToReserve.push(μUsdtToTakeFromVault); // Store the amount of μUSDT used from this vault
         bitcoinAmountInSats = bitcoinAmountInSats.sub(satsUsed);
         remainingVaults--;
     }
 
-    // // Step 6: Optimize vault selection to fit within maxLpOutputs if needed
-    // if (vaultsUsed.length > maxLpOutputs) {
-    //     vaultsUsed = vaultsUsed.sort((a, b) => a.usdtToUse.sub(b.usdtToUse).toNumber()).slice(0, maxLpOutputs);
+    // [5] calculate the total swap exchange rate in microusdtbuffered to 18 decimals per sat
+    let totalSwapExchangeRate;
+    if (totalBitcoinAmountInSatsUsed.gt(0)) {
+        // Calculate total exchange rate if sats were used
+        const totalμUSDTObtainedBufferedTo18Decimals = bufferTo18Decimals(totalμUSDTObtained, depositVaults[0].depositAsset.decimals);
 
-    //     // Recalculate totals based on optimized vaults selection
-    //     totalBitcoinUsed = vaultsUsed.reduce((acc, { vault, usdtToUse }) => acc.add(usdtToUse.div(vault.btcExchangeRate)), BigNumber.from(0));
-    //     totalUSDTObtained = vaultsUsed.reduce((acc, { usdtToUse }) => acc.add(usdtToUse), BigNumber.from(0));
-    // }
+        totalSwapExchangeRate = bufferTo18Decimals(totalμUSDTObtained, depositVaults[0].depositAsset.decimals).div(totalBitcoinAmountInSatsUsed);
+    } else {
+        // No sats used, so exchange rate calculation is not applicable
+        totalSwapExchangeRate = BigNumber.from(0);
+    }
 
-    // // Step 7: Return results
-    // return {
-    //     totalBitcoinUsed,
-    //     totalUSDTObtained,
-    //     vaultsUsed,
-    // };
+    //TODO: handle over maxLpOutputs case
+
+    // [6] return results
+    return {
+        totalBitcoinAmountInSatsUsed,
+        totalμUSDTObtained,
+        vaultIndexes,
+        amountsToReserve,
+        totalSwapExchangeRate,
+    };
 }

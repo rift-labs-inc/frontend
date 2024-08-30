@@ -1,17 +1,5 @@
 import React from 'react';
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalCloseButton,
-    Text,
-    Flex,
-    Box,
-    Spacer,
-    Button,
-} from '@chakra-ui/react';
+import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Text, Flex, Box, Spacer, Button } from '@chakra-ui/react';
 import { ReserveStatus } from '../../hooks/contract/useReserveLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
@@ -76,12 +64,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen,
                 borderRadius='10px'
                 fontFamily={FONT_FAMILIES.AUX_MONO}
                 color={colors.offWhite}>
-                <ModalHeader
-                    fontSize='24px'
-                    userSelect={'none'}
-                    fontFamily={FONT_FAMILIES.NOSTROMO}
-                    fontWeight='bold'
-                    textAlign='center'>
+                <ModalHeader fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
                     Reservation Status
                 </ModalHeader>
                 {(isCompleted || isError) && <ModalCloseButton />}
@@ -89,16 +72,11 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen,
                     <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
                         {isLoading && <GooSpinner size={100} color={colors.RiftBlue} loading={true} />}
                         <Spacer />
-                        <Text
-                            fontSize='12px'
-                            w='60%'
-                            mt='25px'
-                            mb='0px'
-                            color={colors.textGray}
-                            fontWeight={'normal'}
-                            textAlign='center'>
-                            Please confirm the transaction in your wallet
-                        </Text>
+                        {!isCompleted && (
+                            <Text fontSize='12px' w='60%' mt='25px' mb='0px' color={colors.textGray} fontWeight={'normal'} textAlign='center'>
+                                Please confirm the transaction in your wallet
+                            </Text>
+                        )}
                         <Flex direction={'column'} align={'center'} w='100%' justify={'center'}>
                             {isCompleted && (
                                 <Flex mt='6px' ml='4px'>

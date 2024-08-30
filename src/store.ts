@@ -70,6 +70,8 @@ type Store = {
     // modals
     currencyModalTitle: CurrencyModalTitle;
     setCurrencyModalTitle: (x: CurrencyModalTitle) => void;
+    ethPayoutAddress: string;
+    setEthPayoutAddress: (address: string) => void;
 };
 
 export const useStore = create<Store>((set) => {
@@ -89,10 +91,12 @@ export const useStore = create<Store>((set) => {
             name: 'USDT',
             tokenAddress: '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0',
             decimals: 6,
-            riftExchangeContractAddress: '0x3c9ef17623511ae85973fdedcd883fc2fbc1e1be',
+            riftExchangeContractAddress: '0x863dcd698e0B47D6E9CB4b9eAd09Da16f644EB2d',
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: 11155111,
             contractRpcURL: 'https://sepolia.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
+            proverFee: BigNumber.from(5000000),
+            releaserFee: BigNumber.from(2000000),
             icon_svg: USDT_Icon,
             bg_color: '#125641',
             border_color: '#26A17B',
@@ -110,7 +114,7 @@ export const useStore = create<Store>((set) => {
             name: 'WETH',
             tokenAddress: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
             decimals: 18,
-            riftExchangeContractAddress: '0xe6167f469152293b045838d69F9687a7Ee30aaf3',
+            riftExchangeContractAddress: '',
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: 11155111,
             contractRpcURL: 'https://sepolia.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
@@ -232,5 +236,7 @@ export const useStore = create<Store>((set) => {
         setWithdrawAmount: (withdrawAmount) => set({ withdrawAmount }),
         currencyModalTitle: null,
         setCurrencyModalTitle: (x) => set({ currencyModalTitle: x }),
+        ethPayoutAddress: '',
+        setEthPayoutAddress: (ethPayoutAddress) => set({ ethPayoutAddress }),
     };
 });

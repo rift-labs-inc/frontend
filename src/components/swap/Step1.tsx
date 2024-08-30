@@ -1,17 +1,4 @@
-import {
-    Tabs,
-    TabList,
-    Tooltip,
-    TabPanels,
-    Tab,
-    Button,
-    Flex,
-    Text,
-    useColorModeValue,
-    Box,
-    Spacer,
-    Input,
-} from '@chakra-ui/react';
+import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -28,6 +15,9 @@ import { weiToEth } from '../../utils/dappHelper';
 import { BigNumber, ethers } from 'ethers';
 import { useReserveLiquidity } from '../../hooks/contract/useReserveLiquidity';
 import ReservationStatusModal from './ReservationStatusModal';
+import { formatUnits } from 'ethers/lib/utils';
+import { useAccount } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 
 export const Step1 = ({}) => {
     const { width } = useWindowSize();
@@ -39,14 +29,25 @@ export const Step1 = ({}) => {
     const borderColor = `2px solid ${actualBorderColor}`;
     const swapFlowState = useStore((state) => state.swapFlowState);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
-    const [ethPayoutAddress, setethPayoutAddress] = useState('');
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
+    const setEthPayoutAddress = useStore((state) => state.setEthPayoutAddress);
+    const ethPayoutAddress = useStore((state) => state.ethPayoutAddress);
+    const { address, isConnected } = useAccount();
+    const [isAwaitingConnection, setIsAwaitingConnection] = useState(false);
+    const { openConnectModal } = useConnectModal();
+    const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
 
     // eth payout address
     const handleETHPayoutAddressChange = (e) => {
-        const BTCPayoutAddress = e.target.value;
-        setethPayoutAddress(BTCPayoutAddress);
+        const newEthPayoutAddress = e.target.value;
+        setEthPayoutAddress(newEthPayoutAddress);
+
+        // Update the lowestFeeReservationParams with the new ETH payout address
+        setLowestFeeReservationParams({
+            ...lowestFeeReservationParams,
+            ethPayoutAddress: newEthPayoutAddress,
+        });
     };
     const {
         reserveLiquidity,
@@ -59,16 +60,27 @@ export const Step1 = ({}) => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    useEffect(() => {
+        if (isConnected && isAwaitingConnection) {
+            setIsAwaitingConnection(false);
+            proceedWithReservation();
+        }
+    }, [isConnected, isAwaitingConnection]);
+
     const initiateReservation = async () => {
-        if (!window.ethereum) {
-            console.error('Ethereum object not found, please install MetaMask.');
-            // You might want to add some user feedback here
+        if (!isConnected) {
+            setIsAwaitingConnection(true);
+
+            openConnectModal();
             return;
         }
 
-        if (!lowestFeeReservationParams) {
-            console.error('Reservation parameters not found.');
-            // You might want to add some user feedback here
+        proceedWithReservation();
+    };
+
+    const proceedWithReservation = async () => {
+        if (!window.ethereum || !lowestFeeReservationParams) {
+            console.error('Ethereum or reservation parameters not found.');
             return;
         }
 
@@ -76,29 +88,34 @@ export const Step1 = ({}) => {
         resetReserveState();
 
         setIsModalOpen(true);
+
+        console.log('brothers, params', lowestFeeReservationParams);
+
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
 
         try {
             await reserveLiquidity({
                 signer,
-                riftExchangeAbi: riftExchangeABI.abi,
+                riftExchangeAbi: selectedInputAsset.riftExchangeAbi,
                 riftExchangeContract: selectedInputAsset.riftExchangeContractAddress,
                 vaultIndexesToReserve: lowestFeeReservationParams.vaultIndexesToReserve,
                 amountsToReserve: lowestFeeReservationParams.amountsToReserve,
                 ethPayoutAddress,
                 expiredSwapReservationIndexes: lowestFeeReservationParams.expiredSwapReservationIndexes,
+                tokenAddress: selectedInputAsset.tokenAddress,
             });
 
             console.log('Liquidity reservation successful');
-            // You might want to add some success handling here
         } catch (error) {
             console.error('Error reserving liquidity:', error);
-            // You might want to add some error handling here
         } finally {
             // setIsModalOpen(false);
         }
     };
+
+    const totalAmount = lowestFeeReservationParams?.amountsToReserve.reduce((acc, curr) => BigNumber.from(acc).add(curr), ethers.BigNumber.from(0));
+    const formattedTotalAmount = formatUnits(totalAmount, selectedInputAsset.decimals);
 
     return (
         <>
@@ -110,50 +127,39 @@ export const Step1 = ({}) => {
                 borderRadius={'30px'}
                 px='20px'
                 direction={'column'}
-                py='30px'
+                pb='30px'
+                pt='15px'
                 align={'center'}
                 borderWidth={3}
                 borderColor={colors.borderGray}>
-                <Text
-                    fontSize='15px'
-                    maxW={'600px'}
-                    fontWeight={'normal'}
-                    color={colors.textGray}
-                    fontFamily={FONT_FAMILIES.AUX_MONO}
-                    textAlign='center'
-                    mt='6px'
-                    flex='1'>
-                    Initiate the swap by paying fees up front to lock the seller’s ETH. After the reservation is
-                    confirmed, you will have 6 hours to send BTC to complete the swap.
+                <Text fontSize='13px' maxW={'900px'} fontWeight={'normal'} color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='6px' flex='1'>
+                    Initiate the swap by paying fees up front to lock the seller’s ETH. After the reservation is confirmed, you will have 6 hours to send BTC to complete the swap.
                 </Text>
-                <Flex direction='column' my='100px' align='center' width='100%'>
-                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mb={4}>
-                        Reservation Vault Selection Visualization
+                <Flex direction='column' my='60px' align='center' width='100%'>
+                    <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
+                        Vault Selection Algo VISUALIZER
                     </Text>
                     <Flex justify='center' wrap='wrap' gap={4} alignItems='center'>
                         {lowestFeeReservationParams?.vaultIndexesToReserve?.map((index, i) => (
                             <React.Fragment key={index}>
                                 <Box
-                                    border='1px solid'
-                                    borderColor='gray.300'
+                                    border='3px solid'
+                                    borderColor={colors.purpleBorder}
                                     borderRadius='md'
                                     p={3}
                                     bg={colors.purpleBackground}
-                                    width='200px'
+                                    width='250px'
                                     height='90px'
                                     display='flex'
                                     flexDirection='column'
                                     alignItems='center'
                                     justifyContent='space-between'
                                     boxShadow='md'>
-                                    <Text fontSize='12px' fontWeight='bold'>
+                                    <Text fontSize='12px' color={colors.textGray} fontWeight='bold'>
                                         Vault #{index}
                                     </Text>
                                     <Text fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={'-2px'} fontSize='25px'>
-                                        {Number(
-                                            weiToEth(BigNumber.from(lowestFeeReservationParams.amountsToReserve[i])),
-                                        ).toFixed(2)}{' '}
-                                        ETH
+                                        {parseFloat(formatUnits(lowestFeeReservationParams.amountsToReserve[i], selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name}
                                     </Text>
                                 </Box>
                                 {i < lowestFeeReservationParams.vaultIndexesToReserve.length - 1 ? (
@@ -168,52 +174,32 @@ export const Step1 = ({}) => {
                             </React.Fragment>
                         ))}
                         <Box
-                            border='1px solid'
-                            borderColor='gray.300'
+                            border='3px solid'
+                            borderColor={colors.greenOutline}
                             borderRadius='md'
                             p={3}
                             bg={colors.greenBackground}
-                            width='200px'
+                            width='250px'
                             height='90px'
                             display='flex'
                             flexDirection='column'
                             alignItems='center'
                             justifyContent='space-between'
                             boxShadow='md'>
-                            <Text fontSize='12px' fontWeight='bold'>
+                            <Text fontSize='12px' color={colors.offerWhite} fontWeight='bold'>
                                 TOTAL AMOUNT
                             </Text>
                             <Text fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={'-2px'} fontSize='25px'>
-                                {Number(
-                                    lowestFeeReservationParams?.amountsToReserve.reduce(
-                                        (acc, curr) => Number(acc) + Number(weiToEth(BigNumber.from(curr))),
-                                        0,
-                                    ),
-                                ).toFixed(2)}{' '}
-                                ETH
+                                {parseFloat(formattedTotalAmount.toString()).toFixed(2)} {selectedInputAsset.name}
                             </Text>
                         </Box>
                     </Flex>
                 </Flex>
 
                 {/* ETH Payout Address */}
-                <Flex
-                    mt='20px'
-                    px='10px'
-                    bg='#1C1C1C'
-                    w='100%'
-                    h='78px'
-                    border='2px solid #565656'
-                    borderRadius={'10px'}>
+                <Flex mt='20px' px='10px' bg='#1C1C1C' w='100%' h='78px' border='2px solid #565656' borderRadius={'10px'}>
                     <Flex direction={'column'}>
-                        <Text
-                            color={colors.offWhite}
-                            fontSize={'13px'}
-                            mt='7px'
-                            ml='3px'
-                            letterSpacing={'-1px'}
-                            fontWeight={'normal'}
-                            fontFamily={'Aux'}>
+                        <Text color={colors.offWhite} fontSize={'13px'} mt='7px' ml='3px' letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
                             ETH Payout Address
                         </Text>
                         <Input
@@ -255,16 +241,10 @@ export const Step1 = ({}) => {
                 justify={'center'}
                 border={ethPayoutAddress ? '3px solid #445BCB' : '3px solid #3242a8'}>
                 <Text color={ethPayoutAddress ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
-                    Reserve
+                    {isConnected ? 'Reserve Liquidity' : 'Connect Wallet'}
                 </Text>
             </Flex>
-            <ReservationStatusModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                status={reserveLiquidityStatus}
-                error={reserveLiquidityError}
-                txHash={txHash}
-            />
+            <ReservationStatusModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} status={reserveLiquidityStatus} error={reserveLiquidityError} txHash={txHash} />
         </>
     );
 };

@@ -16,7 +16,7 @@ interface WebAssetTagProps {
 
 const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, h, fontSize, borderWidth, px, pointer }) => {
     const adjustedH = h ?? '36px';
-    const adjustedFontSize = fontSize ?? `calc(${adjustedH} / 2 - 2px)`;
+    const adjustedFontSize = fontSize ?? `calc(${adjustedH} / 2 + 0px)`;
     const arrowSize = fontSize ?? `calc(${adjustedH} / 4)`;
     const adjustedBorderRadius = `calc(${adjustedH} / 4)`;
 
@@ -32,7 +32,7 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, h, fontSiz
         <Flex align='center'>
             <Flex
                 aspectRatio={1}
-                h={`calc(${adjustedH} + 4px)`}
+                h={`calc(${adjustedH} + 2px)`}
                 bg={borderColor}
                 borderRadius='400px'
                 mr={`calc(${adjustedH} / 2 * -1)`}
@@ -41,11 +41,7 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, h, fontSiz
                 justify='center'
                 cursor={onDropDown || pointer ? 'pointer' : 'auto'}
                 onClick={onDropDown}>
-                <Image
-                    src={`/images/assets/icons/${imgKey}.svg`}
-                    h={asset == 'WBTC' ? adjustedH : `calc(${adjustedH} - 14px)`}
-                    userSelect='none'
-                />
+                <Image src={`/images/assets/icons/${imgKey}.svg`} h={asset == 'WBTC' ? adjustedH : `calc(${adjustedH} - 14px)`} userSelect='none' />
             </Flex>
             <Flex
                 bg={bgColor}
@@ -62,9 +58,7 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, h, fontSiz
                 <Text fontSize={adjustedFontSize} color={'white'} fontFamily={FONT_FAMILIES.NOSTROMO} userSelect='none'>
                     {asset}
                 </Text>
-                {onDropDown && (
-                    <FaChevronDown fontSize={arrowSize} color={colors.offWhite} style={{ marginRight: '-8px' }} />
-                )}
+                {onDropDown && <FaChevronDown fontSize={arrowSize} color={colors.offWhite} style={{ marginRight: '-8px' }} />}
             </Flex>
         </Flex>
     );

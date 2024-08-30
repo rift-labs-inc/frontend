@@ -27,8 +27,7 @@ export const ManageVaults = ({}) => {
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const withdrawAmount = useStore((state) => state.withdrawAmount);
     const setWithdrawAmount = useStore((state) => state.setWithdrawAmount);
-    const vaultsToDisplay =
-        selectedButtonActiveVsCompleted === 'Active' ? userActiveDepositVaults : userCompletedDepositVaults;
+    const vaultsToDisplay = selectedButtonActiveVsCompleted === 'Active' ? userActiveDepositVaults : userCompletedDepositVaults;
     const setUserActiveDepositVaults = useStore((state) => state.setUserActiveDepositVaults);
     const [_refreshKey, setRefreshKey] = useState(0);
 
@@ -45,8 +44,7 @@ export const ManageVaults = ({}) => {
 
             // check both active and completed vaults
             const updatedVault =
-                userActiveDepositVaults.find((vault) => vault.index === selectedVaultIndex) ||
-                userCompletedDepositVaults.find((vault) => vault.index === selectedVaultIndex);
+                userActiveDepositVaults.find((vault) => vault.index === selectedVaultIndex) || userCompletedDepositVaults.find((vault) => vault.index === selectedVaultIndex);
 
             console.log('updatedVault:', updatedVault);
 
@@ -77,13 +75,7 @@ export const ManageVaults = ({}) => {
             mt='24px'>
             {!selectedVaultToManage && (
                 <Flex justify={'center'}>
-                    <HorizontalButtonSelector
-                        w='300px'
-                        h='40px'
-                        fontSize={'14px'}
-                        options={optionsButtoActiveVsCompleted}
-                        onSelectItem={setSelectedButtonActiveVsCompleted}
-                    />
+                    <HorizontalButtonSelector w='300px' h='40px' fontSize={'14px'} options={optionsButtoActiveVsCompleted} onSelectItem={setSelectedButtonActiveVsCompleted} />
                 </Flex>
             )}
             <Flex
@@ -91,6 +83,7 @@ export const ManageVaults = ({}) => {
                 maxW='1000px'
                 h='650px'
                 px='24px'
+                justify={vaultsToDisplay && vaultsToDisplay.length > 0 ? 'flex-start' : 'center'}
                 py='12px'
                 align={'center'}
                 bg={colors.offBlack}
@@ -100,11 +93,7 @@ export const ManageVaults = ({}) => {
                 borderColor={colors.borderGray}
                 flexDir='column'>
                 {selectedVaultToManage ? (
-                    <VaultSettings
-                        selectedVaultToManage={selectedVaultToManage}
-                        handleGoBack={handleGoBack}
-                        selectedInputAsset={selectedInputAsset}
-                    />
+                    <VaultSettings selectedVaultToManage={selectedVaultToManage} handleGoBack={handleGoBack} selectedInputAsset={selectedInputAsset} />
                 ) : (
                     <>
                         {vaultsToDisplay && vaultsToDisplay.length > 0 && (
@@ -153,25 +142,14 @@ export const ManageVaults = ({}) => {
                                 }
                             `}
                         </style>
-                        <Flex
-                            className='flex-scroll-dark'
-                            overflowY={vaultsToDisplay && vaultsToDisplay.length > 0 ? 'scroll' : 'hidden'}
-                            direction='column'
-                            w='100%'>
+                        <Flex className='flex-scroll-dark' overflowY={vaultsToDisplay && vaultsToDisplay.length > 0 ? 'scroll' : 'hidden'} direction='column' w='100%'>
                             {vaultsToDisplay && vaultsToDisplay.length > 0 ? (
                                 vaultsToDisplay.map((vault: DepositVault, index: number) => (
-                                    <LightVault
-                                        key={index}
-                                        vault={vault}
-                                        onClick={() => setSelectedVaultToManage(vault)}
-                                        selectedInputAsset={selectedInputAsset}
-                                    />
+                                    <LightVault key={index} vault={vault} onClick={() => setSelectedVaultToManage(vault)} selectedInputAsset={selectedInputAsset} />
                                 ))
                             ) : (
                                 <Flex justify={'center'} fontSize={'16px'} alignItems={'center'}>
-                                    <Text>
-                                        No {selectedButtonActiveVsCompleted.toLocaleLowerCase()} deposit vaults found
-                                    </Text>
+                                    <Text>No {selectedButtonActiveVsCompleted.toLocaleLowerCase()} deposit vaults found</Text>
                                 </Flex>
                             )}
                         </Flex>

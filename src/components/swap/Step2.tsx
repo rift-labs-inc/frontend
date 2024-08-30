@@ -6,6 +6,8 @@ import { FONT_FAMILIES } from '../../utils/font';
 import QRCode from 'qrcode.react';
 import { useStore } from '../../store';
 import { BigNumber } from 'ethers';
+import { formatUnits } from 'ethers/lib/utils';
+import { bitcoinDecimals } from '../../utils/constants';
 
 declare global {
     interface Window {
@@ -17,15 +19,9 @@ export const Step2 = () => {
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [totalSwapAmountInSats, setTotalSwapAmountInSats] = useState(0);
+    const [bitcoinUri, setBitcoinUri] = useState('');
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
-
-    function calculateTotalSwapAmount() {
-        const totalAmount = lowestFeeReservationParams.amountsToReserve.reduce(
-            (acc: BigNumber, curr: BigNumber) => acc.add(BigNumber.from(curr)),
-            BigNumber.from(0),
-        );
-        return totalAmount;
-    }
 
     useEffect(() => {
         const fetchAddress = async () => {
@@ -38,6 +34,9 @@ export const Step2 = () => {
                     } else {
                         setError('Unable to retrieve Bitcoin address from wallet info.');
                     }
+                    setTotalSwapAmountInSats(lowestFeeReservationParams?.totalSwapAmountInSats);
+                    setBitcoinUri(`bitcoin:${address}?amount=${formatUnits(totalSwapAmountInSats, bitcoinDecimals)}&label=Rift%20Exchange%20Swap`);
+                    console.log('god', bitcoinUri);
                 } catch (err) {
                     setError('Error fetching wallet information.');
                     console.error(err);
@@ -78,12 +77,12 @@ export const Step2 = () => {
                         </Text>
                     ) : (
                         <>
-                            <QRCode value={address} size={200} />
+                            <QRCode value={bitcoinUri} size={200} />
                             <Text mt='20px' fontSize='16px' color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                Bitcoin Address: {address}
+                                Bitcoin Address : {address}
                             </Text>
                             <Text mt='20px' fontSize='16px' color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                Deposit Amount: {calculateTotalSwapAmount().toString()} WEI
+                                Deposit Amount: {formatUnits(totalSwapAmountInSats, bitcoinDecimals)} BTC
                             </Text>
                         </>
                     )}
@@ -104,16 +103,8 @@ export const Step2 = () => {
                         <Flex maxW='600px' mt='20px' direction='column' align='center'>
                             <WarningSVG width='60px' />
 
-                            <Text
-                                fontSize='15px'
-                                fontWeight='normal'
-                                color={colors.textGray}
-                                fontFamily={FONT_FAMILIES.AUX_MONO}
-                                textAlign='center'
-                                mt='20px'
-                                flex='1'>
-                                Your Rift Proxy Wallet is not detected. If this is your first time swapping, please add the Rift
-                                Chrome Extension below:
+                            <Text fontSize='15px' fontWeight='normal' color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='20px' flex='1'>
+                                Your Rift Proxy Wallet is not detected. If this is your first time swapping, please add the Rift Chrome Extension below:
                             </Text>
                             <Flex
                                 width='100%'

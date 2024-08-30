@@ -10,7 +10,7 @@ export enum ReservationState {
 }
 
 export interface ReserveLiquidityParams {
-    inputSwapAmountInSats: number;
+    totalSwapAmountInSats: number;
     vaultIndexesToReserve: number[];
     amountsToReserve: BigNumberish[];
     ethPayoutAddress: string;
@@ -51,6 +51,8 @@ export type ValidAsset = {
     riftExchangeAbi?: any;
     contractChainID?: number;
     contractRpcURL?: string;
+    proverFee?: BigNumber;
+    releaserFee?: BigNumber;
     icon_svg: any;
     bg_color: string;
     border_color: string;

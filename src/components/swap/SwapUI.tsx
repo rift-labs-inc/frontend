@@ -8,7 +8,16 @@ import { useStore } from '../../store';
 import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { BigNumber } from 'ethers';
 import { formatUnits, parseEther, parseUnits } from 'ethers/lib/utils';
-import { btcToSats, calculateBestVaultsForBitcoinInput, ethToWei, formatAmountToString, weiToEth } from '../../utils/dappHelper';
+import {
+    btcToSats,
+    bufferTo18Decimals,
+    calculateBestVaultsForBitcoinInput,
+    ethToWei,
+    formatAmountToString,
+    formatBtcExchangeRate,
+    unBufferFrom18Decimals,
+    weiToEth,
+} from '../../utils/dappHelper';
 import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
 import { bitcoinDecimals, maxSwapOutputs } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
@@ -52,6 +61,7 @@ export const SwapUI = () => {
     const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);
     const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
     const validAssets = useStore((state) => state.validAssets);
+    const [proxyWalletSwapFastFee, setProxyWalletSwapFastFee] = useState(0);
 
     useEffect(() => {
         if (selectedInputAsset && validAssets[selectedInputAsset.name]) {
@@ -70,36 +80,67 @@ export const SwapUI = () => {
         [availableLiquidity],
     );
 
-    // calculate ideal reservation
-    const calculateIdealReservation = (amount, inputType) => {
-        if (!amount) return;
-        const isBitcoinInput = inputType === 'btc' ? true : false;
-        const amountSmallestUnits = isBitcoinInput ? parseUnits(amount, bitcoinDecimals) : parseUnits(amount, selectedInputAsset.decimals);
-        const idealReservationDetails = isBitcoinInput ? calculateBestVaultsForBitcoinInput(allDepositVaults, amountSmallestUnits) : null;
+    const fetchProxyWalletSwapFee = async (numOutputs) => {
+        if (window.rift) {
+            try {
+                const proxyWalletSwapFee = await window.rift.getRiftSwapFees({ lps: numOutputs });
+                console.log('proxyWalletSwapFee:', proxyWalletSwapFee);
+                setProxyWalletSwapFastFee(proxyWalletSwapFee.fastFeeAmount);
+                return proxyWalletSwapFee.fastFeeAmount;
+            } catch (err) {
+                console.log('Error fetching wallet information.');
+                console.error(err);
+            }
+        } else {
+            console.log('Rift wallet not detected or getProxyWallet not available.');
+        }
+    };
 
-        // console.log('god idealReservationDetails:', idealReservationDetails);
+    // calculate ideal reservation
+    const calculateIdealReservationBitcoinInput = async (amountBtcSwapInput, inputType) => {
+        if (!amountBtcSwapInput) return;
+        const isBitcoinInput = inputType === 'btc' ? true : false;
+        const amountSatsSwapInput = isBitcoinInput ? parseUnits(amountBtcSwapInput, bitcoinDecimals) : parseUnits(amountBtcSwapInput, selectedInputAsset.decimals);
+        let idealReservationDetails = isBitcoinInput ? calculateBestVaultsForBitcoinInput(allDepositVaults, amountSatsSwapInput) : null;
+
+        console.log('true idealReservationDetails:', idealReservationDetails);
 
         // set exchange rate & usdt output based on retulst of the above function
-        // setUsdtExchangeRatePerBTC(validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC);
-        // setUsdtOutputSwapAmount(formatAmountToString(selectedInputAsset, usdtValue));
-        // setUsdtDepositAmount(formatAmountToString(selectedInputAsset, usdtValue));
-        // setBtcInputSwapAmount(formatAmountToString(selectedInputAsset, btcValue));
-        // setBtcOutputAmount(formatAmountToString(selectedInputAsset, btcValue));
-        // checkLiquidityExceeded(usdtValue.toString());
+        if (idealReservationDetails?.totalμUSDTObtained) {
+            // calculate the btc fee and subtract it from the "input", then rerun calculateBestVaultsForBitcoinInput
 
-        //---------------------------------//
+            const proxyWalletSwapFee = await fetchProxyWalletSwapFee(idealReservationDetails.vaultIndexes.length);
+            console.log('please - proxy wallet fee', proxyWalletSwapFee);
 
-        // const reserveLiquidityParams: ReserveLiquidityParams = {
-        //     inputSwapAmountInSats: Number(btcToSats(Number(btcInputSwapAmount))),
-        //     vaultIndexesToReserve: idealReservationDetails.vaultIndexes,
-        //     amountsToReserve: idealReservationDetails.amountsToReserve,
-        //     ethPayoutAddress: '', // this is set when user inputs their eth payout address
-        //     expiredSwapReservationIndexes: [], // TODO: calculated later
-        // };
+            // call the function again with the new amount
+            console.log('please oldAmount', amountSatsSwapInput.toString());
+            const newAmountSatsSwapInput = idealReservationDetails.totalBitcoinAmountInSatsUsed.sub(BigNumber.from(proxyWalletSwapFee));
+            console.log('please newAmount:', newAmountSatsSwapInput.toString());
 
-        // console.log('RESERVATION PARAMs:', reserveLiquidityParams);
+            console.log('please OLD idealReservationDetails:', idealReservationDetails.totalμUSDTObtained.toString());
+            idealReservationDetails = isBitcoinInput ? calculateBestVaultsForBitcoinInput(allDepositVaults, newAmountSatsSwapInput) : null;
+            console.log('please NEW idealReservationDetails:', idealReservationDetails.totalμUSDTObtained.toString());
 
-        // setLowestFeeReservationParams(reserveLiquidityParams);
+            setUsdtOutputSwapAmount(formatAmountToString(selectedInputAsset, formatUnits(idealReservationDetails.totalμUSDTObtained, selectedInputAsset.decimals)));
+            setUsdtDepositAmount(formatAmountToString(selectedInputAsset, formatUnits(idealReservationDetails.totalμUSDTObtained, selectedInputAsset.decimals)));
+
+            setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(idealReservationDetails.totalSwapExchangeRate, selectedInputAsset.decimals)).toFixed(2)));
+            const reserveLiquidityParams: ReserveLiquidityParams = {
+                totalSwapAmountInSats: BigNumber.from(idealReservationDetails?.totalBitcoinAmountInSatsUsed).toNumber(),
+                vaultIndexesToReserve: idealReservationDetails.vaultIndexes,
+                amountsToReserve: idealReservationDetails.amountsToReserve,
+                ethPayoutAddress: '', // this is set when user inputs their eth payout address
+                expiredSwapReservationIndexes: [], // TODO: calculated later
+            };
+
+            console.log('god RESERVATION PARAMs:', reserveLiquidityParams);
+
+            setLowestFeeReservationParams(reserveLiquidityParams);
+        } else {
+            setUsdtOutputSwapAmount('');
+            setUsdtDepositAmount('');
+            setLowestFeeReservationParams(null);
+        }
     };
 
     // ----------------- BITCOIN INPUT ----------------- //
@@ -111,7 +152,7 @@ export const SwapUI = () => {
             setBtcInputSwapAmount(btcValue);
             setBtcOutputAmount(btcValue);
             let usdtValue = btcValue && parseFloat(btcValue) > 0 ? parseFloat(btcValue) * useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
-            calculateIdealReservation(btcValue, 'btc');
+            calculateIdealReservationBitcoinInput(btcValue, 'btc');
         }
     };
 
@@ -144,7 +185,7 @@ export const SwapUI = () => {
             const btcValue =
                 usdtValue && parseFloat(usdtValue) > 0 ? parseFloat(usdtValue) / useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
 
-            calculateIdealReservation(usdtValue, 'usdt');
+            // calculateIdealReservation(usdtValue, 'usdt'); TODO: implemnt usdt output of function
         }
     };
 

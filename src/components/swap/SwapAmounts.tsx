@@ -1,17 +1,4 @@
-import {
-    Tabs,
-    TabList,
-    Tooltip,
-    TabPanels,
-    Tab,
-    Button,
-    Flex,
-    Text,
-    useColorModeValue,
-    Box,
-    Spacer,
-    Input,
-} from '@chakra-ui/react';
+import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -23,6 +10,7 @@ import { FONT_FAMILIES } from '../../utils/font';
 import { ArrowRightIcon } from '@chakra-ui/icons';
 import { FaArrowRight } from 'react-icons/fa';
 import { MdArrowRight } from 'react-icons/md';
+import { AssetTag } from '../other/AssetTag';
 
 export const SwapAmounts = ({}) => {
     const { width } = useWindowSize();
@@ -62,16 +50,12 @@ export const SwapAmounts = ({}) => {
                     <Text mr='15px' fontSize={'36px'} letterSpacing={'-5px'} color={colors.offWhite}>
                         {btcInputSwapAmount}
                     </Text>
-                    <BTCSVG width='100' height='58' viewBox='0 0 148 54' />{' '}
+                    <Flex mt='-16px' mb='-7px'>
+                        <AssetTag assetName='BTC' width='80px' />
+                    </Flex>
+                    {/* <BTCSVG width='100' height='58' viewBox='0 0 148 54' />{' '} */}
                 </Flex>
-                <Text
-                    color={colors.textGray}
-                    fontSize={'13px'}
-                    mt='-12px'
-                    ml='6px'
-                    letterSpacing={'-2px'}
-                    fontWeight={'normal'}
-                    fontFamily={'Aux'}>
+                <Text color={colors.textGray} fontSize={'13px'} mt='-12px' ml='6px' letterSpacing={'-2px'} fontWeight={'normal'} fontFamily={'Aux'}>
                     ≈ $
                     {(parseFloat(btcInputSwapAmount) * bitcoinPriceUSD).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
@@ -81,7 +65,7 @@ export const SwapAmounts = ({}) => {
                 </Text>
             </Flex>
             <Spacer />
-            <Flex align='center' ml='-10px' mt='-4px' justify={'center'}>
+            <Flex align='center' ml='-4px' mr='-5px' mt='-4px' justify={'center'}>
                 <MdArrowRight size={'50px'} color={colors.darkerGray} />
             </Flex>
             <Spacer />
@@ -90,21 +74,13 @@ export const SwapAmounts = ({}) => {
                     <Text mr='15px' fontSize={'36px'} letterSpacing={'-5px'} color={colors.offWhite}>
                         {usdtOutputSwapAmount}
                     </Text>
-                    <ETHSVG width='100' height='58' viewBox='0 0 148 54' />{' '}
+                    <Flex mt='-16px' mb='-7px'>
+                        <AssetTag assetName='USDT' width='90px' />
+                    </Flex>{' '}
                 </Flex>
-                <Text
-                    color={colors.textGray}
-                    fontSize={'13px'}
-                    mt='-12px'
-                    ml='6px'
-                    letterSpacing={'-2px'}
-                    fontWeight={'normal'}
-                    fontFamily={'Aux'}>
+                <Text color={colors.textGray} fontSize={'13px'} mt='-12px' ml='6px' letterSpacing={'-2px'} fontWeight={'normal'} fontFamily={'Aux'}>
                     ≈ $
-                    {(
-                        parseFloat(usdtOutputSwapAmount) *
-                        useStore.getState().validAssets[selectedInputAsset.name].priceUSD
-                    ).toLocaleString(undefined, {
+                    {(parseFloat(usdtOutputSwapAmount) * useStore.getState().validAssets[selectedInputAsset.name].priceUSD).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                     })}{' '}

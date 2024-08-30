@@ -1,17 +1,4 @@
-import {
-    Tabs,
-    TabList,
-    Tooltip,
-    TabPanels,
-    Tab,
-    Button,
-    Flex,
-    Text,
-    useColorModeValue,
-    Box,
-    Spacer,
-    Input,
-} from '@chakra-ui/react';
+import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -48,10 +35,12 @@ export const SwapFlow = ({}) => {
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const [ethPayoutAddress, setethPayoutAddress] = useState('');
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
+    const setEthPayoutAddress = useStore((state) => state.setEthPayoutAddress);
 
-    useEffect(() => {
-        console.log('swapFlowState', swapFlowState);
-    }, [swapFlowState]);
+    //TODO: clear on first load
+    // useEffect(() => {
+    //     setEthPayoutAddress('');
+    // });
 
     return (
         <Flex width='1000px' align={'center'} direction={'column'}>
