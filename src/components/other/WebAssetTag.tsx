@@ -7,6 +7,7 @@ import { AssetType } from '../../types';
 interface WebAssetTagProps {
     asset: AssetType;
     onDropDown?: () => void;
+    w?: string | number;
     h?: string | number;
     fontSize?: string;
     borderWidth?: string | number;
@@ -14,7 +15,7 @@ interface WebAssetTagProps {
     pointer?: boolean;
 }
 
-const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, h, fontSize, borderWidth, px, pointer }) => {
+const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, fontSize, borderWidth, px, pointer }) => {
     const adjustedH = h ?? '36px';
     const adjustedFontSize = fontSize ?? `calc(${adjustedH} / 2 + 0px)`;
     const arrowSize = fontSize ?? `calc(${adjustedH} / 4)`;
@@ -34,6 +35,7 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, h, fontSiz
                 aspectRatio={1}
                 h={`calc(${adjustedH} + 2px)`}
                 bg={borderColor}
+                w={w}
                 borderRadius='400px'
                 mr={`calc(${adjustedH} / 2 * -1)`}
                 zIndex={1}
@@ -41,7 +43,11 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, h, fontSiz
                 justify='center'
                 cursor={onDropDown || pointer ? 'pointer' : 'auto'}
                 onClick={onDropDown}>
-                <Image src={`/images/assets/icons/${imgKey}.svg`} h={asset == 'WBTC' ? adjustedH : `calc(${adjustedH} - 14px)`} userSelect='none' />
+                <Image
+                    src={`/images/assets/icons/${imgKey}.svg`}
+                    h={asset == 'WBTC' ? adjustedH : `calc(${adjustedH} - 14px)`}
+                    userSelect='none'
+                />
             </Flex>
             <Flex
                 bg={bgColor}
@@ -58,7 +64,9 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, h, fontSiz
                 <Text fontSize={adjustedFontSize} color={'white'} fontFamily={FONT_FAMILIES.NOSTROMO} userSelect='none'>
                     {asset}
                 </Text>
-                {onDropDown && <FaChevronDown fontSize={arrowSize} color={colors.offWhite} style={{ marginRight: '-8px' }} />}
+                {onDropDown && (
+                    <FaChevronDown fontSize={arrowSize} color={colors.offWhite} style={{ marginRight: '-8px' }} />
+                )}
             </Flex>
         </Flex>
     );

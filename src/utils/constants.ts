@@ -16,6 +16,9 @@ export const bitcoin_light_text_color = '#7d572e';
 // export const riftExchangeContractAddress = '0x4f9182DBcCf9C6518b1D67181F4E5a6d3D223C0E'; // deployed for USDT on Sepolia
 export const maxSwapOutputs = 175;
 
+export const protocolFeePercentage = BigNumber.from(1); // 0.1%
+export const protocolFeeDenominator = BigNumber.from(1000); // 100% / 0.1% = 1000
+
 export const ERC20ABI = [
     {
         type: 'event',

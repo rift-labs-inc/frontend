@@ -61,7 +61,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 if (isCreated && isExpired) {
                     expiredReservationsCount++;
                     reservation.vaultIndexes.forEach((vaultIndex, i) => {
-                        const vaultIndexNumber = vaultIndex.toNumber();
+                        const vaultIndexNumber = vaultIndex;
                         const amountToAdd = reservation.amountsToReserve[i];
                         const currentAdditional = additionalBalances.get(vaultIndexNumber) || BigNumber.from(0);
                         additionalBalances.set(vaultIndexNumber, currentAdditional.add(amountToAdd));
@@ -135,7 +135,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 Array.from({ length: depositVaultsLength }).map((_, i) => i),
             );
 
-            console.log('All Deposit Vaults:', depositVaults);
+            // console.log('All Deposit Vaults:', depositVaults);
 
             const updatedDepositVaults = calculateTrueUnreservedLiquidity(depositVaults, allFetchedSwapReservations);
             console.log('Updated Deposit Vaults:', updatedDepositVaults);

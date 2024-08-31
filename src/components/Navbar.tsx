@@ -62,7 +62,10 @@ export const Navbar = ({}) => {
                 py='2px'
                 position='relative'
                 alignItems='center'>
-                <Text color={router.pathname == route ? colors.offWhite : '#ccc'} fontSize='1.1rem' fontFamily='Nostromo'>
+                <Text
+                    color={router.pathname == route ? colors.offWhite : '#ccc'}
+                    fontSize='1.1rem'
+                    fontFamily='Nostromo'>
                     {text}
                 </Text>
                 {router.pathname === route && (
@@ -70,16 +73,15 @@ export const Navbar = ({}) => {
                         position={'absolute'}
                         ml='1px'
                         top='29px'
-                        // w={
-                        //     router.pathname === '/manage'
-                        //         ? '87px'
-                        //         : router.pathname === '/activity'
-                        //         ? '93px'
-                        //         : router.pathname === '/whitepaper'
-                        //         ? '134px'
-                        //         : '57px'
-                        // }
-                        w='calc(100% - 20px)'
+                        w={
+                            router.pathname === '/manage'
+                                ? '87px'
+                                : router.pathname === '/activity'
+                                ? '93px'
+                                : router.pathname === '/whitepaper'
+                                ? '134px'
+                                : '55px'
+                        }
                         height='2px'
                         bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
                     />
@@ -89,7 +91,13 @@ export const Navbar = ({}) => {
     };
 
     const StatCard = ({ label, value, color = colors.RiftOrange }) => (
-        <Box borderWidth='1px' borderColor={colors.textGray} borderRadius='10px' bg={colors.offBlack} p={'10px'} textAlign='center'>
+        <Box
+            borderWidth='1px'
+            borderColor={colors.textGray}
+            borderRadius='10px'
+            bg={colors.offBlack}
+            p={'10px'}
+            textAlign='center'>
             <Text color={colors.textGray} fontSize='10px' mb={1}>
                 {label}
             </Text>
@@ -112,7 +120,11 @@ export const Navbar = ({}) => {
 
     return (
         <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1000}>
-            <Flex bgGradient='linear(0deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))' position='absolute' w='100%' h='130%'></Flex>
+            <Flex
+                bgGradient='linear(0deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))'
+                position='absolute'
+                w='100%'
+                h='130%'></Flex>
             <Flex direction='row' w='100%' px={'30px'} pt='25px'>
                 <Flex gap='12px'>
                     {navItem('Swap', '/')}
@@ -124,7 +136,15 @@ export const Navbar = ({}) => {
                 </Flex>
                 <Spacer />
                 {/* TODO: Remove below: */}
-                <Flex direction='column' fontFamily={FONT_FAMILIES.AUX_MONO} align='center' fontSize='12px' position='absolute' top={0} left={0} right={0}>
+                <Flex
+                    direction='column'
+                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                    align='center'
+                    fontSize='12px'
+                    position='absolute'
+                    top={0}
+                    left={0}
+                    right={0}>
                     {isLocalhost && (
                         <Button
                             position={'absolute'}
@@ -154,8 +174,18 @@ export const Navbar = ({}) => {
                                 })}
                             </VStack>
 
-                            <Flex position='absolute' top={height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
-                                <StatCard label='Total Available Liquidity' value={`${formatUnits(availableLiquidity, selectedInputAsset.decimals)} ${selectedInputAsset.name}`} />
+                            <Flex
+                                position='absolute'
+                                top={height - 140}
+                                gap={3}
+                                flexWrap='wrap'
+                                justifyContent='center'>
+                                <StatCard
+                                    label='Total Available Liquidity'
+                                    value={`${formatUnits(availableLiquidity, selectedInputAsset.decimals)} ${
+                                        selectedInputAsset.name
+                                    }`}
+                                />
 
                                 <StatCard label='Total Deposits' value={allDepositVaults.length} />
                                 <StatCard label='My Active Deposits' value={userActiveDepositVaults.length} />

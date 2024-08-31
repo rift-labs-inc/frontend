@@ -1,5 +1,17 @@
 import React from 'react';
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Text, Flex, Box, Spacer, Button } from '@chakra-ui/react';
+import {
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalCloseButton,
+    Text,
+    Flex,
+    Box,
+    Spacer,
+    Button,
+} from '@chakra-ui/react';
 import { ReserveStatus } from '../../hooks/contract/useReserveLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
@@ -18,13 +30,20 @@ interface ReservationStatusModalProps {
     txHash: string | null;
 }
 
-const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen, onClose, status, error, txHash }) => {
+const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
+    isOpen = false,
+    onClose,
+    status = ReserveStatus.WaitingForWalletConfirmation,
+    error = null,
+    txHash = null,
+}) => {
     const isCompleted = status === ReserveStatus.Confirmed;
     const isError = status === ReserveStatus.Error;
     const isLoading = !isCompleted && !isError;
     const showManageReservationScreen = useStore((state) => state.showManageReservationScreen);
     const setShowManageReservationScreen = useStore((state) => state.setShowManageReservationScreen);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
+    const CheckmarkCircleComponent = (props) => <CheckmarkCircle {...props} />;
 
     const getStatusMessage = () => {
         switch (status) {
@@ -64,23 +83,39 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen,
                 borderRadius='10px'
                 fontFamily={FONT_FAMILIES.AUX_MONO}
                 color={colors.offWhite}>
-                <ModalHeader fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
+                <ModalHeader
+                    fontSize='24px'
+                    userSelect={'none'}
+                    fontFamily={FONT_FAMILIES.NOSTROMO}
+                    fontWeight='bold'
+                    textAlign='center'>
                     Reservation Status
                 </ModalHeader>
                 {(isCompleted || isError) && <ModalCloseButton />}
                 <ModalBody>
                     <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
-                        {isLoading && <GooSpinner size={100} color={colors.RiftBlue} loading={true} />}
+                        {isLoading && <GooSpinner size={100} color={colors.purpleBorder} loading={true} />}
                         <Spacer />
                         {!isCompleted && (
-                            <Text fontSize='12px' w='60%' mt='25px' mb='0px' color={colors.textGray} fontWeight={'normal'} textAlign='center'>
+                            <Text
+                                fontSize='12px'
+                                w='60%'
+                                mt='25px'
+                                mb='0px'
+                                color={colors.textGray}
+                                fontWeight={'normal'}
+                                textAlign='center'>
                                 Please confirm the transaction in your wallet
                             </Text>
                         )}
                         <Flex direction={'column'} align={'center'} w='100%' justify={'center'}>
                             {isCompleted && (
                                 <Flex mt='6px' ml='4px'>
-                                    <CheckmarkCircle width='38px' height={'38px'} color={colors.greenOutline} />
+                                    <CheckmarkCircleComponent
+                                        width='38px'
+                                        height={'38px'}
+                                        color={colors.greenOutline}
+                                    />
                                 </Flex>
                             )}
                             {isError && (
@@ -111,7 +146,11 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen,
                                     <Flex mt='-4px ' mr='8px'>
                                         <HiOutlineExternalLink size={'17px'} color={colors.textGray} />
                                     </Flex>
-                                    <Text fontSize='14px' color={colors.textGray} cursor={'pointer'} fontWeight={'normal'}>
+                                    <Text
+                                        fontSize='14px'
+                                        color={colors.textGray}
+                                        cursor={'pointer'}
+                                        fontWeight={'normal'}>
                                         View on Etherscan
                                     </Text>
                                 </Button>

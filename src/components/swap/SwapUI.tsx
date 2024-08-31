@@ -1,4 +1,17 @@
-import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
+import {
+    Tabs,
+    TabList,
+    Tooltip,
+    TabPanels,
+    Tab,
+    Button,
+    Flex,
+    Text,
+    useColorModeValue,
+    Box,
+    Spacer,
+    Input,
+} from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
@@ -18,12 +31,13 @@ import {
     unBufferFrom18Decimals,
     weiToEth,
 } from '../../utils/dappHelper';
-import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
+import { ProxyWalletLiquidityProvider, ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
 import { bitcoinDecimals, maxSwapOutputs } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import WebAssetTag from '../other/WebAssetTag';
+import { getSwapReservations } from '../../utils/contractReadFunctions';
 
 export const SwapUI = () => {
     const { width } = useWindowSize();
@@ -36,6 +50,7 @@ export const SwapUI = () => {
     const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const allDepositVaults = useStore((state) => state.allDepositVaults);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
+    const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
     const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
     const userEthAddress = useStore((state) => state.userEthAddress);
     const [isLiquidityExceeded, setIsLiquidityExceeded] = useState(false);
@@ -67,7 +82,9 @@ export const SwapUI = () => {
         if (selectedInputAsset && validAssets[selectedInputAsset.name]) {
             const totalAvailableLiquidity = validAssets[selectedInputAsset.name]?.totalAvailableLiquidity;
             setAvailableLiquidity(totalAvailableLiquidity ?? BigNumber.from(0));
-            setAvailableLiquidityInUSDT(Number(formatUnits(totalAvailableLiquidity, selectedInputAsset.decimals)).toFixed(2).toString());
+            setAvailableLiquidityInUSDT(
+                Number(formatUnits(totalAvailableLiquidity, selectedInputAsset.decimals)).toFixed(2).toString(),
+            );
         }
     }, [selectedInputAsset, validAssets]);
 
@@ -100,40 +117,77 @@ export const SwapUI = () => {
     const calculateIdealReservationBitcoinInput = async (amountBtcSwapInput, inputType) => {
         if (!amountBtcSwapInput) return;
         const isBitcoinInput = inputType === 'btc' ? true : false;
-        const amountSatsSwapInput = isBitcoinInput ? parseUnits(amountBtcSwapInput, bitcoinDecimals) : parseUnits(amountBtcSwapInput, selectedInputAsset.decimals);
-        let idealReservationDetails = isBitcoinInput ? calculateBestVaultsForBitcoinInput(allDepositVaults, amountSatsSwapInput) : null;
+        const amountSatsSwapInput = isBitcoinInput
+            ? parseUnits(amountBtcSwapInput, bitcoinDecimals)
+            : parseUnits(amountBtcSwapInput, selectedInputAsset.decimals);
+        let idealReservationDetails =
+            isBitcoinInput && allDepositVaults.length > 0
+                ? calculateBestVaultsForBitcoinInput(allDepositVaults, amountSatsSwapInput)
+                : null;
 
         console.log('true idealReservationDetails:', idealReservationDetails);
 
         // set exchange rate & usdt output based on retulst of the above function
-        if (idealReservationDetails?.totalμUSDTObtained) {
+        if (idealReservationDetails?.totalμUsdtSwapOutput) {
             // calculate the btc fee and subtract it from the "input", then rerun calculateBestVaultsForBitcoinInput
 
-            const proxyWalletSwapFee = await fetchProxyWalletSwapFee(idealReservationDetails.vaultIndexes.length);
-            console.log('please - proxy wallet fee', proxyWalletSwapFee);
+            const proxyWalletSwapFeeInSats = await fetchProxyWalletSwapFee(idealReservationDetails.vaultIndexes.length);
+            console.log('please - proxy wallet fee in sats', proxyWalletSwapFeeInSats);
 
             // call the function again with the new amount
-            console.log('please oldAmount', amountSatsSwapInput.toString());
-            const newAmountSatsSwapInput = idealReservationDetails.totalBitcoinAmountInSatsUsed.sub(BigNumber.from(proxyWalletSwapFee));
-            console.log('please newAmount:', newAmountSatsSwapInput.toString());
+            console.log('please old amountSatsSwapInput', amountSatsSwapInput.toString());
+            const newAmountSatsSwapInput = idealReservationDetails.totalBitcoinAmountInSatsUsed.sub(
+                BigNumber.from(proxyWalletSwapFeeInSats),
+            );
+            console.log('please new amountSatsSwapInput:', newAmountSatsSwapInput.toString());
 
-            console.log('please OLD idealReservationDetails:', idealReservationDetails.totalμUSDTObtained.toString());
-            idealReservationDetails = isBitcoinInput ? calculateBestVaultsForBitcoinInput(allDepositVaults, newAmountSatsSwapInput) : null;
-            console.log('please NEW idealReservationDetails:', idealReservationDetails.totalμUSDTObtained.toString());
+            console.log('please OLD totalμUsdtSwapOutput:', idealReservationDetails.totalμUsdtSwapOutput.toString());
+            idealReservationDetails = isBitcoinInput
+                ? calculateBestVaultsForBitcoinInput(allDepositVaults, newAmountSatsSwapInput)
+                : null;
+            console.log('please NEW totalμUsdtSwapOutput:', idealReservationDetails?.totalμUsdtSwapOutput?.toString());
 
-            setUsdtOutputSwapAmount(formatAmountToString(selectedInputAsset, formatUnits(idealReservationDetails.totalμUSDTObtained, selectedInputAsset.decimals)));
-            setUsdtDepositAmount(formatAmountToString(selectedInputAsset, formatUnits(idealReservationDetails.totalμUSDTObtained, selectedInputAsset.decimals)));
+            setUsdtOutputSwapAmount(
+                formatAmountToString(
+                    selectedInputAsset,
+                    formatUnits(
+                        idealReservationDetails.totalμUsdtSwapOutput ?? BigNumber.from(0),
+                        selectedInputAsset.decimals,
+                    ),
+                ),
+            );
+            setUsdtDepositAmount(
+                formatAmountToString(
+                    selectedInputAsset,
+                    formatUnits(
+                        idealReservationDetails.totalμUsdtSwapOutput ?? BigNumber.from(0),
+                        selectedInputAsset.decimals,
+                    ),
+                ),
+            );
 
-            setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(idealReservationDetails.totalSwapExchangeRate, selectedInputAsset.decimals)).toFixed(2)));
+            setUsdtExchangeRatePerBTC(
+                parseFloat(
+                    parseFloat(
+                        formatBtcExchangeRate(
+                            idealReservationDetails.totalSwapExchangeRate,
+                            selectedInputAsset.decimals,
+                        ),
+                    ).toFixed(2),
+                ),
+            );
             const reserveLiquidityParams: ReserveLiquidityParams = {
                 totalSwapAmountInSats: BigNumber.from(idealReservationDetails?.totalBitcoinAmountInSatsUsed).toNumber(),
                 vaultIndexesToReserve: idealReservationDetails.vaultIndexes,
-                amountsToReserve: idealReservationDetails.amountsToReserve,
+                amountsInμUsdtToReserve: idealReservationDetails.amountsInμUsdtToReserve,
+                amountsInSatsToBePaid: idealReservationDetails.amountsInSatsToBePaid,
+                btcPayoutLockingScripts: idealReservationDetails.btcPayoutLockingScripts,
+                btcExchangeRates: idealReservationDetails.btcExchangeRates,
                 ethPayoutAddress: '', // this is set when user inputs their eth payout address
-                expiredSwapReservationIndexes: [], // TODO: calculated later
+                expiredSwapReservationIndexes: [], // TODO: calculate later
             };
 
-            console.log('god RESERVATION PARAMs:', reserveLiquidityParams);
+            console.log('please RESERVATION PARAMs:', reserveLiquidityParams);
 
             setLowestFeeReservationParams(reserveLiquidityParams);
         } else {
@@ -151,7 +205,11 @@ export const SwapUI = () => {
         if (btcValue !== null) {
             setBtcInputSwapAmount(btcValue);
             setBtcOutputAmount(btcValue);
-            let usdtValue = btcValue && parseFloat(btcValue) > 0 ? parseFloat(btcValue) * useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
+            let usdtValue =
+                btcValue && parseFloat(btcValue) > 0
+                    ? parseFloat(btcValue) *
+                      useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC
+                    : 0;
             calculateIdealReservationBitcoinInput(btcValue, 'btc');
         }
     };
@@ -183,7 +241,10 @@ export const SwapUI = () => {
             setUsdtOutputSwapAmount(usdtValue);
             setUsdtDepositAmount(usdtValue);
             const btcValue =
-                usdtValue && parseFloat(usdtValue) > 0 ? parseFloat(usdtValue) / useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
+                usdtValue && parseFloat(usdtValue) > 0
+                    ? parseFloat(usdtValue) /
+                      useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC
+                    : 0;
 
             // calculateIdealReservation(usdtValue, 'usdt'); TODO: implemnt usdt output of function
         }
@@ -206,7 +267,12 @@ export const SwapUI = () => {
                     {/* BTC Input */}
                     <Flex px='10px' bg='#2E1C0C' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
                         <Flex direction={'column'} py='10px' px='5px'>
-                            <Text color={!btcInputSwapAmount ? colors.offWhite : colors.textGray} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                            <Text
+                                color={!btcInputSwapAmount ? colors.offWhite : colors.textGray}
+                                fontSize={'13px'}
+                                letterSpacing={'-1px'}
+                                fontWeight={'normal'}
+                                fontFamily={'Aux'}>
                                 You Send
                             </Text>
                             <Input
@@ -318,7 +384,13 @@ export const SwapUI = () => {
                             />
                             <Flex>
                                 <Text
-                                    color={isLiquidityExceeded ? colors.redHover : !usdtOutputSwapAmount ? colors.offWhite : colors.textGray}
+                                    color={
+                                        isLiquidityExceeded
+                                            ? colors.redHover
+                                            : !usdtOutputSwapAmount
+                                            ? colors.offWhite
+                                            : colors.textGray
+                                    }
                                     fontSize={'13px'}
                                     mt='2px'
                                     ml='1px'
@@ -330,10 +402,13 @@ export const SwapUI = () => {
                                         ? `Exceeds available liquidity -`
                                         : usdtPriceUSD
                                         ? usdtOutputSwapAmount
-                                            ? (usdtPriceUSD * parseFloat(usdtOutputSwapAmount)).toLocaleString('en-US', {
-                                                  style: 'currency',
-                                                  currency: 'USD',
-                                              })
+                                            ? (usdtPriceUSD * parseFloat(usdtOutputSwapAmount)).toLocaleString(
+                                                  'en-US',
+                                                  {
+                                                      style: 'currency',
+                                                      currency: 'USD',
+                                                  },
+                                              )
                                             : '$0.00'
                                         : '$0.00'}
                                 </Text>
@@ -350,7 +425,11 @@ export const SwapUI = () => {
                                         letterSpacing={'-1.5px'}
                                         fontWeight={'normal'}
                                         fontFamily={'Aux'}>
-                                        {isLiquidityExceeded ? `${parseFloat(availableLiquidityInUSDT).toFixed(2)} ${selectedInputAsset.name} Max` : 'Max'}
+                                        {isLiquidityExceeded
+                                            ? `${parseFloat(availableLiquidityInUSDT).toFixed(2)} ${
+                                                  selectedInputAsset.name
+                                              } Max`
+                                            : 'Max'}
                                     </Text>
                                 )}
                             </Flex>
@@ -363,7 +442,13 @@ export const SwapUI = () => {
                 </Flex>
                 {/* Rate/Liquidity Details */}
                 <Flex mt='12px'>
-                    <Text color={colors.textGray} fontSize={'13px'} ml='3px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                    <Text
+                        color={colors.textGray}
+                        fontSize={'13px'}
+                        ml='3px'
+                        letterSpacing={'-1.5px'}
+                        fontWeight={'normal'}
+                        fontFamily={'Aux'}>
                         1 BTC ≈{' '}
                         {usdtExchangeRatePerBTC
                             ? usdtExchangeRatePerBTC.toLocaleString('en-US', {
@@ -385,7 +470,14 @@ export const SwapUI = () => {
                             }}></Box>
                     </Text>
                     <Spacer />
-                    <Flex ml='-3px' color={colors.textGray} fontSize={'13px'} mr='3px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                    <Flex
+                        ml='-3px'
+                        color={colors.textGray}
+                        fontSize={'13px'}
+                        mr='3px'
+                        letterSpacing={'-1.5px'}
+                        fontWeight={'normal'}
+                        fontFamily={'Aux'}>
                         <Tooltip
                             fontFamily={'Aux'}
                             letterSpacing={'-0.5px'}
@@ -395,7 +487,14 @@ export const SwapUI = () => {
                             label='Exchange rate includes the hypernode, protocol, and LP Fees. There are no additional or hidden fees.'
                             aria-label='A tooltip'>
                             <Flex ml='8px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
-                                <Text color={colors.textGray} fontSize={'13px'} mr='8px' mt='1px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                                <Text
+                                    color={colors.textGray}
+                                    fontSize={'13px'}
+                                    mr='8px'
+                                    mt='1px'
+                                    letterSpacing={'-1.5px'}
+                                    fontWeight={'normal'}
+                                    fontFamily={'Aux'}>
                                     Including Fees
                                 </Text>
                                 <InfoSVG width='13' />

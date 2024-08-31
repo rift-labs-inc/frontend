@@ -1,4 +1,17 @@
-import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
+import {
+    Tabs,
+    TabList,
+    Tooltip,
+    TabPanels,
+    Tab,
+    Button,
+    Flex,
+    Text,
+    useColorModeValue,
+    Box,
+    Spacer,
+    Input,
+} from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -16,11 +29,10 @@ import { BigNumber, ethers } from 'ethers';
 import { useReserveLiquidity } from '../../hooks/contract/useReserveLiquidity';
 import ReservationStatusModal from './ReservationStatusModal';
 import { Step1 } from './Step1';
-import { Step2 } from './Step2';
 
 type ActiveTab = 'swap' | 'liquidity';
 
-export const SwapFlow = ({}) => {
+export const ReserveLiquidityPage = ({}) => {
     const { width } = useWindowSize();
     const isMobileView = width < 600;
     const router = useRouter();
@@ -46,16 +58,18 @@ export const SwapFlow = ({}) => {
         <Flex width='1000px' align={'center'} direction={'column'}>
             <SwapAmounts />
             <Flex w='100%' mt='-69px' ml='0px'>
-                <Button bg='none' w='12px' _hover={{ bg: colors.borderGray }} onClick={() => setSwapFlowState('0-not-started')}>
+                <Button
+                    bg='none'
+                    w='12px'
+                    _hover={{ bg: colors.borderGray }}
+                    onClick={() => setSwapFlowState('0-not-started')}>
                     <ChevronLeftIcon width={'40px'} height={'40px'} bg='none' color={colors.offWhite} />
                 </Button>
             </Flex>
             <Flex justify={'center'} w='100%' mt='50px'>
                 <SwapStatusTimeline />
             </Flex>
-            {swapFlowState === '1-reserve-liquidity' && <Step1 />}
-            {swapFlowState === '2-send-bitcoin' && <Step2 />}
-            {/* <Step2 />  // for testing */}
+            <Step1 />
         </Flex>
     );
 };

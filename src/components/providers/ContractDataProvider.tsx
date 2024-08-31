@@ -27,7 +27,9 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const setUserEthAddress = useStore((state) => state.setUserEthAddress);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
-    const updateExchangeRateInSmallestTokenUnitPerSat = useStore((state) => state.updateExchangeRateInSmallestTokenUnitPerSat);
+    const updateExchangeRateInSmallestTokenUnitPerSat = useStore(
+        (state) => state.updateExchangeRateInSmallestTokenUnitPerSat,
+    );
     const updateExchangeRateInTokenPerBTC = useStore((state) => state.updateExchangeRateInTokenPerBTC);
     const updatePriceUSD = useStore((state) => state.updatePriceUSD);
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
@@ -51,18 +53,23 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             const btcToUsdtRate = btcPriceUSD / usdtPriceUSD;
 
             setBitcoinPriceUSD(btcPriceUSD);
-            updatePriceUSD('USDT', usdtPriceUSD);
-            console.log('BRUH btcToUsdtRate:', btcToUsdtRate);
             updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
-            console.log('BRUH DID STATE UPDATE?', useStore.getState().validAssets['USDT'].exchangeRateInTokenPerBTC);
         };
         fetchPriceData();
 
         const fetchSelectedAssetUserBalance = async (address) => {
-            const balance = await getTokenBalance(ethersRpcProvider, selectedInputAsset.tokenAddress, address, ERC20ABI);
+            const balance = await getTokenBalance(
+                ethersRpcProvider,
+                selectedInputAsset.tokenAddress,
+                address,
+                ERC20ABI,
+            );
 
             updateConnectedUserBalanceRaw(selectedInputAsset.name, balance);
-            const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedInputAsset.name].decimals);
+            const formattedBalance = formatUnits(
+                balance,
+                useStore.getState().validAssets[selectedInputAsset.name].decimals,
+            );
             console.log('formattedBalance:', formattedBalance.toString());
             updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
         };
@@ -79,10 +86,18 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
 
         // Clean up the interval on component unmount
         return () => clearInterval(intervalId);
-    }, [selectedInputAsset, address]);
+    }, [selectedInputAsset, address, isConnected]);
 
     // fetch deposit vaults
-    const { allFetchedDepositVaults, userActiveDepositVaults, userCompletedDepositVaults, allFetchedSwapReservations, loading, error, refreshUserDepositData } = useDepositVaults();
+    const {
+        allFetchedDepositVaults,
+        userActiveDepositVaults,
+        userCompletedDepositVaults,
+        allFetchedSwapReservations,
+        loading,
+        error,
+        refreshUserDepositData,
+    } = useDepositVaults();
 
     const value = {
         allDepositVaults: allFetchedDepositVaults,

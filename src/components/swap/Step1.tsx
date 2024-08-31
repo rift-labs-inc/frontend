@@ -1,4 +1,17 @@
-import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
+import {
+    Tabs,
+    TabList,
+    Tooltip,
+    TabPanels,
+    Tab,
+    Button,
+    Flex,
+    Text,
+    useColorModeValue,
+    Box,
+    Spacer,
+    Input,
+} from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -100,7 +113,7 @@ export const Step1 = ({}) => {
                 riftExchangeAbi: selectedInputAsset.riftExchangeAbi,
                 riftExchangeContract: selectedInputAsset.riftExchangeContractAddress,
                 vaultIndexesToReserve: lowestFeeReservationParams.vaultIndexesToReserve,
-                amountsToReserve: lowestFeeReservationParams.amountsToReserve,
+                amountsToReserve: lowestFeeReservationParams.amountsInμUsdtToReserve,
                 ethPayoutAddress,
                 expiredSwapReservationIndexes: lowestFeeReservationParams.expiredSwapReservationIndexes,
                 tokenAddress: selectedInputAsset.tokenAddress,
@@ -114,7 +127,10 @@ export const Step1 = ({}) => {
         }
     };
 
-    const totalAmount = lowestFeeReservationParams?.amountsToReserve.reduce((acc, curr) => BigNumber.from(acc).add(curr), ethers.BigNumber.from(0));
+    const totalAmount = lowestFeeReservationParams?.amountsInμUsdtToReserve.reduce(
+        (acc, curr) => BigNumber.from(acc).add(curr),
+        ethers.BigNumber.from(0),
+    );
     const formattedTotalAmount = formatUnits(totalAmount, selectedInputAsset.decimals);
 
     return (
@@ -132,10 +148,19 @@ export const Step1 = ({}) => {
                 align={'center'}
                 borderWidth={3}
                 borderColor={colors.borderGray}>
-                <Text fontSize='13px' maxW={'900px'} fontWeight={'normal'} color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='6px' flex='1'>
-                    Initiate the swap by paying fees up front to lock the seller’s ETH. After the reservation is confirmed, you will have 6 hours to send BTC to complete the swap.
+                <Text
+                    fontSize='13px'
+                    maxW={'900px'}
+                    fontWeight={'normal'}
+                    color={colors.textGray}
+                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                    textAlign='center'
+                    mt='6px'
+                    flex='1'>
+                    Initiate the swap by paying fees up front to lock the seller’s ETH. After the reservation is
+                    confirmed, you will have 6 hours to send BTC to complete the swap.
                 </Text>
-                <Flex direction='column' my='60px' align='center' width='100%'>
+                <Flex direction='column' my='40px' align='center' width='100%'>
                     <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
                         Vault Selection Algo VISUALIZER
                     </Text>
@@ -147,9 +172,10 @@ export const Step1 = ({}) => {
                                     borderColor={colors.purpleBorder}
                                     borderRadius='md'
                                     p={3}
+                                    pt='10px'
                                     bg={colors.purpleBackground}
                                     width='250px'
-                                    height='90px'
+                                    height='95px'
                                     display='flex'
                                     flexDirection='column'
                                     alignItems='center'
@@ -159,7 +185,17 @@ export const Step1 = ({}) => {
                                         Vault #{index}
                                     </Text>
                                     <Text fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={'-2px'} fontSize='25px'>
-                                        {parseFloat(formatUnits(lowestFeeReservationParams.amountsToReserve[i], selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name}
+                                        {parseFloat(
+                                            formatUnits(
+                                                lowestFeeReservationParams.amountsInμUsdtToReserve[i],
+                                                selectedInputAsset.decimals,
+                                            ),
+                                        ).toFixed(2)}{' '}
+                                        {selectedInputAsset.name}
+                                    </Text>
+                                    <Text fontSize='8px' color={colors.textGray} fontWeight='bold'>
+                                        {BigNumber.from(lowestFeeReservationParams.btcExchangeRates[i]).toString()}{' '}
+                                        μUsdt/Sat
                                     </Text>
                                 </Box>
                                 {i < lowestFeeReservationParams.vaultIndexesToReserve.length - 1 ? (
@@ -197,9 +233,23 @@ export const Step1 = ({}) => {
                 </Flex>
 
                 {/* ETH Payout Address */}
-                <Flex mt='20px' px='10px' bg='#1C1C1C' w='100%' h='78px' border='2px solid #565656' borderRadius={'10px'}>
+                <Flex
+                    mt='20px'
+                    px='10px'
+                    bg='#1C1C1C'
+                    w='100%'
+                    h='78px'
+                    border='2px solid #565656'
+                    borderRadius={'10px'}>
                     <Flex direction={'column'}>
-                        <Text color={colors.offWhite} fontSize={'13px'} mt='7px' ml='3px' letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                        <Text
+                            color={colors.offWhite}
+                            fontSize={'13px'}
+                            mt='7px'
+                            ml='3px'
+                            letterSpacing={'-1px'}
+                            fontWeight={'normal'}
+                            fontFamily={'Aux'}>
                             ETH Payout Address
                         </Text>
                         <Input
@@ -244,7 +294,13 @@ export const Step1 = ({}) => {
                     {isConnected ? 'Reserve Liquidity' : 'Connect Wallet'}
                 </Text>
             </Flex>
-            <ReservationStatusModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} status={reserveLiquidityStatus} error={reserveLiquidityError} txHash={txHash} />
+            <ReservationStatusModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                status={reserveLiquidityStatus}
+                error={reserveLiquidityError}
+                txHash={txHash}
+            />
         </>
     );
 };

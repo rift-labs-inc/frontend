@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish, ethers } from 'ethers';
 import { ComponentType, ReactElement } from 'react';
 
 export enum ReservationState {
@@ -9,15 +9,18 @@ export enum ReservationState {
     Completed,
 }
 
-export interface ReserveLiquidityParams {
+export type ReserveLiquidityParams = {
     totalSwapAmountInSats: number;
     vaultIndexesToReserve: number[];
-    amountsToReserve: BigNumberish[];
+    amountsInμUsdtToReserve: BigNumberish[];
+    amountsInSatsToBePaid: BigNumberish[];
+    btcPayoutLockingScripts: string[];
+    btcExchangeRates: BigNumberish[];
     ethPayoutAddress: string;
     expiredSwapReservationIndexes: number[];
-}
+};
 
-export interface SwapReservation {
+export type SwapReservation = {
     confirmationBlockHeight: number;
     reservationTimestamp: number;
     unlockTimestamp: number;
@@ -27,9 +30,11 @@ export interface SwapReservation {
     nonce: string;
     totalSwapAmount: BigNumber;
     prepaidFeeAmount: BigNumber;
-    vaultIndexes: BigNumber[];
+    proposedBlockHeight: BigNumber;
+    proposedBlockHash: string;
+    vaultIndexes: number[];
     amountsToReserve: BigNumber[];
-}
+};
 
 export type DepositVault = {
     initialBalance: BigNumberish;
@@ -71,6 +76,24 @@ export type LiqudityProvider = {
     depositVaultIndexes: number[];
 };
 
+export interface ProxyWalletLiquidityProvider {
+    amount: string;
+    btcExchangeRate: string;
+    lockingScriptHex: string;
+}
+
+export interface ProxyWalletSwapArgs {
+    orderNonceHex: string;
+    liquidityProviders: Array<ProxyWalletLiquidityProvider>;
+}
+
 export type AssetType = 'BTC' | 'USDT' | 'ETH' | 'WETH' | 'WBTC';
 
 export type CurrencyModalTitle = 'send' | 'receipt' | 'deposit' | null;
+
+export type LiquidityReservedEvent = {
+    reserver: string;
+    swapReservationIndex: string;
+    orderNonce: string;
+    event: ethers.Event;
+};

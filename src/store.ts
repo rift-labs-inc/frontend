@@ -47,7 +47,9 @@ type Store = {
 
     // swap flow
     swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed';
-    setSwapFlowState: (state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed') => void;
+    setSwapFlowState: (
+        state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed',
+    ) => void;
     depositFlowState: '0-not-started' | '1-confirm-deposit';
     setDepositFlowState: (state: '0-not-started' | '1-confirm-deposit') => void;
     btcInputSwapAmount: string;
@@ -72,6 +74,8 @@ type Store = {
     setCurrencyModalTitle: (x: CurrencyModalTitle) => void;
     ethPayoutAddress: string;
     setEthPayoutAddress: (address: string) => void;
+    bitcoinSwapTransactionHash: string;
+    setBitcoinSwapTransactionHash: (hash: string) => void;
 };
 
 export const useStore = create<Store>((set) => {
@@ -91,7 +95,7 @@ export const useStore = create<Store>((set) => {
             name: 'USDT',
             tokenAddress: '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0',
             decimals: 6,
-            riftExchangeContractAddress: '0x863dcd698e0B47D6E9CB4b9eAd09Da16f644EB2d',
+            riftExchangeContractAddress: '0xcB1527f434eEa0c4FF3Ec3C013E5A41423ff3c03',
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: 11155111,
             contractRpcURL: 'https://sepolia.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
@@ -105,7 +109,7 @@ export const useStore = create<Store>((set) => {
             light_text_color: '#327661',
             exchangeRateInTokenPerBTC: null,
             exchangeRateInSmallestTokenUnitPerSat: null, // always 18 decimals
-            priceUSD: null,
+            priceUSD: 1,
             totalAvailableLiquidity: BigNumber.from(0),
             connectedUserBalanceRaw: BigNumber.from(0),
             connectedUserBalanceFormatted: '0',
@@ -238,5 +242,7 @@ export const useStore = create<Store>((set) => {
         setCurrencyModalTitle: (x) => set({ currencyModalTitle: x }),
         ethPayoutAddress: '',
         setEthPayoutAddress: (ethPayoutAddress) => set({ ethPayoutAddress }),
+        bitcoinSwapTransactionHash: '',
+        setBitcoinSwapTransactionHash: (bitcoinSwapTransactionHash) => set({ bitcoinSwapTransactionHash }),
     };
 });

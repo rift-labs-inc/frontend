@@ -1,85 +1,144 @@
 import React from 'react';
 import { Flex, Text, Spacer } from '@chakra-ui/react';
-import useWindowSize from '../../hooks/useWindowSize';
 import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
 import CircleFlex from '../other/CircleFlex';
-
-// Define an enum for swap states
-enum SwapState {
-    ReserveLiquidity = 1,
-    SendBitcoin = 2,
-    ReceiveEthereum = 3,
-    Completed = 4,
-}
-
-// Custom hook for managing swap state
-const useSwapProcess = () => {
-    const [currentState, setCurrentState] = React.useState<SwapState>(SwapState.ReserveLiquidity);
-
-    const moveToNextState = () => {
-        setCurrentState((prevState) => Math.min(prevState + 1, SwapState.Completed) as SwapState);
-    };
-
-    return { currentState, moveToNextState };
-};
-
-// SwapStep component
-const SwapStep: React.FC<{ step: SwapState; title: string; currentState: SwapState }> = ({ step, title, currentState }) => {
-    const isCompleted = currentState > step;
-    const isActive = currentState === step;
-
-    const getColor = () => {
-        if (isCompleted || isActive) return colors.greenOutline;
-        return colors.textGray;
-    };
-
-    return (
-        <Flex direction='column'>
-            <Text fontFamily={FONT_FAMILIES.AUX_MONO} color={getColor()} letterSpacing={'-2px'}>
-                STEP {step}
-            </Text>
-            <Text fontFamily={FONT_FAMILIES.NOSTROMO} color={getColor()} fontSize={'22px'}>
-                {title}
-            </Text>
-        </Flex>
-    );
-};
+import { useStore } from '../../store';
 
 export const SwapStatusTimeline: React.FC = () => {
-    const { width } = useWindowSize();
-    const isMobileView = width < 600;
-    const { currentState, moveToNextState } = useSwapProcess();
+    const swapFlowState = useStore((state) => state.swapFlowState);
 
     return (
         <Flex
             width='100%'
-            bg={'#0D1610'}
+            bg='#0D1610'
             border='3px solid'
-            borderColor={'#3D5A44'}
-            borderRadius={'25px'}
+            borderColor='#3D5A44'
+            borderRadius='25px'
             h='140px'
             direction='column'
-            px={'30px'}
+            px='30px'
             fontFamily={FONT_FAMILIES.AUX_MONO}
-            fontWeight={'normal'}
+            fontWeight='normal'
             py='15px'>
             <Flex w='100%'>
-                <SwapStep step={SwapState.ReserveLiquidity} title='RESERVE LIQUIDITY' currentState={currentState} />
-                <Spacer />
-                <SwapStep step={SwapState.SendBitcoin} title='SEND BITCOIN' currentState={currentState} />
-                <Spacer />
-                <SwapStep step={SwapState.ReceiveEthereum} title='RECEIVE ETHEREUM' currentState={currentState} />
-            </Flex>
-            <Flex mt='10px'>
-                <Flex zIndex={2} mt='-8px'>
-                    <CircleFlex state='completed' />
+                {/* ReserveLiquidity */}
+                <Flex direction='column'>
+                    <Text
+                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                        color={swapFlowState !== '0-not-started' ? colors.greenOutline : colors.textGray}
+                        letterSpacing='-2px'>
+                        STEP 1
+                    </Text>
+                    <Text
+                        fontFamily={FONT_FAMILIES.NOSTROMO}
+                        color={swapFlowState !== '0-not-started' ? colors.greenOutline : colors.textGray}
+                        fontSize='22px'>
+                        RESERVE LIQUIDITY
+                    </Text>
                 </Flex>
-                <Flex mt='10px' h='10px' w='37.7%' mx='-5px' bg={colors.greenBackground}></Flex>
-                <CircleFlex state='not-started' />
-                <Flex mt='10px' h='10px' w='30.2%' mx='-5px' bg={colors.offBlackLighter2}></Flex>
-                <CircleFlex state='not-started' />
-                <Flex mt='10px' h='10px' w='25%' mx='-5px' bg={colors.offBlackLighter2}></Flex>
+                <Spacer />
+
+                {/* SendBitcoin */}
+                <Flex direction='column'>
+                    <Text
+                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                        color={
+                            swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity'
+                                ? colors.greenOutline
+                                : colors.textGray
+                        }
+                        letterSpacing='-2px'>
+                        STEP 2
+                    </Text>
+                    <Text
+                        fontFamily={FONT_FAMILIES.NOSTROMO}
+                        color={
+                            swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity'
+                                ? colors.greenOutline
+                                : colors.textGray
+                        }
+                        fontSize='22px'>
+                        SEND BITCOIN
+                    </Text>
+                </Flex>
+                <Spacer />
+
+                {/* ReceiveUSDT */}
+                <Flex direction='column' mr='70px'>
+                    <Text
+                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                        color={
+                            swapFlowState === '3-receive-eth' || swapFlowState === '4-completed'
+                                ? colors.greenOutline
+                                : colors.textGray
+                        }
+                        letterSpacing='-2px'>
+                        STEP 3
+                    </Text>
+                    <Text
+                        fontFamily={FONT_FAMILIES.NOSTROMO}
+                        color={
+                            swapFlowState === '3-receive-eth' || swapFlowState === '4-completed'
+                                ? colors.greenOutline
+                                : colors.textGray
+                        }
+                        fontSize='22px'>
+                        RECEIVE USDT
+                    </Text>
+                </Flex>
+            </Flex>
+
+            <Flex mt='10px'>
+                <Flex zIndex={2} mt={swapFlowState === '1-reserve-liquidity' ? '0px' : '-8px'}>
+                    <CircleFlex state={swapFlowState !== '1-reserve-liquidity' ? 'completed' : 'current'} />
+                </Flex>
+                <Flex
+                    mt='10px'
+                    h='10px'
+                    w='37.7%'
+                    mx='-5px'
+                    bg={swapFlowState !== '0-not-started' ? colors.greenBackground : colors.offBlackLighter2}></Flex>
+                <Flex
+                    zIndex={2}
+                    mt={swapFlowState === '1-reserve-liquidity' || swapFlowState === '0-not-started' ? '0px' : '-9px'}>
+                    <CircleFlex
+                        state={
+                            swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity'
+                                ? 'completed'
+                                : 'not-started'
+                        }
+                    />
+                </Flex>
+                <Flex
+                    mt='10px'
+                    h='10px'
+                    w='30.2%'
+                    mx='-5px'
+                    bg={
+                        swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity'
+                            ? colors.greenBackground
+                            : colors.offBlackLighter2
+                    }></Flex>
+                <Flex zIndex={2} mt={swapFlowState !== '3-receive-eth' ? '0px' : '-9px'}>
+                    <CircleFlex
+                        state={
+                            swapFlowState === '3-receive-eth' || swapFlowState === '4-completed'
+                                ? 'completed'
+                                : 'not-started'
+                        }
+                    />
+                </Flex>
+                <Flex
+                    mt='10px'
+                    h='10px'
+                    w='25%'
+                    mx='-5px'
+                    bg={
+                        swapFlowState === '3-receive-eth' || swapFlowState === '4-completed'
+                            ? colors.greenBackground
+                            : colors.offBlackLighter2
+                    }></Flex>
             </Flex>
         </Flex>
     );

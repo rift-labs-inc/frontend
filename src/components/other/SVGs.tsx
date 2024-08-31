@@ -3,7 +3,16 @@ import { CSSProperties } from 'react';
 export const WBTCSVG = () => {
     return (
         <svg width='100' height='20' viewBox='0 0 200 46' fill='none' xmlns='http://www.w3.org/2000/svg'>
-            <rect x='17.2437' y='3.24368' width='134.513' height='39.5126' rx='10.5004' fill='url(#paint0_linear_4723_44)' stroke='#FFA04C' strokeWidth='2.48735' />
+            <rect
+                x='17.2437'
+                y='3.24368'
+                width='134.513'
+                height='39.5126'
+                rx='10.5004'
+                fill='url(#paint0_linear_4723_44)'
+                stroke='#FFA04C'
+                strokeWidth='2.48735'
+            />
             <path
                 d='M45.0827 28.4175C42.0253 40.6832 29.5982 48.1393 17.3501 45.0816C5.08408 42.0242 -2.37206 29.5976 0.685591 17.3497C3.74306 5.08408 16.1521 -2.37206 28.4181 0.685592C40.6662 3.72518 48.1404 16.1517 45.0827 28.4175Z'
                 fill='url(#paint1_linear_4723_44)'
@@ -17,11 +26,23 @@ export const WBTCSVG = () => {
                 fill='white'
             />
             <defs>
-                <linearGradient id='paint0_linear_4723_44' x1='84.5' y1='2' x2='84.5' y2='44' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint0_linear_4723_44'
+                    x1='84.5'
+                    y1='2'
+                    x2='84.5'
+                    y2='44'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stopColor='#C16C21' />
                     <stop offset='1' stopColor='#C46816' />
                 </linearGradient>
-                <linearGradient id='paint1_linear_4723_44' x1='2287.13' y1='-1.09841' x2='2287.13' y2='4576.27' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint1_linear_4723_44'
+                    x1='2287.13'
+                    y1='-1.09841'
+                    x2='2287.13'
+                    y2='4576.27'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stopColor='#F9AA4B' />
                     <stop offset='1' stopColor='#F7931A' />
                 </linearGradient>
@@ -33,7 +54,16 @@ export const WBTCSVG = () => {
 export const BTCSVG = ({ width = '100', height = '20', viewBox = '0 0 200 46' }) => {
     return (
         <svg width={width} height={height} viewBox={viewBox} fill='none' xmlns='http://www.w3.org/2000/svg'>
-            <rect x='17.5991' y='2.90579' width='110.58' height='40.1668' rx='10.5004' fill='url(#paint0_linear_4628_619)' stroke='#FFA04C' strokeWidth='2.48735' />
+            <rect
+                x='17.5991'
+                y='2.90579'
+                width='110.58'
+                height='40.1668'
+                rx='10.5004'
+                fill='url(#paint0_linear_4628_619)'
+                stroke='#FFA04C'
+                strokeWidth='2.48735'
+            />
             <path
                 d='M45.8659 28.4175C42.8085 40.6832 30.3814 48.1393 18.1333 45.0816C5.86728 42.0242 -1.58885 29.5976 1.46879 17.3497C4.52626 5.08408 16.9353 -2.37206 29.2013 0.685592C41.4494 3.72518 48.9236 16.1517 45.8659 28.4175Z'
                 fill='url(#paint1_linear_4628_619)'
@@ -47,11 +77,23 @@ export const BTCSVG = ({ width = '100', height = '20', viewBox = '0 0 200 46' })
                 fill='white'
             />
             <defs>
-                <linearGradient id='paint0_linear_4628_619' x1='72.8891' y1='1.66211' x2='72.8891' y2='44.3162' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint0_linear_4628_619'
+                    x1='72.8891'
+                    y1='1.66211'
+                    x2='72.8891'
+                    y2='44.3162'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stopColor='#C16C21' />
                     <stop offset='1' stopColor='#C46816' />
                 </linearGradient>
-                <linearGradient id='paint1_linear_4628_619' x1='2287.91' y1='-1.09841' x2='2287.91' y2='4576.27' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint1_linear_4628_619'
+                    x1='2287.91'
+                    y1='-1.09841'
+                    x2='2287.91'
+                    y2='4576.27'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stopColor='#F9AA4B' />
                     <stop offset='1' stopColor='#F7931A' />
                 </linearGradient>
@@ -63,7 +105,16 @@ export const BTCSVG = ({ width = '100', height = '20', viewBox = '0 0 200 46' })
 export const ETHSVG = ({ width = '100', height = '20', viewBox = '0 0 200 46' }) => {
     return (
         <svg width={width} height={height} viewBox={viewBox} fill='none' xmlns='http://www.w3.org/2000/svg'>
-            <rect x='18.2759' y='2.91067' width='108.549' height='40.8438' rx='10.5004' fill='url(#paint0_linear_4628_625)' stroke='#627EEA' strokeWidth='2.48735' />
+            <rect
+                x='18.2759'
+                y='2.91067'
+                width='108.549'
+                height='40.8438'
+                rx='10.5004'
+                fill='url(#paint0_linear_4628_625)'
+                stroke='#627EEA'
+                strokeWidth='2.48735'
+            />
 
             <path
                 d='M22.8836 46.0002C35.5219 46.0002 45.7673 35.7548 45.7673 23.1166C45.7673 10.4783 35.5219 0.23291 22.8836 0.23291C10.2454 0.23291 0 10.4783 0 23.1166C0 35.7548 10.2454 46.0002 22.8836 46.0002Z'
@@ -80,7 +131,13 @@ export const ETHSVG = ({ width = '100', height = '20', viewBox = '0 0 200 46' })
                 fill='white'
             />
             <defs>
-                <linearGradient id='paint0_linear_4628_625' x1='72.5503' y1='1.66699' x2='72.5503' y2='44.9982' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint0_linear_4628_625'
+                    x1='72.5503'
+                    y1='1.66699'
+                    x2='72.5503'
+                    y2='44.9982'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stopColor='#2E40B7' />
                     <stop offset='1' stopColor='#2E45B0' />
                 </linearGradient>
@@ -178,7 +235,10 @@ export const GreenCheck = () => {
     return (
         <svg width='14' height='14' viewBox='0 0 31 31' fill='none' xmlns='http://www.w3.org/2000/svg'>
             <circle cx='15.5' cy='15.5' r='15.5' fill='#238739' />
-            <path d='M12.9752 17.9367L9.83105 14.7809L8.48096 16.136L12.9752 20.6469L22.2435 11.3443L20.8934 9.98926L12.9752 17.9367Z' fill='#E6E6E6' />
+            <path
+                d='M12.9752 17.9367L9.83105 14.7809L8.48096 16.136L12.9752 20.6469L22.2435 11.3443L20.8934 9.98926L12.9752 17.9367Z'
+                fill='#E6E6E6'
+            />
         </svg>
     );
 };
@@ -217,7 +277,13 @@ export const ETH_Logo = () => {
             <path d='M68.5699 86.2605L99.7293 68.1684L68.5699 54.2532V86.2605Z' fill='white' fillOpacity='0.2' />
             <path d='M37.4067 68.1684L68.5703 86.2605V54.2532L37.4067 68.1684Z' fill='white' fillOpacity='0.602' />
             <defs>
-                <linearGradient id='paint0_linear_110_1894' x1='6646.4' y1='-2.4384' x2='6646.4' y2='13299.4' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint0_linear_110_1894'
+                    x1='6646.4'
+                    y1='-2.4384'
+                    x2='6646.4'
+                    y2='13299.4'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stopColor='#F9AA4B' />
                     <stop offset='1' stopColor='#F7931A' />
                 </linearGradient>
@@ -243,7 +309,10 @@ export const USDT_Icon = ({ width = '80', height = '80', viewBox = '0 0 80 80' }
     return (
         <svg width={width} height={height} viewBox={viewBox} fill='none' xmlns='http://www.w3.org/2000/svg'>
             <g clipPath='url(#clip0_1565_51)'>
-                <path d='M40 80C62.0914 80 80 62.0914 80 40C80 17.9086 62.0914 0 40 0C17.9086 0 0 17.9086 0 40C0 62.0914 17.9086 80 40 80Z' fill='#26A17B' />
+                <path
+                    d='M40 80C62.0914 80 80 62.0914 80 40C80 17.9086 62.0914 0 40 0C17.9086 0 0 17.9086 0 40C0 62.0914 17.9086 80 40 80Z'
+                    fill='#26A17B'
+                />
                 <path
                     fillRule='evenodd'
                     clipRule='evenodd'
@@ -272,7 +341,13 @@ export const BTC_Logo = ({ width = '133', height = '133', viewBox = '0 0 133 133
                 fill='white'
             />
             <defs>
-                <linearGradient id='paint0_linear_110_1891' x1='6646.41' y1='-3.192' x2='6646.41' y2='13298.7' gradientUnits='userSpaceOnUse'>
+                <linearGradient
+                    id='paint0_linear_110_1891'
+                    x1='6646.41'
+                    y1='-3.192'
+                    x2='6646.41'
+                    y2='13298.7'
+                    gradientUnits='userSpaceOnUse'>
                     <stop stopColor='#F9AA4B' />
                     <stop offset='1' stopColor='#F7931A' />
                 </linearGradient>
@@ -284,7 +359,16 @@ export const BTC_Logo = ({ width = '133', height = '133', viewBox = '0 0 133 133
 export const BTC_Tag = ({ width = '228', height = '81', viewBox = '0 0 228 81' }) => {
     return (
         <svg width={width} height={height} viewBox={viewBox} fill='none' xmlns='http://www.w3.org/2000/svg'>
-            <rect x='30.0502' y='5.54243' width='195.39' height='70.0684' rx='18.2255' fill='url(#paint0_linear_1572_152)' stroke='#FFA04C' stroke-width='4.31728' />
+            <rect
+                x='30.0502'
+                y='5.54243'
+                width='195.39'
+                height='70.0684'
+                rx='18.2255'
+                fill='url(#paint0_linear_1572_152)'
+                stroke='#FFA04C'
+                strokeWidth='4.31728'
+            />
             {/* <path
                 d='M81.5542 49.8238C76.0233 71.2638 53.5428 84.2969 31.3861 78.9522C9.19705 73.6079 -4.29103 51.8866 1.24023 30.4775C6.77116 9.03748 29.2189 -3.99566 51.408 1.34903C73.5647 6.66216 87.0855 28.3834 81.5542 49.8238Z'
                 fill='url(#paint1_linear_1572_152)'
@@ -298,13 +382,25 @@ export const BTC_Tag = ({ width = '228', height = '81', viewBox = '0 0 228 81' }
                 fill='white'
             />
             <defs>
-                <linearGradient id='paint0_linear_1572_152' x1='127.745' y1='3.38379' x2='127.745' y2='77.7695' gradientUnits='userSpaceOnUse'>
-                    <stop stop-color='#C16C21' />
-                    <stop offset='1' stop-color='#C46816' />
+                <linearGradient
+                    id='paint0_linear_1572_152'
+                    x1='127.745'
+                    y1='3.38379'
+                    x2='127.745'
+                    y2='77.7695'
+                    gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#C16C21' />
+                    <stop offset='1' stopColor='#C46816' />
                 </linearGradient>
-                <linearGradient id='paint1_linear_1572_152' x1='4137.39' y1='-1.76937' x2='4137.39' y2='7999.35' gradientUnits='userSpaceOnUse'>
-                    <stop stop-color='#F9AA4B' />
-                    <stop offset='1' stop-color='#F7931A' />
+                <linearGradient
+                    id='paint1_linear_1572_152'
+                    x1='4137.39'
+                    y1='-1.76937'
+                    x2='4137.39'
+                    y2='7999.35'
+                    gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#F9AA4B' />
+                    <stop offset='1' stopColor='#F7931A' />
                 </linearGradient>
             </defs>
         </svg>
@@ -314,16 +410,28 @@ export const BTC_Tag = ({ width = '228', height = '81', viewBox = '0 0 228 81' }
 export const USDT_Tag = ({ width = '250', height = '80', viewBox = '0 0 250 80' }) => {
     return (
         <svg width={width} height={height} viewBox={viewBox} fill='none' xmlns='http://www.w3.org/2000/svg'>
-            <rect x='33.1692' y='5.16923' width='214.662' height='70.6615' rx='18.3149' fill='#125641' stroke='#26A17B' stroke-width='4.33846' />
+            <rect
+                x='33.1692'
+                y='5.16923'
+                width='214.662'
+                height='70.6615'
+                rx='18.3149'
+                fill='#125641'
+                stroke='#26A17B'
+                strokeWidth='4.33846'
+            />
             <path
                 d='M125.942 26.4L126.436 26.894V49.2L122.636 53H106.22L102.42 49.2V26.894L102.914 26.4H106.866L107.36 26.894V46.806L109.146 48.592H119.71L121.496 46.806V26.894L121.99 26.4H125.942ZM134.892 53L134.398 52.506L134.892 49.086L135.462 48.592H149.902L151.612 46.882V43.766L149.902 42.056H138.198L134.398 38.256V30.2L138.198 26.4H156.058L156.552 26.894L156.058 30.314L155.488 30.808H141.048L139.338 32.518V35.976L141.048 37.686H152.752L156.552 41.486V49.2L152.752 53H134.892ZM165.014 53L164.52 52.506V26.856L165.014 26.4H184.736L188.536 30.2V49.2L184.736 53H165.014ZM169.46 48.592H181.886L183.596 46.882V32.518L181.886 30.808H169.46V48.592ZM195.852 30.846L195.358 26.894L195.852 26.4H218.044L218.5 26.894L218.006 30.846L217.436 31.34H209.418V52.544L208.924 53.038H204.972L204.478 52.544V31.34H196.422L195.852 30.846Z'
                 fill='white'
             />
-            <g clip-path='url(#clip0_1565_55)'>
-                <path d='M40 80C62.0914 80 80 62.0914 80 40C80 17.9086 62.0914 0 40 0C17.9086 0 0 17.9086 0 40C0 62.0914 17.9086 80 40 80Z' fill='#26A17B' />
+            <g clipPath='url(#clip0_1565_55)'>
                 <path
-                    fill-rule='evenodd'
-                    clip-rule='evenodd'
+                    d='M40 80C62.0914 80 80 62.0914 80 40C80 17.9086 62.0914 0 40 0C17.9086 0 0 17.9086 0 40C0 62.0914 17.9086 80 40 80Z'
+                    fill='#26A17B'
+                />
+                <path
+                    fillRule='evenodd'
+                    clipRule='evenodd'
                     d='M44.805 43.4578V43.4529C44.53 43.4729 43.1125 43.5579 39.95 43.5579C37.425 43.5579 35.6475 43.4829 35.0225 43.4529V43.4604C25.3025 43.0329 18.0475 41.3404 18.0475 39.3154C18.0475 37.2904 25.3025 35.6004 35.0225 35.1654V41.7753C35.6575 41.8203 37.4775 41.9279 39.9925 41.9279C43.01 41.9279 44.5225 41.8029 44.805 41.7779V35.1704C54.505 35.6029 61.7425 37.2954 61.7425 39.3154C61.7425 41.3404 54.505 43.0278 44.805 43.4578ZM44.805 34.4829V28.5679H58.34V19.5479H21.4875V28.5679H35.0225V34.4804C24.0225 34.9854 15.75 37.1654 15.75 39.7754C15.75 42.3854 24.0225 44.5629 35.0225 45.0704V64.0254H44.805V45.0653C55.7875 44.5603 64.04 42.3829 64.04 39.7754C64.04 37.1679 55.7875 34.9904 44.805 34.4829Z'
                     fill='white'
                 />
@@ -349,8 +457,23 @@ export const WETH_Tag = ({
     style?: CSSProperties;
 }) => {
     return (
-        <svg width={width} height={height} viewBox={viewBox} fill='none' xmlns='http://www.w3.org/2000/svg' style={style}>
-            <rect x='34.1054' y='5.76018' width='222.334' height='71.3418' rx='17.5368' fill='#3B3D4A' stroke='#646C8C' stroke-width='4.15414' />
+        <svg
+            width={width}
+            height={height}
+            viewBox={viewBox}
+            fill='none'
+            xmlns='http://www.w3.org/2000/svg'
+            style={style}>
+            <rect
+                x='34.1054'
+                y='5.76018'
+                width='222.334'
+                height='71.3418'
+                rx='17.5368'
+                fill='#3B3D4A'
+                stroke='#646C8C'
+                strokeWidth='4.15414'
+            />
             <path
                 d='M81.913 50.3689C76.3577 71.8089 53.7784 84.842 31.5242 79.4973C9.23751 74.153 -4.30991 52.4317 1.24568 31.0226C6.80095 9.58264 29.3475 -3.45049 51.6342 1.8942C73.8884 7.20732 87.4686 28.9286 81.913 50.3689Z'
                 fill='url(#paint0_linear_1572_129)'
@@ -374,9 +497,15 @@ export const WETH_Tag = ({
                 fill='white'
             />
             <defs>
-                <linearGradient id='paint0_linear_1572_129' x1='4155.59' y1='-1.2242' x2='4155.59' y2='7999.89' gradientUnits='userSpaceOnUse'>
-                    <stop stop-color='#F9AA4B' />
-                    <stop offset='1' stop-color='#F7931A' />
+                <linearGradient
+                    id='paint0_linear_1572_129'
+                    x1='4155.59'
+                    y1='-1.2242'
+                    x2='4155.59'
+                    y2='7999.89'
+                    gradientUnits='userSpaceOnUse'>
+                    <stop stopColor='#F9AA4B' />
+                    <stop offset='1' stopColor='#F7931A' />
                 </linearGradient>
             </defs>
         </svg>
