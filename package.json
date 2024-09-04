@@ -3,7 +3,8 @@
   "scripts": {
     "dev": "next",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "sync": "git submodule update --remote --recursive && chmod +x ./populate_artifacts.sh && ./populate_artifacts.sh"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.0.2",
