@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ethers, BigNumber, BigNumberish } from 'ethers';
-import { ERC20ABI, protocolFeeDenominator, protocolFeePercentage } from '../../utils/constants'; // Make sure this import is correct
+import { ERC20ABI, protocolFeeDenominator, protocolFeePercentage } from '../../utils/constants';
 import { useStore } from '../../store';
 import { ProxyWalletLiquidityProvider } from '../../types';
 import {
@@ -20,6 +20,7 @@ export enum ReserveStatus {
     WaitingForTokenApproval = 'waitingForTokenApproval',
     ApprovalPending = 'approvalPending',
     ReservingLiquidity = 'reservingLiquidity',
+    ReservationPending = 'reservationPending',
     Confirmed = 'confirmed',
     Error = 'error',
 }
@@ -72,12 +73,11 @@ export function useReserveLiquidity() {
         async (params: ReserveLiquidityParams) => {
             if (!isClient) return;
 
-            setStatus(ReserveStatus.WaitingForWalletConfirmation);
-            setError(null);
-            setTxHash(null);
-
             try {
-                // create contract instances
+                setStatus(ReserveStatus.WaitingForWalletConfirmation);
+                setError(null);
+                setTxHash(null);
+
                 const tokenContract = new ethers.Contract(params.tokenAddress, ERC20ABI, params.signer);
                 const riftExchangeContractInstance = new ethers.Contract(
                     params.riftExchangeContract,
@@ -85,13 +85,11 @@ export function useReserveLiquidity() {
                     params.signer,
                 );
 
-                // calculate total amount to reserve
                 const totalAmountToReserve = params.amountsToReserve.reduce(
                     (acc, amount) => BigNumber.from(acc).add(amount),
                     BigNumber.from(0),
                 );
 
-                // check if user token allowance > reservation fee
                 const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContract);
                 const protocolFee = BigNumber.from(totalAmountToReserve)
                     .mul(protocolFeePercentage)
@@ -108,7 +106,6 @@ export function useReserveLiquidity() {
                     await approveTx.wait();
                 }
 
-                setStatus(ReserveStatus.ReservingLiquidity);
                 const reserveTx = await riftExchangeContractInstance.reserveLiquidity(
                     params.vaultIndexesToReserve,
                     params.amountsToReserve,
@@ -117,10 +114,10 @@ export function useReserveLiquidity() {
                 );
 
                 setTxHash(reserveTx.hash);
+                setStatus(ReserveStatus.ReservationPending);
                 await reserveTx.wait();
                 setStatus(ReserveStatus.Confirmed);
 
-                // LISTEN FOR "LiquidityReserved" CONTRACT EVENT EMIT HERE
                 const reservationDetails = await getMatchingLiquidityReserved(
                     ethersRpcProvider,
                     selectedInputAsset.riftExchangeContractAddress,
@@ -130,7 +127,6 @@ export function useReserveLiquidity() {
 
                 console.log('reservationDetails', reservationDetails);
 
-                // create unique url for the swap
                 const reservationUri = createReservationUrl(
                     reservationDetails.orderNonce,
                     reservationDetails.swapReservationIndex,
@@ -139,11 +135,9 @@ export function useReserveLiquidity() {
                 try {
                     handleNavigation(`/swap/${reservationUri}`);
                 } catch (e) {
-                    console.log(e);
+                    console.error('Navigation error:', e);
                 }
-                // TODO: how can we make a a dynamic page for the above url and get details about the swap from the url?
 
-                // ---------- CREATE swap args for proxy wallet ---------- //
                 const createLiquidityProvider = (
                     amount: string,
                     btcExchangeRate: string,
@@ -171,7 +165,7 @@ export function useReserveLiquidity() {
                     },
                 );
 
-                console.log('please liquidityProviders:', liquidityProviders);
+                console.log('liquidityProviders:', liquidityProviders);
 
                 const reservationNonce = reservationDetails.orderNonce;
 
@@ -180,11 +174,11 @@ export function useReserveLiquidity() {
                     liquidityProviders: liquidityProviders,
                 };
 
-                console.log('please riftSwapArgs:', riftSwapArgs);
+                console.log('riftSwapArgs:', riftSwapArgs);
                 try {
                     window.rift.createRiftSwap(riftSwapArgs);
                 } catch (e) {
-                    console.log(e);
+                    console.error('Error creating Rift swap:', e);
                 }
             } catch (err) {
                 console.error('Error in reserveLiquidity:', err);
@@ -192,7 +186,7 @@ export function useReserveLiquidity() {
                 setStatus(ReserveStatus.Error);
             }
         },
-        [isClient],
+        [isClient, userEthAddress, selectedInputAsset, lowestFeeReservationParams, ethersRpcProvider, handleNavigation],
     );
 
     if (!isClient) {
