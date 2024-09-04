@@ -18,7 +18,6 @@ import { colors } from '../../utils/colors';
 import { GooSpinner } from 'react-spinners-kit';
 import { CheckmarkCircle, AlertCircleOutline } from 'react-ionicons';
 import { HiOutlineExternalLink } from 'react-icons/hi';
-import { IoMdSettings } from 'react-icons/io';
 import { etherScanBaseUrl } from '../../utils/constants';
 import { useStore } from '../../store';
 
@@ -33,22 +32,25 @@ interface ReservationStatusModalProps {
 const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
     isOpen = false,
     onClose,
-    status = ReserveStatus.WaitingForWalletConfirmation,
+    status = ReserveStatus.Idle,
     error = null,
     txHash = null,
 }) => {
     const isCompleted = status === ReserveStatus.Confirmed;
     const isError = status === ReserveStatus.Error;
-    const isLoading = !isCompleted && !isError;
-    const showManageReservationScreen = useStore((state) => state.showManageReservationScreen);
-    const setShowManageReservationScreen = useStore((state) => state.setShowManageReservationScreen);
+    const isLoading = ![ReserveStatus.Idle, ReserveStatus.Confirmed, ReserveStatus.Error].includes(status);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
-    const CheckmarkCircleComponent = (props) => <CheckmarkCircle {...props} />;
 
     const getStatusMessage = () => {
         switch (status) {
+            case ReserveStatus.Idle:
+                return 'Ready to reserve liquidity';
             case ReserveStatus.WaitingForWalletConfirmation:
                 return 'Waiting for wallet confirmation...';
+            case ReserveStatus.WaitingForTokenApproval:
+                return 'Waiting for token approval...';
+            case ReserveStatus.ApprovalPending:
+                return 'Token approval pending...';
             case ReserveStatus.ReservingLiquidity:
                 return 'Reserving liquidity...';
             case ReserveStatus.Confirmed:
@@ -59,7 +61,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
                 }
                 return `Error: ${error}`;
             default:
-                return 'Processing...';
+                return 'Confirming...';
         }
     };
 
@@ -96,26 +98,26 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
                     <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
                         {isLoading && <GooSpinner size={100} color={colors.purpleBorder} loading={true} />}
                         <Spacer />
-                        {!isCompleted && (
-                            <Text
-                                fontSize='12px'
-                                w='60%'
-                                mt='25px'
-                                mb='0px'
-                                color={colors.textGray}
-                                fontWeight={'normal'}
-                                textAlign='center'>
-                                Please confirm the transaction in your wallet
-                            </Text>
-                        )}
+                        <Text
+                            fontSize='12px'
+                            w={'100%'}
+                            mt='25px'
+                            mb='0px'
+                            color={colors.textGray}
+                            fontWeight={'normal'}
+                            textAlign='center'>
+                            {status != ReserveStatus.Confirmed &&
+                                status != ReserveStatus.Error &&
+                                (status === ReserveStatus.WaitingForWalletConfirmation ||
+                                status === ReserveStatus.ApprovalPending ||
+                                status === ReserveStatus.ReservationPending
+                                    ? 'Awaiting blockchain confirmation...'
+                                    : 'Please confirm the transaction in your wallet')}
+                        </Text>
                         <Flex direction={'column'} align={'center'} w='100%' justify={'center'}>
                             {isCompleted && (
-                                <Flex mt='6px' ml='4px'>
-                                    <CheckmarkCircleComponent
-                                        width='38px'
-                                        height={'38px'}
-                                        color={colors.greenOutline}
-                                    />
+                                <Flex mt='-20px' ml='4px'>
+                                    <CheckmarkCircle width='38px' height={'38px'} color={colors.greenOutline} />
                                 </Flex>
                             )}
                             {isError && (
@@ -127,7 +129,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
                                 overflowWrap={'anywhere'}
                                 color={isCompleted ? colors.greenOutline : colors.offWhite}
                                 fontSize={getStatusMessage().length > 40 ? '12px' : '20px'}
-                                mt={isLoading ? '20px' : isCompleted ? '5px' : '20px'}
+                                mt={isLoading ? '25px' : isCompleted ? '5px' : '20px'}
                                 fontWeight='normal'
                                 textAlign='center'>
                                 {getStatusMessage()}
@@ -138,17 +140,18 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
                                 <Button
                                     bg={colors.offBlackLighter}
                                     borderWidth={'2px'}
-                                    borderColor={colors.offBlackLighter2}
+                                    borderColor={colors.borderGrayLight}
                                     _hover={{ bg: colors.borderGray }}
                                     borderRadius='md'
                                     onClick={() => window.open(getEtherscanUrl(), '_blank')}
                                     isDisabled={!txHash}>
                                     <Flex mt='-4px ' mr='8px'>
-                                        <HiOutlineExternalLink size={'17px'} color={colors.textGray} />
+                                        <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
                                     </Flex>
                                     <Text
                                         fontSize='14px'
-                                        color={colors.textGray}
+                                        color={colors.offerWhite}
+                                        fontFamily={FONT_FAMILIES.NOSTROMO}
                                         cursor={'pointer'}
                                         fontWeight={'normal'}>
                                         View on Etherscan
@@ -162,16 +165,12 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
                                     borderColor={colors.purpleBorder}
                                     fontWeight={'normal'}
                                     onClick={() => {
-                                        // setShowManageReservationScreen(true);
                                         setSwapFlowState('2-send-bitcoin');
                                         onClose();
                                     }}
                                     _hover={{ bg: colors.purpleHover }}
                                     borderRadius='md'>
-                                    {/* <Flex mt='-2px ' mr='8px'>
-                                        <IoMdSettings size={'17px'} color={colors.offWhite} />
-                                    </Flex> */}
-                                    <Text fontSize='14px' color={colors.offWhite}>
+                                    <Text fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                                         Continue
                                     </Text>
                                 </Button>

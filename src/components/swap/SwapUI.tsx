@@ -484,7 +484,7 @@ export const SwapUI = () => {
                             color={colors.offWhite}
                             bg={'#121212'}
                             fontSize={'12px'}
-                            label='Exchange rate includes the hypernode, protocol, and LP Fees. There are no additional or hidden fees.'
+                            label='Exchange rate includes the hypernode, protocol, and reservation fees. There are no additional or hidden fees.'
                             aria-label='A tooltip'>
                             <Flex ml='8px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
                                 <Text

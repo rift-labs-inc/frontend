@@ -8,7 +8,7 @@ import { FONT_FAMILIES } from '../utils/font';
 import BlueText from '../components/other/BlueText';
 import OrangeText from '../components/other/OrangeText';
 import React, { useEffect } from 'react';
-import { SwapFlow } from '../components/swap/ReserveLiquidityPage';
+import { ReserveLiquidityPage } from '../components/swap/ReserveLiquidityPage';
 import { useStore } from '../store';
 import { SwapContainer } from '../components/swap/SwapContainer';
 import { DepositUI } from '../components/swap/DepositUI';
@@ -75,7 +75,7 @@ const Home = () => {
                     w='100%'
                     mt={swapFlowState === '0-not-started' ? '19vh' : '100px'}>
                     {swapFlowState != '0-not-started' ? (
-                        <SwapFlow />
+                        <ReserveLiquidityPage />
                     ) : (
                         // {/* LOGOS & TEXT */}
                         <>
