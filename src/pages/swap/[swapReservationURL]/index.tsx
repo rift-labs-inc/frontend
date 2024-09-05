@@ -23,6 +23,9 @@ import QRCode from 'qrcode.react';
 import swapReservationsAggregatorABI from '../../../abis/SwapReservationsAggregator.json';
 import { getDepositVaults, getSwapReservations } from '../../../utils/contractReadFunctions';
 import { BigNumber } from 'ethers';
+import depositVaultAggregatorABI from '../../../abis/DepositVaultsAggregator.json';
+import { parseUnits } from 'viem';
+import { bitcoin } from 'bitcoinjs-lib/src/networks';
 
 declare global {
     interface Window {
@@ -121,74 +124,79 @@ const ReservationDetails = () => {
     // fetch reservation details from url
     useEffect(() => {
         const fetchReservationDetails = async () => {
-            console.log('swapReservationURL', swapReservationURL);
-
             if (swapReservationURL) {
                 try {
+                    // [0] decode swap reservaiton details from url
                     const reservationDetails = decodeReservationUrl(swapReservationURL as string);
-                    console.log(reservationDetails);
 
-                    // fetch reservation details
-                    const bytecode = swapReservationsAggregatorABI.bytecode;
-                    const abi = swapReservationsAggregatorABI.abi;
+                    // [1] fetch & decode swap reservation details from contract
+                    const swapAggregatorBytecode = swapReservationsAggregatorABI.bytecode;
+                    const swapAggregatorAbi = swapReservationsAggregatorABI.abi;
                     const swapReservations = await getSwapReservations(
                         ethersRpcProvider,
-                        bytecode.object,
-                        abi,
+                        swapAggregatorBytecode.object,
+                        swapAggregatorAbi,
                         selectedInputAsset.riftExchangeContractAddress,
                         [parseInt(reservationDetails.reservationId)],
                     );
-
-                    const swapReservationData = swapReservations[0];
+                    const swapReservationData: any = swapReservations[0];
                     console.log('swapReservationData:', swapReservationData);
 
-                    const reservedVaultIndexes = swapReservationData.vaultIndexes;
-                    console.log('reservedVaultIndexes:', reservedVaultIndexes);
-                    const reservedAmounts = swapReservationData.amountsToReserve;
-
-                    const reservedVaults = await getDepositVaults(
-                        ethersRpcProvider,
-                        bytecode.object,
-                        abi,
-                        selectedInputAsset.riftExchangeContractAddress,
-                        reservedVaultIndexes,
+                    // [2] convert BigNumber reserved vault indexes to numbers
+                    const reservedVaultIndexesConverted = swapReservationData.vaultIndexes.map((index) =>
+                        index.toNumber(),
                     );
 
-                    console.log('reservedVaults:', reservedVaults);
-                    console.log('reservedAmounts:', reservedAmounts);
+                    // [3] fetch the reserved deposit vaults on the reservation
+                    const depositVaultBytecode = depositVaultAggregatorABI.bytecode;
+                    const depositVaultAbi = depositVaultAggregatorABI.abi;
+                    const reservedVaults = await getDepositVaults(
+                        ethersRpcProvider,
+                        depositVaultBytecode.object,
+                        depositVaultAbi,
+                        selectedInputAsset.riftExchangeContractAddress,
+                        reservedVaultIndexesConverted,
+                    );
 
-                    // Initialize variables to accumulate the total values
+                    const reservedAmounts = swapReservationData.amountsToReserve;
+                    console.log('reservedVaults:', reservedVaults);
+                    console.log('reservedAmounts:', reservedAmounts[0].toString());
+
+                    // [4] initialize variables to accumulate the total values
                     let totalReservedAmountInµUsdt = BigNumber.from(0);
                     let totalBtcInputInSats = BigNumber.from(0);
 
-                    // Combined loop for summing µUsdt and calculating BTC in sats
+                    // [5] LOOP over reserved deposit vaults and sum sat inputs and µUsdt outputs
                     for (let i = 0; i < reservedVaults.length; i++) {
+                        // [0] get the deposit vault and reserved amount
                         const vault = reservedVaults[i];
                         const reservedAmountInµUsdt = BigNumber.from(reservedAmounts[i]);
+                        console.log('reservedAmountInµUsdt:', reservedAmountInµUsdt.toString());
+                        const btcExchangeRate = vault.btcExchangeRate;
+
+                        // [1] buffer reserved amount to 18 decimals
                         const reservedAmountInµUsdtBufferedTo18Decimals = bufferTo18Decimals(
                             reservedAmountInµUsdt,
                             selectedInputAsset.decimals,
                         );
-                        const btcExchangeRate = vault.btcExchangeRate;
-                        console.log('vault', vault);
-                        console.log(' buff btcExchangeRate:', btcExchangeRate);
 
-                        const btcInputInSats = calculateBtcOutputAmountFromExchangeRate(
-                            reservedAmountInµUsdt,
-                            selectedInputAsset.decimals,
-                            btcExchangeRate,
+                        console.log('VAULT:', i);
+                        console.log(
+                            'reservedAmountInµUsdtBufferedTo18Decimals:',
+                            reservedAmountInµUsdtBufferedTo18Decimals.toString(),
                         );
-                        console.log('penjus btcInputInSats:', btcInputInSats.toString());
+                        console.log('btcExchangeRate:', btcExchangeRate.toString());
 
-                        const btcAmountInSats = reservedAmountInµUsdtBufferedTo18Decimals.mul(vault.btcExchangeRate);
-                        console.log('btcAmountInSats:', btcAmountInSats.toString());
+                        // [2] divide by exchange rate (which is already in smallest token units buffered to 18 decimals per sat)
+                        const inputAmountInSats = reservedAmountInµUsdtBufferedTo18Decimals.div(btcExchangeRate);
+                        console.log('inputAmountInSats:', inputAmountInSats.toString());
 
                         totalReservedAmountInµUsdt = totalReservedAmountInµUsdt.add(reservedAmountInµUsdt);
-                        totalBtcInputInSats = totalBtcInputInSats.add(btcAmountInSats);
+                        totalBtcInputInSats = totalBtcInputInSats.add(inputAmountInSats);
                     }
 
-                    console.log('totalBtcInputInSats:', totalBtcInputInSats);
-                    console.log('totalReservedAmount:', totalReservedAmountInµUsdt);
+                    console.log('totalBtcInputInSats:', totalBtcInputInSats.toString());
+                    console.log('totalReservedAmount:', totalReservedAmountInµUsdt.toString());
 
                     // convert to USDT
                     const totalReservedAmountInUsdt = formatUnits(
@@ -201,7 +209,7 @@ const ReservationDetails = () => {
                     setUsdtOutputSwapAmount(totalReservedAmountInUsdt);
                     console.log('setUsdtOutputSwapAmount:', totalReservedAmountInUsdt);
 
-                    setBtcInputSwapAmount(BigNumber.from(totalBtcInputInSats).toString());
+                    setBtcInputSwapAmount(formatUnits(totalBtcInputInSats, bitcoinDecimals));
                     console.log('setBtcInputSwapAmount:', totalBtcInputInSats);
                 } catch (error) {
                     console.error('Error fetching reservation details:', error);

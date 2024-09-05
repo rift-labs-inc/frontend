@@ -147,49 +147,53 @@ export const SwapUI = () => {
                 : null;
             console.log('please NEW totalμUsdtSwapOutput:', idealReservationDetails?.totalμUsdtSwapOutput?.toString());
 
-            setUsdtOutputSwapAmount(
-                formatAmountToString(
-                    selectedInputAsset,
-                    formatUnits(
-                        idealReservationDetails.totalμUsdtSwapOutput ?? BigNumber.from(0),
-                        selectedInputAsset.decimals,
-                    ),
-                ),
-            );
-            setUsdtDepositAmount(
-                formatAmountToString(
-                    selectedInputAsset,
-                    formatUnits(
-                        idealReservationDetails.totalμUsdtSwapOutput ?? BigNumber.from(0),
-                        selectedInputAsset.decimals,
-                    ),
-                ),
-            );
-
-            setUsdtExchangeRatePerBTC(
-                parseFloat(
-                    parseFloat(
-                        formatBtcExchangeRate(
-                            idealReservationDetails.totalSwapExchangeRate,
+            if (idealReservationDetails) {
+                setUsdtOutputSwapAmount(
+                    formatAmountToString(
+                        selectedInputAsset,
+                        formatUnits(
+                            idealReservationDetails?.totalμUsdtSwapOutput ?? BigNumber.from(0),
                             selectedInputAsset.decimals,
                         ),
-                    ).toFixed(2),
-                ),
-            );
-            const reserveLiquidityParams: ReserveLiquidityParams = {
-                totalSwapAmountInSats: BigNumber.from(idealReservationDetails?.totalBitcoinAmountInSatsUsed).toNumber(),
-                vaultIndexesToReserve: idealReservationDetails.vaultIndexes,
-                amountsInμUsdtToReserve: idealReservationDetails.amountsInμUsdtToReserve,
-                amountsInSatsToBePaid: idealReservationDetails.amountsInSatsToBePaid,
-                btcPayoutLockingScripts: idealReservationDetails.btcPayoutLockingScripts,
-                btcExchangeRates: idealReservationDetails.btcExchangeRates,
-                ethPayoutAddress: '', // this is set when user inputs their eth payout address
-                expiredSwapReservationIndexes: [], // TODO: calculate later
-            };
+                    ),
+                );
+                setUsdtDepositAmount(
+                    formatAmountToString(
+                        selectedInputAsset,
+                        formatUnits(
+                            idealReservationDetails?.totalμUsdtSwapOutput ?? BigNumber.from(0),
+                            selectedInputAsset.decimals,
+                        ),
+                    ),
+                );
 
-            console.log('please RESERVATION PARAMs:', reserveLiquidityParams);
+                setUsdtExchangeRatePerBTC(
+                    parseFloat(
+                        parseFloat(
+                            formatBtcExchangeRate(
+                                idealReservationDetails?.totalSwapExchangeRate,
+                                selectedInputAsset.decimals,
+                            ),
+                        ).toFixed(2),
+                    ),
+                );
+                const reserveLiquidityParams: ReserveLiquidityParams = {
+                    totalSwapAmountInSats: BigNumber.from(
+                        idealReservationDetails?.totalBitcoinAmountInSatsUsed,
+                    ).toNumber(),
+                    vaultIndexesToReserve: idealReservationDetails.vaultIndexes,
+                    amountsInμUsdtToReserve: idealReservationDetails.amountsInμUsdtToReserve,
+                    amountsInSatsToBePaid: idealReservationDetails.amountsInSatsToBePaid,
+                    btcPayoutLockingScripts: idealReservationDetails.btcPayoutLockingScripts,
+                    btcExchangeRates: idealReservationDetails.btcExchangeRates,
+                    ethPayoutAddress: '', // this is set when user inputs their eth payout address
+                    expiredSwapReservationIndexes: [], // TODO: calculate later
+                };
 
-            setLowestFeeReservationParams(reserveLiquidityParams);
+                console.log('please RESERVATION PARAMs:', reserveLiquidityParams);
+
+                setLowestFeeReservationParams(reserveLiquidityParams);
+            }
         } else {
             setUsdtOutputSwapAmount('');
             setUsdtDepositAmount('');
