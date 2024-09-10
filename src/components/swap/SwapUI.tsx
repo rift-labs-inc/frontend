@@ -45,7 +45,7 @@ export const SwapUI = () => {
     const [isLiquidityExceeded, setIsLiquidityExceeded] = useState(false);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
-    const usdtPriceUSD = useStore.getState().validAssets[selectedInputAsset.name].priceUSD;
+    const usdtPriceUSD = useStore.getState().validAssets[selectedInpu tAsset.name].priceUSD;
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
     const [usdtExchangeRatePerBTC, setUsdtExchangeRatePerBTC] = useState(0);
     const depositMode = useStore((state) => state.depositMode);
