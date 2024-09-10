@@ -8,11 +8,12 @@ import { FONT_FAMILIES } from '../utils/font';
 import BlueText from '../components/other/BlueText';
 import OrangeText from '../components/other/OrangeText';
 import React, { useEffect } from 'react';
+import { ReserveLiquidityPage } from '../components/swap/ReserveLiquidityContainer';
 import { useStore } from '../store';
 import { SwapContainer } from '../components/swap/SwapContainer';
 import { DepositUI } from '../components/swap/DepositUI';
 import { DepositConfirmation } from '../components/deposit/DepositConfirmation';
-import { ReserveLiquidityContainer } from '../components/swap/ReserveLiquidityContainer';
+import CurrencyModal from '../components/swap/CurrencyModal';
 
 const Home = () => {
     const { height, width } = useWindowSize();
@@ -74,7 +75,7 @@ const Home = () => {
                     w='100%'
                     mt={swapFlowState === '0-not-started' ? '19vh' : '100px'}>
                     {swapFlowState != '0-not-started' ? (
-                        <ReserveLiquidityContainer />
+                        <ReserveLiquidityPage />
                     ) : (
                         // {/* LOGOS & TEXT */}
                         <>
@@ -148,6 +149,7 @@ const Home = () => {
                         </>
                     )}
                 </Flex>
+                <CurrencyModal />
             </Flex>
         </>
     );

@@ -1,5 +1,5 @@
 import { Flex, Spacer, Text } from '@chakra-ui/react';
-import { calculateFillPercentage, formatBtcExchangeRate } from '../../utils/dappHelper';
+import { formatBtcExchangeRate } from '../../utils/dappHelper';
 import { DepositVault, ValidAsset } from '../../types';
 import { BigNumber } from 'ethers';
 import { colors } from '../../utils/colors';
@@ -17,7 +17,6 @@ interface DetailedVaultProps {
 }
 
 const DetailedVault: React.FC<DetailedVaultProps> = ({ vault, onClick, selectedInputAsset }) => {
-    const fillPercentage = calculateFillPercentage(vault);
     console.log('vault index:', vault.index);
 
     return (
@@ -57,16 +56,8 @@ const DetailedVault: React.FC<DetailedVaultProps> = ({ vault, onClick, selectedI
                                 pl='15px'
                                 pr='10px'
                                 align={'center'}>
-                                <Text
-                                    fontSize='16px'
-                                    color={colors.offWhite}
-                                    letterSpacing={'-1px'}
-                                    fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                    {vault?.initialBalance &&
-                                        formatUnits(
-                                            BigNumber.from(vault.initialBalance).toString(),
-                                            vault.depositAsset?.decimals,
-                                        ).toString()}
+                                <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                    {vault?.initialBalance && formatUnits(BigNumber.from(vault.initialBalance).toString(), vault.depositAsset?.decimals).toString()}
                                 </Text>
                                 <Spacer />
                                 <AssetTag assetName={vault?.depositAsset?.name} width='84px' />
@@ -86,16 +77,8 @@ const DetailedVault: React.FC<DetailedVaultProps> = ({ vault, onClick, selectedI
                                 pl='15px'
                                 pr='10px'
                                 align={'center'}>
-                                <Text
-                                    fontSize='16px'
-                                    color={colors.offWhite}
-                                    letterSpacing={'-1px'}
-                                    fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                    {vault?.initialBalance &&
-                                        formatUnits(
-                                            BigNumber.from(vault.initialBalance).toString(),
-                                            vault.depositAsset?.decimals,
-                                        ).toString()}
+                                <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                    {vault?.initialBalance && formatUnits(BigNumber.from(vault.initialBalance).toString(), vault.depositAsset?.decimals).toString()}
                                 </Text>
                                 <Spacer />
                                 <AssetTag assetName={'BTC'} width='80px' />

@@ -6,6 +6,7 @@ import { USDT_Icon, ETH_Icon, ETH_Logo } from './components/other/SVGs';
 import { ERC20ABI } from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
+import sepoliaDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/11155111/run-latest.json';
 
 type Store = {
     // setup & asset data
@@ -66,10 +67,16 @@ type Store = {
     setShowManageReservationScreen: (show: boolean) => void;
     depositMode: boolean;
     setDepositMode: (mode: boolean) => void;
+    withdrawAmount: string;
+    setWithdrawAmount: (amount: string) => void;
 
     // modals
     currencyModalTitle: CurrencyModalTitle;
     setCurrencyModalTitle: (x: CurrencyModalTitle) => void;
+    ethPayoutAddress: string;
+    setEthPayoutAddress: (address: string) => void;
+    bitcoinSwapTransactionHash: string;
+    setBitcoinSwapTransactionHash: (hash: string) => void;
 };
 
 export const useStore = create<Store>((set) => {
@@ -89,10 +96,13 @@ export const useStore = create<Store>((set) => {
             name: 'USDT',
             tokenAddress: '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0',
             decimals: 6,
-            riftExchangeContractAddress: '0x3c9ef17623511ae85973fdedcd883fc2fbc1e1be',
+            riftExchangeContractAddress: sepoliaDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange')
+                .contractAddress,
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: 11155111,
             contractRpcURL: 'https://sepolia.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
+            proverFee: BigNumber.from(5000000),
+            releaserFee: BigNumber.from(2000000),
             icon_svg: USDT_Icon,
             bg_color: '#125641',
             border_color: '#26A17B',
@@ -101,8 +111,8 @@ export const useStore = create<Store>((set) => {
             light_text_color: '#327661',
             exchangeRateInTokenPerBTC: null,
             exchangeRateInSmallestTokenUnitPerSat: null, // always 18 decimals
-            priceUSD: null,
-            totalAvailableLiquidity: BigNumber.from(1223243432432),
+            priceUSD: 1,
+            totalAvailableLiquidity: BigNumber.from(0),
             connectedUserBalanceRaw: BigNumber.from(0),
             connectedUserBalanceFormatted: '0',
         },
@@ -110,7 +120,7 @@ export const useStore = create<Store>((set) => {
             name: 'WETH',
             tokenAddress: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
             decimals: 18,
-            riftExchangeContractAddress: '0xe6167f469152293b045838d69F9687a7Ee30aaf3',
+            riftExchangeContractAddress: '',
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: 11155111,
             contractRpcURL: 'https://sepolia.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
@@ -228,7 +238,13 @@ export const useStore = create<Store>((set) => {
         setShowManageReservationScreen: (showManageReservationScreen) => set({ showManageReservationScreen }),
         depositMode: false,
         setDepositMode: (depositMode) => set({ depositMode }),
+        withdrawAmount: '',
+        setWithdrawAmount: (withdrawAmount) => set({ withdrawAmount }),
         currencyModalTitle: null,
         setCurrencyModalTitle: (x) => set({ currencyModalTitle: x }),
+        ethPayoutAddress: '',
+        setEthPayoutAddress: (ethPayoutAddress) => set({ ethPayoutAddress }),
+        bitcoinSwapTransactionHash: '',
+        setBitcoinSwapTransactionHash: (bitcoinSwapTransactionHash) => set({ bitcoinSwapTransactionHash }),
     };
 });

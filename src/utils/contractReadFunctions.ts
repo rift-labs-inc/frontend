@@ -1,6 +1,6 @@
 import { ethers, BigNumberish, BigNumber } from 'ethers';
 import { JsonFragment } from '@ethersproject/abi';
-import { LiqudityProvider, ReservationState, SwapReservation } from '../types';
+import { LiqudityProvider, LiquidityReservedEvent, ReservationState, SwapReservation } from '../types';
 import { DepositVault, ValidAsset } from '../types';
 import { useStore } from '../store';
 
@@ -125,10 +125,10 @@ export function decodeDepositVaults(data: string): DepositVault[] {
         ] = abiCoder.decode(['uint256', 'uint256', 'uint256', 'uint64', 'bytes22'], item);
 
         return {
-            initialBalance,
-            unreservedBalanceFromContract,
-            withdrawnAmount,
-            btcExchangeRate,
+            initialBalance: initialBalance,
+            unreservedBalanceFromContract: unreservedBalanceFromContract,
+            withdrawnAmount: withdrawnAmount,
+            btcExchangeRate: btcExchangeRate,
             btcPayoutLockingScript: ethers.utils.hexlify(btcPayoutLockingScript),
         };
     });
@@ -168,22 +168,24 @@ function decodeSwapReservations(data: string): SwapReservation[] {
         const decodedResults = abiCoder.decode(
             [
                 `tuple(
-            uint32 confirmationBlockHeight,
-            uint32 reservationTimestamp,
-            uint32 unlockTimestamp,
-            uint8 state,
-            address ethPayoutAddress,
-            bytes32 lpReservationHash,
-            bytes32 nonce,
-            uint256 totalSwapAmount,
-            int256 prepaidFeeAmount,
-            uint256[] vaultIndexes,
-            uint192[] amountsToReserve
-        )`,
+                    uint32 confirmationBlockHeight,
+                    uint32 reservationTimestamp,
+                    uint32 unlockTimestamp,
+                    uint8 state,
+                    address ethPayoutAddress,
+                    bytes32 lpReservationHash,
+                    bytes32 nonce,
+                    uint256 totalSatsInputInlcudingProxyFee,
+                    uint256 totalSwapOutputAmount,
+                    int256 prepaidFeeAmount,
+                    uint256 proposedBlockHeight,
+                    bytes32 proposedBlockHash,
+                    uint256[] vaultIndexes,
+                    uint192[] amountsToReserve
+                )`,
             ],
             item,
         );
-
         const [
             confirmationBlockHeight,
             reservationTimestamp,
@@ -192,8 +194,11 @@ function decodeSwapReservations(data: string): SwapReservation[] {
             ethPayoutAddress,
             lpReservationHash,
             nonce,
-            totalSwapAmount,
+            totalSatsInputInlcudingProxyFee,
+            totalSwapOutputAmount,
             prepaidFeeAmount,
+            proposedBlockHeight,
+            proposedBlockHash,
             vaultIndexes,
             amountsToReserve,
         ] = decodedResults[0];
@@ -205,13 +210,56 @@ function decodeSwapReservations(data: string): SwapReservation[] {
             state: state as ReservationState,
             ethPayoutAddress,
             lpReservationHash,
-            nonce: nonce,
-            totalSwapAmount: totalSwapAmount,
-            prepaidFeeAmount: prepaidFeeAmount,
-            vaultIndexes: vaultIndexes,
-            amountsToReserve: amountsToReserve,
+            nonce,
+            totalSatsInputInlcudingProxyFee: ethers.BigNumber.from(totalSatsInputInlcudingProxyFee),
+            totalSwapOutputAmount: ethers.BigNumber.from(totalSwapOutputAmount),
+            prepaidFeeAmount: ethers.BigNumber.from(prepaidFeeAmount),
+            proposedBlockHeight: ethers.BigNumber.from(proposedBlockHeight),
+            proposedBlockHash,
+            vaultIndexes,
+            amountsToReserve: amountsToReserve.map((amount: any) => ethers.BigNumber.from(amount)),
         };
     });
 
+    console.log('Decoded swap reservations:', swapReservations);
+
     return swapReservations;
+}
+
+export function getMatchingLiquidityReservedEvent(
+    provider: ethers.providers.Provider,
+    contractAddress: string,
+    abi: ethers.ContractInterface,
+    reserverAddress: string,
+): Promise<LiquidityReservedEvent> {
+    return new Promise((resolve, reject) => {
+        // Set up a provider and a contract instance
+        const contract = new ethers.Contract(contractAddress, abi, provider);
+
+        // Create the event listener
+        const listener = (
+            reserver: string,
+            swapReservationIndex: ethers.BigNumber,
+            orderNonce: string,
+            event: ethers.Event,
+        ) => {
+            // Check if the reserver matches the specified address
+            if (reserver.toLowerCase() === reserverAddress.toLowerCase()) {
+                const matchingEvent: LiquidityReservedEvent = {
+                    reserver,
+                    swapReservationIndex: swapReservationIndex.toString(),
+                    orderNonce,
+                    event,
+                };
+
+                console.log('Matching LiquidityReserved event found:', matchingEvent);
+
+                contract.off('LiquidityReserved', listener);
+
+                resolve(matchingEvent);
+            }
+        };
+
+        contract.on('LiquidityReserved', listener);
+    });
 }

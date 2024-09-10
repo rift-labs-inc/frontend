@@ -27,14 +27,14 @@ export const Navbar = ({}) => {
     const [showDeveloperMode, setShowDeveloperMode] = useState(false);
     const [isLocalhost, setIsLocalhost] = useState(false);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
+    const validAssets = useStore((state) => state.validAssets);
 
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
 
     useEffect(() => {
-        setAvailableLiquidity(
-            useStore.getState().validAssets[selectedInputAsset.name]?.totalAvailableLiquidity ?? BigNumber.from(0),
-        );
-    }, [selectedInputAsset]);
+        const totalAvailableLiquidity = validAssets[selectedInputAsset.name]?.totalAvailableLiquidity;
+        setAvailableLiquidity(totalAvailableLiquidity ?? BigNumber.from(0));
+    }, [validAssets]);
 
     useEffect(() => {
         const hostname = window.location.hostname;
@@ -73,16 +73,15 @@ export const Navbar = ({}) => {
                         position={'absolute'}
                         ml='1px'
                         top='29px'
-                        // w={
-                        //     router.pathname === '/manage'
-                        //         ? '87px'
-                        //         : router.pathname === '/activity'
-                        //         ? '93px'
-                        //         : router.pathname === '/whitepaper'
-                        //         ? '134px'
-                        //         : '57px'
-                        // }
-                        w='calc(100% - 20px)'
+                        w={
+                            router.pathname === '/manage'
+                                ? '87px'
+                                : router.pathname === '/activity'
+                                ? '93px'
+                                : router.pathname === '/whitepaper'
+                                ? '134px'
+                                : '55px'
+                        }
                         height='2px'
                         bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
                     />
@@ -132,7 +131,7 @@ export const Navbar = ({}) => {
                     {/* {navItem('Lending', '/lending')} */}
                     {/* {navItem('OTC', '/otc')} */}
                     {navItem('Manage', '/manage')}
-                    {navItem('Activity', '/activity')}
+                    {/* {navItem('Activity', '/activity')} */}
                     {navItem('About', '/about')}
                 </Flex>
                 <Spacer />

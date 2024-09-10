@@ -1,5 +1,9 @@
 import { Flex, Spacer, Text } from '@chakra-ui/react';
-import { calculateFillPercentage, formatBtcExchangeRate } from '../../utils/dappHelper';
+import {
+    calculateBtcOutputAmountFromExchangeRate,
+    calculateFillPercentage,
+    formatBtcExchangeRate,
+} from '../../utils/dappHelper';
 import { DepositVault, ValidAsset } from '../../types';
 import { BigNumber } from 'ethers';
 import { colors } from '../../utils/colors';
@@ -88,11 +92,12 @@ const LightVault: React.FC<LightVaultProps> = ({ vault, onClick, selectedInputAs
                             color={colors.offWhite}
                             letterSpacing={'-1px'}
                             fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {vault?.initialBalance &&
-                                formatUnits(
-                                    BigNumber.from(vault.initialBalance).toString(),
-                                    vault.depositAsset?.decimals,
-                                ).toString()}
+                            {vault.btcExchangeRate &&
+                                calculateBtcOutputAmountFromExchangeRate(
+                                    vault.initialBalance,
+                                    vault.depositAsset.decimals,
+                                    vault.btcExchangeRate,
+                                )}
                         </Text>
                         <Spacer />
                         <AssetTag assetName={'BTC'} width='80px' />

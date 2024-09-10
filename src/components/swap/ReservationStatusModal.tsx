@@ -15,12 +15,11 @@ import {
 import { ReserveStatus } from '../../hooks/contract/useReserveLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
-import { GooSpinner } from 'react-spinners-kit';
 import { CheckmarkCircle, AlertCircleOutline } from 'react-ionicons';
 import { HiOutlineExternalLink } from 'react-icons/hi';
-import { IoMdSettings } from 'react-icons/io';
 import { etherScanBaseUrl } from '../../utils/constants';
 import { useStore } from '../../store';
+import GooSpinner from '../other/GooSpiner';
 
 interface ReservationStatusModalProps {
     isOpen: boolean;
@@ -30,18 +29,36 @@ interface ReservationStatusModalProps {
     txHash: string | null;
 }
 
-const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen, onClose, status, error, txHash }) => {
+const CustomAlertCircleOutline = ({ width = '38px', height = '38px', color = colors.red }) => {
+    return <AlertCircleOutline width={width} height={height} color={color} />;
+};
+
+const CustomGooSpinner = ({ size = 100, color = 'purple', loading = true }) => {
+    return <GooSpinner size={size} color={color} />;
+};
+
+const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
+    isOpen = false,
+    onClose,
+    status = ReserveStatus.Idle,
+    error = null,
+    txHash = null,
+}) => {
     const isCompleted = status === ReserveStatus.Confirmed;
     const isError = status === ReserveStatus.Error;
-    const isLoading = !isCompleted && !isError;
-    const showManageReservationScreen = useStore((state) => state.showManageReservationScreen);
-    const setShowManageReservationScreen = useStore((state) => state.setShowManageReservationScreen);
+    const isLoading = ![ReserveStatus.Idle, ReserveStatus.Confirmed, ReserveStatus.Error].includes(status);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
 
     const getStatusMessage = () => {
         switch (status) {
+            case ReserveStatus.Idle:
+                return 'Ready to reserve liquidity';
             case ReserveStatus.WaitingForWalletConfirmation:
                 return 'Waiting for wallet confirmation...';
+            case ReserveStatus.WaitingForTokenApproval:
+                return 'Waiting for token approval...';
+            case ReserveStatus.ApprovalPending:
+                return 'Confirming token approval confirming...';
             case ReserveStatus.ReservingLiquidity:
                 return 'Reserving liquidity...';
             case ReserveStatus.Confirmed:
@@ -52,7 +69,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen,
                 }
                 return `Error: ${error}`;
             default:
-                return 'Processing...';
+                return 'Confirming...';
         }
     };
 
@@ -87,34 +104,40 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen,
                 {(isCompleted || isError) && <ModalCloseButton />}
                 <ModalBody>
                     <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
-                        {isLoading && <GooSpinner size={100} color={colors.RiftBlue} loading={true} />}
+                        {isLoading && <CustomGooSpinner size={100} color={colors.purpleBorder} loading={true} />}
                         <Spacer />
                         <Text
                             fontSize='12px'
-                            w='60%'
+                            w={'100%'}
                             mt='25px'
                             mb='0px'
                             color={colors.textGray}
                             fontWeight={'normal'}
                             textAlign='center'>
-                            Please confirm the transaction in your wallet
+                            {status != ReserveStatus.Confirmed &&
+                                status != ReserveStatus.Error &&
+                                (status === ReserveStatus.WaitingForWalletConfirmation ||
+                                status === ReserveStatus.ApprovalPending ||
+                                status === ReserveStatus.ReservationPending
+                                    ? 'Awaiting blockchain confirmation...'
+                                    : 'Please confirm the transaction in your wallet')}
                         </Text>
                         <Flex direction={'column'} align={'center'} w='100%' justify={'center'}>
                             {isCompleted && (
-                                <Flex mt='6px' ml='4px'>
+                                <Flex mt='-20px' ml='4px'>
                                     <CheckmarkCircle width='38px' height={'38px'} color={colors.greenOutline} />
                                 </Flex>
                             )}
                             {isError && (
                                 <Flex mt='6px' ml='4px'>
-                                    <AlertCircleOutline width='38px' height={'38px'} color={colors.red} />
+                                    <CustomAlertCircleOutline width='38px' height={'38px'} color={colors.red} />
                                 </Flex>
                             )}
                             <Text
                                 overflowWrap={'anywhere'}
                                 color={isCompleted ? colors.greenOutline : colors.offWhite}
                                 fontSize={getStatusMessage().length > 40 ? '12px' : '20px'}
-                                mt={isLoading ? '20px' : isCompleted ? '5px' : '20px'}
+                                mt={isLoading ? '25px' : isCompleted ? '5px' : '20px'}
                                 fontWeight='normal'
                                 textAlign='center'>
                                 {getStatusMessage()}
@@ -125,15 +148,20 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen,
                                 <Button
                                     bg={colors.offBlackLighter}
                                     borderWidth={'2px'}
-                                    borderColor={colors.offBlackLighter2}
+                                    borderColor={colors.borderGrayLight}
                                     _hover={{ bg: colors.borderGray }}
                                     borderRadius='md'
                                     onClick={() => window.open(getEtherscanUrl(), '_blank')}
                                     isDisabled={!txHash}>
                                     <Flex mt='-4px ' mr='8px'>
-                                        <HiOutlineExternalLink size={'17px'} color={colors.textGray} />
+                                        <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
                                     </Flex>
-                                    <Text fontSize='14px' color={colors.textGray} cursor={'pointer'} fontWeight={'normal'}>
+                                    <Text
+                                        fontSize='14px'
+                                        color={colors.offerWhite}
+                                        fontFamily={FONT_FAMILIES.NOSTROMO}
+                                        cursor={'pointer'}
+                                        fontWeight={'normal'}>
                                         View on Etherscan
                                     </Text>
                                 </Button>
@@ -145,16 +173,12 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen,
                                     borderColor={colors.purpleBorder}
                                     fontWeight={'normal'}
                                     onClick={() => {
-                                        // setShowManageReservationScreen(true);
                                         setSwapFlowState('2-send-bitcoin');
                                         onClose();
                                     }}
                                     _hover={{ bg: colors.purpleHover }}
                                     borderRadius='md'>
-                                    {/* <Flex mt='-2px ' mr='8px'>
-                                        <IoMdSettings size={'17px'} color={colors.offWhite} />
-                                    </Flex> */}
-                                    <Text fontSize='14px' color={colors.offWhite}>
+                                    <Text fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                                         Continue
                                     </Text>
                                 </Button>

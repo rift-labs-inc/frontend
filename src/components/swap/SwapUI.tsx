@@ -20,14 +20,24 @@ import { colors } from '../../utils/colors';
 import { useStore } from '../../store';
 import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { BigNumber } from 'ethers';
-import { parseEther } from 'ethers/lib/utils';
-import { btcToSats, calculateLowestFeeReservation, ethToWei, weiToEth } from '../../utils/dappHelper';
-import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
+import { formatUnits, parseEther, parseUnits } from 'ethers/lib/utils';
+import {
+    btcToSats,
+    bufferTo18Decimals,
+    calculateBestVaultsForBitcoinInput,
+    ethToWei,
+    formatAmountToString,
+    formatBtcExchangeRate,
+    unBufferFrom18Decimals,
+    weiToEth,
+} from '../../utils/dappHelper';
+import { ProxyWalletLiquidityProvider, ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
 import { bitcoinDecimals, maxSwapOutputs } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import WebAssetTag from '../other/WebAssetTag';
+import { getSwapReservations } from '../../utils/contractReadFunctions';
 
 export const SwapUI = () => {
     const { width } = useWindowSize();
@@ -40,6 +50,7 @@ export const SwapUI = () => {
     const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const allDepositVaults = useStore((state) => state.allDepositVaults);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
+    const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
     const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
     const userEthAddress = useStore((state) => state.userEthAddress);
     const [isLiquidityExceeded, setIsLiquidityExceeded] = useState(false);
@@ -47,10 +58,10 @@ export const SwapUI = () => {
     const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
     const usdtPriceUSD = useStore.getState().validAssets[selectedInpu tAsset.name].priceUSD;
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
+    const [availableLiquidityInUSDT, setAvailableLiquidityInUSDT] = useState('');
     const [usdtExchangeRatePerBTC, setUsdtExchangeRatePerBTC] = useState(0);
     const depositMode = useStore((state) => state.depositMode);
     const setDepositMode = useStore((state) => state.setDepositMode);
-    const validAssets = useStore((state) => state.validAssets);
     const { address, isConnected } = useAccount();
     const { openConnectModal } = useConnectModal();
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
@@ -62,88 +73,175 @@ export const SwapUI = () => {
     const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
+    const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);
+    const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
+    const validAssets = useStore((state) => state.validAssets);
+    const [proxyWalletSwapFastFee, setProxyWalletSwapFastFee] = useState(0);
+
+    useEffect(() => {
+        if (selectedInputAsset && validAssets[selectedInputAsset.name]) {
+            const totalAvailableLiquidity = validAssets[selectedInputAsset.name]?.totalAvailableLiquidity;
+            setAvailableLiquidity(totalAvailableLiquidity ?? BigNumber.from(0));
+            setAvailableLiquidityInUSDT(
+                Number(formatUnits(totalAvailableLiquidity, selectedInputAsset.decimals)).toFixed(2).toString(),
+            );
+        }
+    }, [selectedInputAsset, validAssets]);
 
     const checkLiquidityExceeded = useCallback(
         (amount: string | null) => {
-            try {
-                return BigNumber.from(usdtOutputSwapAmount).gt(availableLiquidity);
-            } catch (error) {
-                console.error('Error in checkLiquidityExceeded:', error);
-                return false; // or handle the error as appropriate for your use case
-            }
+            const roundedUsdtAmount = Number(amount).toFixed(selectedInputAsset.decimals);
+            const usdtAmountSmallestUnits = parseUnits(roundedUsdtAmount, selectedInputAsset.decimals);
+            setIsLiquidityExceeded(BigNumber.from(usdtAmountSmallestUnits).gt(availableLiquidity));
         },
         [availableLiquidity],
     );
 
+    const fetchProxyWalletSwapFee = async (numOutputs) => {
+        if (window.rift) {
+            try {
+                const proxyWalletSwapFee = await window.rift.getRiftSwapFees({ lps: numOutputs });
+                console.log('proxyWalletSwapFee:', proxyWalletSwapFee);
+                setProxyWalletSwapFastFee(proxyWalletSwapFee.fastFeeAmount);
+                return proxyWalletSwapFee.fastFeeAmount;
+            } catch (err) {
+                console.log('Error fetching wallet information.');
+                console.error(err);
+            }
+        } else {
+            console.log('Rift wallet not detected or getProxyWallet not available.');
+        }
+    };
+
     // calculate ideal reservation
-    // useEffect(() => {
-    //     const exceeded = checkLiquidityExceeded(usdtOutputSwapAmount);
-    //     setIsLiquidityExceeded(exceeded);
+    const calculateIdealReservationBitcoinInput = async (amountBtcSwapInput) => {
+        if (!amountBtcSwapInput || amountBtcSwapInput == '.') return;
+        const amountSatsSwapInput = parseUnits(amountBtcSwapInput, bitcoinDecimals);
+        let ogIdealReservationDetails =
+            allDepositVaults.length > 0
+                ? calculateBestVaultsForBitcoinInput(allDepositVaults, amountSatsSwapInput)
+                : null;
 
-    //     if (usdtOutputSwapAmount && !exceeded) {
-    //         const ethOutputInWei = ethToWei(usdtOutputSwapAmount);
-    //         const reservationPart = calculateLowestFeeReservation(
-    //             allDepositVaults,
-    //             BigNumber.from(ethOutputInWei),
-    //             maxSwapOutputs,
-    //         );
+        if (ogIdealReservationDetails) console.log('idealReservationDetails:', ogIdealReservationDetails);
 
-    //         const reserveLiquidityParams: ReserveLiquidityParams = {
-    //             inputSwapAmountInSats: Number(btcToSats(Number(btcInputSwapAmount))),
-    //             vaultIndexesToReserve: reservationPart.vaultIndexes,
-    //             amountsToReserve: reservationPart.amountsToReserve,
-    //             ethPayoutAddress: '', // this is set when user inputs their eth payout address
-    //             expiredSwapReservationIndexes: [], // TODO: calculated later
-    //         };
+        // set exchange rate & usdt output based on retulst of the above function
+        if (ogIdealReservationDetails?.totalμUsdtSwapOutput) {
+            // calculate the btc fee and subtract it from the "input", then rerun calculateBestVaultsForBitcoinInput
 
-    //         console.log('RESERVATION PARAMs:', reserveLiquidityParams);
+            const proxyWalletSwapFeeInSats = await fetchProxyWalletSwapFee(
+                ogIdealReservationDetails.vaultIndexes.length,
+            );
+            console.log('typed btc input', amountSatsSwapInput.toString());
+            console.log('-proxy wallet fee in sats', proxyWalletSwapFeeInSats);
 
-    //         setLowestFeeReservationParams(reserveLiquidityParams);
-    //     } else {
-    //         setLowestFeeReservationParams(null);
-    //     }
-    // }, [usdtOutputSwapAmount, checkLiquidityExceeded, allDepositVaults, setLowestFeeReservationParams]);
+            // call the function again with the new amount
+            const newAmountSatsSwapInput = ogIdealReservationDetails.totalBitcoinAmountInSatsUsed.sub(
+                BigNumber.from(proxyWalletSwapFeeInSats),
+            );
+            console.log('new amountSatsSwapInput:', newAmountSatsSwapInput.toString());
+
+            const newIdealReservationDetails = calculateBestVaultsForBitcoinInput(
+                allDepositVaults,
+                newAmountSatsSwapInput,
+            );
+
+            if (newIdealReservationDetails) {
+                setUsdtOutputSwapAmount(
+                    formatAmountToString(
+                        selectedInputAsset,
+                        formatUnits(
+                            newIdealReservationDetails?.totalμUsdtSwapOutput ?? BigNumber.from(0),
+                            selectedInputAsset.decimals,
+                        ),
+                    ),
+                );
+                setUsdtDepositAmount(
+                    formatAmountToString(
+                        selectedInputAsset,
+                        formatUnits(
+                            newIdealReservationDetails?.totalμUsdtSwapOutput ?? BigNumber.from(0),
+                            selectedInputAsset.decimals,
+                        ),
+                    ),
+                );
+
+                setUsdtExchangeRatePerBTC(
+                    parseFloat(
+                        parseFloat(
+                            formatBtcExchangeRate(
+                                newIdealReservationDetails?.totalSwapExchangeRate,
+                                selectedInputAsset.decimals,
+                            ),
+                        ).toFixed(2),
+                    ),
+                );
+                const reserveLiquidityParams: ReserveLiquidityParams = {
+                    swapAmountInSats: BigNumber.from(
+                        newIdealReservationDetails?.totalBitcoinAmountInSatsUsed,
+                    ).toNumber(),
+                    vaultIndexesToReserve: newIdealReservationDetails.vaultIndexes,
+                    amountsInμUsdtToReserve: newIdealReservationDetails.amountsInμUsdtToReserve,
+                    amountsInSatsToBePaid: newIdealReservationDetails.amountsInSatsToBePaid,
+                    btcPayoutLockingScripts: newIdealReservationDetails.btcPayoutLockingScripts,
+                    btcExchangeRates: newIdealReservationDetails.btcExchangeRates,
+                    ethPayoutAddress: '', // this is set when user inputs their eth payout address
+                    totalSatsInputInlcudingProxyFee: amountSatsSwapInput,
+                    expiredSwapReservationIndexes: [], // TODO: calculate later
+                };
+
+                setLowestFeeReservationParams(reserveLiquidityParams);
+            }
+        } else {
+            setUsdtOutputSwapAmount('');
+            setUsdtDepositAmount('');
+            setLowestFeeReservationParams(null);
+        }
+    };
 
     // ----------------- BITCOIN INPUT ----------------- //
 
     const handleBtcInputChange = (e) => {
-        console.log('e.target.value:', e.target.value);
         const btcValue = validateBtcInput(e.target.value);
-        console.log('btcValue:', btcValue);
 
         if (btcValue !== null) {
             setBtcInputSwapAmount(btcValue);
-            let btcOutputAmount =
+            setBtcOutputAmount(btcValue);
+            let usdtValue =
                 btcValue && parseFloat(btcValue) > 0
                     ? parseFloat(btcValue) *
                       useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC
                     : 0;
-            // TODO: subtract premium we calculate from the eth value
-            // btcOutputAmount -= calculatePremium;
-            setUsdtOutputSwapAmount(formatOutput(btcOutputAmount)); // Correctly format output
+            calculateIdealReservationBitcoinInput(btcValue);
         }
     };
 
     const validateBtcInput = (value) => {
         if (value === '') return '';
+
+        // match only digits and optionally one decimal point with digits after it
         const regex = /^\d*\.?\d*$/;
         if (!regex.test(value)) return null;
+
+        // split by decimal
         const parts = value.split('.');
-        if (parts.length > 1 && parts[1].length > bitcoinDecimals) {
-            return parts[0] + '.' + parts[1].slice(0, bitcoinDecimals);
+
+        // ensure no more than one leading zero before the decimal point
+        if (parts[0].length > 1 && parts[0][0] === '0') {
+            parts[0] = parts[0].replace(/^0+/, '') || '0';
         }
-        return value;
+
+        // limit to 8 digits after the decimal point
+        if (parts.length > 1 && parts[1].length > bitcoinDecimals) {
+            parts[1] = parts[1].slice(0, bitcoinDecimals);
+        }
+        return parts.length > 1 ? `${parts[0]}.${parts[1]}` : parts[0];
     };
 
-    const formatOutput = (number) => {
-        if (!number) return '';
-        const roundedNumber = Number(number).toFixed(selectedInputAsset.decimals);
-        return roundedNumber.replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.$/, ''); // Remove trailing zeros and pointless decimal
-    };
+    // ----------------- USDT OUTPUT ----------------- //
 
-    const handleUsdtOutputChange = (e) => {
+    const handleUsdtOutputChange = (e, amount = null) => {
         const maxDecimals = useStore.getState().validAssets[selectedInputAsset.name].decimals;
-        const usdtValue = e.target.value;
+        const usdtValue = amount !== null ? amount : e.target.value;
 
         const validateUsdtOutputChange = (value: string) => {
             if (value === '') return true;
@@ -153,16 +251,14 @@ export const SwapUI = () => {
 
         if (validateUsdtOutputChange(usdtValue)) {
             setUsdtOutputSwapAmount(usdtValue);
+            setUsdtDepositAmount(usdtValue);
             const btcValue =
                 usdtValue && parseFloat(usdtValue) > 0
                     ? parseFloat(usdtValue) /
                       useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC
                     : 0;
-            setBtcInputSwapAmount(formatOutput(btcValue));
 
-            // Immediately check and log liquidity status
-            const exceeded = checkLiquidityExceeded(usdtValue);
-            console.log('LIQUIDITY EXCEEDED (immediate)?:', exceeded);
+            // calculateIdealReservation(usdtValue, 'usdt'); TODO: implemnt usdt output of function
         }
     };
 
@@ -188,8 +284,7 @@ export const SwapUI = () => {
                                 fontSize={'13px'}
                                 letterSpacing={'-1px'}
                                 fontWeight={'normal'}
-                                fontFamily={'Aux'}
-                                userSelect='none'>
+                                fontFamily={'Aux'}>
                                 You Send
                             </Text>
                             <Input
@@ -236,14 +331,14 @@ export const SwapUI = () => {
 
                     {/* Switch Button */}
                     <Flex
-                        w='30px'
-                        h='30px'
+                        w='32px'
+                        h='32px'
                         borderRadius={'20%'}
                         alignSelf={'center'}
                         align={'center'}
                         justify={'center'}
                         cursor={'pointer'}
-                        _hover={{ bg: '#232323' }}
+                        _hover={{ bg: '#333' }}
                         onClick={() => setDepositMode(true)}
                         position={'absolute'}
                         bg='#161616'
@@ -299,33 +394,57 @@ export const SwapUI = () => {
                                 placeholder='0.0'
                                 _placeholder={{ color: selectedInputAsset.light_text_color }}
                             />
-                            <Text
-                                color={
-                                    isLiquidityExceeded
-                                        ? colors.redHover
-                                        : !usdtOutputSwapAmount
-                                        ? colors.offWhite
-                                        : colors.textGray
-                                }
-                                fontSize={'13px'}
-                                mt='2px'
-                                ml='1px'
-                                letterSpacing={'-1.5px'}
-                                fontWeight={'normal'}
-                                fontFamily={'Aux'}>
-                                {isLiquidityExceeded
-                                    ? `Exceeds available liquidity - ${Number(availableLiquidity).toFixed(
-                                          selectedInputAsset.decimals,
-                                      )} ${selectedInputAsset.name} max`
-                                    : usdtPriceUSD
-                                    ? usdtOutputSwapAmount
-                                        ? (usdtPriceUSD * parseFloat(usdtOutputSwapAmount)).toLocaleString('en-US', {
-                                              style: 'currency',
-                                              currency: 'USD',
-                                          })
-                                        : '$0.00'
-                                    : '$0.00'}
-                            </Text>
+                            <Flex>
+                                <Text
+                                    color={
+                                        isLiquidityExceeded
+                                            ? colors.redHover
+                                            : !usdtOutputSwapAmount
+                                            ? colors.offWhite
+                                            : colors.textGray
+                                    }
+                                    fontSize={'13px'}
+                                    mt='2px'
+                                    ml='1px'
+                                    mr={isLiquidityExceeded ? '8px' : '0px'}
+                                    letterSpacing={'-1px'}
+                                    fontWeight={'normal'}
+                                    fontFamily={'Aux'}>
+                                    {isLiquidityExceeded
+                                        ? `Exceeds available liquidity -`
+                                        : usdtPriceUSD
+                                        ? usdtOutputSwapAmount
+                                            ? (usdtPriceUSD * parseFloat(usdtOutputSwapAmount)).toLocaleString(
+                                                  'en-US',
+                                                  {
+                                                      style: 'currency',
+                                                      currency: 'USD',
+                                                  },
+                                              )
+                                            : '$0.00'
+                                        : '$0.00'}
+                                </Text>
+                                {isLiquidityExceeded && (
+                                    <Text
+                                        fontSize={'13px'}
+                                        mt='2px'
+                                        mr='-116px'
+                                        zIndex={'10'}
+                                        color={selectedInputAsset.border_color_light}
+                                        cursor='pointer'
+                                        onClick={() => handleUsdtOutputChange(null, availableLiquidityInUSDT)}
+                                        _hover={{ textDecoration: 'underline' }}
+                                        letterSpacing={'-1.5px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        {isLiquidityExceeded
+                                            ? `${parseFloat(availableLiquidityInUSDT).toFixed(2)} ${
+                                                  selectedInputAsset.name
+                                              } Max`
+                                            : 'Max'}
+                                    </Text>
+                                )}
+                            </Flex>
                         </Flex>
                         <Spacer />
                         <Flex mr='6px'>
@@ -377,7 +496,7 @@ export const SwapUI = () => {
                             color={colors.offWhite}
                             bg={'#121212'}
                             fontSize={'12px'}
-                            label='Exchange rate includes the hypernode, protocol, and LP Fees. There are no additional or hidden fees.'
+                            label='Exchange rate includes the hypernode, protocol, and reservation fees. There are no additional or hidden fees.'
                             aria-label='A tooltip'>
                             <Flex ml='8px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
                                 <Text

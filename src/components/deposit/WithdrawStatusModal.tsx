@@ -13,27 +13,25 @@ import {
     Button,
     Input,
 } from '@chakra-ui/react';
+import { BigNumber, ethers } from 'ethers';
 import { WithdrawStatus } from '../../hooks/contract/useWithdrawLiquidity';
+import { useWithdrawLiquidity } from '../../hooks/contract/useWithdrawLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
-import { GooSpinner } from 'react-spinners-kit';
 import { CheckmarkCircle, AlertCircleOutline } from 'react-ionicons';
 import { HiOutlineExternalLink, HiXCircle } from 'react-icons/hi';
 import { etherScanBaseUrl } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { DepositVault } from '../../types';
-import { BigNumber } from 'ethers';
-import { formatUnits } from 'ethers/lib/utils';
+import { formatUnits, parseUnits } from 'ethers/lib/utils';
+import { useStore } from '../../store';
+import { getLiquidityProvider } from '../../utils/contractReadFunctions';
+import riftExchangeABI from '../../abis/RiftExchange.json';
+import GooSpinner from '../other/GooSpiner';
 
 interface WithdrawStatusModalProps {
     isOpen: boolean;
     onClose: () => void;
-    status: WithdrawStatus;
-    error: string | null;
-    txHash: string | null;
-    withdrawAmount: string;
-    setWithdrawAmount: (amount: string) => void;
-    handleWithdraw: () => void;
     clearError: () => void;
     selectedVaultToManage: DepositVault;
 }
@@ -41,16 +39,17 @@ interface WithdrawStatusModalProps {
 const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
     isOpen,
     onClose,
-    status,
-    error,
-    txHash,
-    withdrawAmount,
-    setWithdrawAmount,
-    handleWithdraw,
     clearError,
     selectedVaultToManage,
 }) => {
     const [isConfirmStep, setIsConfirmStep] = useState(true);
+    const withdrawAmount = useStore((state) => state.withdrawAmount);
+    const setWithdrawAmount = useStore((state) => state.setWithdrawAmount);
+    const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
+    const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
+    const [_refreshKey, setRefreshKey] = useState(0);
+
+    const { status, error, txHash, resetWithdrawState, withdrawLiquidity } = useWithdrawLiquidity();
 
     useEffect(() => {
         if (isOpen) {
@@ -59,11 +58,79 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
         }
     }, [isOpen, setWithdrawAmount]);
 
+    // handle withdraw liquidity
+    const handleWithdraw = async () => {
+        if (!window.ethereum || !selectedVaultToManage) {
+            console.error('Ethereum provider or selected vault not available');
+            return;
+        }
+
+        resetWithdrawState();
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        console.log('withdrawAmount:', withdrawAmount);
+        const withdrawAmountInTokenSmallestUnit = parseUnits(
+            withdrawAmount,
+            selectedVaultToManage.depositAsset.decimals,
+        );
+
+        const globalVaultIndex = selectedVaultToManage.index;
+
+        try {
+            // get the liquidity provider's data
+            const liquidityProviderData = await getLiquidityProvider(
+                provider,
+                riftExchangeABI.abi,
+                selectedVaultToManage.depositAsset.riftExchangeContractAddress,
+                await signer.getAddress(),
+            );
+
+            // convert the depositVaultIndexes to strings for comparison
+            console.log('liquidityProviderData:', liquidityProviderData);
+            const stringIndexes = liquidityProviderData.depositVaultIndexes.map((index) =>
+                BigNumber.from(index).toNumber(),
+            );
+            console.log('stringIndexes:', stringIndexes);
+
+            // find the local index of the globalVaultIndex in the depositVaultIndexes array
+            const localVaultIndex = stringIndexes.findIndex(
+                (index) => BigNumber.from(index).toNumber() === globalVaultIndex,
+            );
+
+            if (localVaultIndex === -1) {
+                throw new Error("Selected vault not found in user's deposit vaults");
+            }
+
+            const expiredReservationIndexes = [];
+
+            await withdrawLiquidity({
+                signer,
+                riftExchangeAbi: riftExchangeABI.abi,
+                riftExchangeContract: selectedVaultToManage.depositAsset.riftExchangeContractAddress,
+                globalVaultIndex,
+                localVaultIndex,
+                amountToWithdraw: withdrawAmountInTokenSmallestUnit,
+                expiredReservationIndexes,
+            });
+
+            // TODO: refresh deposit vault data in ContractDataProvider somehow - await refreshUserDepositData();
+            const updatedVault = userActiveDepositVaults.find((vault) => vault.index === selectedVaultToManage.index);
+            if (updatedVault) {
+                setSelectedVaultToManage(updatedVault);
+            }
+            setRefreshKey((prevKey) => prevKey + 1);
+        } catch (error) {
+            console.error('Failed to process withdrawal:', error);
+        }
+    };
+
     const isCompleted = status === WithdrawStatus.Confirmed;
     const isError = status === WithdrawStatus.Error;
     const isLoading = !isCompleted && !isError && status !== WithdrawStatus.Idle;
 
     const getStatusMessage = () => {
+        console.log('status:', status);
         switch (status) {
             case WithdrawStatus.WaitingForWalletConfirmation:
                 return 'Waiting for wallet confirmation...';
@@ -132,7 +199,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                 bottom={'20px'}
                 bg={colors.offBlack}
                 borderWidth={2}
-                minH={isCompleted ? '280px' : '320px'}
+                minH={isCompleted ? '280px' : '290px'}
                 w={isError ? '600px' : isCompleted ? '400px' : '500px'}
                 maxWidth='100%'
                 borderColor={colors.borderGray}
@@ -147,7 +214,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                     textAlign='center'>
                     {isConfirmStep ? 'Withdraw Liquidity' : 'Withdrawal Status'}
                 </ModalHeader>
-                {(isCompleted || isError) && !isConfirmStep && <ModalCloseButton />}
+                {isError && !isConfirmStep && <ModalCloseButton />}
                 <ModalBody>
                     {isConfirmStep ? (
                         <Flex direction='column' align='center' justify='center' h='100%'>
@@ -234,7 +301,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                         </Flex>
                     ) : (
                         <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
-                            {isLoading && <GooSpinner size={100} color={colors.purpleBorder} loading={true} />}
+                            {isLoading && <GooSpinner size={100} color={colors.purpleBorder} />}
                             <Spacer />
                             <Text
                                 fontSize='12px'
@@ -283,10 +350,10 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                                 <Flex direction='column' mt={'40px'} w='100%'>
                                     <Button
                                         mt={'40px'}
-                                        bg={colors.offBlackLighter}
+                                        bg={colors.purpleButtonBG}
                                         borderWidth={'2px'}
-                                        borderColor={colors.borderGrayLight}
-                                        _hover={{ bg: colors.borderGray }}
+                                        borderColor={colors.purpleBorder}
+                                        _hover={{ bg: colors.purpleHover }}
                                         borderRadius='md'
                                         onClick={() => window.open(getEtherscanUrl(), '_blank')}
                                         isDisabled={!txHash}>

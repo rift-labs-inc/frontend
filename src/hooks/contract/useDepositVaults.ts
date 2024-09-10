@@ -13,6 +13,7 @@ import { useStore } from '../../store';
 import { useSwapReservations } from './useSwapReservations';
 import { DepositVault, SwapReservation, ReservationState } from '../../types';
 import { calculateFillPercentage } from '../../utils/dappHelper';
+import { formatUnits } from 'ethers/lib/utils';
 
 type UseDepositVaultsResult = {
     allFetchedDepositVaults: DepositVault[];
@@ -60,7 +61,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 if (isCreated && isExpired) {
                     expiredReservationsCount++;
                     reservation.vaultIndexes.forEach((vaultIndex, i) => {
-                        const vaultIndexNumber = vaultIndex.toNumber();
+                        const vaultIndexNumber = vaultIndex;
                         const amountToAdd = reservation.amountsToReserve[i];
                         const currentAdditional = additionalBalances.get(vaultIndexNumber) || BigNumber.from(0);
                         additionalBalances.set(vaultIndexNumber, currentAdditional.add(amountToAdd));
@@ -102,9 +103,6 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 };
             });
 
-            console.log('Total Available Liquidity:', totalAvailableLiquidity.toString());
-
-            // Update the store with the new total available liquidity
             updateTotalAvailableLiquidity(selectedInputAsset.name, totalAvailableLiquidity);
 
             return updatedVaults;
@@ -137,7 +135,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 Array.from({ length: depositVaultsLength }).map((_, i) => i),
             );
 
-            console.log('All Deposit Vaults:', depositVaults);
+            // console.log('All Deposit Vaults:', depositVaults);
 
             const updatedDepositVaults = calculateTrueUnreservedLiquidity(depositVaults, allFetchedSwapReservations);
             console.log('Updated Deposit Vaults:', updatedDepositVaults);

@@ -17,20 +17,15 @@ import { DepositVault, ValidAsset } from '../../types';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { useWithdrawLiquidity } from '../../hooks/contract/useWithdrawLiquidity';
 import { useState } from 'react';
+import { useStore } from '../../store';
 
 interface VaultSettingsProps {
     selectedVaultToManage: DepositVault;
     handleGoBack: () => void;
     selectedInputAsset: ValidAsset;
-    handleWithdraw: () => void;
 }
 
-const VaultSettings: React.FC<VaultSettingsProps> = ({
-    selectedVaultToManage,
-    handleGoBack,
-    selectedInputAsset,
-    handleWithdraw,
-}) => {
+const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, handleGoBack, selectedInputAsset }) => {
     const {
         status: withdrawLiquidityStatus,
         error: withdrawLiquidityError,
@@ -39,7 +34,9 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({
     } = useWithdrawLiquidity();
 
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-    const [withdrawAmount, setWithdrawAmount] = useState('');
+    // const [withdrawAmount, setWithdrawAmount] = useState('');
+    const withdrawAmount = useStore((state) => state.withdrawAmount);
+    const setWithdrawAmount = useStore((state) => state.setWithdrawAmount);
 
     const handleOpenWithdrawModal = () => {
         setIsWithdrawModalOpen(true);
@@ -287,12 +284,6 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({
                 <WithdrawStatusModal
                     isOpen={isWithdrawModalOpen}
                     onClose={() => setIsWithdrawModalOpen(false)}
-                    status={withdrawLiquidityStatus}
-                    error={withdrawLiquidityError}
-                    txHash={withdrawTxHash}
-                    withdrawAmount={withdrawAmount}
-                    setWithdrawAmount={setWithdrawAmount}
-                    handleWithdraw={handleWithdraw}
                     clearError={resetWithdrawState}
                     selectedVaultToManage={selectedVaultToManage}
                 />

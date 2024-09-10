@@ -34,7 +34,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const updatePriceUSD = useStore((state) => state.updatePriceUSD);
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
-    const updateTotalAvailableLiquidity = useStore((state) => state.updateTotalAvailableLiquidity);
 
     // set ethers provider
     useEffect(() => {
@@ -48,16 +47,12 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const fetchPriceData = async () => {
             // TESTING VALUES - TODO: get this data from uniswap
-            console.log('fetching price data...');
-            const btcPriceUSD = 59072.43;
+            const btcPriceUSD = 59624.35;
             const usdtPriceUSD = 1;
             const btcToUsdtRate = btcPriceUSD / usdtPriceUSD;
 
             setBitcoinPriceUSD(btcPriceUSD);
-            updatePriceUSD('USDT', usdtPriceUSD);
-            console.log('BRUH btcToUsdtRate:', btcToUsdtRate);
             updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
-            console.log('BRUH DID STATE UPDATE?', useStore.getState().validAssets['USDT'].exchangeRateInTokenPerBTC);
         };
         fetchPriceData();
 
@@ -74,7 +69,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
                 balance,
                 useStore.getState().validAssets[selectedInputAsset.name].decimals,
             );
-            console.log('formattedBalance:', formattedBalance.toString());
             updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
         };
 
@@ -90,7 +84,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
 
         // Clean up the interval on component unmount
         return () => clearInterval(intervalId);
-    }, [selectedInputAsset, address]);
+    }, [selectedInputAsset, address, isConnected]);
 
     // fetch deposit vaults
     const {

@@ -1,0 +1,54 @@
+.goo-spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.goo-ball {
+    width: 25%;
+    height: 25%;
+    border-radius: 50%;
+    position: absolute;
+    animation: goo-animate 1.5s ease-in-out infinite;
+}
+
+.goo-ball:nth-child(1) {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    animation-delay: 0s;
+}
+
+.goo-ball:nth-child(2) {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    animation-delay: 0.3s;
+}
+
+.goo-ball:nth-child(3) {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    animation-delay: 0.6s;
+}
+
+.goo-ball:nth-child(4) {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    animation-delay: 0.9s;
+}
+
+@keyframes goo-animate {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.5);
+    }
+    100% {
+        transform: scale(1);
+    }
+}

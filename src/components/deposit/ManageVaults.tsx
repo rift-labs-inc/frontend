@@ -1,9 +1,6 @@
 import { Flex, Text } from '@chakra-ui/react';
-import { BigNumber, ethers } from 'ethers';
 import { parseUnits } from 'ethers/lib/utils';
 import { useEffect, useState } from 'react';
-import riftExchangeABI from '../../abis/RiftExchange.json';
-import { useWithdrawLiquidity } from '../../hooks/contract/useWithdrawLiquidity';
 import useHorizontalSelectorInput from '../../hooks/useHorizontalSelectorInput';
 import { useStore } from '../../store';
 import { DepositVault } from '../../types';
@@ -15,102 +12,35 @@ import HorizontalButtonSelector from '../HorizontalButtonSelector';
 import DetailedVault from './DetailedVault';
 import VaultSettings from './VaultSettings';
 import LightVault from './LightVault';
+import { useAccount } from 'wagmi';
+import { ConnectWalletButton } from '../ConnectWalletButton';
 
 export const ManageVaults = ({}) => {
     const {
-        options: optionsButtoActiveVsCompleted,
-        selected: selectedButtonActiveVsCompleted,
-        setSelected: setSelectedButtonActiveVsCompleted,
-    } = useHorizontalSelectorInput(['Active', 'Completed'] as const);
+        options: optionsButtonVaultsVsReservations,
+        selected: selectedButtonVaultsVsReservations,
+        setSelected: setOptionsButtonVaultsVsReservations,
+    } = useHorizontalSelectorInput(['Vaults', 'Reservations'] as const);
 
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
     const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
     const userCompletedDepositVaults = useStore((state) => state.userCompletedDepositVaults);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-
-    const { withdrawLiquidity, resetWithdrawState } = useWithdrawLiquidity();
-
-    const [withdrawAmount, setWithdrawAmount] = useState('');
-    const vaultsToDisplay =
-        selectedButtonActiveVsCompleted === 'Active' ? userActiveDepositVaults : userCompletedDepositVaults;
+    const withdrawAmount = useStore((state) => state.withdrawAmount);
+    const setWithdrawAmount = useStore((state) => state.setWithdrawAmount);
+    const [hideCompletedVaults, setHideCompletedVaults] = useState(false); // TODO: add hide completed vaults checkbox in UI
+    const vaultsToDisplay = hideCompletedVaults
+        ? userActiveDepositVaults
+        : userActiveDepositVaults.concat(userCompletedDepositVaults);
     const setUserActiveDepositVaults = useStore((state) => state.setUserActiveDepositVaults);
     const [_refreshKey, setRefreshKey] = useState(0);
-
-    useEffect(() => {
-        console.log('BRUH ADVAITH GAY???', vaultsToDisplay);
-    }, [vaultsToDisplay]);
+    const { address, isConnected } = useAccount();
 
     const handleGoBack = () => {
         // clear selected vault
         setSelectedVaultToManage(null);
-        console.log('selectedButtonActiveVsCompleted:', selectedButtonActiveVsCompleted);
-    };
-
-    // handle withdraw liquidity
-    const handleWithdraw = async () => {
-        if (!window.ethereum || !selectedVaultToManage) {
-            console.error('Ethereum provider or selected vault not available');
-            return;
-        }
-
-        resetWithdrawState();
-
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const withdrawAmountInTokenSmallestUnit = parseUnits(
-            withdrawAmount,
-            selectedVaultToManage.depositAsset.decimals,
-        );
-
-        const globalVaultIndex = selectedVaultToManage.index;
-
-        try {
-            // get the liquidity provider's data
-            const liquidityProviderData = await getLiquidityProvider(
-                provider,
-                riftExchangeABI.abi,
-                selectedVaultToManage.depositAsset.riftExchangeContractAddress,
-                await signer.getAddress(),
-            );
-
-            // convert the depositVaultIndexes to strings for comparison
-            console.log('liquidityProviderData:', liquidityProviderData);
-            const stringIndexes = liquidityProviderData.depositVaultIndexes.map((index) =>
-                BigNumber.from(index).toNumber(),
-            );
-            console.log('stringIndexes:', stringIndexes);
-
-            // find the local index of the globalVaultIndex in the depositVaultIndexes array
-            const localVaultIndex = stringIndexes.findIndex(
-                (index) => BigNumber.from(index).toNumber() === globalVaultIndex,
-            );
-
-            if (localVaultIndex === -1) {
-                throw new Error("Selected vault not found in user's deposit vaults");
-            }
-
-            const expiredReservationIndexes = [];
-
-            await withdrawLiquidity({
-                signer,
-                riftExchangeAbi: riftExchangeABI.abi,
-                riftExchangeContract: selectedVaultToManage.depositAsset.riftExchangeContractAddress,
-                globalVaultIndex,
-                localVaultIndex,
-                amountToWithdraw: withdrawAmountInTokenSmallestUnit,
-                expiredReservationIndexes,
-            });
-
-            // TODO: refresh deposit vault data in ContractDataProvider somehow - await refreshUserDepositData();
-            const updatedVault = userActiveDepositVaults.find((vault) => vault.index === selectedVaultToManage.index);
-            if (updatedVault) {
-                setSelectedVaultToManage(updatedVault);
-            }
-            setRefreshKey((prevKey) => prevKey + 1);
-        } catch (error) {
-            console.error('Failed to process withdrawal:', error);
-        }
+        console.log('selectedButtonVaultsVsReservations:', selectedButtonVaultsVsReservations);
     };
 
     // update selected vault with new data
@@ -137,7 +67,41 @@ export const ManageVaults = ({}) => {
     //     if (userActiveDepositVaults.length == 0) setUserActiveDepositVaults(vault as any);
     // }, [userActiveDepositVaults]);
 
-    return (
+    return !isConnected ? (
+        <Flex
+            w={'100%'}
+            h='100%'
+            flexDir={'column'}
+            userSelect={'none'}
+            fontSize={'12px'}
+            fontFamily={FONT_FAMILIES.AUX_MONO}
+            color={'#c3c3c3'}
+            fontWeight={'normal'}
+            gap={'0px'}
+            align='center'
+            mt='24px'>
+            <Flex
+                w='100%'
+                maxW='600px'
+                h='200px'
+                px='24px'
+                justify={vaultsToDisplay && vaultsToDisplay.length > 0 ? 'flex-start' : 'center'}
+                py='12px'
+                align={'center'}
+                bg={colors.offBlack}
+                borderRadius={'20px'}
+                mt={selectedVaultToManage ? '56px' : '16px'}
+                border='3px solid'
+                borderColor={colors.borderGray}
+                flexDir='column'>
+                <Text textAlign={'center'} fontSize={'16px'} px='20px' mb='30px'>
+                    Connect your wallet to see active deposit vaults and swap resevations
+                </Text>
+
+                <ConnectWalletButton />
+            </Flex>
+        </Flex>
+    ) : (
         <Flex
             w={'100%'}
             h='100%'
@@ -153,11 +117,11 @@ export const ManageVaults = ({}) => {
             {!selectedVaultToManage && (
                 <Flex justify={'center'}>
                     <HorizontalButtonSelector
-                        w='300px'
+                        w='350px'
                         h='40px'
                         fontSize={'14px'}
-                        options={optionsButtoActiveVsCompleted}
-                        onSelectItem={setSelectedButtonActiveVsCompleted}
+                        options={optionsButtonVaultsVsReservations}
+                        onSelectItem={setOptionsButtonVaultsVsReservations}
                     />
                 </Flex>
             )}
@@ -166,9 +130,9 @@ export const ManageVaults = ({}) => {
                 maxW='1000px'
                 h='650px'
                 px='24px'
+                justify={vaultsToDisplay && vaultsToDisplay.length > 0 ? 'flex-start' : 'center'}
                 py='12px'
                 align={'center'}
-                justify={'center'}
                 bg={colors.offBlack}
                 borderRadius={'20px'}
                 mt={selectedVaultToManage ? '56px' : '16px'}
@@ -180,7 +144,6 @@ export const ManageVaults = ({}) => {
                         selectedVaultToManage={selectedVaultToManage}
                         handleGoBack={handleGoBack}
                         selectedInputAsset={selectedInputAsset}
-                        handleWithdraw={handleWithdraw}
                     />
                 ) : (
                     <>
@@ -235,7 +198,13 @@ export const ManageVaults = ({}) => {
                             overflowY={vaultsToDisplay && vaultsToDisplay.length > 0 ? 'scroll' : 'hidden'}
                             direction='column'
                             w='100%'>
-                            {vaultsToDisplay && vaultsToDisplay.length > 0 ? (
+                            {selectedButtonVaultsVsReservations === 'Reservations' ? (
+                                <Flex justify={'center'} fontSize={'16px'} alignItems={'center'}>
+                                    <Text fontSize='16px' fontWeight='bold' color={colors.offWhite} mt='10px'>
+                                        TODO: Populate with user Reservations
+                                    </Text>
+                                </Flex>
+                            ) : vaultsToDisplay && vaultsToDisplay.length > 0 ? (
                                 vaultsToDisplay.map((vault: DepositVault, index: number) => (
                                     <LightVault
                                         key={index}
@@ -246,9 +215,7 @@ export const ManageVaults = ({}) => {
                                 ))
                             ) : (
                                 <Flex justify={'center'} fontSize={'16px'} alignItems={'center'}>
-                                    <Text>
-                                        No {selectedButtonActiveVsCompleted.toLocaleLowerCase()} deposit vaults found
-                                    </Text>
+                                    <Text>No deposit vaults found with your address</Text>
                                 </Flex>
                             )}
                         </Flex>
