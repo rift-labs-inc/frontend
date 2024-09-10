@@ -12,13 +12,15 @@ import HorizontalButtonSelector from '../HorizontalButtonSelector';
 import DetailedVault from './DetailedVault';
 import VaultSettings from './VaultSettings';
 import LightVault from './LightVault';
+import { useAccount } from 'wagmi';
+import { ConnectWalletButton } from '../ConnectWalletButton';
 
 export const ManageVaults = ({}) => {
     const {
-        options: optionsButtoActiveVsCompleted,
-        selected: selectedButtonActiveVsCompleted,
-        setSelected: setSelectedButtonActiveVsCompleted,
-    } = useHorizontalSelectorInput(['Active', 'Completed'] as const);
+        options: optionsButtonVaultsVsReservations,
+        selected: selectedButtonVaultsVsReservations,
+        setSelected: setOptionsButtonVaultsVsReservations,
+    } = useHorizontalSelectorInput(['Vaults', 'Reservations'] as const);
 
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
@@ -27,14 +29,18 @@ export const ManageVaults = ({}) => {
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const withdrawAmount = useStore((state) => state.withdrawAmount);
     const setWithdrawAmount = useStore((state) => state.setWithdrawAmount);
-    const vaultsToDisplay = selectedButtonActiveVsCompleted === 'Active' ? userActiveDepositVaults : userCompletedDepositVaults;
+    const [hideCompletedVaults, setHideCompletedVaults] = useState(false); // TODO: add hide completed vaults checkbox in UI
+    const vaultsToDisplay = hideCompletedVaults
+        ? userActiveDepositVaults
+        : userActiveDepositVaults.concat(userCompletedDepositVaults);
     const setUserActiveDepositVaults = useStore((state) => state.setUserActiveDepositVaults);
     const [_refreshKey, setRefreshKey] = useState(0);
+    const { address, isConnected } = useAccount();
 
     const handleGoBack = () => {
         // clear selected vault
         setSelectedVaultToManage(null);
-        console.log('selectedButtonActiveVsCompleted:', selectedButtonActiveVsCompleted);
+        console.log('selectedButtonVaultsVsReservations:', selectedButtonVaultsVsReservations);
     };
 
     // update selected vault with new data
@@ -44,7 +50,8 @@ export const ManageVaults = ({}) => {
 
             // check both active and completed vaults
             const updatedVault =
-                userActiveDepositVaults.find((vault) => vault.index === selectedVaultIndex) || userCompletedDepositVaults.find((vault) => vault.index === selectedVaultIndex);
+                userActiveDepositVaults.find((vault) => vault.index === selectedVaultIndex) ||
+                userCompletedDepositVaults.find((vault) => vault.index === selectedVaultIndex);
 
             console.log('updatedVault:', updatedVault);
 
@@ -60,7 +67,41 @@ export const ManageVaults = ({}) => {
     //     if (userActiveDepositVaults.length == 0) setUserActiveDepositVaults(vault as any);
     // }, [userActiveDepositVaults]);
 
-    return (
+    return !isConnected ? (
+        <Flex
+            w={'100%'}
+            h='100%'
+            flexDir={'column'}
+            userSelect={'none'}
+            fontSize={'12px'}
+            fontFamily={FONT_FAMILIES.AUX_MONO}
+            color={'#c3c3c3'}
+            fontWeight={'normal'}
+            gap={'0px'}
+            align='center'
+            mt='24px'>
+            <Flex
+                w='100%'
+                maxW='600px'
+                h='200px'
+                px='24px'
+                justify={vaultsToDisplay && vaultsToDisplay.length > 0 ? 'flex-start' : 'center'}
+                py='12px'
+                align={'center'}
+                bg={colors.offBlack}
+                borderRadius={'20px'}
+                mt={selectedVaultToManage ? '56px' : '16px'}
+                border='3px solid'
+                borderColor={colors.borderGray}
+                flexDir='column'>
+                <Text textAlign={'center'} fontSize={'16px'} px='20px' mb='30px'>
+                    Connect your wallet to see active deposit vaults and swap resevations
+                </Text>
+
+                <ConnectWalletButton />
+            </Flex>
+        </Flex>
+    ) : (
         <Flex
             w={'100%'}
             h='100%'
@@ -75,7 +116,13 @@ export const ManageVaults = ({}) => {
             mt='24px'>
             {!selectedVaultToManage && (
                 <Flex justify={'center'}>
-                    <HorizontalButtonSelector w='300px' h='40px' fontSize={'14px'} options={optionsButtoActiveVsCompleted} onSelectItem={setSelectedButtonActiveVsCompleted} />
+                    <HorizontalButtonSelector
+                        w='350px'
+                        h='40px'
+                        fontSize={'14px'}
+                        options={optionsButtonVaultsVsReservations}
+                        onSelectItem={setOptionsButtonVaultsVsReservations}
+                    />
                 </Flex>
             )}
             <Flex
@@ -93,7 +140,11 @@ export const ManageVaults = ({}) => {
                 borderColor={colors.borderGray}
                 flexDir='column'>
                 {selectedVaultToManage ? (
-                    <VaultSettings selectedVaultToManage={selectedVaultToManage} handleGoBack={handleGoBack} selectedInputAsset={selectedInputAsset} />
+                    <VaultSettings
+                        selectedVaultToManage={selectedVaultToManage}
+                        handleGoBack={handleGoBack}
+                        selectedInputAsset={selectedInputAsset}
+                    />
                 ) : (
                     <>
                         {vaultsToDisplay && vaultsToDisplay.length > 0 && (
@@ -142,14 +193,29 @@ export const ManageVaults = ({}) => {
                                 }
                             `}
                         </style>
-                        <Flex className='flex-scroll-dark' overflowY={vaultsToDisplay && vaultsToDisplay.length > 0 ? 'scroll' : 'hidden'} direction='column' w='100%'>
-                            {vaultsToDisplay && vaultsToDisplay.length > 0 ? (
+                        <Flex
+                            className='flex-scroll-dark'
+                            overflowY={vaultsToDisplay && vaultsToDisplay.length > 0 ? 'scroll' : 'hidden'}
+                            direction='column'
+                            w='100%'>
+                            {selectedButtonVaultsVsReservations === 'Reservations' ? (
+                                <Flex justify={'center'} fontSize={'16px'} alignItems={'center'}>
+                                    <Text fontSize='16px' fontWeight='bold' color={colors.offWhite} mt='10px'>
+                                        TODO: Populate with user Reservations
+                                    </Text>
+                                </Flex>
+                            ) : vaultsToDisplay && vaultsToDisplay.length > 0 ? (
                                 vaultsToDisplay.map((vault: DepositVault, index: number) => (
-                                    <LightVault key={index} vault={vault} onClick={() => setSelectedVaultToManage(vault)} selectedInputAsset={selectedInputAsset} />
+                                    <LightVault
+                                        key={index}
+                                        vault={vault}
+                                        onClick={() => setSelectedVaultToManage(vault)}
+                                        selectedInputAsset={selectedInputAsset}
+                                    />
                                 ))
                             ) : (
                                 <Flex justify={'center'} fontSize={'16px'} alignItems={'center'}>
-                                    <Text>No {selectedButtonActiveVsCompleted.toLocaleLowerCase()} deposit vaults found</Text>
+                                    <Text>No deposit vaults found with your address</Text>
                                 </Flex>
                             )}
                         </Flex>

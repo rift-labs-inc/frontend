@@ -230,8 +230,6 @@ export function calculateFillPercentage(vault: DepositVault) {
 
 export function calculateBestVaultsForBitcoinInput(depositVaults, bitcoinAmountInSats, maxLpOutputs = maxSwapOutputs) {
     // [0] validate inputs
-    console.log('testing, depositVaults:', depositVaults);
-
     if (!depositVaults || depositVaults.length === 0 || bitcoinAmountInSats.lte(0)) {
         return null;
     }
@@ -244,7 +242,6 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, bitcoinAmountI
 
     // [2] sort vaults based on exchange rate (high -> low)
     const sortedVaults = filteredVaults.sort((a, b) => b.btcExchangeRate.sub(a.btcExchangeRate).toNumber());
-    console.log('sortedVaults:', sortedVaults);
 
     // [3] setup variables to track results
     let totalBitcoinAmountInSatsUsed = BigNumber.from(0);

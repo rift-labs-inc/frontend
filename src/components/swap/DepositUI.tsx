@@ -39,7 +39,6 @@ export const DepositUI = () => {
     const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);
     const allDepositVaults = useStore((state) => state.allDepositVaults);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
-    const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
     const userEthAddress = useStore((state) => state.userEthAddress);
     const [userBalanceExceeded, setUserBalanceExceeded] = useState(false);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
@@ -280,7 +279,7 @@ export const DepositUI = () => {
                                                 <Text
                                                     fontSize={'13px'}
                                                     mt='2px'
-                                                    mr='-116px'
+                                                    mr='-138px'
                                                     zIndex={'10'}
                                                     color={selectedInputAsset.border_color_light}
                                                     cursor='pointer'

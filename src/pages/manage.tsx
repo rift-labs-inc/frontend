@@ -39,6 +39,7 @@ const Manage = () => {
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
     const showManageDepositVaultsScreen = useStore((state) => state.showManageDepositVaultsScreen);
     const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
+    const { address, isConnected } = useAccount();
 
     // switch to manage vaults screen if user has just created a vault
     useEffect(() => {
@@ -73,7 +74,7 @@ const Manage = () => {
                 <Navbar />
                 <Flex direction={'column'} align='center' w='100%' h='100%' mt='105px'>
                     {/* LOGOS & TEXT */}
-                    <Flex direction={'column'} align='center' w='100%'>
+                    <Flex direction={'column'} align='center' mt={!isConnected ? '20vh' : '10px'} w='100%'>
                         <Flex
                             sx={{
                                 WebkitTextFillColor: 'transparent',
@@ -90,7 +91,7 @@ const Manage = () => {
                                 fontWeight='bold'
                                 px='12px'
                                 as='h1'>
-                                Manage Vaults
+                                Manage Swaps
                             </Text>
                         </Flex>
                     </Flex>

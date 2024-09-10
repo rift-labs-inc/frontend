@@ -22,9 +22,9 @@ const CircleFlex: React.FC<CircleFlexProps> = ({ state }) => {
                     borderRadius='full'
                     w='30px'
                     h='30px'
-                    bg='#299A44'
+                    bg='yellow.700'
                     borderWidth='6px'
-                    borderColor={colors.greenBackground}
+                    borderColor={colors.RiftOrange}
                 />
             );
         case 'completed':

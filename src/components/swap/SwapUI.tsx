@@ -114,45 +114,43 @@ export const SwapUI = () => {
     };
 
     // calculate ideal reservation
-    const calculateIdealReservationBitcoinInput = async (amountBtcSwapInput, inputType) => {
-        if (!amountBtcSwapInput) return;
-        const isBitcoinInput = inputType === 'btc' ? true : false;
-        const amountSatsSwapInput = isBitcoinInput
-            ? parseUnits(amountBtcSwapInput, bitcoinDecimals)
-            : parseUnits(amountBtcSwapInput, selectedInputAsset.decimals);
-        let idealReservationDetails =
-            isBitcoinInput && allDepositVaults.length > 0
+    const calculateIdealReservationBitcoinInput = async (amountBtcSwapInput) => {
+        if (!amountBtcSwapInput || amountBtcSwapInput == '.') return;
+        const amountSatsSwapInput = parseUnits(amountBtcSwapInput, bitcoinDecimals);
+        let ogIdealReservationDetails =
+            allDepositVaults.length > 0
                 ? calculateBestVaultsForBitcoinInput(allDepositVaults, amountSatsSwapInput)
                 : null;
 
-        console.log('true idealReservationDetails:', idealReservationDetails);
+        if (ogIdealReservationDetails) console.log('idealReservationDetails:', ogIdealReservationDetails);
 
         // set exchange rate & usdt output based on retulst of the above function
-        if (idealReservationDetails?.totalμUsdtSwapOutput) {
+        if (ogIdealReservationDetails?.totalμUsdtSwapOutput) {
             // calculate the btc fee and subtract it from the "input", then rerun calculateBestVaultsForBitcoinInput
 
-            const proxyWalletSwapFeeInSats = await fetchProxyWalletSwapFee(idealReservationDetails.vaultIndexes.length);
-            console.log('please - proxy wallet fee in sats', proxyWalletSwapFeeInSats);
+            const proxyWalletSwapFeeInSats = await fetchProxyWalletSwapFee(
+                ogIdealReservationDetails.vaultIndexes.length,
+            );
+            console.log('typed btc input', amountSatsSwapInput.toString());
+            console.log('-proxy wallet fee in sats', proxyWalletSwapFeeInSats);
 
             // call the function again with the new amount
-            console.log('please old amountSatsSwapInput', amountSatsSwapInput.toString());
-            const newAmountSatsSwapInput = idealReservationDetails.totalBitcoinAmountInSatsUsed.sub(
+            const newAmountSatsSwapInput = ogIdealReservationDetails.totalBitcoinAmountInSatsUsed.sub(
                 BigNumber.from(proxyWalletSwapFeeInSats),
             );
-            console.log('please new amountSatsSwapInput:', newAmountSatsSwapInput.toString());
+            console.log('new amountSatsSwapInput:', newAmountSatsSwapInput.toString());
 
-            console.log('please OLD totalμUsdtSwapOutput:', idealReservationDetails.totalμUsdtSwapOutput.toString());
-            idealReservationDetails = isBitcoinInput
-                ? calculateBestVaultsForBitcoinInput(allDepositVaults, newAmountSatsSwapInput)
-                : null;
-            console.log('please NEW totalμUsdtSwapOutput:', idealReservationDetails?.totalμUsdtSwapOutput?.toString());
+            const newIdealReservationDetails = calculateBestVaultsForBitcoinInput(
+                allDepositVaults,
+                newAmountSatsSwapInput,
+            );
 
-            if (idealReservationDetails) {
+            if (newIdealReservationDetails) {
                 setUsdtOutputSwapAmount(
                     formatAmountToString(
                         selectedInputAsset,
                         formatUnits(
-                            idealReservationDetails?.totalμUsdtSwapOutput ?? BigNumber.from(0),
+                            newIdealReservationDetails?.totalμUsdtSwapOutput ?? BigNumber.from(0),
                             selectedInputAsset.decimals,
                         ),
                     ),
@@ -161,7 +159,7 @@ export const SwapUI = () => {
                     formatAmountToString(
                         selectedInputAsset,
                         formatUnits(
-                            idealReservationDetails?.totalμUsdtSwapOutput ?? BigNumber.from(0),
+                            newIdealReservationDetails?.totalμUsdtSwapOutput ?? BigNumber.from(0),
                             selectedInputAsset.decimals,
                         ),
                     ),
@@ -171,26 +169,25 @@ export const SwapUI = () => {
                     parseFloat(
                         parseFloat(
                             formatBtcExchangeRate(
-                                idealReservationDetails?.totalSwapExchangeRate,
+                                newIdealReservationDetails?.totalSwapExchangeRate,
                                 selectedInputAsset.decimals,
                             ),
                         ).toFixed(2),
                     ),
                 );
                 const reserveLiquidityParams: ReserveLiquidityParams = {
-                    totalSwapAmountInSats: BigNumber.from(
-                        idealReservationDetails?.totalBitcoinAmountInSatsUsed,
+                    swapAmountInSats: BigNumber.from(
+                        newIdealReservationDetails?.totalBitcoinAmountInSatsUsed,
                     ).toNumber(),
-                    vaultIndexesToReserve: idealReservationDetails.vaultIndexes,
-                    amountsInμUsdtToReserve: idealReservationDetails.amountsInμUsdtToReserve,
-                    amountsInSatsToBePaid: idealReservationDetails.amountsInSatsToBePaid,
-                    btcPayoutLockingScripts: idealReservationDetails.btcPayoutLockingScripts,
-                    btcExchangeRates: idealReservationDetails.btcExchangeRates,
+                    vaultIndexesToReserve: newIdealReservationDetails.vaultIndexes,
+                    amountsInμUsdtToReserve: newIdealReservationDetails.amountsInμUsdtToReserve,
+                    amountsInSatsToBePaid: newIdealReservationDetails.amountsInSatsToBePaid,
+                    btcPayoutLockingScripts: newIdealReservationDetails.btcPayoutLockingScripts,
+                    btcExchangeRates: newIdealReservationDetails.btcExchangeRates,
                     ethPayoutAddress: '', // this is set when user inputs their eth payout address
+                    totalSatsInputInlcudingProxyFee: amountSatsSwapInput,
                     expiredSwapReservationIndexes: [], // TODO: calculate later
                 };
-
-                console.log('please RESERVATION PARAMs:', reserveLiquidityParams);
 
                 setLowestFeeReservationParams(reserveLiquidityParams);
             }
@@ -214,19 +211,30 @@ export const SwapUI = () => {
                     ? parseFloat(btcValue) *
                       useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC
                     : 0;
-            calculateIdealReservationBitcoinInput(btcValue, 'btc');
+            calculateIdealReservationBitcoinInput(btcValue);
         }
     };
 
     const validateBtcInput = (value) => {
         if (value === '') return '';
+
+        // match only digits and optionally one decimal point with digits after it
         const regex = /^\d*\.?\d*$/;
         if (!regex.test(value)) return null;
+
+        // split by decimal
         const parts = value.split('.');
-        if (parts.length > 1 && parts[1].length > bitcoinDecimals) {
-            return parts[0] + '.' + parts[1].slice(0, bitcoinDecimals);
+
+        // ensure no more than one leading zero before the decimal point
+        if (parts[0].length > 1 && parts[0][0] === '0') {
+            parts[0] = parts[0].replace(/^0+/, '') || '0';
         }
-        return value;
+
+        // limit to 8 digits after the decimal point
+        if (parts.length > 1 && parts[1].length > bitcoinDecimals) {
+            parts[1] = parts[1].slice(0, bitcoinDecimals);
+        }
+        return parts.length > 1 ? `${parts[0]}.${parts[1]}` : parts[0];
     };
 
     // ----------------- USDT OUTPUT ----------------- //

@@ -175,7 +175,8 @@ function decodeSwapReservations(data: string): SwapReservation[] {
                     address ethPayoutAddress,
                     bytes32 lpReservationHash,
                     bytes32 nonce,
-                    uint256 totalSwapAmount,
+                    uint256 totalSatsInputInlcudingProxyFee,
+                    uint256 totalSwapOutputAmount,
                     int256 prepaidFeeAmount,
                     uint256 proposedBlockHeight,
                     bytes32 proposedBlockHash,
@@ -193,7 +194,8 @@ function decodeSwapReservations(data: string): SwapReservation[] {
             ethPayoutAddress,
             lpReservationHash,
             nonce,
-            totalSwapAmount,
+            totalSatsInputInlcudingProxyFee,
+            totalSwapOutputAmount,
             prepaidFeeAmount,
             proposedBlockHeight,
             proposedBlockHash,
@@ -209,7 +211,8 @@ function decodeSwapReservations(data: string): SwapReservation[] {
             ethPayoutAddress,
             lpReservationHash,
             nonce,
-            totalSwapAmount: ethers.BigNumber.from(totalSwapAmount),
+            totalSatsInputInlcudingProxyFee: ethers.BigNumber.from(totalSatsInputInlcudingProxyFee),
+            totalSwapOutputAmount: ethers.BigNumber.from(totalSwapOutputAmount),
             prepaidFeeAmount: ethers.BigNumber.from(prepaidFeeAmount),
             proposedBlockHeight: ethers.BigNumber.from(proposedBlockHeight),
             proposedBlockHash,
@@ -218,10 +221,12 @@ function decodeSwapReservations(data: string): SwapReservation[] {
         };
     });
 
+    console.log('Decoded swap reservations:', swapReservations);
+
     return swapReservations;
 }
 
-export function getMatchingLiquidityReserved(
+export function getMatchingLiquidityReservedEvent(
     provider: ethers.providers.Provider,
     contractAddress: string,
     abi: ethers.ContractInterface,
@@ -249,22 +254,12 @@ export function getMatchingLiquidityReserved(
 
                 console.log('Matching LiquidityReserved event found:', matchingEvent);
 
-                // Remove the event listener
                 contract.off('LiquidityReserved', listener);
 
-                // Resolve the promise with the matching event
                 resolve(matchingEvent);
             }
         };
 
-        // Set up the event listener
         contract.on('LiquidityReserved', listener);
-
-        // Optional: Set up a timeout to reject the promise if no matching event is found within a certain time
-        // Uncomment and adjust the timeout as needed
-        // setTimeout(() => {
-        //   contract.off("LiquidityReserved", listener);
-        //   reject(new Error("Timeout: No matching LiquidityReserved event found within the specified time"));
-        // }, 300000); // 5 minutes timeout
     });
 }

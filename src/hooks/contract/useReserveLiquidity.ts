@@ -4,7 +4,7 @@ import { ERC20ABI, protocolFeeDenominator, protocolFeePercentage } from '../../u
 import { useStore } from '../../store';
 import { ProxyWalletLiquidityProvider } from '../../types';
 import {
-    getMatchingLiquidityReserved,
+    getMatchingLiquidityReservedEvent,
     getSwapReservations,
     getSwapReservationsLength,
 } from '../../utils/contractReadFunctions';
@@ -32,6 +32,7 @@ interface ReserveLiquidityParams {
     vaultIndexesToReserve: number[];
     amountsToReserve: BigNumberish[];
     ethPayoutAddress: string;
+    totalSatsInputInlcudingProxyFee: BigNumber;
     expiredSwapReservationIndexes: number[];
     tokenAddress: string;
 }
@@ -53,7 +54,6 @@ export function useReserveLiquidity() {
     const setUserEthAddress = useStore((state) => state.setUserEthAddress);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
-    const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
     const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const router = useRouter();
 
@@ -106,10 +106,13 @@ export function useReserveLiquidity() {
                     await approveTx.wait();
                 }
 
+                console.log('Reserving liquidity with params SATS:', params.totalSatsInputInlcudingProxyFee.toString());
+
                 const reserveTx = await riftExchangeContractInstance.reserveLiquidity(
                     params.vaultIndexesToReserve,
                     params.amountsToReserve,
                     params.ethPayoutAddress,
+                    params.totalSatsInputInlcudingProxyFee,
                     params.expiredSwapReservationIndexes,
                 );
 
@@ -118,7 +121,7 @@ export function useReserveLiquidity() {
                 await reserveTx.wait();
                 setStatus(ReserveStatus.Confirmed);
 
-                const reservationDetails = await getMatchingLiquidityReserved(
+                const reservationDetails = await getMatchingLiquidityReservedEvent(
                     ethersRpcProvider,
                     selectedInputAsset.riftExchangeContractAddress,
                     riftExchangeABI.abi,
@@ -132,36 +135,18 @@ export function useReserveLiquidity() {
                     reservationDetails.swapReservationIndex,
                 );
 
-                try {
-                    handleNavigation(`/swap/${reservationUri}`);
-                } catch (e) {
-                    console.error('Navigation error:', e);
-                }
-
-                const createLiquidityProvider = (
-                    amount: string,
-                    btcExchangeRate: string,
-                    btcPayoutLockingScript: string,
-                ): ProxyWalletLiquidityProvider => {
-                    return {
-                        amount: amount,
-                        btcExchangeRate: btcExchangeRate,
-                        lockingScriptHex: btcPayoutLockingScript,
-                    };
-                };
-
                 const liquidityProviders: Array<ProxyWalletLiquidityProvider> = params.vaultIndexesToReserve.map(
                     (index: number, i: number) => {
-                        return createLiquidityProvider(
-                            BigNumber.from(
+                        return {
+                            amount: BigNumber.from(
                                 bufferTo18Decimals(
                                     lowestFeeReservationParams.amountsInμUsdtToReserve[i],
                                     selectedInputAsset.decimals,
                                 ),
                             ).toString(),
-                            BigNumber.from(lowestFeeReservationParams.btcExchangeRates[i]).toString(),
-                            lowestFeeReservationParams.btcPayoutLockingScripts[i],
-                        );
+                            btcExchangeRate: BigNumber.from(lowestFeeReservationParams.btcExchangeRates[i]).toString(),
+                            lockingScriptHex: lowestFeeReservationParams.btcPayoutLockingScripts[i],
+                        };
                     },
                 );
 
@@ -179,6 +164,12 @@ export function useReserveLiquidity() {
                     window.rift.createRiftSwap(riftSwapArgs);
                 } catch (e) {
                     console.error('Error creating Rift swap:', e);
+                }
+
+                try {
+                    handleNavigation(`/swap/${reservationUri}`);
+                } catch (e) {
+                    console.error('Navigation error:', e);
                 }
             } catch (err) {
                 console.error('Error in reserveLiquidity:', err);

@@ -32,7 +32,7 @@ import { formatUnits } from 'ethers/lib/utils';
 import { useAccount } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 
-export const Step1 = ({}) => {
+export const ReserveLiquidity = ({}) => {
     const { width } = useWindowSize();
     const isMobileView = width < 600;
     const router = useRouter();
@@ -50,8 +50,9 @@ export const Step1 = ({}) => {
     const [isAwaitingConnection, setIsAwaitingConnection] = useState(false);
     const { openConnectModal } = useConnectModal();
     const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
+    const [formattedTotalAmount, setFormattedTotalAmount] = useState<string>('0');
 
-    // eth payout address
+    // usdt payout address
     const handleETHPayoutAddressChange = (e) => {
         const newEthPayoutAddress = e.target.value;
         setEthPayoutAddress(newEthPayoutAddress);
@@ -103,9 +104,10 @@ export const Step1 = ({}) => {
         setIsModalOpen(true);
 
         console.log('brothers, params', lowestFeeReservationParams);
-
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
+        const totalSatsInputInlcudingProxyFee = lowestFeeReservationParams.totalSatsInputInlcudingProxyFee;
+        console.log('brothers, total sats', totalSatsInputInlcudingProxyFee.toString());
 
         try {
             await reserveLiquidity({
@@ -115,6 +117,7 @@ export const Step1 = ({}) => {
                 vaultIndexesToReserve: lowestFeeReservationParams.vaultIndexesToReserve,
                 amountsToReserve: lowestFeeReservationParams.amountsInμUsdtToReserve,
                 ethPayoutAddress,
+                totalSatsInputInlcudingProxyFee: totalSatsInputInlcudingProxyFee,
                 expiredSwapReservationIndexes: lowestFeeReservationParams.expiredSwapReservationIndexes,
                 tokenAddress: selectedInputAsset.tokenAddress,
             });
@@ -127,11 +130,16 @@ export const Step1 = ({}) => {
         }
     };
 
-    const totalAmount = lowestFeeReservationParams?.amountsInμUsdtToReserve.reduce(
-        (acc, curr) => BigNumber.from(acc).add(curr),
-        ethers.BigNumber.from(0),
-    );
-    const formattedTotalAmount = formatUnits(totalAmount, selectedInputAsset.decimals);
+    useEffect(() => {
+        if (!lowestFeeReservationParams) {
+            return;
+        }
+        const totalAmount = lowestFeeReservationParams?.amountsInμUsdtToReserve.reduce(
+            (acc, curr) => BigNumber.from(acc).add(curr),
+            ethers.BigNumber.from(0),
+        );
+        setFormattedTotalAmount(formatUnits(totalAmount, selectedInputAsset.decimals));
+    }, [lowestFeeReservationParams]);
 
     return (
         <>
@@ -232,7 +240,7 @@ export const Step1 = ({}) => {
                     </Flex>
                 </Flex>
 
-                {/* ETH Payout Address */}
+                {/* USDT Payout Address */}
                 <Flex
                     mt='20px'
                     px='10px'
@@ -250,7 +258,7 @@ export const Step1 = ({}) => {
                             letterSpacing={'-1px'}
                             fontWeight={'normal'}
                             fontFamily={'Aux'}>
-                            ETH Payout Address
+                            USDT Payout Address
                         </Text>
                         <Input
                             value={ethPayoutAddress}
@@ -258,7 +266,7 @@ export const Step1 = ({}) => {
                             fontFamily={'Aux'}
                             border='none'
                             mt='1px'
-                            mr='195px'
+                            mr='550px'
                             p='0px'
                             letterSpacing={'-5px'}
                             color={colors.offWhite}
@@ -266,7 +274,8 @@ export const Step1 = ({}) => {
                             _focus={{ border: 'none', boxShadow: 'none' }}
                             _selected={{ border: 'none', boxShadow: 'none' }}
                             fontSize='26px'
-                            placeholder='Enter ETH payout address'
+                            placeholder='Enter USDT payout address'
+                            spellCheck={false}
                             _placeholder={{ color: colors.textGray }}
                         />
                     </Flex>

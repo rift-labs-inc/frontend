@@ -28,11 +28,11 @@ import { weiToEth } from '../../utils/dappHelper';
 import { BigNumber, ethers } from 'ethers';
 import { useReserveLiquidity } from '../../hooks/contract/useReserveLiquidity';
 import ReservationStatusModal from './ReservationStatusModal';
-import { Step1 } from './Step1';
+import { ReserveLiquidity } from './ReserveLiquidity';
 
 type ActiveTab = 'swap' | 'liquidity';
 
-export const ReserveLiquidityPage = ({}) => {
+export const ReserveLiquidityContainer = ({}) => {
     const { width } = useWindowSize();
     const isMobileView = width < 600;
     const router = useRouter();
@@ -69,7 +69,7 @@ export const ReserveLiquidityPage = ({}) => {
             <Flex justify={'center'} w='100%' mt='50px'>
                 <SwapStatusTimeline />
             </Flex>
-            <Step1 />
+            <ReserveLiquidity />
         </Flex>
     );
 };

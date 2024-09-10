@@ -6,7 +6,7 @@ import { USDT_Icon, ETH_Icon, ETH_Logo } from './components/other/SVGs';
 import { ERC20ABI } from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
-import sepoliaDeployment from "../contracts/broadcast/DeployRiftExchange.s.sol/11155111/run-latest.json";
+import sepoliaDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/11155111/run-latest.json';
 
 type Store = {
     // setup & asset data
@@ -96,7 +96,8 @@ export const useStore = create<Store>((set) => {
             name: 'USDT',
             tokenAddress: '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0',
             decimals: 6,
-            riftExchangeContractAddress: sepoliaDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
+            riftExchangeContractAddress: sepoliaDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange')
+                .contractAddress,
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: 11155111,
             contractRpcURL: 'https://sepolia.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',

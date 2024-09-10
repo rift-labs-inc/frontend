@@ -25,6 +25,7 @@ import { FaArrowRight } from 'react-icons/fa';
 import { MdArrowRight } from 'react-icons/md';
 import { AssetTag } from '../other/AssetTag';
 import WebAssetTag from '../other/WebAssetTag';
+import { LoaderIcon } from 'react-hot-toast';
 
 export const SwapAmounts = ({}) => {
     const { width } = useWindowSize();
@@ -52,76 +53,96 @@ export const SwapAmounts = ({}) => {
     }, [usdtOutputSwapAmount]);
 
     return (
-        <Flex
-            bg={colors.offBlack}
-            border='3px solid'
-            borderColor={colors.borderGray}
-            borderRadius={'full'}
-            h='88px'
-            pl={'35px'}
-            pr={'28px'}
-            fontFamily={FONT_FAMILIES.AUX_MONO}
-            fontWeight={'normal'}
-            py='3px'>
-            <Flex direction='column'>
-                <Flex>
-                    <Text mr='15px' fontSize={'36px'} letterSpacing={'-5px'} color={colors.offWhite}>
-                        {btcInputSwapAmount}
-                    </Text>
-                    <Flex mt='-16px' mb='-7px'>
-                        <WebAssetTag w='20px' h='20px' asset={'BTC'} />
+        <>
+            {btcInputSwapAmount === '-1' || usdtOutputSwapAmount === '-1' ? (
+                <Flex
+                    bg={colors.offBlack}
+                    border='3px solid'
+                    borderColor={colors.borderGray}
+                    borderRadius={'full'}
+                    h='88px'
+                    px={'35px'}
+                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                    fontWeight={'normal'}
+                    py='3px'>
+                    <Flex align={'center'} justify={'center'}>
+                        <LoaderIcon style={{ width: 40, height: 40 }} />
                     </Flex>
-                    {/* <BTCSVG width='100' height='58' viewBox='0 0 148 54' />{' '} */}
                 </Flex>
-                <Text
-                    color={colors.textGray}
-                    fontSize={'13px'}
-                    mt='-12px'
-                    ml='6px'
-                    letterSpacing={'-2px'}
+            ) : (
+                <Flex
+                    bg={colors.offBlack}
+                    border='3px solid'
+                    borderColor={colors.borderGray}
+                    borderRadius={'full'}
+                    h='88px'
+                    pl={'35px'}
+                    pr={'28px'}
+                    fontFamily={FONT_FAMILIES.AUX_MONO}
                     fontWeight={'normal'}
-                    fontFamily={'Aux'}>
-                    ≈ $
-                    {(parseFloat(btcInputSwapAmount) * bitcoinPriceUSD).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    })}{' '}
-                    USD{' '}
-                </Text>
-            </Flex>
-            <Spacer />
-            <Flex align='center' ml='-4px' mr='-5px' mt='-4px' justify={'center'}>
-                <MdArrowRight size={'50px'} color={colors.darkerGray} />
-            </Flex>
-            <Spacer />
-            <Flex direction='column'>
-                <Flex>
-                    <Text mr='15px' fontSize={'36px'} letterSpacing={'-5px'} color={colors.offWhite}>
-                        {usdtOutputSwapAmount}
-                    </Text>
-                    <Flex mt='-16px' mb='-7px'>
-                        <AssetTag assetName='USDT' width='90px' />
-                    </Flex>{' '}
+                    py='3px'>
+                    <Flex direction='column'>
+                        <Flex>
+                            <Text mr='15px' fontSize={'36px'} letterSpacing={'-5px'} color={colors.offWhite}>
+                                {btcInputSwapAmount === '-1' ? 'Loading...' : btcInputSwapAmount}
+                            </Text>
+                            <Flex mt='-16px' mb='-7px'>
+                                <WebAssetTag w='20px' h='20px' asset={'BTC'} />
+                            </Flex>
+                            {/* <BTCSVG width='100' height='58' viewBox='0 0 148 54' />{' '} */}
+                        </Flex>
+                        <Text
+                            color={colors.textGray}
+                            fontSize={'13px'}
+                            mt='-12px'
+                            ml='6px'
+                            letterSpacing={'-2px'}
+                            fontWeight={'normal'}
+                            fontFamily={'Aux'}>
+                            ≈ $
+                            {(parseFloat(btcInputSwapAmount) * bitcoinPriceUSD).toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            })}{' '}
+                            USD{' '}
+                        </Text>
+                    </Flex>
+
+                    <Spacer />
+                    <Flex align='center' ml='-4px' mr='-5px' mt='-4px' justify={'center'}>
+                        <MdArrowRight size={'50px'} color={colors.darkerGray} />
+                    </Flex>
+                    <Spacer />
+                    <Flex direction='column'>
+                        <Flex>
+                            <Text mr='15px' fontSize={'36px'} letterSpacing={'-5px'} color={colors.offWhite}>
+                                {usdtOutputSwapAmount === '-1' ? 'Loading...' : usdtOutputSwapAmount}
+                            </Text>
+                            <Flex mt='-16px' mb='-7px'>
+                                <AssetTag assetName='USDT' width='90px' />
+                            </Flex>{' '}
+                        </Flex>
+                        <Text
+                            color={colors.textGray}
+                            fontSize={'13px'}
+                            mt='-12px'
+                            ml='6px'
+                            letterSpacing={'-2px'}
+                            fontWeight={'normal'}
+                            fontFamily={'Aux'}>
+                            ≈ $
+                            {(
+                                parseFloat(usdtOutputSwapAmount) *
+                                useStore.getState().validAssets[selectedInputAsset.name].priceUSD
+                            ).toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            })}{' '}
+                            USD{' '}
+                        </Text>
+                    </Flex>
                 </Flex>
-                <Text
-                    color={colors.textGray}
-                    fontSize={'13px'}
-                    mt='-12px'
-                    ml='6px'
-                    letterSpacing={'-2px'}
-                    fontWeight={'normal'}
-                    fontFamily={'Aux'}>
-                    ≈ $
-                    {(
-                        parseFloat(usdtOutputSwapAmount) *
-                        useStore.getState().validAssets[selectedInputAsset.name].priceUSD
-                    ).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    })}{' '}
-                    USD{' '}
-                </Text>
-            </Flex>
-        </Flex>
+            )}
+        </>
     );
 };

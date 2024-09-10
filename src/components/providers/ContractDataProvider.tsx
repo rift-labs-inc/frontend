@@ -47,7 +47,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const fetchPriceData = async () => {
             // TESTING VALUES - TODO: get this data from uniswap
-            console.log('fetching price data...');
             const btcPriceUSD = 59624.35;
             const usdtPriceUSD = 1;
             const btcToUsdtRate = btcPriceUSD / usdtPriceUSD;
@@ -70,7 +69,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
                 balance,
                 useStore.getState().validAssets[selectedInputAsset.name].decimals,
             );
-            console.log('formattedBalance:', formattedBalance.toString());
             updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
         };
 

@@ -26,6 +26,7 @@ import { BigNumber } from 'ethers';
 import depositVaultAggregatorABI from '../../../abis/DepositVaultsAggregator.json';
 import { parseUnits } from 'viem';
 import { bitcoin } from 'bitcoinjs-lib/src/networks';
+import { SwapReservation } from '../../../types';
 
 declare global {
     interface Window {
@@ -51,11 +52,12 @@ const ReservationDetails = () => {
     const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
+    const [swapReservationData, setSwapReservationData] = useState<SwapReservation | null>(null);
 
     useEffect(() => {
-        if (typeof window !== 'undefined' && address && lowestFeeReservationParams?.totalSwapAmountInSats) {
+        if (typeof window !== 'undefined' && address && lowestFeeReservationParams?.totalSatsInputInlcudingProxyFee) {
             const uri = `bitcoin:${address}?amount=${formatUnits(
-                lowestFeeReservationParams.totalSwapAmountInSats,
+                lowestFeeReservationParams.totalSatsInputInlcudingProxyFee,
                 bitcoinDecimals,
             )}&label=Rift%20Exchange%20Swap`;
             console.log('Bitcoin URI:', uri);
@@ -64,17 +66,22 @@ const ReservationDetails = () => {
     }, [address, lowestFeeReservationParams]);
 
     useEffect(() => {
+        setSwapFlowState('2-send-bitcoin');
+        setBtcInputSwapAmount('-1');
+        setUsdtOutputSwapAmount('-1');
+    }, []);
+
+    useEffect(() => {
         const fetchAddress = async () => {
             if (typeof window !== 'undefined' && window.rift && window.rift.getProxyWallet) {
                 try {
                     const walletInfo = await window.rift.getProxyWallet();
                     if (walletInfo && walletInfo.address) {
                         setAddress(walletInfo.address);
-                        console.log('walletInfo:', walletInfo);
                     } else {
                         // setError('Unable to retrieve Bitcoin address from wallet info.');
                     }
-                    setTotalSwapAmountInSats(lowestFeeReservationParams?.totalSwapAmountInSats);
+                    setTotalSwapAmountInSats(lowestFeeReservationParams?.totalSatsInputInlcudingProxyFee.toNumber());
                 } catch (err) {
                     setError('Error fetching wallet information.');
                     console.error(err);
@@ -88,38 +95,43 @@ const ReservationDetails = () => {
         };
 
         fetchAddress();
-    }, []);
+    }, [lowestFeeReservationParams]);
 
     // constantly look for swap status updates from proxy wallet
     useEffect(() => {
-        const checkSwapStatuses = () => {
-            if (typeof window !== 'undefined' && window.rift && window.rift.getAllRiftSwapStatuses) {
-                setError(null);
-                window.rift
-                    .getAllRiftSwapStatuses()
-                    .then((statuses) => {
-                        // console.log('Swap Statuses:', statuses[0]);
-                        if (statuses[0].status === 1) {
-                            console.log('Proxy wallet Swap is complete!');
-                            setSwapFlowState('3-receive-eth');
-                            setBitcoinSwapTransactionHash(statuses[0].paymentTxid);
-                        }
-                    })
-                    .catch((err) => {
-                        console.error('Error fetching swap statuses:', err);
-                    });
-            } else {
-                setError('Rift wallet not detected or getAllRiftSwapStatuses not available.');
-                console.error('Rift wallet not detected or getAllRiftSwapStatuses not available.');
+        const checkSwapStatus = () => {
+            if (
+                typeof window === 'undefined' ||
+                !window.rift ||
+                !window.rift.getRiftSwapStatus ||
+                !swapReservationData
+            ) {
+                setError('Rift wallet not detected or getRiftSwapStatus not available.');
+                console.error('Rift wallet not detected or getRiftSwapStatus not available.');
+                return; // Early return if any of the required objects or methods doesn't exist
             }
+
+            setError(null);
+            window.rift
+                .getRiftSwapStatus({ internalId: swapReservationData.nonce })
+                .then((status) => {
+                    if (status.status === 1) {
+                        console.log('Proxy wallet Swap is complete!');
+                        setSwapFlowState('3-receive-eth');
+                        setBitcoinSwapTransactionHash(status.paymentTxid);
+                    }
+                })
+                .catch((err) => {
+                    console.error('Error fetching swap status:', err);
+                });
         };
 
         if (typeof window !== 'undefined') {
-            checkSwapStatuses();
-            const intervalId = setInterval(checkSwapStatuses, 1000);
+            checkSwapStatus();
+            const intervalId = setInterval(checkSwapStatus, 1000);
             return () => clearInterval(intervalId);
         }
-    }, []);
+    }, [swapReservationData?.nonce]);
 
     // fetch reservation details from url
     useEffect(() => {
@@ -129,6 +141,7 @@ const ReservationDetails = () => {
                     // [0] decode swap reservaiton details from url
                     const reservationDetails = decodeReservationUrl(swapReservationURL as string);
 
+                    console.log('URL reservationDetails:', reservationDetails);
                     // [1] fetch & decode swap reservation details from contract
                     const swapAggregatorBytecode = swapReservationsAggregatorABI.bytecode;
                     const swapAggregatorAbi = swapReservationsAggregatorABI.abi;
@@ -137,15 +150,18 @@ const ReservationDetails = () => {
                         swapAggregatorBytecode.object,
                         swapAggregatorAbi,
                         selectedInputAsset.riftExchangeContractAddress,
-                        [parseInt(reservationDetails.reservationId)],
+                        [parseInt(reservationDetails.reservationId)], // TODO: update this if we add overwriting slots
                     );
-                    const swapReservationData: any = swapReservations[0];
-                    console.log('swapReservationData:', swapReservationData);
+
+                    const swapReservationData: SwapReservation = swapReservations[0];
+                    console.log('swapReservationData from URL:', swapReservationData);
+                    const totalInputAmountInSatsIncludingProxyWalletFee =
+                        swapReservationData.totalSatsInputInlcudingProxyFee;
+                    const totalReservedAmountInµUsdt = swapReservationData.totalSwapOutputAmount;
+                    setSwapReservationData(swapReservationData);
 
                     // [2] convert BigNumber reserved vault indexes to numbers
-                    const reservedVaultIndexesConverted = swapReservationData.vaultIndexes.map((index) =>
-                        index.toNumber(),
-                    );
+                    const reservedVaultIndexesConverted = swapReservationData.vaultIndexes.map((index) => index);
 
                     // [3] fetch the reserved deposit vaults on the reservation
                     const depositVaultBytecode = depositVaultAggregatorABI.bytecode;
@@ -162,55 +178,20 @@ const ReservationDetails = () => {
                     console.log('reservedVaults:', reservedVaults);
                     console.log('reservedAmounts:', reservedAmounts[0].toString());
 
-                    // [4] initialize variables to accumulate the total values
-                    let totalReservedAmountInµUsdt = BigNumber.from(0);
-                    let totalBtcInputInSats = BigNumber.from(0);
-
-                    // [5] LOOP over reserved deposit vaults and sum sat inputs and µUsdt outputs
-                    for (let i = 0; i < reservedVaults.length; i++) {
-                        // [0] get the deposit vault and reserved amount
-                        const vault = reservedVaults[i];
-                        const reservedAmountInµUsdt = BigNumber.from(reservedAmounts[i]);
-                        console.log('reservedAmountInµUsdt:', reservedAmountInµUsdt.toString());
-                        const btcExchangeRate = vault.btcExchangeRate;
-
-                        // [1] buffer reserved amount to 18 decimals
-                        const reservedAmountInµUsdtBufferedTo18Decimals = bufferTo18Decimals(
-                            reservedAmountInµUsdt,
-                            selectedInputAsset.decimals,
-                        );
-
-                        console.log('VAULT:', i);
-                        console.log(
-                            'reservedAmountInµUsdtBufferedTo18Decimals:',
-                            reservedAmountInµUsdtBufferedTo18Decimals.toString(),
-                        );
-                        console.log('btcExchangeRate:', btcExchangeRate.toString());
-
-                        // [2] divide by exchange rate (which is already in smallest token units buffered to 18 decimals per sat)
-                        const inputAmountInSats = reservedAmountInµUsdtBufferedTo18Decimals.div(btcExchangeRate);
-                        console.log('inputAmountInSats:', inputAmountInSats.toString());
-
-                        totalReservedAmountInµUsdt = totalReservedAmountInµUsdt.add(reservedAmountInµUsdt);
-                        totalBtcInputInSats = totalBtcInputInSats.add(inputAmountInSats);
-                    }
-
-                    console.log('totalBtcInputInSats:', totalBtcInputInSats.toString());
-                    console.log('totalReservedAmount:', totalReservedAmountInµUsdt.toString());
-
                     // convert to USDT
                     const totalReservedAmountInUsdt = formatUnits(
                         totalReservedAmountInµUsdt,
                         selectedInputAsset.decimals,
                     );
 
-                    console.log('totalReservedAmountInUsdt:', totalReservedAmountInUsdt);
-
                     setUsdtOutputSwapAmount(totalReservedAmountInUsdt);
-                    console.log('setUsdtOutputSwapAmount:', totalReservedAmountInUsdt);
 
-                    setBtcInputSwapAmount(formatUnits(totalBtcInputInSats, bitcoinDecimals));
-                    console.log('setBtcInputSwapAmount:', totalBtcInputInSats);
+                    setBtcInputSwapAmount(
+                        formatUnits(
+                            totalInputAmountInSatsIncludingProxyWalletFee.toString(),
+                            bitcoinDecimals,
+                        ).toString(),
+                    );
                 } catch (error) {
                     console.error('Error fetching reservation details:', error);
                 }

@@ -8,7 +8,7 @@ import { FONT_FAMILIES } from '../utils/font';
 import BlueText from '../components/other/BlueText';
 import OrangeText from '../components/other/OrangeText';
 import React, { useEffect } from 'react';
-import { ReserveLiquidityPage } from '../components/swap/ReserveLiquidityPage';
+import { ReserveLiquidityPage } from '../components/swap/ReserveLiquidityContainer';
 import { useStore } from '../store';
 import { SwapContainer } from '../components/swap/SwapContainer';
 import { DepositUI } from '../components/swap/DepositUI';

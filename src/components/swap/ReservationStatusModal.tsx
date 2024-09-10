@@ -15,11 +15,11 @@ import {
 import { ReserveStatus } from '../../hooks/contract/useReserveLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
-import { GooSpinner } from 'react-spinners-kit';
 import { CheckmarkCircle, AlertCircleOutline } from 'react-ionicons';
 import { HiOutlineExternalLink } from 'react-icons/hi';
 import { etherScanBaseUrl } from '../../utils/constants';
 import { useStore } from '../../store';
+import GooSpinner from '../other/GooSpiner';
 
 interface ReservationStatusModalProps {
     isOpen: boolean;
@@ -28,6 +28,14 @@ interface ReservationStatusModalProps {
     error: string | null;
     txHash: string | null;
 }
+
+const CustomAlertCircleOutline = ({ width = '38px', height = '38px', color = colors.red }) => {
+    return <AlertCircleOutline width={width} height={height} color={color} />;
+};
+
+const CustomGooSpinner = ({ size = 100, color = 'purple', loading = true }) => {
+    return <GooSpinner size={size} color={color} />;
+};
 
 const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
     isOpen = false,
@@ -50,7 +58,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
             case ReserveStatus.WaitingForTokenApproval:
                 return 'Waiting for token approval...';
             case ReserveStatus.ApprovalPending:
-                return 'Token approval pending...';
+                return 'Confirming token approval confirming...';
             case ReserveStatus.ReservingLiquidity:
                 return 'Reserving liquidity...';
             case ReserveStatus.Confirmed:
@@ -96,7 +104,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
                 {(isCompleted || isError) && <ModalCloseButton />}
                 <ModalBody>
                     <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
-                        {isLoading && <GooSpinner size={100} color={colors.purpleBorder} loading={true} />}
+                        {isLoading && <CustomGooSpinner size={100} color={colors.purpleBorder} loading={true} />}
                         <Spacer />
                         <Text
                             fontSize='12px'
@@ -122,7 +130,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
                             )}
                             {isError && (
                                 <Flex mt='6px' ml='4px'>
-                                    <AlertCircleOutline width='38px' height={'38px'} color={colors.red} />
+                                    <CustomAlertCircleOutline width='38px' height={'38px'} color={colors.red} />
                                 </Flex>
                             )}
                             <Text

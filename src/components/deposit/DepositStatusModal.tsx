@@ -16,7 +16,6 @@ import {
 import { DepositStatus } from '../../hooks/contract/useDepositLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
-import { GooSpinner } from 'react-spinners-kit';
 import { CheckmarkCircle, AlertCircleOutline, OpenOutline } from 'react-ionicons';
 import { HiOutlineExternalLink } from 'react-icons/hi';
 import { PiVaultBold } from 'react-icons/pi';
@@ -24,6 +23,7 @@ import { IoMdSettings } from 'react-icons/io';
 import { etherScanBaseUrl } from '../../utils/constants';
 import { useStore } from '../../store';
 import { useRouter } from 'next/router';
+import GooSpinner from '../other/GooSpiner';
 
 interface DepositStatusModalProps {
     isOpen: boolean;
@@ -108,7 +108,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
                 {(isCompleted || isError) && <ModalCloseButton />}
                 <ModalBody>
                     <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
-                        {isLoading && <GooSpinner size={100} color={colors.purpleBorder} loading={true} />}
+                        {isLoading && <GooSpinner size={100} color={colors.purpleBorder} />}
                         <Spacer />
                         <Text
                             fontSize='12px'

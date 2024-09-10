@@ -10,7 +10,7 @@ export enum ReservationState {
 }
 
 export type ReserveLiquidityParams = {
-    totalSwapAmountInSats: number;
+    swapAmountInSats: number;
     vaultIndexesToReserve: number[];
     amountsInμUsdtToReserve: BigNumberish[];
     amountsInSatsToBePaid: BigNumberish[];
@@ -18,6 +18,7 @@ export type ReserveLiquidityParams = {
     btcExchangeRates: BigNumberish[];
     ethPayoutAddress: string;
     expiredSwapReservationIndexes: number[];
+    totalSatsInputInlcudingProxyFee: BigNumber;
 };
 
 export type SwapReservation = {
@@ -28,7 +29,8 @@ export type SwapReservation = {
     ethPayoutAddress: string;
     lpReservationHash: string;
     nonce: string;
-    totalSwapAmount: BigNumber;
+    totalSatsInputInlcudingProxyFee: BigNumber;
+    totalSwapOutputAmount: BigNumber;
     prepaidFeeAmount: BigNumber;
     proposedBlockHeight: BigNumber;
     proposedBlockHash: string;

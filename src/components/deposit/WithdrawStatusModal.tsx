@@ -18,7 +18,6 @@ import { WithdrawStatus } from '../../hooks/contract/useWithdrawLiquidity';
 import { useWithdrawLiquidity } from '../../hooks/contract/useWithdrawLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
-import { GooSpinner } from 'react-spinners-kit';
 import { CheckmarkCircle, AlertCircleOutline } from 'react-ionicons';
 import { HiOutlineExternalLink, HiXCircle } from 'react-icons/hi';
 import { etherScanBaseUrl } from '../../utils/constants';
@@ -28,6 +27,7 @@ import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { useStore } from '../../store';
 import { getLiquidityProvider } from '../../utils/contractReadFunctions';
 import riftExchangeABI from '../../abis/RiftExchange.json';
+import GooSpinner from '../other/GooSpiner';
 
 interface WithdrawStatusModalProps {
     isOpen: boolean;
@@ -301,7 +301,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                         </Flex>
                     ) : (
                         <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
-                            {isLoading && <GooSpinner size={100} color={colors.purpleBorder} loading={true} />}
+                            {isLoading && <GooSpinner size={100} color={colors.purpleBorder} />}
                             <Spacer />
                             <Text
                                 fontSize='12px'
