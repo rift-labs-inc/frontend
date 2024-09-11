@@ -241,27 +241,23 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
 
         // [2] if we need more USDT than is in the vault, take all of it otherwise take remaining amount needed
         const MicroUsdtToTakeFromVault = MicroUsdtStillNeeded.gt(vault.trueUnreservedBalance) ? vault.trueUnreservedBalance : MicroUsdtStillNeeded;
-        console.log('vault.trueUnreservedBalance:', vault.trueUnreservedBalance.toString());
-        console.log('MicroUsdtToTakeFromVault:', MicroUsdtToTakeFromVault.toString());
         const bufferedMicroUSDTToTakeFromVault = bufferTo18Decimals(MicroUsdtToTakeFromVault, vault.depositAsset.decimals);
-        console.log('bufferedMicroUSDTToTakeFromVault:', bufferedMicroUSDTToTakeFromVault.toString());
         const fixedNumberBufferedMicroUSDTToTakeFromVault = FixedNumber.from(bufferedMicroUSDTToTakeFromVault);
-        console.log('fixedNumberBufferedMicroUSDTToTakeFromVault:', fixedNumberBufferedMicroUSDTToTakeFromVault.toString());
         const fixedNumberExchangeRate = FixedNumber.from(vault.btcExchangeRate.toString());
-        console.log('fixedNumberExchangeRate:', fixedNumberExchangeRate.toString());
         const satsUsed = Math.round(fixedNumberBufferedMicroUSDTToTakeFromVault.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
-        console.log('satsUsed:', satsUsed);
 
-        // [3] update tracked amounts
-        totalMicroUsdtSwapOutput = totalMicroUsdtSwapOutput.add(MicroUsdtToTakeFromVault);
-        totalSatsUsed = totalSatsUsed.add(satsUsed);
-        vaultIndexes.push(vault.index); // Store the index of the vault used
-        amountsInMicroUsdtToReserve.push(MicroUsdtToTakeFromVault); // Store the amount of MicroUSDT used from this vault
-        amountsInSatsToBePaid.push(satsUsed); // Store the amount of sats used from this vault
-        btcPayoutLockingScripts.push(vault.btcPayoutLockingScript); // Store the BTC payout locking script
-        btcExchangeRates.push(vault.btcExchangeRate); // Store the BTC exchange rate
-        satsToSpend = satsToSpend.sub(satsUsed);
-        totalLpOutputsUsed++;
+        // [3] update tracked amounts, but skip vaults with 0 sats or 0 micro USDT
+        if (MicroUsdtToTakeFromVault.gt(0) && satsUsed > 0) {
+            totalMicroUsdtSwapOutput = totalMicroUsdtSwapOutput.add(MicroUsdtToTakeFromVault);
+            totalSatsUsed = totalSatsUsed.add(satsUsed);
+            vaultIndexes.push(vault.index); // Store the index of the vault used
+            amountsInMicroUsdtToReserve.push(MicroUsdtToTakeFromVault); // Store the amount of MicroUSDT used from this vault
+            amountsInSatsToBePaid.push(satsUsed); // Store the amount of sats used from this vault
+            btcPayoutLockingScripts.push(vault.btcPayoutLockingScript); // Store the BTC payout locking script
+            btcExchangeRates.push(vault.btcExchangeRate); // Store the BTC exchange rate
+            satsToSpend = satsToSpend.sub(satsUsed);
+            totalLpOutputsUsed++;
+        }
     }
 
     // [6] calculate the total swap exchange rate in microusdtbuffered to 18 decimals per sat
@@ -324,17 +320,19 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
         const fixedNumberExchangeRate = FixedNumber.from(vault.btcExchangeRate.toString());
         const satsNeeded = Math.round(fixedNumberBufferedMicroUsdtToTake.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
 
-        // [3] update tracked amounts
-        totalSatsUsed = totalSatsUsed.add(satsNeeded);
-        remainingUsdtToAchieve = remainingUsdtToAchieve.sub(microUsdtToTake);
+        // [3] update tracked amounts, but skip vaults with 0 sats or 0 micro USDT
+        if (microUsdtToTake.gt(0) && satsNeeded > 0) {
+            totalSatsUsed = totalSatsUsed.add(satsNeeded);
+            remainingUsdtToAchieve = remainingUsdtToAchieve.sub(microUsdtToTake);
 
-        // Store results
-        vaultIndexes.push(vault.index);
-        amountsInMicroUsdtToReserve.push(microUsdtToTake.toString());
-        amountsInSatsToBePaid.push(satsNeeded);
-        btcPayoutLockingScripts.push(vault.btcPayoutLockingScript);
-        btcExchangeRates.push(vault.btcExchangeRate.toString());
-        totalLpOutputsUsed++;
+            // Store results
+            vaultIndexes.push(vault.index);
+            amountsInMicroUsdtToReserve.push(microUsdtToTake.toString());
+            amountsInSatsToBePaid.push(satsNeeded);
+            btcPayoutLockingScripts.push(vault.btcPayoutLockingScript);
+            btcExchangeRates.push(vault.btcExchangeRate.toString());
+            totalLpOutputsUsed++;
+        }
     }
 
     // [6] calculate the total swap exchange rate in microusdtbuffered to 18 decimals per sat

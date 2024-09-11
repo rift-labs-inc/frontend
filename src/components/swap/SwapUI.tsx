@@ -61,7 +61,7 @@ export const SwapUI = () => {
     const [overpayingBtcInput, setOverpayingBtcInput] = useState(false);
     const [isBelowMinUsdtOutput, setIsBelowMinUsdtOutput] = useState(false);
     const [isBelowMinBtcInput, setIsBelowMinBtcInput] = useState(false);
-    const [minBtcInputAmount, setMinBtcInputAmount] = useState(0);
+    const [minBtcInputAmount, setMinBtcInputAmount] = useState('');
 
     const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
@@ -107,7 +107,6 @@ export const SwapUI = () => {
         if (window.rift) {
             try {
                 const proxyWalletSwapFee = await window.rift.getRiftSwapFees({ lps: numOutputs });
-                console.log('proxyWalletSwapFee:', proxyWalletSwapFee);
                 setProxyWalletSwapFastFee(proxyWalletSwapFee.fastFeeAmount);
                 return proxyWalletSwapFee.fastFeeAmount;
             } catch (err) {
@@ -163,23 +162,32 @@ export const SwapUI = () => {
         } else {
             setOverpayingBtcInput(false);
         }
-        // [4] re-run vault combo calculation with new input amount
-        const newIdealReservationDetails = calculateBestVaultsForBitcoinInput(allDepositVaults, newAmountSatsSwapInput);
 
-        console.log('NEW idealReservationDetails:', newIdealReservationDetails);
-
-        // check if output is less than 1 usdt
-        if (parseFloat(formatUnits(newIdealReservationDetails.totalMicroUsdtSwapOutput, selectedInputAsset.decimals)) < 1) {
+        // check if sats to spend is less than 0 (meaning fees are too high)
+        console.log('newAmountSatsSwapInput:', newAmountSatsSwapInput.toString());
+        if (newAmountSatsSwapInput.lt(BigNumber.from(1))) {
+            console.log('NEGATIVE SATS below min btc input');
             setIsBelowMinBtcInput(true);
             setUsdtOutputSwapAmount('');
             setUsdtDepositAmount('');
             setLowestFeeReservationParams(null);
-            const minReservation = calculateBestVaultsForUsdtOutput(allDepositVaults, parseUnits('1', selectedInputAsset.decimals)); // min 1 usdt output
-            const minProxyFee = await fetchProxyWalletSwapFee(minReservation.vaultIndexes.length);
-            const updatedMinReservation = minReservation.totalSatsUsed.add(BigNumber.from(minProxyFee));
-            console.log('minReservation:', updatedMinReservation);
-            // setMinBtcInputAmount
             return;
+        }
+
+        // [4] re-run vault combo calculation with new input amount
+        const newIdealReservationDetails = calculateBestVaultsForBitcoinInput(allDepositVaults, newAmountSatsSwapInput);
+        console.log('NEW idealReservationDetails:', newIdealReservationDetails);
+
+        // check if output is less than 1 usdt
+        if (parseFloat(formatUnits(newIdealReservationDetails.totalMicroUsdtSwapOutput, selectedInputAsset.decimals)) < 1) {
+            console.log('BELOW MIN 1 USDT OUTPUT', newIdealReservationDetails?.totalMicroUsdtSwapOutput);
+            setIsBelowMinBtcInput(true);
+            setUsdtOutputSwapAmount('');
+            setUsdtDepositAmount('');
+            setLowestFeeReservationParams(null);
+            return;
+        } else {
+            setIsBelowMinBtcInput(false);
         }
 
         // set new exchange rate & usdt output based on new ideal reservation
@@ -211,6 +219,32 @@ export const SwapUI = () => {
             setLowestFeeReservationParams(null);
         }
     };
+
+    // calculate minimum sats input amount for 1 usdt output
+    const calcuateMinimumReservationSatsInputAmount = async () => {
+        const minReservation = calculateBestVaultsForUsdtOutput(allDepositVaults, parseUnits('1', selectedInputAsset.decimals)); // min 1 usdt output
+        if (!minReservation) return;
+        const minProxyFee = await fetchProxyWalletSwapFee(minReservation.vaultIndexes.length);
+        const updatedMinReservationSatsInputAmount = minReservation.totalSatsUsed.add(BigNumber.from(minProxyFee));
+        const minReservationBtcInputAmount = formatUnits(updatedMinReservationSatsInputAmount.add(BigNumber.from(1)), bitcoinDecimals).toString();
+        setMinBtcInputAmount(minReservationBtcInputAmount);
+        return minReservationBtcInputAmount;
+    };
+
+    // function to continuously calculate the minimum BTC input
+    useEffect(() => {
+        const continuouslyCalculateMinReservation = () => {
+            if (allDepositVaults) {
+                calcuateMinimumReservationSatsInputAmount();
+            }
+        };
+
+        if (allDepositVaults) {
+            continuouslyCalculateMinReservation();
+            const intervalId = setInterval(continuouslyCalculateMinReservation, 2000);
+            return () => clearInterval(intervalId);
+        }
+    }, [allDepositVaults]);
 
     // calculate ideal reservation for usdt output
     const calculateIdealReservationUsdtOutput = async (amountUsdtSwapOutput) => {
@@ -385,7 +419,7 @@ export const SwapUI = () => {
                             />
                             <Flex>
                                 <Text
-                                    color={overpayingBtcInput ? colors.redHover : !btcInputSwapAmount ? colors.offWhite : colors.textGray}
+                                    color={overpayingBtcInput || isBelowMinBtcInput ? colors.redHover : !btcInputSwapAmount ? colors.offWhite : colors.textGray}
                                     fontSize={'13px'}
                                     mt='2px'
                                     ml='1px'
@@ -394,6 +428,8 @@ export const SwapUI = () => {
                                     fontFamily={'Aux'}>
                                     {overpayingBtcInput
                                         ? `Exceeds available to swap - `
+                                        : isBelowMinBtcInput
+                                        ? `Below minimum required - `
                                         : bitcoinPriceUSD
                                         ? btcInputSwapAmount
                                             ? (bitcoinPriceUSD * parseFloat(btcInputSwapAmount)).toLocaleString('en-US', {
@@ -412,12 +448,29 @@ export const SwapUI = () => {
                                         zIndex={'10'}
                                         color={selectedInputAsset.border_color_light}
                                         cursor='pointer'
-                                        onClick={() => handleBtcInputChange(null, maxBtcInputExceeded)}
+                                        onClick={() => handleUsdtOutputChange(null, formatUnits(availableLiquidity, selectedInputAsset.decimals).toString())}
                                         _hover={{ textDecoration: 'underline' }}
                                         letterSpacing={'-1.5px'}
                                         fontWeight={'normal'}
                                         fontFamily={'Aux'}>
                                         {`${parseFloat(maxBtcInputExceeded).toFixed(8)} BTC Max`} {/* Max available BTC */}
+                                    </Text>
+                                )}
+                                {isBelowMinBtcInput && (
+                                    <Text
+                                        ml='8px'
+                                        fontSize={'13px'}
+                                        mt='2px'
+                                        mr='-116px'
+                                        zIndex={'10'}
+                                        color={selectedInputAsset.border_color_light}
+                                        cursor='pointer'
+                                        onClick={() => handleBtcInputChange(null, minBtcInputAmount)}
+                                        _hover={{ textDecoration: 'underline' }}
+                                        letterSpacing={'-1.5px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        {`${parseFloat(minBtcInputAmount).toFixed(8)} BTC Min`} {/* Min 1 USDT output worth of sats input */}
                                     </Text>
                                 )}
                             </Flex>
