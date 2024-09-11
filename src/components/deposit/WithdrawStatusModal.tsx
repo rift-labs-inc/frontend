@@ -1,18 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalCloseButton,
-    Text,
-    Flex,
-    Box,
-    Spacer,
-    Button,
-    Input,
-} from '@chakra-ui/react';
+import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Text, Flex, Box, Spacer, Button, Input } from '@chakra-ui/react';
 import { BigNumber, ethers } from 'ethers';
 import { WithdrawStatus } from '../../hooks/contract/useWithdrawLiquidity';
 import { useWithdrawLiquidity } from '../../hooks/contract/useWithdrawLiquidity';
@@ -36,12 +23,7 @@ interface WithdrawStatusModalProps {
     selectedVaultToManage: DepositVault;
 }
 
-const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
-    isOpen,
-    onClose,
-    clearError,
-    selectedVaultToManage,
-}) => {
+const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClose, clearError, selectedVaultToManage }) => {
     const [isConfirmStep, setIsConfirmStep] = useState(true);
     const withdrawAmount = useStore((state) => state.withdrawAmount);
     const setWithdrawAmount = useStore((state) => state.setWithdrawAmount);
@@ -70,10 +52,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
         console.log('withdrawAmount:', withdrawAmount);
-        const withdrawAmountInTokenSmallestUnit = parseUnits(
-            withdrawAmount,
-            selectedVaultToManage.depositAsset.decimals,
-        );
+        const withdrawAmountInTokenSmallestUnit = parseUnits(withdrawAmount, selectedVaultToManage.depositAsset.decimals);
 
         const globalVaultIndex = selectedVaultToManage.index;
 
@@ -88,15 +67,11 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
 
             // convert the depositVaultIndexes to strings for comparison
             console.log('liquidityProviderData:', liquidityProviderData);
-            const stringIndexes = liquidityProviderData.depositVaultIndexes.map((index) =>
-                BigNumber.from(index).toNumber(),
-            );
+            const stringIndexes = liquidityProviderData.depositVaultIndexes.map((index) => BigNumber.from(index).toNumber());
             console.log('stringIndexes:', stringIndexes);
 
             // find the local index of the globalVaultIndex in the depositVaultIndexes array
-            const localVaultIndex = stringIndexes.findIndex(
-                (index) => BigNumber.from(index).toNumber() === globalVaultIndex,
-            );
+            const localVaultIndex = stringIndexes.findIndex((index) => BigNumber.from(index).toNumber() === globalVaultIndex);
 
             if (localVaultIndex === -1) {
                 throw new Error("Selected vault not found in user's deposit vaults");
@@ -114,7 +89,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                 expiredReservationIndexes,
             });
 
-            // TODO: refresh deposit vault data in ContractDataProvider somehow - await refreshUserDepositData();
+            // TODO: refresh deposit vault data in ContractDataProvider somehow - await refreshAllDepositData();
             const updatedVault = userActiveDepositVaults.find((vault) => vault.index === selectedVaultToManage.index);
             if (updatedVault) {
                 setSelectedVaultToManage(updatedVault);
@@ -180,10 +155,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
         }
     };
 
-    const unreservedBalance = formatUnits(
-        selectedVaultToManage.trueUnreservedBalance,
-        selectedVaultToManage.depositAsset.decimals,
-    );
+    const unreservedBalance = formatUnits(selectedVaultToManage.trueUnreservedBalance, selectedVaultToManage.depositAsset.decimals);
 
     const isExceedingMax = parseFloat(withdrawAmount) > parseFloat(unreservedBalance);
 
@@ -206,12 +178,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                 borderRadius='10px'
                 fontFamily={FONT_FAMILIES.AUX_MONO}
                 color={colors.offWhite}>
-                <ModalHeader
-                    fontSize='24px'
-                    userSelect={'none'}
-                    fontFamily={FONT_FAMILIES.NOSTROMO}
-                    fontWeight='bold'
-                    textAlign='center'>
+                <ModalHeader fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
                     {isConfirmStep ? 'Withdraw Liquidity' : 'Withdrawal Status'}
                 </ModalHeader>
                 {isError && !isConfirmStep && <ModalCloseButton />}
@@ -228,12 +195,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                                 borderColor={colors.borderGrayLight}
                                 px='16px'>
                                 <Flex justify='space-between ' w='100%' align='center'>
-                                    <Text
-                                        color={!withdrawAmount ? colors.offWhite : colors.textGray}
-                                        fontSize='13px'
-                                        letterSpacing='-1px'
-                                        fontWeight='normal'
-                                        fontFamily='Aux'>
+                                    <Text color={!withdrawAmount ? colors.offWhite : colors.textGray} fontSize='13px' letterSpacing='-1px' fontWeight='normal' fontFamily='Aux'>
                                         Amount
                                     </Text>
                                 </Flex>
@@ -256,13 +218,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                                     _placeholder={{ color: colors.darkerGray }}
                                 />
                                 <Text
-                                    color={
-                                        isExceedingMax
-                                            ? colors.redHover
-                                            : !withdrawAmount
-                                            ? colors.offWhite
-                                            : colors.textGray
-                                    }
+                                    color={isExceedingMax ? colors.redHover : !withdrawAmount ? colors.offWhite : colors.textGray}
                                     fontSize='13px'
                                     mt='2px'
                                     ml='0px'
@@ -308,10 +264,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                                 w={
                                     status != WithdrawStatus.Confirmed &&
                                     status != WithdrawStatus.Error &&
-                                    (status === WithdrawStatus.WaitingForWalletConfirmation ||
-                                    status === WithdrawStatus.WithdrawalPending
-                                        ? '100%'
-                                        : '60%')
+                                    (status === WithdrawStatus.WaitingForWalletConfirmation || status === WithdrawStatus.WithdrawalPending ? '100%' : '60%')
                                 }
                                 mt='25px'
                                 mb='0px'
@@ -320,8 +273,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                                 textAlign='center'>
                                 {status != WithdrawStatus.Confirmed &&
                                     status != WithdrawStatus.Error &&
-                                    (status === WithdrawStatus.WaitingForWalletConfirmation ||
-                                    status === WithdrawStatus.WithdrawalPending
+                                    (status === WithdrawStatus.WaitingForWalletConfirmation || status === WithdrawStatus.WithdrawalPending
                                         ? 'Awaiting blockchain confirmation...'
                                         : 'Please confirm the transaction in your wallet')}
                             </Text>
@@ -360,11 +312,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                                         <Flex mt='-4px ' mr='8px'>
                                             <HiOutlineExternalLink size={'17px'} color={colors.offWhite} />
                                         </Flex>
-                                        <Text
-                                            fontSize='14px'
-                                            color={colors.offWhite}
-                                            cursor={'pointer'}
-                                            fontWeight={'normal'}>
+                                        <Text fontSize='14px' color={colors.offWhite} cursor={'pointer'} fontWeight={'normal'}>
                                             View on Etherscan
                                         </Text>
                                     </Button>
@@ -392,9 +340,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
                                 <>
                                     <Box mt={4} p={2} bg='#2E1C0C' border='1px solid #78491F' borderRadius='md'>
                                         <Text overflowWrap={'anywhere'} fontSize='12px' color='#FF6B6B'>
-                                            {error && error.toLowerCase().includes('user rejected transaction')
-                                                ? 'User rejected transaction'
-                                                : `Error: ${error}`}
+                                            {error && error.toLowerCase().includes('user rejected transaction') ? 'User rejected transaction' : `Error: ${error}`}
                                         </Text>
                                     </Box>
                                     <Button

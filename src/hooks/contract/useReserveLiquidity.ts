@@ -9,6 +9,7 @@ import riftExchangeABI from '../../abis/RiftExchange.json';
 import { bufferTo18Decimals, createReservationUrl } from '../../utils/dappHelper';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
+import { useContractData } from '../../components/providers/ContractDataProvider';
 
 export enum ReserveStatus {
     Idle = 'idle',
@@ -52,6 +53,7 @@ export function useReserveLiquidity() {
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
     const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const router = useRouter();
+    const { refreshAllDepositData } = useContractData();
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -140,6 +142,7 @@ export function useReserveLiquidity() {
                 } catch (e) {
                     console.error('Error creating Rift swap:', e);
                 }
+                refreshAllDepositData();
 
                 try {
                     handleNavigation(`/swap/${reservationUri}`);

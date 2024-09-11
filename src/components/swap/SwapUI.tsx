@@ -26,6 +26,7 @@ import { useAccount } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import WebAssetTag from '../other/WebAssetTag';
 import { getSwapReservations } from '../../utils/contractReadFunctions';
+import { useContractData } from '../providers/ContractDataProvider';
 
 export const SwapUI = () => {
     const { width } = useWindowSize();
@@ -62,6 +63,7 @@ export const SwapUI = () => {
     const [isBelowMinUsdtOutput, setIsBelowMinUsdtOutput] = useState(false);
     const [isBelowMinBtcInput, setIsBelowMinBtcInput] = useState(false);
     const [minBtcInputAmount, setMinBtcInputAmount] = useState('');
+    const { refreshAllDepositData } = useContractData();
 
     const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
@@ -231,6 +233,21 @@ export const SwapUI = () => {
         return minReservationBtcInputAmount;
     };
 
+    // function to continuously call refreshAllDepositData
+    useEffect(() => {
+        const continuouslyRefreshUserDepositData = () => {
+            if (isConnected && address) {
+                refreshAllDepositData();
+            }
+        };
+
+        if (isConnected && address) {
+            continuouslyRefreshUserDepositData();
+            const intervalId = setInterval(continuouslyRefreshUserDepositData, 10000);
+            return () => clearInterval(intervalId);
+        }
+    }, [isConnected, address]);
+
     // function to continuously calculate the minimum BTC input
     useEffect(() => {
         const continuouslyCalculateMinReservation = () => {
@@ -344,6 +361,7 @@ export const SwapUI = () => {
 
     const handleUsdtOutputChange = (e, amount = null) => {
         const usdtValue = amount !== null ? amount : e.target.value;
+        setIsBelowMinBtcInput(false);
 
         if (validateUsdtOutputChange(usdtValue)) {
             const isBelowMin = checkAmountBelowMinUsdtOutput(usdtValue);
@@ -465,7 +483,7 @@ export const SwapUI = () => {
                                         zIndex={'10'}
                                         color={selectedInputAsset.border_color_light}
                                         cursor='pointer'
-                                        onClick={() => handleBtcInputChange(null, minBtcInputAmount)}
+                                        onClick={() => handleUsdtOutputChange(null, '1.0')}
                                         _hover={{ textDecoration: 'underline' }}
                                         letterSpacing={'-1.5px'}
                                         fontWeight={'normal'}

@@ -42,7 +42,7 @@ export function useDepositLiquidity() {
     const [txHash, setTxHash] = useState<string | null>(null);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const userEthAddress = useStore((state) => state.userEthAddress);
-    const { refreshUserDepositData } = useContractData();
+    const { refreshAllDepositData } = useContractData();
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
 
     const resetDepositState = useCallback(() => {
@@ -63,25 +63,15 @@ export function useDepositLiquidity() {
 
             try {
                 const tokenContract = new ethers.Contract(params.tokenAddress, ERC20ABI, params.signer);
-                const riftExchangeContractInstance = new ethers.Contract(
-                    params.riftExchangeContractAddress,
-                    params.riftExchangeAbi,
-                    params.signer,
-                );
+                const riftExchangeContractInstance = new ethers.Contract(params.riftExchangeContractAddress, params.riftExchangeAbi, params.signer);
 
                 const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContractAddress);
 
                 console.log('allowance:', allowance.toString());
-                console.log(
-                    'tokenDepositAmountInSmallestTokenUnits:',
-                    params.tokenDepositAmountInSmallestTokenUnits.toString(),
-                );
+                console.log('tokenDepositAmountInSmallestTokenUnits:', params.tokenDepositAmountInSmallestTokenUnits.toString());
                 if (BigNumber.from(allowance).lt(BigNumber.from(params.tokenDepositAmountInSmallestTokenUnits))) {
                     setStatus(DepositStatus.WaitingForDepositTokenApproval);
-                    const approveTx = await tokenContract.approve(
-                        params.riftExchangeContractAddress,
-                        params.tokenDepositAmountInSmallestTokenUnits,
-                    );
+                    const approveTx = await tokenContract.approve(params.riftExchangeContractAddress, params.tokenDepositAmountInSmallestTokenUnits);
 
                     setStatus(DepositStatus.ApprovalPending);
                     await approveTx.wait();
@@ -101,7 +91,7 @@ export function useDepositLiquidity() {
                 setTxHash(depositTx.hash);
                 await depositTx.wait();
                 setStatus(DepositStatus.Confirmed);
-                refreshUserDepositData();
+                refreshAllDepositData();
             } catch (err) {
                 console.error('Error in depositLiquidity:', err);
                 setError(err instanceof Error ? err.message : String(err));
