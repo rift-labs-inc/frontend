@@ -1,17 +1,4 @@
-import {
-    Tabs,
-    TabList,
-    Tooltip,
-    TabPanels,
-    Tab,
-    Button,
-    Flex,
-    Text,
-    useColorModeValue,
-    Box,
-    Spacer,
-    Input,
-} from '@chakra-ui/react';
+import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
@@ -91,10 +78,7 @@ export const DepositUI = () => {
             setUsdtDepositAmount(usdtValue);
             setUsdtOutputSwapAmount(usdtValue);
             const btcOutputValue =
-                usdtValue && parseFloat(usdtValue) > 0
-                    ? parseFloat(usdtValue) /
-                      useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC
-                    : 0;
+                usdtValue && parseFloat(usdtValue) > 0 ? parseFloat(usdtValue) / useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
             setBtcOutputAmount(formatAmountToString(selectedInputAsset, btcOutputValue));
             setBtcInputSwapAmount(formatAmountToString(selectedInputAsset, btcOutputValue));
 
@@ -106,7 +90,7 @@ export const DepositUI = () => {
     };
 
     const checkLiquidityExceeded = (amount: number) => {
-        setUserBalanceExceeded(amount > parseFloat(userUsdtBalance));
+        if (isConnected) setUserBalanceExceeded(amount > parseFloat(userUsdtBalance));
     };
 
     // --------------- BTC OUTPUT ---------------
@@ -119,10 +103,7 @@ export const DepositUI = () => {
             setBtcOutputAmount(btcValue);
             setBtcInputSwapAmount(btcValue);
             let usdtInputValue =
-                btcValue && parseFloat(btcValue) > 0
-                    ? parseFloat(btcValue) *
-                      useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC
-                    : 0;
+                btcValue && parseFloat(btcValue) > 0 ? parseFloat(btcValue) * useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
             // TODO: subtract premium we calculate from the eth value
             // btcOutputAmount -= calculatePremium;
             setUsdtDepositAmount(formatAmountToString(selectedInputAsset, usdtInputValue));
@@ -222,13 +203,7 @@ export const DepositUI = () => {
                                         />
                                         <Flex>
                                             <Text
-                                                color={
-                                                    userBalanceExceeded
-                                                        ? colors.redHover
-                                                        : !usdtDepositAmount
-                                                        ? colors.offWhite
-                                                        : colors.textGray
-                                                }
+                                                color={userBalanceExceeded ? colors.redHover : !usdtDepositAmount ? colors.offWhite : colors.textGray}
                                                 fontSize={'13px'}
                                                 mt='2px'
                                                 ml='1px'
@@ -240,13 +215,10 @@ export const DepositUI = () => {
                                                     ? `Exceeds available liquidity - `
                                                     : usdtPriceUSD
                                                     ? usdtDepositAmount
-                                                        ? (usdtPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString(
-                                                              'en-US',
-                                                              {
-                                                                  style: 'currency',
-                                                                  currency: 'USD',
-                                                              },
-                                                          )
+                                                        ? (usdtPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
+                                                              style: 'currency',
+                                                              currency: 'USD',
+                                                          })
                                                         : '$0.00'
                                                     : '$0.00'}{' '}
                                             </Text>
@@ -255,13 +227,7 @@ export const DepositUI = () => {
                                                     <Spacer />
                                                     <Text
                                                         align={'right'}
-                                                        color={
-                                                            userBalanceExceeded
-                                                                ? selectedInputAsset.border_color_light
-                                                                : !usdtDepositAmount
-                                                                ? colors.offWhite
-                                                                : colors.textGray
-                                                        }
+                                                        color={userBalanceExceeded ? selectedInputAsset.border_color_light : !usdtDepositAmount ? colors.offWhite : colors.textGray}
                                                         fontSize={'13px'}
                                                         onClick={() => handleUsdtInputChange(-1, userUsdtBalance)}
                                                         _hover={{ textDecoration: 'underline' }}
@@ -270,8 +236,7 @@ export const DepositUI = () => {
                                                         letterSpacing={'-1.5px'}
                                                         fontWeight={'normal'}
                                                         fontFamily={'Aux'}>
-                                                        {parseFloat(userUsdtBalance).toFixed(2)}{' '}
-                                                        {selectedInputAsset.name}
+                                                        {parseFloat(userUsdtBalance).toFixed(2)} {selectedInputAsset.name}
                                                     </Text>
                                                 </>
                                             )}
@@ -288,11 +253,7 @@ export const DepositUI = () => {
                                                     letterSpacing={'-1.5px'}
                                                     fontWeight={'normal'}
                                                     fontFamily={'Aux'}>
-                                                    {userBalanceExceeded
-                                                        ? `${parseFloat(userUsdtBalance).toFixed(2)} ${
-                                                              selectedInputAsset.name
-                                                          } Max`
-                                                        : 'Max'}
+                                                    {userBalanceExceeded ? `${parseFloat(userUsdtBalance).toFixed(2)} ${selectedInputAsset.name} Max` : 'Max'}
                                                 </Text>
                                             )}
                                         </Flex>
@@ -319,11 +280,7 @@ export const DepositUI = () => {
                                     top='50%'
                                     left='50%'
                                     transform='translate(-50%, -50%)'>
-                                    <svg
-                                        xmlns='http://www.w3.org/2000/svg'
-                                        width='20px'
-                                        height='20px'
-                                        viewBox='0 0 20 20'>
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='20px' height='20px' viewBox='0 0 20 20'>
                                         <path
                                             fill='#909090'
                                             fillRule='evenodd'
@@ -333,14 +290,7 @@ export const DepositUI = () => {
                                     </svg>
                                 </Flex>
                                 {/* BTC Output */}
-                                <Flex
-                                    mt={'5px'}
-                                    px='10px'
-                                    bg='#2E1C0C'
-                                    w='100%'
-                                    h='105px'
-                                    border='2px solid #78491F'
-                                    borderRadius={'10px'}>
+                                <Flex mt={'5px'} px='10px' bg='#2E1C0C' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
                                     <Flex direction={'column'} py='10px' px='5px'>
                                         <Text
                                             color={!btcOutputAmount ? colors.offWhite : colors.textGray}
@@ -379,13 +329,10 @@ export const DepositUI = () => {
                                             fontFamily={'Aux'}>
                                             {bitcoinPriceUSD
                                                 ? btcOutputAmount
-                                                    ? (bitcoinPriceUSD * parseFloat(btcOutputAmount)).toLocaleString(
-                                                          'en-US',
-                                                          {
-                                                              style: 'currency',
-                                                              currency: 'USD',
-                                                          },
-                                                      )
+                                                    ? (bitcoinPriceUSD * parseFloat(btcOutputAmount)).toLocaleString('en-US', {
+                                                          style: 'currency',
+                                                          currency: 'USD',
+                                                      })
                                                     : '$0.00'
                                                 : '$0.00'}
                                         </Text>
@@ -398,21 +345,14 @@ export const DepositUI = () => {
                             </Flex>{' '}
                             {/* Rate/Liquidity Details */}
                             <Flex mt='12px'>
-                                <Text
-                                    color={colors.textGray}
-                                    fontSize={'13px'}
-                                    ml='3px'
-                                    letterSpacing={'-1.5px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
+                                <Text color={colors.textGray} fontSize={'13px'} ml='3px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
                                     1 BTC ≈{' '}
                                     {usdtExchangeRatePerBTC
                                         ? usdtExchangeRatePerBTC.toLocaleString('en-US', {
                                               maximumFractionDigits: 4,
                                           })
                                         : 'N/A'}{' '}
-                                    {selectedInputAsset.name}{' '}
-                                    {/* TODO: implemnt above where its based on the selected asset */}
+                                    {selectedInputAsset.name} {/* TODO: implemnt above where its based on the selected asset */}
                                     <Box
                                         as='span'
                                         color={colors.textGray}
@@ -427,14 +367,7 @@ export const DepositUI = () => {
                                         }}></Box>
                                 </Text>
                                 <Spacer />
-                                <Flex
-                                    ml='-3px'
-                                    color={colors.textGray}
-                                    fontSize={'13px'}
-                                    mr='3px'
-                                    letterSpacing={'-1.5px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
+                                <Flex ml='-3px' color={colors.textGray} fontSize={'13px'} mr='3px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
                                     <Tooltip
                                         fontFamily={'Aux'}
                                         letterSpacing={'-0.5px'}
@@ -444,14 +377,7 @@ export const DepositUI = () => {
                                         label='Exchange rate includes the hypernode, protocol, and reservation fees. There are no additional or hidden fees.'
                                         aria-label='A tooltip'>
                                         <Flex ml='8px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
-                                            <Text
-                                                color={colors.textGray}
-                                                fontSize={'13px'}
-                                                mr='8px'
-                                                mt='1px'
-                                                letterSpacing={'-1.5px'}
-                                                fontWeight={'normal'}
-                                                fontFamily={'Aux'}>
+                                            <Text color={colors.textGray} fontSize={'13px'} mr='8px' mt='1px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
                                                 Including Fees
                                             </Text>
                                             <InfoSVG width='13' />
@@ -475,9 +401,7 @@ export const DepositUI = () => {
                                 borderRadius={'10px'}
                                 justify={'center'}
                                 border={usdtDepositAmount ? '3px solid #445BCB' : '3px solid #3242a8'}>
-                                <Text
-                                    color={usdtDepositAmount ? colors.offWhite : colors.darkerGray}
-                                    fontFamily='Nostromo'>
+                                <Text color={usdtDepositAmount ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
                                     {isConnected ? 'Create Sell Order' : 'Connect Wallet'}
                                 </Text>
                             </Flex>

@@ -3,11 +3,7 @@ import { ethers, BigNumber, BigNumberish } from 'ethers';
 import { ERC20ABI, protocolFeeDenominator, protocolFeePercentage } from '../../utils/constants';
 import { useStore } from '../../store';
 import { ProxyWalletLiquidityProvider } from '../../types';
-import {
-    getMatchingLiquidityReservedEvent,
-    getSwapReservations,
-    getSwapReservationsLength,
-} from '../../utils/contractReadFunctions';
+import { getMatchingLiquidityReservedEvent, getSwapReservations, getSwapReservationsLength } from '../../utils/contractReadFunctions';
 import swapReservationsAggregatorABI from '../../abis/SwapReservationsAggregator.json';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { bufferTo18Decimals, createReservationUrl } from '../../utils/dappHelper';
@@ -79,24 +75,13 @@ export function useReserveLiquidity() {
                 setTxHash(null);
 
                 const tokenContract = new ethers.Contract(params.tokenAddress, ERC20ABI, params.signer);
-                const riftExchangeContractInstance = new ethers.Contract(
-                    params.riftExchangeContract,
-                    params.riftExchangeAbi,
-                    params.signer,
-                );
+                const riftExchangeContractInstance = new ethers.Contract(params.riftExchangeContract, params.riftExchangeAbi, params.signer);
 
-                const totalAmountToReserve = params.amountsToReserve.reduce(
-                    (acc, amount) => BigNumber.from(acc).add(amount),
-                    BigNumber.from(0),
-                );
+                const totalAmountToReserve = params.amountsToReserve.reduce((acc, amount) => BigNumber.from(acc).add(amount), BigNumber.from(0));
 
                 const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContract);
-                const protocolFee = BigNumber.from(totalAmountToReserve)
-                    .mul(protocolFeePercentage)
-                    .div(protocolFeeDenominator);
-                const reservationFee = selectedInputAsset.releaserFee
-                    .add(selectedInputAsset.proverFee)
-                    .add(protocolFee);
+                const protocolFee = BigNumber.from(totalAmountToReserve).mul(protocolFeePercentage).div(protocolFeeDenominator);
+                const reservationFee = selectedInputAsset.releaserFee.add(selectedInputAsset.proverFee).add(protocolFee);
 
                 if (BigNumber.from(allowance).lt(reservationFee)) {
                     setStatus(ReserveStatus.WaitingForTokenApproval);
@@ -130,25 +115,15 @@ export function useReserveLiquidity() {
 
                 console.log('reservationDetails', reservationDetails);
 
-                const reservationUri = createReservationUrl(
-                    reservationDetails.orderNonce,
-                    reservationDetails.swapReservationIndex,
-                );
+                const reservationUri = createReservationUrl(reservationDetails.orderNonce, reservationDetails.swapReservationIndex);
 
-                const liquidityProviders: Array<ProxyWalletLiquidityProvider> = params.vaultIndexesToReserve.map(
-                    (index: number, i: number) => {
-                        return {
-                            amount: BigNumber.from(
-                                bufferTo18Decimals(
-                                    lowestFeeReservationParams.amountsInμUsdtToReserve[i],
-                                    selectedInputAsset.decimals,
-                                ),
-                            ).toString(),
-                            btcExchangeRate: BigNumber.from(lowestFeeReservationParams.btcExchangeRates[i]).toString(),
-                            lockingScriptHex: lowestFeeReservationParams.btcPayoutLockingScripts[i],
-                        };
-                    },
-                );
+                const liquidityProviders: Array<ProxyWalletLiquidityProvider> = params.vaultIndexesToReserve.map((index: number, i: number) => {
+                    return {
+                        amount: BigNumber.from(bufferTo18Decimals(lowestFeeReservationParams.amountsInMicroUsdtToReserve[i], selectedInputAsset.decimals)).toString(),
+                        btcExchangeRate: BigNumber.from(lowestFeeReservationParams.btcExchangeRates[i]).toString(),
+                        lockingScriptHex: lowestFeeReservationParams.btcPayoutLockingScripts[i],
+                    };
+                });
 
                 console.log('liquidityProviders:', liquidityProviders);
 

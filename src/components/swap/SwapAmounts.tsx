@@ -11,6 +11,7 @@ import {
     Box,
     Spacer,
     Input,
+    Spinner,
 } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
@@ -24,7 +25,6 @@ import { ArrowRightIcon } from '@chakra-ui/icons';
 import { FaArrowRight } from 'react-icons/fa';
 import { MdArrowRight } from 'react-icons/md';
 import { AssetTag } from '../other/AssetTag';
-import WebAssetTag from '../other/WebAssetTag';
 import { LoaderIcon } from 'react-hot-toast';
 
 export const SwapAmounts = ({}) => {
@@ -66,7 +66,7 @@ export const SwapAmounts = ({}) => {
                     fontWeight={'normal'}
                     py='3px'>
                     <Flex align={'center'} justify={'center'}>
-                        <LoaderIcon style={{ width: 40, height: 40 }} />
+                        <Spinner size='lg' color={colors.offWhite} />
                     </Flex>
                 </Flex>
             ) : (
@@ -86,8 +86,8 @@ export const SwapAmounts = ({}) => {
                             <Text mr='15px' fontSize={'36px'} letterSpacing={'-5px'} color={colors.offWhite}>
                                 {btcInputSwapAmount === '-1' ? 'Loading...' : btcInputSwapAmount}
                             </Text>
-                            <Flex mt='-16px' mb='-7px'>
-                                <WebAssetTag w='20px' h='20px' asset={'BTC'} />
+                            <Flex mt='-14px' mb='-9px'>
+                                <AssetTag assetName='BTC' width='79px' />
                             </Flex>
                             {/* <BTCSVG width='100' height='58' viewBox='0 0 148 54' />{' '} */}
                         </Flex>
@@ -118,7 +118,7 @@ export const SwapAmounts = ({}) => {
                             <Text mr='15px' fontSize={'36px'} letterSpacing={'-5px'} color={colors.offWhite}>
                                 {usdtOutputSwapAmount === '-1' ? 'Loading...' : usdtOutputSwapAmount}
                             </Text>
-                            <Flex mt='-16px' mb='-7px'>
+                            <Flex mt='-14px' mb='-9px'>
                                 <AssetTag assetName='USDT' width='90px' />
                             </Flex>{' '}
                         </Flex>
