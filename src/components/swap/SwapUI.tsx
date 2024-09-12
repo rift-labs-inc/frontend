@@ -287,6 +287,7 @@ export const SwapUI = () => {
         const minReservation = calculateBestVaultsForUsdtOutput(allDepositVaults, parseUnits('1', selectedInputAsset.decimals)); // min 1 usdt output
         if (!minReservation) return;
         const minProxyFee = await fetchProxyWalletSwapFee(minReservation.vaultIndexes.length);
+        if (!minProxyFee) return;
         const updatedMinReservationSatsInputAmount = minReservation.totalSatsUsed.add(BigNumber.from(minProxyFee));
         const minReservationBtcInputAmount = formatUnits(updatedMinReservationSatsInputAmount.add(BigNumber.from(1)), bitcoinDecimals).toString();
         setMinBtcInputAmount(minReservationBtcInputAmount);
