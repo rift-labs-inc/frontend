@@ -37,6 +37,8 @@ type Store = {
     setUserCompletedDepositVaults: (userCompletedDepositVaults: DepositVault[]) => void;
     allSwapReservations: SwapReservation[];
     setAllSwapReservations: (reservations: SwapReservation[]) => void;
+    userSwapReservations: SwapReservation[];
+    setUserSwapReservations: (reservations: SwapReservation[]) => void;
     totalExpiredReservations: number;
     setTotalExpiredReservations: (totalExpiredReservations: number) => void;
 
@@ -209,6 +211,8 @@ export const useStore = create<Store>((set) => {
         setUserCompletedDepositVaults: (userCompletedDepositVaults) => set({ userCompletedDepositVaults }),
         allSwapReservations: [],
         setAllSwapReservations: (allSwapReservations) => set({ allSwapReservations }),
+        userSwapReservations: [],
+        setUserSwapReservations: (userSwapReservations) => set({ userSwapReservations }),
         totalExpiredReservations: 0,
         setTotalExpiredReservations: (totalExpiredReservations) => set({ totalExpiredReservations }),
 

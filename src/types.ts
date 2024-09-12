@@ -22,6 +22,7 @@ export type ReserveLiquidityParams = {
 };
 
 export type SwapReservation = {
+    owner: string;
     confirmationBlockHeight: number;
     reservationTimestamp: number;
     unlockTimestamp: number;

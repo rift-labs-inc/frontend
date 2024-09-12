@@ -6,11 +6,7 @@ import { useStore } from '../store';
 
 // CONTRACT FUNCTIONS
 
-export async function getDepositVaultsLength(
-    provider: ethers.providers.Provider,
-    abi: ethers.ContractInterface,
-    rift_exchange_contract: string,
-): Promise<number> {
+export async function getDepositVaultsLength(provider: ethers.providers.Provider, abi: ethers.ContractInterface, rift_exchange_contract: string): Promise<number> {
     const contract = new ethers.Contract(rift_exchange_contract, abi, provider);
 
     const length = await contract.getDepositVaultsLength();
@@ -49,11 +45,7 @@ export async function getDepositVaultByIndex(
     }
 }
 
-export async function getSwapReservationsLength(
-    provider: ethers.providers.Provider,
-    abi: ethers.ContractInterface,
-    rift_exchange_contract: string,
-): Promise<number> {
+export async function getSwapReservationsLength(provider: ethers.providers.Provider, abi: ethers.ContractInterface, rift_exchange_contract: string): Promise<number> {
     const contract = new ethers.Contract(rift_exchange_contract, abi, provider);
 
     const length = await contract.getReservationLength();
@@ -116,13 +108,10 @@ export function decodeDepositVaults(data: string): DepositVault[] {
 
     // decode each element in the array
     const depositVaults: DepositVault[] = decodedArray.map((item: string) => {
-        const [
-            initialBalance,
-            unreservedBalanceFromContract,
-            withdrawnAmount,
-            btcExchangeRate,
-            btcPayoutLockingScript,
-        ] = abiCoder.decode(['uint256', 'uint256', 'uint256', 'uint64', 'bytes22'], item);
+        const [initialBalance, unreservedBalanceFromContract, withdrawnAmount, btcExchangeRate, btcPayoutLockingScript] = abiCoder.decode(
+            ['uint256', 'uint256', 'uint256', 'uint64', 'bytes22'],
+            item,
+        );
 
         return {
             initialBalance: initialBalance,
@@ -168,6 +157,7 @@ function decodeSwapReservations(data: string): SwapReservation[] {
         const decodedResults = abiCoder.decode(
             [
                 `tuple(
+                    address owner,
                     uint32 confirmationBlockHeight,
                     uint32 reservationTimestamp,
                     uint32 unlockTimestamp,
@@ -187,6 +177,7 @@ function decodeSwapReservations(data: string): SwapReservation[] {
             item,
         );
         const [
+            owner,
             confirmationBlockHeight,
             reservationTimestamp,
             unlockTimestamp,
@@ -204,6 +195,7 @@ function decodeSwapReservations(data: string): SwapReservation[] {
         ] = decodedResults[0];
 
         return {
+            owner,
             confirmationBlockHeight,
             reservationTimestamp,
             unlockTimestamp,
@@ -237,12 +229,7 @@ export function getMatchingLiquidityReservedEvent(
         const contract = new ethers.Contract(contractAddress, abi, provider);
 
         // Create the event listener
-        const listener = (
-            reserver: string,
-            swapReservationIndex: ethers.BigNumber,
-            orderNonce: string,
-            event: ethers.Event,
-        ) => {
+        const listener = (reserver: string, swapReservationIndex: ethers.BigNumber, orderNonce: string, event: ethers.Event) => {
             // Check if the reserver matches the specified address
             if (reserver.toLowerCase() === reserverAddress.toLowerCase()) {
                 const matchingEvent: LiquidityReservedEvent = {
