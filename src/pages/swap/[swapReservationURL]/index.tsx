@@ -103,7 +103,6 @@ const ReservationDetails = () => {
         const checkSwapStatus = () => {
             if (typeof window === 'undefined' || !window.rift || !window.rift.getRiftSwapStatus || !swapReservationData) {
                 setError('Rift wallet not detected or getRiftSwapStatus not available.');
-                console.error('Rift wallet not detected or getRiftSwapStatus not available.');
                 return;
             }
 

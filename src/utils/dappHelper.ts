@@ -244,7 +244,7 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
         const bufferedMicroUSDTToTakeFromVault = bufferTo18Decimals(MicroUsdtToTakeFromVault, vault.depositAsset.decimals);
         const fixedNumberBufferedMicroUSDTToTakeFromVault = FixedNumber.from(bufferedMicroUSDTToTakeFromVault);
         const fixedNumberExchangeRate = FixedNumber.from(vault.btcExchangeRate.toString());
-        const satsUsed = Math.round(fixedNumberBufferedMicroUSDTToTakeFromVault.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
+        const satsUsed = Math.floor(fixedNumberBufferedMicroUSDTToTakeFromVault.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
 
         // [3] update tracked amounts, but skip vaults with 0 sats or 0 micro USDT
         if (MicroUsdtToTakeFromVault.gt(0) && satsUsed > 0) {
@@ -318,7 +318,7 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
         // [2] calculate the equivalent sats needed for the μUSDT taken
         const fixedNumberBufferedMicroUsdtToTake = FixedNumber.from(bufferedMicroUsdtToTake.toString());
         const fixedNumberExchangeRate = FixedNumber.from(vault.btcExchangeRate.toString());
-        const satsNeeded = Math.round(fixedNumberBufferedMicroUsdtToTake.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
+        const satsNeeded = Math.floor(fixedNumberBufferedMicroUsdtToTake.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
 
         // [3] update tracked amounts, but skip vaults with 0 sats or 0 micro USDT
         if (microUsdtToTake.gt(0) && satsNeeded > 0) {

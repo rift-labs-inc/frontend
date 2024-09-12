@@ -92,6 +92,7 @@ export function useDepositLiquidity() {
                 await depositTx.wait();
                 setStatus(DepositStatus.Confirmed);
                 refreshAllDepositData();
+                console.log('Deposit confirmed');
             } catch (err) {
                 console.error('Error in depositLiquidity:', err);
                 setError(err instanceof Error ? err.message : String(err));

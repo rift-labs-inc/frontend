@@ -1,25 +1,14 @@
 import React from 'react';
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalCloseButton,
-    Text,
-    Flex,
-    Box,
-    Spacer,
-    Button,
-} from '@chakra-ui/react';
+import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Text, Flex, Box, Spacer, Button } from '@chakra-ui/react';
 import { ReserveStatus } from '../../hooks/contract/useReserveLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
-import { CheckmarkCircle, AlertCircleOutline } from 'react-ionicons';
+import { AlertCircleOutline } from 'react-ionicons';
 import { HiOutlineExternalLink } from 'react-icons/hi';
 import { etherScanBaseUrl } from '../../utils/constants';
 import { useStore } from '../../store';
 import GooSpinner from '../other/GooSpiner';
+import { IoIosCheckmarkCircle } from 'react-icons/io';
 
 interface ReservationStatusModalProps {
     isOpen: boolean;
@@ -37,13 +26,7 @@ const CustomGooSpinner = ({ size = 100, color = 'purple', loading = true }) => {
     return <GooSpinner size={size} color={color} />;
 };
 
-const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
-    isOpen = false,
-    onClose,
-    status = ReserveStatus.Idle,
-    error = null,
-    txHash = null,
-}) => {
+const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen = false, onClose, status = ReserveStatus.Idle, error = null, txHash = null }) => {
     const isCompleted = status === ReserveStatus.Confirmed;
     const isError = status === ReserveStatus.Error;
     const isLoading = ![ReserveStatus.Idle, ReserveStatus.Confirmed, ReserveStatus.Error].includes(status);
@@ -93,12 +76,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
                 borderRadius='10px'
                 fontFamily={FONT_FAMILIES.AUX_MONO}
                 color={colors.offWhite}>
-                <ModalHeader
-                    fontSize='24px'
-                    userSelect={'none'}
-                    fontFamily={FONT_FAMILIES.NOSTROMO}
-                    fontWeight='bold'
-                    textAlign='center'>
+                <ModalHeader fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
                     Reservation Status
                 </ModalHeader>
                 {(isCompleted || isError) && <ModalCloseButton />}
@@ -106,26 +84,17 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
                     <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
                         {isLoading && <CustomGooSpinner size={100} color={colors.purpleBorder} loading={true} />}
                         <Spacer />
-                        <Text
-                            fontSize='12px'
-                            w={'100%'}
-                            mt='25px'
-                            mb='0px'
-                            color={colors.textGray}
-                            fontWeight={'normal'}
-                            textAlign='center'>
+                        <Text fontSize='12px' w={'100%'} mt='25px' mb='0px' color={colors.textGray} fontWeight={'normal'} textAlign='center'>
                             {status != ReserveStatus.Confirmed &&
                                 status != ReserveStatus.Error &&
-                                (status === ReserveStatus.WaitingForWalletConfirmation ||
-                                status === ReserveStatus.ApprovalPending ||
-                                status === ReserveStatus.ReservationPending
+                                (status === ReserveStatus.WaitingForWalletConfirmation || status === ReserveStatus.ApprovalPending || status === ReserveStatus.ReservationPending
                                     ? 'Awaiting blockchain confirmation...'
                                     : 'Please confirm the transaction in your wallet')}
                         </Text>
                         <Flex direction={'column'} align={'center'} w='100%' justify={'center'}>
                             {isCompleted && (
                                 <Flex mt='-20px' ml='4px'>
-                                    <CheckmarkCircle width='38px' height={'38px'} color={colors.greenOutline} />
+                                    <IoIosCheckmarkCircle size={45} color={colors.greenOutline} />
                                 </Flex>
                             )}
                             {isError && (
@@ -156,12 +125,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({
                                     <Flex mt='-4px ' mr='8px'>
                                         <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
                                     </Flex>
-                                    <Text
-                                        fontSize='14px'
-                                        color={colors.offerWhite}
-                                        fontFamily={FONT_FAMILIES.NOSTROMO}
-                                        cursor={'pointer'}
-                                        fontWeight={'normal'}>
+                                    <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
                                         View on Etherscan
                                     </Text>
                                 </Button>

@@ -107,6 +107,7 @@ export function useReserveLiquidity() {
                 setStatus(ReserveStatus.ReservationPending);
                 await reserveTx.wait();
                 setStatus(ReserveStatus.Confirmed);
+                console.log('Liquidity reserved successfully');
 
                 const reservationDetails = await getMatchingLiquidityReservedEvent(
                     ethersRpcProvider,

@@ -5,7 +5,7 @@ import { WithdrawStatus } from '../../hooks/contract/useWithdrawLiquidity';
 import { useWithdrawLiquidity } from '../../hooks/contract/useWithdrawLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
-import { CheckmarkCircle, AlertCircleOutline } from 'react-ionicons';
+import { AlertCircleOutline } from 'react-ionicons';
 import { HiOutlineExternalLink, HiXCircle } from 'react-icons/hi';
 import { etherScanBaseUrl } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
@@ -15,6 +15,7 @@ import { useStore } from '../../store';
 import { getLiquidityProvider } from '../../utils/contractReadFunctions';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import GooSpinner from '../other/GooSpiner';
+import { IoIosCheckmarkCircle } from 'react-icons/io';
 
 interface WithdrawStatusModalProps {
     isOpen: boolean;
@@ -279,8 +280,8 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                             </Text>
                             <Flex direction={'column'} align={'center'} w='100%' justify={'center'}>
                                 {isCompleted && (
-                                    <Flex mt='6px' ml='4px'>
-                                        <CheckmarkCircle width='38px' height={'38px'} color={colors.greenOutline} />
+                                    <Flex mt='-20px' ml='4px'>
+                                        <IoIosCheckmarkCircle size={45} color={colors.greenOutline} />
                                     </Flex>
                                 )}
                                 {isError && (

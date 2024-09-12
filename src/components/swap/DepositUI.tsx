@@ -378,7 +378,7 @@ export const DepositUI = () => {
                                         aria-label='A tooltip'>
                                         <Flex ml='8px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
                                             <Text color={colors.textGray} fontSize={'13px'} mr='8px' mt='1px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
-                                                Including Fees
+                                                Includes Fees
                                             </Text>
                                             <InfoSVG width='13' />
                                         </Flex>

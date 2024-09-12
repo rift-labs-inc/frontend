@@ -1,4 +1,4 @@
-import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
+import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input, Spinner, Skeleton } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
@@ -20,7 +20,7 @@ import {
     weiToEth,
 } from '../../utils/dappHelper';
 import { ProxyWalletLiquidityProvider, ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
-import { bitcoinDecimals, maxSwapOutputs } from '../../utils/constants';
+import { bitcoin_bg_color, bitcoin_dark_bg_color, bitcoinDecimals, maxSwapOutputs, protocolFeeDenominator, protocolFeePercentage } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
@@ -63,8 +63,8 @@ export const SwapUI = () => {
     const [isBelowMinUsdtOutput, setIsBelowMinUsdtOutput] = useState(false);
     const [isBelowMinBtcInput, setIsBelowMinBtcInput] = useState(false);
     const [minBtcInputAmount, setMinBtcInputAmount] = useState('');
-    const { refreshAllDepositData } = useContractData();
-
+    const { refreshAllDepositData, loading } = useContractData();
+    // const loading = true;
     const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
@@ -72,7 +72,25 @@ export const SwapUI = () => {
     const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
     const validAssets = useStore((state) => state.validAssets);
     const [proxyWalletSwapFastFee, setProxyWalletSwapFastFee] = useState(0);
+    const reservationFeeAmountMicroUsdt = useStore((state) => state.reservationFeeAmountMicroUsdt);
+    const setReservationFeeAmountMicroUsdt = useStore((state) => state.setReservationFeeAmountMicroUsdt);
+    const [dots, setDots] = useState('');
 
+    useEffect(() => {
+        console.log('reservationFeeAmountMicroUsdt:', reservationFeeAmountMicroUsdt);
+    }, [reservationFeeAmountMicroUsdt]);
+
+    // loading dots effect
+    useEffect(() => {
+        if (loading) {
+            const interval = setInterval(() => {
+                setDots((prev) => (prev === '...' ? '' : prev + '.'));
+            }, 350);
+            return () => clearInterval(interval);
+        }
+    }, [loading]);
+
+    // set available liquidity
     useEffect(() => {
         if (selectedInputAsset && validAssets[selectedInputAsset.name]) {
             const totalAvailableLiquidity = validAssets[selectedInputAsset.name]?.totalAvailableLiquidity;
@@ -80,6 +98,36 @@ export const SwapUI = () => {
             setAvailableLiquidityInUSDT(Number(formatUnits(totalAvailableLiquidity, selectedInputAsset.decimals)).toFixed(2).toString());
         }
     }, [selectedInputAsset, validAssets]);
+
+    // function to continuously call refreshAllDepositData
+    useEffect(() => {
+        const continuouslyRefreshUserDepositData = () => {
+            if (isConnected && address) {
+                refreshAllDepositData();
+            }
+        };
+
+        if (isConnected && address) {
+            continuouslyRefreshUserDepositData();
+            const intervalId = setInterval(continuouslyRefreshUserDepositData, 10000);
+            return () => clearInterval(intervalId);
+        }
+    }, [isConnected, address]);
+
+    // function to continuously calculate the minimum BTC input
+    useEffect(() => {
+        const continuouslyCalculateMinReservation = () => {
+            if (allDepositVaults) {
+                calcuateMinimumReservationSatsInputAmount();
+            }
+        };
+
+        if (allDepositVaults) {
+            continuouslyCalculateMinReservation();
+            const intervalId = setInterval(continuouslyCalculateMinReservation, 2000);
+            return () => clearInterval(intervalId);
+        }
+    }, [allDepositVaults]);
 
     const checkLiquidityExceeded = useCallback(
         (amount: string | null): boolean => {
@@ -194,6 +242,13 @@ export const SwapUI = () => {
 
         // set new exchange rate & usdt output based on new ideal reservation
         if (newIdealReservationDetails) {
+            // account for the prover, releaser, and protocol fees
+            const protocolFee = BigNumber.from(idealReservationDetails.totalMicroUsdtSwapOutput).mul(protocolFeePercentage).div(protocolFeeDenominator);
+            console.log('PROTOCOL FEE:', protocolFee.toString());
+            const reservationFee = selectedInputAsset.releaserFee.add(selectedInputAsset.proverFee).add(protocolFee);
+            console.log('TOTAL reservation fee:', reservationFee.toString());
+            setReservationFeeAmountMicroUsdt(reservationFee.toString());
+
             setUsdtOutputSwapAmount(
                 formatAmountToString(selectedInputAsset, formatUnits(newIdealReservationDetails?.totalMicroUsdtSwapOutput ?? BigNumber.from(0), selectedInputAsset.decimals)),
             );
@@ -232,36 +287,6 @@ export const SwapUI = () => {
         setMinBtcInputAmount(minReservationBtcInputAmount);
         return minReservationBtcInputAmount;
     };
-
-    // function to continuously call refreshAllDepositData
-    useEffect(() => {
-        const continuouslyRefreshUserDepositData = () => {
-            if (isConnected && address) {
-                refreshAllDepositData();
-            }
-        };
-
-        if (isConnected && address) {
-            continuouslyRefreshUserDepositData();
-            const intervalId = setInterval(continuouslyRefreshUserDepositData, 10000);
-            return () => clearInterval(intervalId);
-        }
-    }, [isConnected, address]);
-
-    // function to continuously calculate the minimum BTC input
-    useEffect(() => {
-        const continuouslyCalculateMinReservation = () => {
-            if (allDepositVaults) {
-                calcuateMinimumReservationSatsInputAmount();
-            }
-        };
-
-        if (allDepositVaults) {
-            continuouslyCalculateMinReservation();
-            const intervalId = setInterval(continuouslyCalculateMinReservation, 2000);
-            return () => clearInterval(intervalId);
-        }
-    }, [allDepositVaults]);
 
     // calculate ideal reservation for usdt output
     const calculateIdealReservationUsdtOutput = async (amountUsdtSwapOutput) => {
@@ -414,49 +439,75 @@ export const SwapUI = () => {
                     {/* BTC Input */}
                     <Flex px='10px' bg='#2E1C0C' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
                         <Flex direction={'column'} py='10px' px='5px'>
-                            <Text color={!btcInputSwapAmount ? colors.offWhite : colors.textGray} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
-                                You Send
+                            <Text
+                                color={loading ? colors.offerWhite : !btcInputSwapAmount ? colors.offWhite : colors.textGray}
+                                fontSize={'13px'}
+                                letterSpacing={'-1px'}
+                                fontWeight={'normal'}
+                                fontFamily={'Aux'}>
+                                {loading ? `Loading contract data${dots}` : 'You Send'}
                             </Text>
-                            <Input
-                                value={btcInputSwapAmount}
-                                onChange={handleBtcInputChange}
-                                fontFamily={'Aux'}
-                                border='none'
-                                mt='2px'
-                                mr='-150px'
-                                ml='-5px'
-                                p='0px'
-                                letterSpacing={'-6px'}
-                                color={overpayingBtcInput || isBelowMinBtcInput ? colors.red : colors.offWhite}
-                                _active={{ border: 'none', boxShadow: 'none' }}
-                                _focus={{ border: 'none', boxShadow: 'none' }}
-                                _selected={{ border: 'none', boxShadow: 'none' }}
-                                fontSize='40px'
-                                placeholder='0.0'
-                                _placeholder={{ color: '#805530' }}
-                            />
-                            <Flex>
-                                <Text
-                                    color={overpayingBtcInput || isBelowMinBtcInput ? colors.redHover : !btcInputSwapAmount ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
+                            {loading ? (
+                                <Skeleton height='54px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#795436'} endColor={'#6C4525'} />
+                            ) : (
+                                <Input
+                                    value={btcInputSwapAmount}
+                                    onChange={handleBtcInputChange}
+                                    fontFamily={'Aux'}
+                                    border='none'
                                     mt='2px'
-                                    ml='1px'
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    {overpayingBtcInput
-                                        ? `Exceeds available to swap - `
-                                        : isBelowMinBtcInput
-                                        ? `Below minimum required - `
-                                        : bitcoinPriceUSD
-                                        ? btcInputSwapAmount
-                                            ? (bitcoinPriceUSD * parseFloat(btcInputSwapAmount)).toLocaleString('en-US', {
-                                                  style: 'currency',
-                                                  currency: 'USD',
-                                              })
-                                            : '$0.00'
-                                        : '$0.00'}
-                                </Text>
+                                    mr='-150px'
+                                    ml='-5px'
+                                    p='0px'
+                                    letterSpacing={'-6px'}
+                                    color={overpayingBtcInput || isBelowMinBtcInput ? colors.red : colors.offWhite}
+                                    _active={{ border: 'none', boxShadow: 'none' }}
+                                    _focus={{ border: 'none', boxShadow: 'none' }}
+                                    _selected={{ border: 'none', boxShadow: 'none' }}
+                                    fontSize='40px'
+                                    placeholder='0.0'
+                                    _placeholder={{ color: '#805530' }}
+                                />
+                            )}
+                            <Flex>
+                                {!loading && (
+                                    <Text
+                                        color={overpayingBtcInput || isBelowMinBtcInput ? colors.redHover : !btcInputSwapAmount ? colors.offWhite : colors.textGray}
+                                        fontSize={'13px'}
+                                        mt='2px'
+                                        ml='1px'
+                                        letterSpacing={'-1px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        {overpayingBtcInput
+                                            ? `Exceeds available to swap - `
+                                            : isBelowMinBtcInput
+                                            ? `Below minimum required - `
+                                            : bitcoinPriceUSD
+                                            ? btcInputSwapAmount
+                                                ? (bitcoinPriceUSD * parseFloat(btcInputSwapAmount)).toLocaleString('en-US', {
+                                                      style: 'currency',
+                                                      currency: 'USD',
+                                                  })
+                                                : '$0.00'
+                                            : '$0.00'}
+                                    </Text>
+                                )}
+                                {btcInputSwapAmount && reservationFeeAmountMicroUsdt && !overpayingBtcInput && !isBelowMinBtcInput && (
+                                    <Text
+                                        ml='8px'
+                                        fontSize={'13px'}
+                                        mt='2px'
+                                        mr='-116px'
+                                        zIndex={'10'}
+                                        color={colors.textGray}
+                                        letterSpacing={'-1.5px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        {`+ $${parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} USDT`} {/* Max available BTC */}
+                                    </Text>
+                                )}
+
                                 {overpayingBtcInput && (
                                     <Text
                                         ml='8px'
@@ -538,55 +589,61 @@ export const SwapUI = () => {
                         borderRadius={'10px'}>
                         <Flex direction={'column'} py='10px' px='5px'>
                             <Text
-                                color={!usdtOutputSwapAmount ? colors.offWhite : colors.textGray}
+                                color={loading ? colors.offerWhite : !usdtOutputSwapAmount ? colors.offWhite : colors.textGray}
                                 fontSize={'13px'}
                                 letterSpacing={'-1px'}
                                 fontWeight={'normal'}
                                 fontFamily={'Aux'}
                                 userSelect='none'>
-                                You Receive
+                                {loading ? `Loading contract data${dots}` : 'You Receive'}
                             </Text>
-                            <Input
-                                value={usdtOutputSwapAmount}
-                                onChange={handleUsdtOutputChange}
-                                fontFamily={'Aux'}
-                                border='none'
-                                mt='2px'
-                                mr='-150px'
-                                ml='-5px'
-                                p='0px'
-                                letterSpacing={'-6px'}
-                                color={isLiquidityExceeded || isBelowMinUsdtOutput ? colors.red : colors.offWhite}
-                                _active={{ border: 'none', boxShadow: 'none' }}
-                                _focus={{ border: 'none', boxShadow: 'none' }}
-                                _selected={{ border: 'none', boxShadow: 'none' }}
-                                fontSize='40px'
-                                placeholder='0.0'
-                                _placeholder={{ color: selectedInputAsset.light_text_color }}
-                            />
-                            <Flex>
-                                <Text
-                                    color={isLiquidityExceeded || isBelowMinUsdtOutput ? colors.redHover : !usdtOutputSwapAmount ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
+                            {loading ? (
+                                <Skeleton height='54px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#2E5F50'} endColor={'#0F4534'} />
+                            ) : (
+                                <Input
+                                    value={usdtOutputSwapAmount}
+                                    onChange={handleUsdtOutputChange}
+                                    fontFamily={'Aux'}
+                                    border='none'
                                     mt='2px'
-                                    ml='1px'
-                                    mr={isLiquidityExceeded || isBelowMinUsdtOutput ? '8px' : '0px'}
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    {isLiquidityExceeded
-                                        ? `Exceeds available liquidity -`
-                                        : isBelowMinUsdtOutput
-                                        ? `Minimum 1 USDT required -`
-                                        : usdtPriceUSD
-                                        ? usdtOutputSwapAmount
-                                            ? (usdtPriceUSD * parseFloat(usdtOutputSwapAmount)).toLocaleString('en-US', {
-                                                  style: 'currency',
-                                                  currency: 'USD',
-                                              })
-                                            : '$0.00'
-                                        : '$0.00'}
-                                </Text>
+                                    mr='-150px'
+                                    ml='-5px'
+                                    p='0px'
+                                    letterSpacing={'-6px'}
+                                    color={isLiquidityExceeded || isBelowMinUsdtOutput ? colors.red : colors.offWhite}
+                                    _active={{ border: 'none', boxShadow: 'none' }}
+                                    _focus={{ border: 'none', boxShadow: 'none' }}
+                                    _selected={{ border: 'none', boxShadow: 'none' }}
+                                    fontSize='40px'
+                                    placeholder='0.0'
+                                    _placeholder={{ color: selectedInputAsset.light_text_color }}
+                                />
+                            )}
+                            <Flex>
+                                {!loading && (
+                                    <Text
+                                        color={isLiquidityExceeded || isBelowMinUsdtOutput ? colors.redHover : !usdtOutputSwapAmount ? colors.offWhite : colors.textGray}
+                                        fontSize={'13px'}
+                                        mt='2px'
+                                        ml='1px'
+                                        mr={isLiquidityExceeded || isBelowMinUsdtOutput ? '8px' : '0px'}
+                                        letterSpacing={'-1px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        {isLiquidityExceeded
+                                            ? `Exceeds available liquidity -`
+                                            : isBelowMinUsdtOutput
+                                            ? `Minimum 1 USDT required -`
+                                            : usdtPriceUSD
+                                            ? usdtOutputSwapAmount
+                                                ? (usdtPriceUSD * parseFloat(usdtOutputSwapAmount)).toLocaleString('en-US', {
+                                                      style: 'currency',
+                                                      currency: 'USD',
+                                                  })
+                                                : '$0.00'
+                                            : '$0.00'}
+                                    </Text>
+                                )}
 
                                 {(isLiquidityExceeded || isBelowMinUsdtOutput) && (
                                     <Text
@@ -656,7 +713,7 @@ export const SwapUI = () => {
                             aria-label='A tooltip'>
                             <Flex ml='8px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
                                 <Text color={colors.textGray} fontSize={'13px'} mr='8px' mt='1px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
-                                    Including Fees
+                                    Includes Fees
                                 </Text>
                                 <InfoSVG width='13' />
                             </Flex>

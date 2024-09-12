@@ -1,25 +1,12 @@
 import React from 'react';
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalCloseButton,
-    Text,
-    Flex,
-    Box,
-    Spacer,
-    Button,
-    Icon,
-} from '@chakra-ui/react';
+import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Text, Flex, Box, Spacer, Button, Icon } from '@chakra-ui/react';
 import { DepositStatus } from '../../hooks/contract/useDepositLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
-import { CheckmarkCircle, AlertCircleOutline, OpenOutline } from 'react-ionicons';
+import { AlertCircleOutline, OpenOutline } from 'react-ionicons';
 import { HiOutlineExternalLink } from 'react-icons/hi';
 import { PiVaultBold } from 'react-icons/pi';
-import { IoMdSettings } from 'react-icons/io';
+import { IoIosCheckmarkCircle, IoMdSettings } from 'react-icons/io';
 import { etherScanBaseUrl } from '../../utils/constants';
 import { useStore } from '../../store';
 import { useRouter } from 'next/router';
@@ -33,13 +20,7 @@ interface DepositStatusModalProps {
     txHash: string | null;
 }
 
-const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
-    isOpen = false,
-    onClose,
-    status = DepositStatus.WaitingForWalletConfirmation,
-    error = null,
-    txHash = null,
-}) => {
+const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false, onClose, status = DepositStatus.WaitingForWalletConfirmation, error = null, txHash = null }) => {
     // Add txHash here
     const isCompleted = status === DepositStatus.Confirmed;
     const isError = status === DepositStatus.Error;
@@ -97,12 +78,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
                 borderRadius='10px'
                 fontFamily={FONT_FAMILIES.AUX_MONO}
                 color={colors.offWhite}>
-                <ModalHeader
-                    fontSize='24px'
-                    userSelect={'none'}
-                    fontFamily={FONT_FAMILIES.NOSTROMO}
-                    fontWeight='bold'
-                    textAlign='center'>
+                <ModalHeader fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
                     Deposit Status
                 </ModalHeader>
                 {(isCompleted || isError) && <ModalCloseButton />}
@@ -115,9 +91,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
                             w={
                                 status != DepositStatus.Confirmed &&
                                 status != DepositStatus.Error &&
-                                (status === DepositStatus.WaitingForWalletConfirmation ||
-                                status === DepositStatus.ApprovalPending ||
-                                status === DepositStatus.DepositPending
+                                (status === DepositStatus.WaitingForWalletConfirmation || status === DepositStatus.ApprovalPending || status === DepositStatus.DepositPending
                                     ? '100%'
                                     : '60%')
                             }
@@ -128,16 +102,14 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
                             textAlign='center'>
                             {status != DepositStatus.Confirmed &&
                                 status != DepositStatus.Error &&
-                                (status === DepositStatus.WaitingForWalletConfirmation ||
-                                status === DepositStatus.ApprovalPending ||
-                                status === DepositStatus.DepositPending
+                                (status === DepositStatus.WaitingForWalletConfirmation || status === DepositStatus.ApprovalPending || status === DepositStatus.DepositPending
                                     ? 'Awaiting blockchain confirmation...'
                                     : 'Please confirm the transaction in your wallet')}
                         </Text>
                         <Flex direction={'column'} align={'center'} w='100%' justify={'center'}>
                             {isCompleted && (
                                 <Flex mt='-20px' ml='4px'>
-                                    <CheckmarkCircle width='38px' height={'38px'} color={colors.greenOutline} />
+                                    <IoIosCheckmarkCircle size={45} color={colors.greenOutline} />
                                 </Flex>
                             )}
                             {isError && (
@@ -168,12 +140,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
                                     <Flex mt='-4px ' mr='8px'>
                                         <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
                                     </Flex>
-                                    <Text
-                                        fontSize='14px'
-                                        color={colors.offerWhite}
-                                        fontFamily={FONT_FAMILIES.NOSTROMO}
-                                        cursor={'pointer'}
-                                        fontWeight={'normal'}>
+                                    <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
                                         Etherscan
                                     </Text>
                                 </Button>
