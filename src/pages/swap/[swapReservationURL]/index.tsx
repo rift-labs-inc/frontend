@@ -216,8 +216,8 @@ const ReservationDetails = () => {
                             borderWidth={3}
                             borderColor={colors.borderGray}>
                             {loadingState ? (
-                                <Flex mb='20px' mt='0px'>
-                                    <Spinner color={colors.textGray} size='xl' />
+                                <Flex mb='20px' mt='20px'>
+                                    <Spinner color={colors.textGray} h={'50px'} w={'50px'} thickness='3px' speed='0.65s' />
                                 </Flex>
                             ) : swapFlowState === '3-receive-eth' || swapFlowState === '4-completed' ? (
                                 <RecieveUsdt />
@@ -315,7 +315,7 @@ const ReservationDetails = () => {
                                             </Flex>
 
                                             <Text fontSize='12px' mt='32px' color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                                {proxyWalletSwapInternalID && 'Internal ID - ' + proxyWalletSwapInternalID}
+                                                {proxyWalletSwapInternalID ? 'Internal ID - ' + proxyWalletSwapInternalID : 'Loading internal id...'}
                                             </Text>
                                         </>
                                     ) : (
@@ -394,6 +394,25 @@ const ReservationDetails = () => {
                                 </>
                             )}
                         </Flex>
+                        {!loadingState && swapFlowState === '2-send-bitcoin' && (
+                            <Flex
+                                bg={colors.offBlack}
+                                borderColor={colors.borderGray}
+                                borderWidth={3}
+                                borderRadius='10px'
+                                px='20px'
+                                w='600px'
+                                py='4px'
+                                mt={'25px'}
+                                h={'60px'}
+                                align={'center'}
+                                justify={'center'}>
+                                <Text fontSize={'17px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                    AWAITING BITCOIN PAYMENT
+                                </Text>
+                                <Spinner w={'20px'} h={'20px'} thickness='3px' color={colors.darkerGray} speed='0.65s' />
+                            </Flex>
+                        )}
                     </Flex>
                 </Flex>
                 <CurrencyModal />

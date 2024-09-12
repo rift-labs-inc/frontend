@@ -210,9 +210,11 @@ export const ReserveLiquidity = ({}) => {
                         </Box>
                     </Flex>
 
-                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mt={4}>
-                        {parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name} Reservation Fee
-                    </Text>
+                    {reservationFeeAmountMicroUsdt && (
+                        <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mt={4} color={colors.textGray}>
+                            {parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name} Reservation Fee
+                        </Text>
+                    )}
                 </Flex>
 
                 {/* USDT Payout Address */}

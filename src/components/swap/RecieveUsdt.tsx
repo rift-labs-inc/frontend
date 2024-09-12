@@ -126,7 +126,7 @@ export const RecieveUsdt = () => {
                     </Text>
                     {confirmations < 6 && (
                         <Text textAlign={'center'} mt='0px' fontSize='12px' fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray}>
-                            ({blocksNeeded} still needed...)
+                            {blocksNeeded} remaining...
                         </Text>
                     )}
                 </>

@@ -1,18 +1,4 @@
-import {
-    Tabs,
-    TabList,
-    Tooltip,
-    TabPanels,
-    Tab,
-    Button,
-    Flex,
-    Text,
-    useColorModeValue,
-    Box,
-    Spacer,
-    Input,
-    Spinner,
-} from '@chakra-ui/react';
+import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input, Spinner } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -66,7 +52,7 @@ export const SwapAmounts = ({}) => {
                     fontWeight={'normal'}
                     py='3px'>
                     <Flex align={'center'} justify={'center'}>
-                        <Spinner size='lg' color={colors.offWhite} />
+                        <Spinner size='lg' thickness='3px' color={colors.textGray} speed='0.65s' />
                     </Flex>
                 </Flex>
             ) : (
@@ -91,14 +77,7 @@ export const SwapAmounts = ({}) => {
                             </Flex>
                             {/* <BTCSVG width='100' height='58' viewBox='0 0 148 54' />{' '} */}
                         </Flex>
-                        <Text
-                            color={colors.textGray}
-                            fontSize={'13px'}
-                            mt='-12px'
-                            ml='6px'
-                            letterSpacing={'-2px'}
-                            fontWeight={'normal'}
-                            fontFamily={'Aux'}>
+                        <Text color={colors.textGray} fontSize={'13px'} mt='-12px' ml='6px' letterSpacing={'-2px'} fontWeight={'normal'} fontFamily={'Aux'}>
                             ≈ $
                             {(parseFloat(btcInputSwapAmount) * bitcoinPriceUSD).toLocaleString(undefined, {
                                 minimumFractionDigits: 2,
@@ -122,19 +101,9 @@ export const SwapAmounts = ({}) => {
                                 <AssetTag assetName='USDT' width='90px' />
                             </Flex>{' '}
                         </Flex>
-                        <Text
-                            color={colors.textGray}
-                            fontSize={'13px'}
-                            mt='-12px'
-                            ml='6px'
-                            letterSpacing={'-2px'}
-                            fontWeight={'normal'}
-                            fontFamily={'Aux'}>
+                        <Text color={colors.textGray} fontSize={'13px'} mt='-12px' ml='6px' letterSpacing={'-2px'} fontWeight={'normal'} fontFamily={'Aux'}>
                             ≈ $
-                            {(
-                                parseFloat(usdtOutputSwapAmount) *
-                                useStore.getState().validAssets[selectedInputAsset.name].priceUSD
-                            ).toLocaleString(undefined, {
+                            {(parseFloat(usdtOutputSwapAmount) * useStore.getState().validAssets[selectedInputAsset.name].priceUSD).toLocaleString(undefined, {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
                             })}{' '}
