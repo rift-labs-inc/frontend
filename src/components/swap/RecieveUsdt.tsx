@@ -76,8 +76,8 @@ export const RecieveUsdt = () => {
                 mt='10px'
                 flex='1'
                 letterSpacing={'-1.2px'}>
-                A hypernode will now automatically generate a proof of your transaction, and your requested USDT will be released upon 6 block confirmations. You can safely close
-                this tab.
+                A hypernode will now automatically generate a proof of your transaction, and your requested USDT will be released upon 6 block confirmations. You can safely leave
+                this tab or return to see swap status.
             </Text>
             {/* Display confirmations */}
             {confirmations !== null ? (
