@@ -12,7 +12,7 @@ export enum ReservationState {
 export type ReserveLiquidityParams = {
     swapAmountInSats: number;
     vaultIndexesToReserve: number[];
-    amountsInμUsdtToReserve: BigNumberish[];
+    amountsInMicroUsdtToReserve: BigNumberish[];
     amountsInSatsToBePaid: BigNumberish[];
     btcPayoutLockingScripts: string[];
     btcExchangeRates: BigNumberish[];

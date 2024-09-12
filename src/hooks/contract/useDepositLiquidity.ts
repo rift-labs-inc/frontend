@@ -42,7 +42,7 @@ export function useDepositLiquidity() {
     const [txHash, setTxHash] = useState<string | null>(null);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const userEthAddress = useStore((state) => state.userEthAddress);
-    const { refreshUserDepositData } = useContractData();
+    const { refreshAllDepositData } = useContractData();
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
 
     const resetDepositState = useCallback(() => {
@@ -79,8 +79,6 @@ export function useDepositLiquidity() {
 
                 setStatus(DepositStatus.WaitingForDepositApproval);
 
-                console.log('ALPINE', params.btcExchangeRate.toString());
-
                 const depositTx = await riftExchangeContractInstance.depositLiquidity(
                     params.tokenDepositAmountInSmallestTokenUnits,
                     params.btcExchangeRate,
@@ -93,7 +91,8 @@ export function useDepositLiquidity() {
                 setTxHash(depositTx.hash);
                 await depositTx.wait();
                 setStatus(DepositStatus.Confirmed);
-                refreshUserDepositData();
+                refreshAllDepositData();
+                console.log('Deposit confirmed');
             } catch (err) {
                 console.error('Error in depositLiquidity:', err);
                 setError(err instanceof Error ? err.message : String(err));

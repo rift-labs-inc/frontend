@@ -3,12 +3,7 @@ import { ethers, BigNumber } from 'ethers';
 import { useAccount } from 'wagmi';
 import depositVaultAggregatorABI from '../../abis/DepositVaultsAggregator.json';
 import riftExchangeABI from '../../abis/RiftExchange.json';
-import {
-    getDepositVaults,
-    getDepositVaultsLength,
-    getLiquidityProvider,
-    getDepositVaultByIndex,
-} from '../../utils/contractReadFunctions';
+import { getDepositVaults, getDepositVaultsLength, getLiquidityProvider, getDepositVaultByIndex } from '../../utils/contractReadFunctions';
 import { useStore } from '../../store';
 import { useSwapReservations } from './useSwapReservations';
 import { DepositVault, SwapReservation, ReservationState } from '../../types';
@@ -22,7 +17,7 @@ type UseDepositVaultsResult = {
     allFetchedSwapReservations: SwapReservation[];
     loading: boolean;
     error: Error | null;
-    refreshUserDepositData: () => Promise<void>;
+    refreshAllDepositData: () => Promise<void>;
 };
 const EIGHT_HOURS_IN_SECONDS = 8 * 60 * 60; // 8 hours
 
@@ -41,11 +36,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
 
-    const {
-        allSwapReservations: allFetchedSwapReservations,
-        loading: swapReservationsLoading,
-        error: swapReservationsError,
-    } = useSwapReservations();
+    const { allSwapReservations: allFetchedSwapReservations, loading: swapReservationsLoading, error: swapReservationsError } = useSwapReservations();
 
     const calculateTrueUnreservedLiquidity = useCallback(
         (depositVaults: DepositVault[], swapReservations: SwapReservation[]): DepositVault[] => {
@@ -69,7 +60,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 }
             });
 
-            console.log(`Total expired reservations found: ${expiredReservationsCount}`);
+            // console.log(`Total expired reservations found: ${expiredReservationsCount}`);
             setTotalExpiredReservations(expiredReservationsCount);
 
             let totalAvailableLiquidity = BigNumber.from(0);
@@ -77,9 +68,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
             // Now update the deposit vaults with the additional balances
             const updatedVaults = depositVaults.map((vault, vaultIndex) => {
                 const additionalBalance = additionalBalances.get(vaultIndex) || BigNumber.from(0);
-                const newCalculatedUnreservedBalance = BigNumber.from(vault.unreservedBalanceFromContract).add(
-                    additionalBalance,
-                );
+                const newCalculatedUnreservedBalance = BigNumber.from(vault.unreservedBalanceFromContract).add(additionalBalance);
 
                 if (!additionalBalance.isZero()) {
                     console.log(`Updating vault ${vaultIndex}:`, {
@@ -95,9 +84,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 return {
                     ...vault,
                     trueUnreservedBalance: newCalculatedUnreservedBalance || vault.unreservedBalanceFromContract,
-                    reservedBalance: BigNumber.from(vault.initialBalance)
-                        .sub(newCalculatedUnreservedBalance)
-                        .sub(vault.withdrawnAmount),
+                    reservedBalance: BigNumber.from(vault.initialBalance).sub(newCalculatedUnreservedBalance).sub(vault.withdrawnAmount),
                     depositAsset: selectedInputAsset,
                     index: vaultIndex,
                 };
@@ -119,11 +106,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
         try {
             // [0] fetch all deposit vaults
-            const depositVaultsLength = await getDepositVaultsLength(
-                ethersRpcProvider,
-                riftExchangeABI.abi,
-                selectedInputAsset.riftExchangeContractAddress,
-            );
+            const depositVaultsLength = await getDepositVaultsLength(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress);
 
             const bytecode = depositVaultAggregatorABI.bytecode;
             const abi = depositVaultAggregatorABI.abi;
@@ -138,23 +121,16 @@ export function useDepositVaults(): UseDepositVaultsResult {
             // console.log('All Deposit Vaults:', depositVaults);
 
             const updatedDepositVaults = calculateTrueUnreservedLiquidity(depositVaults, allFetchedSwapReservations);
-            console.log('Updated Deposit Vaults:', updatedDepositVaults);
+            // console.log('Updated Deposit Vaults:', updatedDepositVaults);
             setAllDepositVaults(updatedDepositVaults);
 
             // [1] fetch user-specific vaults (if connected)
             if (isConnected && address) {
-                const result = await getLiquidityProvider(
-                    ethersRpcProvider,
-                    riftExchangeABI.abi,
-                    selectedInputAsset.riftExchangeContractAddress,
-                    address,
-                );
+                const result = await getLiquidityProvider(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress, address);
 
                 const vaultIndexes = result.depositVaultIndexes.map((index) => BigNumber.from(index).toNumber());
 
-                const userVaults = updatedDepositVaults.filter((_, index) =>
-                    vaultIndexes.includes(BigNumber.from(index).toNumber()),
-                );
+                const userVaults = updatedDepositVaults.filter((_, index) => vaultIndexes.includes(BigNumber.from(index).toNumber()));
 
                 const active: DepositVault[] = [];
                 const completed: DepositVault[] = [];
@@ -223,7 +199,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
         }
     }, [swapReservationsError]);
 
-    const refreshUserDepositData = useCallback(async () => {
+    const refreshAllDepositData = useCallback(async () => {
         try {
             await fetchDepositVaultsData();
         } catch (error) {
@@ -234,15 +210,11 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
     return {
         allFetchedDepositVaults: Array.isArray(allDepositVaults) ? allDepositVaults : [],
-        userActiveDepositVaults: Array.isArray(useStore.getState().userActiveDepositVaults)
-            ? useStore.getState().userActiveDepositVaults
-            : [],
-        userCompletedDepositVaults: Array.isArray(useStore.getState().userCompletedDepositVaults)
-            ? useStore.getState().userCompletedDepositVaults
-            : [],
+        userActiveDepositVaults: Array.isArray(useStore.getState().userActiveDepositVaults) ? useStore.getState().userActiveDepositVaults : [],
+        userCompletedDepositVaults: Array.isArray(useStore.getState().userCompletedDepositVaults) ? useStore.getState().userCompletedDepositVaults : [],
         allFetchedSwapReservations,
         loading: loading || swapReservationsLoading,
         error,
-        refreshUserDepositData,
+        refreshAllDepositData,
     };
 }

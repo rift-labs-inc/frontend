@@ -15,7 +15,7 @@ interface ContractDataContextType {
     allSwapReservations: any;
     loading: boolean;
     error: any;
-    refreshUserDepositData: () => Promise<void>;
+    refreshAllDepositData: () => Promise<void>;
 }
 
 const ContractDataContext = createContext<ContractDataContextType | undefined>(undefined);
@@ -27,9 +27,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const setUserEthAddress = useStore((state) => state.setUserEthAddress);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
-    const updateExchangeRateInSmallestTokenUnitPerSat = useStore(
-        (state) => state.updateExchangeRateInSmallestTokenUnitPerSat,
-    );
+    const updateExchangeRateInSmallestTokenUnitPerSat = useStore((state) => state.updateExchangeRateInSmallestTokenUnitPerSat);
     const updateExchangeRateInTokenPerBTC = useStore((state) => state.updateExchangeRateInTokenPerBTC);
     const updatePriceUSD = useStore((state) => state.updatePriceUSD);
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
@@ -57,18 +55,10 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         fetchPriceData();
 
         const fetchSelectedAssetUserBalance = async (address) => {
-            const balance = await getTokenBalance(
-                ethersRpcProvider,
-                selectedInputAsset.tokenAddress,
-                address,
-                ERC20ABI,
-            );
+            const balance = await getTokenBalance(ethersRpcProvider, selectedInputAsset.tokenAddress, address, ERC20ABI);
 
             updateConnectedUserBalanceRaw(selectedInputAsset.name, balance);
-            const formattedBalance = formatUnits(
-                balance,
-                useStore.getState().validAssets[selectedInputAsset.name].decimals,
-            );
+            const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedInputAsset.name].decimals);
             updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
         };
 
@@ -87,15 +77,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     }, [selectedInputAsset, address, isConnected]);
 
     // fetch deposit vaults
-    const {
-        allFetchedDepositVaults,
-        userActiveDepositVaults,
-        userCompletedDepositVaults,
-        allFetchedSwapReservations,
-        loading,
-        error,
-        refreshUserDepositData,
-    } = useDepositVaults();
+    const { allFetchedDepositVaults, userActiveDepositVaults, userCompletedDepositVaults, allFetchedSwapReservations, loading, error, refreshAllDepositData } = useDepositVaults();
 
     const value = {
         allDepositVaults: allFetchedDepositVaults,
@@ -104,7 +86,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         allSwapReservations: allFetchedSwapReservations,
         loading,
         error,
-        refreshUserDepositData,
+        refreshAllDepositData,
     };
 
     return <ContractDataContext.Provider value={value}>{children}</ContractDataContext.Provider>;

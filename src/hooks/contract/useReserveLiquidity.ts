@@ -3,16 +3,13 @@ import { ethers, BigNumber, BigNumberish } from 'ethers';
 import { ERC20ABI, protocolFeeDenominator, protocolFeePercentage } from '../../utils/constants';
 import { useStore } from '../../store';
 import { ProxyWalletLiquidityProvider } from '../../types';
-import {
-    getMatchingLiquidityReservedEvent,
-    getSwapReservations,
-    getSwapReservationsLength,
-} from '../../utils/contractReadFunctions';
+import { getMatchingLiquidityReservedEvent, getSwapReservations, getSwapReservationsLength } from '../../utils/contractReadFunctions';
 import swapReservationsAggregatorABI from '../../abis/SwapReservationsAggregator.json';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { bufferTo18Decimals, createReservationUrl } from '../../utils/dappHelper';
 import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
+import { useContractData } from '../../components/providers/ContractDataProvider';
 
 export enum ReserveStatus {
     Idle = 'idle',
@@ -56,6 +53,7 @@ export function useReserveLiquidity() {
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
     const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const router = useRouter();
+    const { refreshAllDepositData } = useContractData();
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -79,24 +77,13 @@ export function useReserveLiquidity() {
                 setTxHash(null);
 
                 const tokenContract = new ethers.Contract(params.tokenAddress, ERC20ABI, params.signer);
-                const riftExchangeContractInstance = new ethers.Contract(
-                    params.riftExchangeContract,
-                    params.riftExchangeAbi,
-                    params.signer,
-                );
+                const riftExchangeContractInstance = new ethers.Contract(params.riftExchangeContract, params.riftExchangeAbi, params.signer);
 
-                const totalAmountToReserve = params.amountsToReserve.reduce(
-                    (acc, amount) => BigNumber.from(acc).add(amount),
-                    BigNumber.from(0),
-                );
+                const totalAmountToReserve = params.amountsToReserve.reduce((acc, amount) => BigNumber.from(acc).add(amount), BigNumber.from(0));
 
                 const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContract);
-                const protocolFee = BigNumber.from(totalAmountToReserve)
-                    .mul(protocolFeePercentage)
-                    .div(protocolFeeDenominator);
-                const reservationFee = selectedInputAsset.releaserFee
-                    .add(selectedInputAsset.proverFee)
-                    .add(protocolFee);
+                const protocolFee = BigNumber.from(totalAmountToReserve).mul(protocolFeePercentage).div(protocolFeeDenominator);
+                const reservationFee = selectedInputAsset.releaserFee.add(selectedInputAsset.proverFee).add(protocolFee);
 
                 if (BigNumber.from(allowance).lt(reservationFee)) {
                     setStatus(ReserveStatus.WaitingForTokenApproval);
@@ -116,11 +103,6 @@ export function useReserveLiquidity() {
                     params.expiredSwapReservationIndexes,
                 );
 
-                setTxHash(reserveTx.hash);
-                setStatus(ReserveStatus.ReservationPending);
-                await reserveTx.wait();
-                setStatus(ReserveStatus.Confirmed);
-
                 const reservationDetails = await getMatchingLiquidityReservedEvent(
                     ethersRpcProvider,
                     selectedInputAsset.riftExchangeContractAddress,
@@ -128,27 +110,23 @@ export function useReserveLiquidity() {
                     userEthAddress,
                 );
 
+                setTxHash(reserveTx.hash);
+                setStatus(ReserveStatus.ReservationPending);
+                await reserveTx.wait();
+                setStatus(ReserveStatus.Confirmed);
+                console.log('Liquidity reserved successfully');
+
                 console.log('reservationDetails', reservationDetails);
 
-                const reservationUri = createReservationUrl(
-                    reservationDetails.orderNonce,
-                    reservationDetails.swapReservationIndex,
-                );
+                const reservationUri = createReservationUrl(reservationDetails.orderNonce, reservationDetails.swapReservationIndex);
 
-                const liquidityProviders: Array<ProxyWalletLiquidityProvider> = params.vaultIndexesToReserve.map(
-                    (index: number, i: number) => {
-                        return {
-                            amount: BigNumber.from(
-                                bufferTo18Decimals(
-                                    lowestFeeReservationParams.amountsInμUsdtToReserve[i],
-                                    selectedInputAsset.decimals,
-                                ),
-                            ).toString(),
-                            btcExchangeRate: BigNumber.from(lowestFeeReservationParams.btcExchangeRates[i]).toString(),
-                            lockingScriptHex: lowestFeeReservationParams.btcPayoutLockingScripts[i],
-                        };
-                    },
-                );
+                const liquidityProviders: Array<ProxyWalletLiquidityProvider> = params.vaultIndexesToReserve.map((index: number, i: number) => {
+                    return {
+                        amount: BigNumber.from(bufferTo18Decimals(lowestFeeReservationParams.amountsInMicroUsdtToReserve[i], selectedInputAsset.decimals)).toString(),
+                        btcExchangeRate: BigNumber.from(lowestFeeReservationParams.btcExchangeRates[i]).toString(),
+                        lockingScriptHex: lowestFeeReservationParams.btcPayoutLockingScripts[i],
+                    };
+                });
 
                 console.log('liquidityProviders:', liquidityProviders);
 
@@ -165,6 +143,7 @@ export function useReserveLiquidity() {
                 } catch (e) {
                     console.error('Error creating Rift swap:', e);
                 }
+                refreshAllDepositData();
 
                 try {
                     handleNavigation(`/swap/${reservationUri}`);

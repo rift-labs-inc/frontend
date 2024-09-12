@@ -26,7 +26,7 @@ export function useWithdrawLiquidity() {
     const [status, setStatus] = useState<WithdrawStatus>(WithdrawStatus.Idle);
     const [error, setError] = useState<string | null>(null);
     const [txHash, setTxHash] = useState<string | null>(null);
-    const { refreshUserDepositData } = useContractData();
+    const { refreshAllDepositData } = useContractData();
 
     const resetWithdrawState = useCallback(() => {
         setStatus(WithdrawStatus.Idle);
@@ -48,11 +48,7 @@ export function useWithdrawLiquidity() {
 
             setStatus(WithdrawStatus.InitiatingWithdrawal);
 
-            const riftExchangeContractInstance = new ethers.Contract(
-                params.riftExchangeContract,
-                params.riftExchangeAbi,
-                params.signer,
-            );
+            const riftExchangeContractInstance = new ethers.Contract(params.riftExchangeContract, params.riftExchangeAbi, params.signer);
 
             setStatus(WithdrawStatus.WithdrawingLiquidity);
 
@@ -70,7 +66,7 @@ export function useWithdrawLiquidity() {
 
             console.log('Liquidity withdrawn successfully');
             setStatus(WithdrawStatus.Confirmed);
-            refreshUserDepositData();
+            refreshAllDepositData();
         } catch (err) {
             console.error('Error in withdrawLiquidity:', err);
             setError(err instanceof Error ? err.message : String(err));

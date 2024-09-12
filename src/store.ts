@@ -48,9 +48,7 @@ type Store = {
 
     // swap flow
     swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed';
-    setSwapFlowState: (
-        state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed',
-    ) => void;
+    setSwapFlowState: (state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed') => void;
     depositFlowState: '0-not-started' | '1-confirm-deposit';
     setDepositFlowState: (state: '0-not-started' | '1-confirm-deposit') => void;
     btcInputSwapAmount: string;
@@ -69,6 +67,8 @@ type Store = {
     setDepositMode: (mode: boolean) => void;
     withdrawAmount: string;
     setWithdrawAmount: (amount: string) => void;
+    reservationFeeAmountMicroUsdt: string;
+    setReservationFeeAmountMicroUsdt: (amount: string) => void;
 
     // modals
     currencyModalTitle: CurrencyModalTitle;
@@ -96,13 +96,12 @@ export const useStore = create<Store>((set) => {
             name: 'USDT',
             tokenAddress: '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0',
             decimals: 6,
-            riftExchangeContractAddress: sepoliaDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange')
-                .contractAddress,
+            riftExchangeContractAddress: sepoliaDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: 11155111,
             contractRpcURL: 'https://sepolia.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
-            proverFee: BigNumber.from(5000000),
-            releaserFee: BigNumber.from(2000000),
+            proverFee: BigNumber.from(2000000),
+            releaserFee: BigNumber.from(1000000),
             icon_svg: USDT_Icon,
             bg_color: '#125641',
             border_color: '#26A17B',
@@ -246,5 +245,7 @@ export const useStore = create<Store>((set) => {
         setEthPayoutAddress: (ethPayoutAddress) => set({ ethPayoutAddress }),
         bitcoinSwapTransactionHash: '',
         setBitcoinSwapTransactionHash: (bitcoinSwapTransactionHash) => set({ bitcoinSwapTransactionHash }),
+        reservationFeeAmountMicroUsdt: '',
+        setReservationFeeAmountMicroUsdt: (reservationFeeAmountMicroUsdt) => set({ reservationFeeAmountMicroUsdt }),
     };
 });
