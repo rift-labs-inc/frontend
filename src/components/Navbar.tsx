@@ -14,10 +14,9 @@ import { ValidAsset } from '../types';
 import { formatUnits } from 'ethers/lib/utils';
 
 export const Navbar = ({}) => {
-    const { height, width } = useWindowSize();
-    const isMobileView = width < 600;
+    const { isMobile, isTablet, windowSize } = useWindowSize();
     const router = useRouter();
-    const fontSize = isMobileView ? '20px' : '20px';
+    const fontSize = isMobile ? '20px' : '20px';
     const allSwapReservations = useStore((state) => state.allSwapReservations);
     const allDepositVaults = useStore((state) => state.allDepositVaults);
     const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
@@ -62,15 +61,16 @@ export const Navbar = ({}) => {
                 py='2px'
                 position='relative'
                 alignItems='center'>
-                <Text color={router.pathname == route ? colors.offWhite : '#ccc'} fontSize='1.1rem' fontFamily='Nostromo'>
+                <Text color={router.pathname == route ? colors.offWhite : '#ccc'} fontSize={isTablet ? '0.9rem' : '1.1rem'} fontFamily='Nostromo'>
                     {text}
                 </Text>
                 {router.pathname === route && (
                     <Flex
                         position={'absolute'}
-                        ml='1px'
+                        // ml='1px'
                         top='29px'
-                        w={router.pathname === '/manage' ? '87px' : router.pathname === '/activity' ? '93px' : router.pathname === '/whitepaper' ? '134px' : '55px'}
+                        // w={router.pathname === '/manage' ? '87px' : router.pathname === '/activity' ? '93px' : router.pathname === '/whitepaper' ? '134px' : '55px'}
+                        w='calc(100% - 20px)'
                         height='2px'
                         bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
                     />
@@ -100,6 +100,8 @@ export const Navbar = ({}) => {
                 return id;
         }
     };
+
+    if (isMobile) return null;
 
     return (
         <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1000}>
@@ -145,7 +147,7 @@ export const Navbar = ({}) => {
                                 })}
                             </VStack>
 
-                            <Flex position='absolute' top={height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
+                            <Flex position='absolute' top={windowSize.height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
                                 <StatCard label='Total Available Liquidity' value={`${formatUnits(availableLiquidity, selectedInputAsset.decimals)} ${selectedInputAsset.name}`} />
 
                                 <StatCard label='Total Deposits' value={allDepositVaults.length} />

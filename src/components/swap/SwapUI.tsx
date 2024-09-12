@@ -28,12 +28,12 @@ import WebAssetTag from '../other/WebAssetTag';
 import { getSwapReservations } from '../../utils/contractReadFunctions';
 import { useContractData } from '../providers/ContractDataProvider';
 import { parse } from 'path';
+import { toastError, toastInfo, toastLoad, toastSuccess } from '../../hooks/toast';
 
 export const SwapUI = () => {
-    const { width } = useWindowSize();
-    const isMobileView = width < 600;
+    const { isMobile } = useWindowSize();
     const router = useRouter();
-    const fontSize = isMobileView ? '20px' : '20px';
+    const fontSize = isMobile ? '20px' : '20px';
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
@@ -692,7 +692,13 @@ export const SwapUI = () => {
                         </Flex>
                         <Spacer />
                         <Flex mr='6px'>
-                            <WebAssetTag asset='USDT' onDropDown={() => setCurrencyModalTitle('receipt')} />
+                            <WebAssetTag
+                                asset='USDT'
+                                onDropDown={() => {
+                                    console.log('CALLING');
+                                    setCurrencyModalTitle('receipt');
+                                }}
+                            />
                         </Flex>
                     </Flex>
                 </Flex>
@@ -746,7 +752,13 @@ export const SwapUI = () => {
                     mt='15px'
                     transition={'0.2s'}
                     h='45px'
-                    onClick={usdtOutputSwapAmount ? () => setSwapFlowState('1-reserve-liquidity') : null}
+                    onClick={
+                        isMobile
+                            ? () => toastInfo({ title: 'Hop on your laptop', description: 'This app is too cool for small screens' })
+                            : usdtOutputSwapAmount
+                            ? () => setSwapFlowState('1-reserve-liquidity')
+                            : null
+                    }
                     fontSize={'15px'}
                     align={'center'}
                     userSelect={'none'}

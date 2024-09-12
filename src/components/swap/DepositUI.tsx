@@ -17,12 +17,12 @@ import { connectorsForWallets, useConnectModal } from '@rainbow-me/rainbowkit';
 import { DepositConfirmation } from '../deposit/DepositConfirmation';
 import WebAssetTag from '../other/WebAssetTag';
 import { useContractData } from '../providers/ContractDataProvider';
+import { toastInfo } from '../../hooks/toast';
 
 export const DepositUI = () => {
-    const { width } = useWindowSize();
-    const isMobileView = width < 600;
+    const { isMobile } = useWindowSize();
     const router = useRouter();
-    const fontSize = isMobileView ? '20px' : '20px';
+    const fontSize = isMobile ? '20px' : '20px';
     const usdtDepositAmount = useStore((state) => state.usdtDepositAmount);
     const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);
     const allDepositVaults = useStore((state) => state.allDepositVaults);
@@ -410,7 +410,13 @@ export const DepositUI = () => {
                                 mt='15px'
                                 transition={'0.2s'}
                                 h='45px'
-                                onClick={usdtDepositAmount ? () => initiateDeposit() : null}
+                                onClick={
+                                    isMobile
+                                        ? () => toastInfo({ title: 'Hop on your laptop', description: 'This app is too cool for small screens' })
+                                        : usdtDepositAmount
+                                        ? () => initiateDeposit()
+                                        : null
+                                }
                                 fontSize={'15px'}
                                 align={'center'}
                                 userSelect={'none'}

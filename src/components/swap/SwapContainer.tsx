@@ -1,17 +1,4 @@
-import {
-    Tabs,
-    TabList,
-    Tooltip,
-    TabPanels,
-    Tab,
-    Button,
-    Flex,
-    Text,
-    useColorModeValue,
-    Box,
-    Spacer,
-    Input,
-} from '@chakra-ui/react';
+import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
@@ -31,12 +18,11 @@ import { DepositUI } from './DepositUI';
 import { DepositConfirmation } from '../deposit/DepositConfirmation';
 
 export const SwapContainer = ({}) => {
-    const { width } = useWindowSize();
-    const isMobileView = width < 600;
+    const { isMobile } = useWindowSize();
     const depositMode = useStore((state) => state.depositMode);
 
     return (
-        <Flex width='600px' mt='30px' direction={'column'} overflow={'visible'}>
+        <Flex w='100%' maxW='600px' mt='30px' px='20px' direction={'column'} overflow={'visible'}>
             {/* Content */}
             {depositMode ? (
                 // DEPOSIT UI

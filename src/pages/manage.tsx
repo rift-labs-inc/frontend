@@ -21,17 +21,12 @@ import { BTCSVG, ETH_Icon, ETH_Logo, ETHSVG } from '../components/other/SVGs';
 import ExchangeRateChart from '../components/charts/ExchangeRateChart';
 
 const Manage = () => {
-    const { height, width } = useWindowSize();
-    const isSmallScreen = width < 1200;
+    const { isMobile } = useWindowSize();
     const router = useRouter();
     const handleNavigation = (route: string) => {
         router.push(route);
     };
-    const {
-        options: optionsButton,
-        selected: selectedButton,
-        setSelected: setSelectedButton,
-    } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
+    const { options: optionsButton, selected: selectedButton, setSelected: setSelectedButton } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
 
     const allDepositVaults = useStore((state) => state.allDepositVaults);
 
@@ -64,13 +59,7 @@ const Manage = () => {
     return (
         <>
             <OpenGraph title='Liquidity' />
-            <Flex
-                h='100vh'
-                width='100%'
-                direction='column'
-                backgroundImage={'/images/rift_background_low.webp'}
-                backgroundSize='cover'
-                backgroundPosition='center'>
+            <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
                 <Navbar />
                 <Flex direction={'column'} align='center' w='100%' h='100%' mt='105px'>
                     {/* LOGOS & TEXT */}
@@ -84,13 +73,7 @@ const Manage = () => {
                             bgGradient={`linear(-90deg, #394AFF, #FF8F28)`}
                             letterSpacing={'2px'}
                             mt='-35px'>
-                            <Text
-                                userSelect={'none'}
-                                fontSize='60px'
-                                fontFamily={'Klein'}
-                                fontWeight='bold'
-                                px='12px'
-                                as='h1'>
+                            <Text userSelect={'none'} fontSize='60px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
                                 Manage Swaps
                             </Text>
                         </Flex>

@@ -13,10 +13,10 @@ import { SwapContainer } from '../components/swap/SwapContainer';
 import { DepositUI } from '../components/swap/DepositUI';
 import { DepositConfirmation } from '../components/deposit/DepositConfirmation';
 import { ReserveLiquidityContainer } from '../components/swap/ReserveLiquidityContainer';
+import CurrencyModal from '../components/swap/CurrencyModal';
 
 const Home = () => {
-    const { height, width } = useWindowSize();
-    const isSmallScreen = width < 1200;
+    const { isTablet, isMobile } = useWindowSize();
     const router = useRouter();
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -46,7 +46,7 @@ const Home = () => {
 
     const RiftSVG = () => {
         return (
-            <svg width='80' height='40' viewBox='0 0 2293 547' fill='none' xmlns='http://www.w3.org/2000/svg'>
+            <svg width={isTablet ? '50' : '80'} height={isTablet ? '30' : '40'} viewBox='0 0 2293 547' fill='none' xmlns='http://www.w3.org/2000/svg'>
                 <path
                     fillRule='evenodd'
                     clipRule='evenodd'
@@ -60,19 +60,9 @@ const Home = () => {
     return (
         <>
             <OpenGraph />
-            <Flex
-                h='100vh'
-                width='100%'
-                direction='column'
-                backgroundImage={'/images/rift_background_low.webp'}
-                backgroundSize='cover'
-                backgroundPosition='center'>
+            <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
                 <Navbar />
-                <Flex
-                    direction={'column'}
-                    align='center'
-                    w='100%'
-                    mt={swapFlowState === '0-not-started' ? '19vh' : '100px'}>
+                <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === '0-not-started' ? '19vh' : '100px'}>
                     {swapFlowState != '0-not-started' ? (
                         <ReserveLiquidityContainer />
                     ) : (
@@ -87,31 +77,15 @@ const Home = () => {
                                     WebkitBackgroundClip: 'text',
                                 }}
                                 bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
-                                letterSpacing={'2px'}
-                                mt='-25px'>
-                                <Text
-                                    userSelect={'none'}
-                                    fontSize='94px'
-                                    fontFamily={'Klein'}
-                                    fontWeight='bold'
-                                    px='12px'
-                                    as='h1'
-                                    // dropShadow={"10px 10px 10px rgba(122, 90, 212)"} TODO: Add drop shadow to all gradient text
-                                >
+                                letterSpacing={isTablet ? '1px' : '2px'}
+                                fontSize={isMobile ? '44px' : isTablet ? '60px' : '94px'}
+                                fontFamily={'Klein'}
+                                fontWeight='bold'
+                                mt={isTablet ? '-18px' : '-25px'}>
+                                <Text px='12px' as='h1'>
                                     HyperBrid
                                 </Text>
-                                <Text
-                                    userSelect={'none'}
-                                    fontSize='94px'
-                                    fontFamily={'Klein'}
-                                    ml='-20px'
-                                    fontWeight='bold'
-                                    sx={{
-                                        WebkitTextFillColor: 'transparent',
-                                        backgroundClip: 'text',
-                                        WebkitBackgroundClip: 'text',
-                                    }}
-                                    as='h1'>
+                                <Text ml={isTablet ? '-18px' : '-20px'} as='h1'>
                                     ge
                                 </Text>
                             </Flex>
@@ -120,14 +94,13 @@ const Home = () => {
                                     flexDir={'column'}
                                     textAlign={'center'}
                                     userSelect={'none'}
-                                    fontSize={'14px'}
+                                    fontSize={isTablet ? '12px' : '14px'}
                                     mt={'8px'}
                                     fontFamily={FONT_FAMILIES.AUX_MONO}
                                     color={'#c3c3c3'}
                                     fontWeight={'normal'}
                                     gap={'0px'}>
                                     <Text>Trustless cross-chain swaps between</Text>
-
                                     <Text>
                                         <OrangeText>Bitcoin</OrangeText> and <BlueText>Ethereum</BlueText>. See{' '}
                                         <Box
@@ -148,6 +121,7 @@ const Home = () => {
                         </>
                     )}
                 </Flex>
+                <CurrencyModal />
             </Flex>
         </>
     );

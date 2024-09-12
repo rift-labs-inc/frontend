@@ -91,11 +91,19 @@ export interface ProxyWalletSwapArgs {
 
 export type AssetType = 'BTC' | 'USDT' | 'ETH' | 'WETH' | 'WBTC';
 
-export type CurrencyModalTitle = 'send' | 'receipt' | 'deposit' | null;
+export type CurrencyModalTitle = 'send' | 'receipt' | 'deposit' | 'close';
 
 export type LiquidityReservedEvent = {
     reserver: string;
     swapReservationIndex: string;
     orderNonce: string;
     event: ethers.Event;
+};
+
+export type RouteButton = 'Swap' | 'Manage' | 'About';
+
+export const ROUTES: { [k in RouteButton]: string } = {
+    Swap: '/',
+    Manage: '/manage',
+    About: '/about',
 };

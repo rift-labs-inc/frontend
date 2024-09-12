@@ -26,6 +26,7 @@
     "bitcoinjs-lib": "^6.1.6",
     "ethers": "^5.7.0",
     "framer-motion": "^6.3.0",
+    "hamburger-react": "^2.5.1",
     "jsonwebtoken": "^9.0.1",
     "metamask": "^0.0.1-security",
     "metamask-react": "^2.4.0",

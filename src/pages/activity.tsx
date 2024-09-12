@@ -20,8 +20,7 @@ import ActiveLiquidityRawChart from '../components/charts/ActiveLiquidityRawChar
 import MonthlyValueRawChart from '../components/charts/MonthlyValueRawChart';
 
 const Activity = () => {
-    const { height, width } = useWindowSize();
-    const isSmallScreen = width < 1200;
+    const { isMobile } = useWindowSize();
     const router = useRouter();
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -30,22 +29,12 @@ const Activity = () => {
 
     const [showMyActivity, setShowMyActivity] = useState(false);
 
-    const {
-        options: optionsButton,
-        selected: selectedButton,
-        setSelected: setSelectedButton,
-    } = useHorizontalSelectorInput(['Swaps', 'Deposits'] as const);
+    const { options: optionsButton, selected: selectedButton, setSelected: setSelectedButton } = useHorizontalSelectorInput(['Swaps', 'Deposits'] as const);
 
     return (
         <>
             <OpenGraph title='Activity' />
-            <Flex
-                h='100vh'
-                width='100%'
-                direction='column'
-                backgroundImage={'/images/rift_background_low.webp'}
-                backgroundSize='cover'
-                backgroundPosition='center'>
+            <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
                 <Navbar />
                 <Flex direction={'column'} align='center' w='100%' h='100%' mt='105px'>
                     {/* LOGOS & TEXT */}
@@ -59,13 +48,7 @@ const Activity = () => {
                             bgGradient={`linear(90deg, #FF8F28, #394AFF)`}
                             letterSpacing={'2px'}
                             mt='-25px'>
-                            <Text
-                                userSelect={'none'}
-                                fontSize='46px'
-                                fontFamily={'Klein'}
-                                fontWeight='bold'
-                                px='12px'
-                                as='h1'>
+                            <Text userSelect={'none'} fontSize='46px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
                                 Activity
                             </Text>
                         </Flex>
@@ -92,12 +75,7 @@ const Activity = () => {
                         </ActivityChartContainer>
                     </Flex>
                     <Flex mt='52px' mb='20px'>
-                        <HorizontalButtonSelector
-                            options={optionsButton}
-                            selectedItem={selectedButton}
-                            onSelectItem={setSelectedButton}
-                            h='40px'
-                        />
+                        <HorizontalButtonSelector options={optionsButton} selectedItem={selectedButton} onSelectItem={setSelectedButton} h='40px' />
                     </Flex>
                     <Flex w='100%' maxW='1200px' gap='12px' px='20px'>
                         <SwapTable />

@@ -1,18 +1,10 @@
 import { Button, Flex, Text } from '@chakra-ui/react';
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalFooter,
-    ModalBody,
-    ModalCloseButton,
-} from '@chakra-ui/react';
+import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from '@chakra-ui/react';
 import { useStore } from '../../store';
 import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
 import { AssetType } from '../../types';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import WebAssetTag from '../other/WebAssetTag';
 
 const CurrencyItem = ({
@@ -53,16 +45,13 @@ const CurrencyItem = ({
                         {isSelected ? 'Selected' : ''}
                     </Text>
                 </Flex>
-                <Text
-                    fontFamily={FONT_FAMILIES.AUX_MONO}
-                    fontSize={'0.7rem'}
-                    letterSpacing={'-1px'}
-                    fontWeight='300'
-                    color={colors.textGray}>
+                <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize={'0.7rem'} letterSpacing={'-1px'} fontWeight='300' color={colors.textGray} wordBreak='break-all'>
                     {isComingSoon ? 'Coming Soon...' : children}
                 </Text>
             </Flex>
-            <WebAssetTag asset={asset} pointer={!isComingSoon} />
+            <Flex>
+                <WebAssetTag asset={asset} pointer={!isComingSoon} />
+            </Flex>
             {/* <Text position='absolute' fontSize='0.7rem' fontFamily={FONT_FAMILIES.NOSTROMO} top='8px' right='18px'>
                 {isSelected ? 'Selected' : ''}
             </Text> */}
@@ -79,13 +68,13 @@ const CurrencyModal: React.FC<CurrencyModalProps> = () => {
     const setCurrencyModalTitle = useStore((state) => state.setCurrencyModalTitle);
 
     const onClose = () => {
-        setCurrencyModalTitle(null);
+        setCurrencyModalTitle('close');
     };
 
     return (
-        <Modal blockScrollOnMount={false} isOpen={currencyModalTitle != null} onClose={onClose} isCentered size='lg'>
-            <ModalOverlay />
-            <ModalContent bg={colors.offBlack} borderRadius={'20px'} border='3px solid' borderColor={colors.borderGray}>
+        <Modal blockScrollOnMount={false} isOpen={currencyModalTitle != 'close'} onClose={onClose} isCentered size='lg'>
+            <ModalOverlay outline='none' />
+            <ModalContent bg={colors.offBlack} borderRadius={'20px'} mx='20px' border='3px solid' borderColor={colors.borderGray}>
                 <ModalHeader fontFamily={FONT_FAMILIES.NOSTROMO} textAlign='center' textTransform='capitalize'>
                     Select {currencyModalTitle} Asset
                 </ModalHeader>
@@ -93,10 +82,7 @@ const CurrencyModal: React.FC<CurrencyModalProps> = () => {
                     <Flex flexDir='column' gap='12px' pb='12px'>
                         <CurrencyItem
                             asset='BTC'
-                            isSelected={
-                                (currencyModalTitle == 'send' && !depositMode) ||
-                                (currencyModalTitle == 'receipt' && depositMode)
-                            }
+                            isSelected={(currencyModalTitle == 'send' && !depositMode) || (currencyModalTitle == 'receipt' && depositMode)}
                             onClick={() => {
                                 if (currencyModalTitle == 'deposit' && depositMode) {
                                     setDepositMode(false);
@@ -105,15 +91,11 @@ const CurrencyModal: React.FC<CurrencyModalProps> = () => {
                                 }
                                 onClose();
                             }}>
-                            For LPs who don’t want to manage their position, wBTC provides less volatility in exchange
-                            for increased risk (trusting wBTC).
+                            For LPs who don’t want to manage their position, wBTC provides less volatility in exchange for increased risk (trusting wBTC).
                         </CurrencyItem>
                         <CurrencyItem
                             asset='USDT'
-                            isSelected={
-                                (currencyModalTitle == 'receipt' && !depositMode) ||
-                                (currencyModalTitle == 'deposit' && depositMode)
-                            }
+                            isSelected={(currencyModalTitle == 'receipt' && !depositMode) || (currencyModalTitle == 'deposit' && depositMode)}
                             onClick={() => {
                                 if (currencyModalTitle == 'send' && !depositMode) {
                                     setDepositMode(true);
@@ -122,19 +104,16 @@ const CurrencyModal: React.FC<CurrencyModalProps> = () => {
                                 }
                                 onClose();
                             }}>
-                            Most secure but can lead to less optimal execution price as the exchange rate
-                            between BTC and ETH diverges.
+                            Most secure but can lead to less optimal execution price as the exchange rate between BTC and ETH diverges.
                         </CurrencyItem>
                         <CurrencyItem asset='ETH' isComingSoon>
-                            Most secure but can lead to less optimal execution price as the exchange rate
-                            between BTC and ETH diverges.
+                            Most secure but can lead to less optimal execution price as the exchange rate between BTC and ETH diverges.
                         </CurrencyItem>
                         <CurrencyItem asset='WETH' isComingSoon>
                             Same tradeoffs as ETH but provided as a convince for users holding WETH
                         </CurrencyItem>
                         <CurrencyItem asset='WBTC' isComingSoon>
-                            For LPs who don’t want to manage their position, wBTC provides less volatility in exchange
-                            for increased risk (trusting wBTC).
+                            For LPs who don’t want to manage their position, wBTC provides less volatility in exchange for increased risk (trusting wBTC).
                         </CurrencyItem>
                     </Flex>
                 </ModalBody>

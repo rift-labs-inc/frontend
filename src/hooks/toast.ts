@@ -65,12 +65,13 @@ export const toastInfo = (details: ToastDetails = { title: 'Info', description: 
     const { title, description } = details;
     toaster.success(`${title};;${description}`, {
         style: {
-            background: 'linear-gradient(155deg, rgba(20,41,77,1) 0%, rgba(45,102,196,1) 42%, rgba(48,123,244,1) 100%)',
+            // background: 'linear-gradient(155deg, rgba(20,41,77,1) 0%, rgba(45,102,196,1) 42%, rgba(48,123,244,1) 100%)',
+            background: colors.toast.info,
         },
-        duration: 3000,
+        duration: 30000,
         iconTheme: {
-            primary: 'rgba(50,130,255,1)',
-            secondary: colors.textGray,
+            primary: colors.offWhite,
+            secondary: colors.toast.info,
         },
     });
 };
@@ -91,8 +92,7 @@ export const toastPromise = <T>(
         loading: `${loadingDetails.title};;${loadingDetails.description}`,
         success: `${successDetails.title};;${successDetails.description}`,
         error: (e) => {
-            if (e && e.response && e.response.data && e.response.data.detail)
-                return `${e.response.data.detail};;${errorDetails.description}`;
+            if (e && e.response && e.response.data && e.response.data.detail) return `${e.response.data.detail};;${errorDetails.description}`;
             if (e && e.message) return `${e.message};;${errorDetails.description}`;
             if (e && typeof e == 'string') return `${e};;${errorDetails.description}`;
             return `${errorDetails.title};;${errorDetails.description}`;
@@ -104,11 +104,7 @@ export const toastLoad = () => {
     return toaster.loading('Loading...', { duration: 10000 });
 };
 
-export const toastUpdateLoad = (
-    toastId: string,
-    type: 'Success' | 'Error' | 'Remove' | 'Warning',
-    details: ToastDetails = { title: 'Success', description: undefined },
-) => {
+export const toastUpdateLoad = (toastId: string, type: 'Success' | 'Error' | 'Remove' | 'Warning', details: ToastDetails = { title: 'Success', description: undefined }) => {
     const { title, description } = details;
     if (type == 'Success') toaster.success(`${title};;${description}`, { id: toastId });
     else if (type == 'Error') toaster.error(`${title};;${description}`, { id: toastId });

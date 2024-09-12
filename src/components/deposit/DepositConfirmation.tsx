@@ -58,10 +58,9 @@ import { FaRegArrowAltCircleRight } from 'react-icons/fa';
 type ActiveTab = 'swap' | 'liquidity';
 
 export const DepositConfirmation = ({}) => {
-    const { width } = useWindowSize();
-    const isMobileView = width < 600;
+    const { isMobile } = useWindowSize();
     const router = useRouter();
-    const fontSize = isMobileView ? '20px' : '20px';
+    const fontSize = isMobile ? '20px' : '20px';
 
     const { openConnectModal } = useConnectModal();
     const { address, isConnected } = useAccount();

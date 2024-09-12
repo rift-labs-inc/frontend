@@ -14,10 +14,9 @@ import { AssetTag } from '../other/AssetTag';
 import { LoaderIcon } from 'react-hot-toast';
 
 export const SwapAmounts = ({}) => {
-    const { width } = useWindowSize();
-    const isMobileView = width < 600;
+    const { isMobile } = useWindowSize();
     const router = useRouter();
-    const fontSize = isMobileView ? '20px' : '20px';
+    const fontSize = isMobile ? '20px' : '20px';
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);

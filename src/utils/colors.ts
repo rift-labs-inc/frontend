@@ -81,4 +81,12 @@ export const colors = {
             border: '#646C8C',
         },
     },
+    gradient: {
+        title: 'linear(90deg, #394AFF, #FF8F28)',
+        softTitle: 'linear(90deg, #8094F6, #FF8F28)',
+        contract: 'linear(180deg, #2C6DD5, #7550DD)',
+        mobileNav: 'linear(90deg, rgba(57,74,255,0.1), rgba(255,143,40,0.1))',
+        telegramButton: 'linear(90deg, rgba(57,74,255,0.4), rgba(255,143,40,0.4))',
+        xButton: 'linear(90deg, rgba(0,0,0,0.3), rgba(20,20,20,0.9))',
+    },
 };

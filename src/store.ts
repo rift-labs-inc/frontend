@@ -239,7 +239,7 @@ export const useStore = create<Store>((set) => {
         setDepositMode: (depositMode) => set({ depositMode }),
         withdrawAmount: '',
         setWithdrawAmount: (withdrawAmount) => set({ withdrawAmount }),
-        currencyModalTitle: null,
+        currencyModalTitle: 'close',
         setCurrencyModalTitle: (x) => set({ currencyModalTitle: x }),
         ethPayoutAddress: '',
         setEthPayoutAddress: (ethPayoutAddress) => set({ ethPayoutAddress }),

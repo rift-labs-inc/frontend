@@ -1,17 +1,4 @@
-import {
-    Tabs,
-    TabList,
-    Tooltip,
-    TabPanels,
-    Tab,
-    Button,
-    Flex,
-    Text,
-    useColorModeValue,
-    Box,
-    Spacer,
-    Input,
-} from '@chakra-ui/react';
+import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -33,10 +20,9 @@ import { ReserveLiquidity } from './ReserveLiquidity';
 type ActiveTab = 'swap' | 'liquidity';
 
 export const ReserveLiquidityContainer = ({}) => {
-    const { width } = useWindowSize();
-    const isMobileView = width < 600;
+    const { isMobile } = useWindowSize();
     const router = useRouter();
-    const fontSize = isMobileView ? '20px' : '20px';
+    const fontSize = isMobile ? '20px' : '20px';
     const [activeTab, setActiveTab] = useState<ActiveTab>('swap');
     const [lpFee, setLpFee] = useState('');
 
@@ -58,11 +44,7 @@ export const ReserveLiquidityContainer = ({}) => {
         <Flex width='1000px' align={'center'} direction={'column'}>
             <SwapAmounts />
             <Flex w='100%' mt='-69px' ml='0px'>
-                <Button
-                    bg='none'
-                    w='12px'
-                    _hover={{ bg: colors.borderGray }}
-                    onClick={() => setSwapFlowState('0-not-started')}>
+                <Button bg='none' w='12px' _hover={{ bg: colors.borderGray }} onClick={() => setSwapFlowState('0-not-started')}>
                     <ChevronLeftIcon width={'40px'} height={'40px'} bg='none' color={colors.offWhite} />
                 </Button>
             </Flex>
