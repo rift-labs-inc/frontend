@@ -27,25 +27,13 @@ export const SwapStatusTimeline: React.FC = () => {
                 <Flex direction='column'>
                     <Text
                         fontFamily={FONT_FAMILIES.AUX_MONO}
-                        color={
-                            swapFlowState === '1-reserve-liquidity'
-                                ? colors.RiftOrange
-                                : swapFlowState !== '0-not-started'
-                                ? colors.greenOutline
-                                : colors.textGray
-                        }
+                        color={swapFlowState === '1-reserve-liquidity' ? colors.RiftOrange : swapFlowState !== '0-not-started' ? colors.greenOutline : colors.textGray}
                         letterSpacing='-2px'>
                         STEP 1
                     </Text>
                     <Text
                         fontFamily={FONT_FAMILIES.NOSTROMO}
-                        color={
-                            swapFlowState === '1-reserve-liquidity'
-                                ? colors.RiftOrange
-                                : swapFlowState !== '0-not-started'
-                                ? colors.greenOutline
-                                : colors.textGray
-                        }
+                        color={swapFlowState === '1-reserve-liquidity' ? colors.RiftOrange : swapFlowState !== '0-not-started' ? colors.greenOutline : colors.textGray}
                         fontSize='22px'>
                         RESERVE LIQUIDITY
                     </Text>
@@ -85,25 +73,13 @@ export const SwapStatusTimeline: React.FC = () => {
                 <Flex direction='column' mr='70px'>
                     <Text
                         fontFamily={FONT_FAMILIES.AUX_MONO}
-                        color={
-                            swapFlowState === '3-receive-eth'
-                                ? colors.RiftOrange
-                                : swapFlowState === '4-completed'
-                                ? colors.greenOutline
-                                : colors.textGray
-                        }
+                        color={swapFlowState === '3-receive-eth' ? colors.RiftOrange : swapFlowState === '4-completed' ? colors.greenOutline : colors.textGray}
                         letterSpacing='-2px'>
                         STEP 3
                     </Text>
                     <Text
                         fontFamily={FONT_FAMILIES.NOSTROMO}
-                        color={
-                            swapFlowState === '3-receive-eth'
-                                ? colors.RiftOrange
-                                : swapFlowState === '4-completed'
-                                ? colors.greenOutline
-                                : colors.textGray
-                        }
+                        color={swapFlowState === '3-receive-eth' ? colors.RiftOrange : swapFlowState === '4-completed' ? colors.greenOutline : colors.textGray}
                         fontSize='22px'>
                         RECEIVE USDT
                     </Text>
@@ -119,20 +95,8 @@ export const SwapStatusTimeline: React.FC = () => {
                     h='10px'
                     w='37.7%'
                     mx='-5px'
-                    bg={
-                        swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity'
-                            ? colors.greenBackground
-                            : colors.offBlackLighter2
-                    }></Flex>
-                <Flex
-                    zIndex={2}
-                    mt={
-                        swapFlowState === '1-reserve-liquidity' ||
-                        swapFlowState === '0-not-started' ||
-                        swapFlowState === '2-send-bitcoin'
-                            ? '0px'
-                            : '-9px'
-                    }>
+                    bg={swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity' ? colors.greenBackground : colors.offBlackLighter2}></Flex>
+                <Flex zIndex={2} mt={swapFlowState === '1-reserve-liquidity' || swapFlowState === '0-not-started' || swapFlowState === '2-send-bitcoin' ? '0px' : '-9px'}>
                     <CircleFlex
                         state={
                             swapFlowState === '2-send-bitcoin'
@@ -149,31 +113,14 @@ export const SwapStatusTimeline: React.FC = () => {
                     w='30.2%'
                     mx='-5px'
                     bg={
-                        swapFlowState !== '0-not-started' &&
-                        swapFlowState !== '1-reserve-liquidity' &&
-                        swapFlowState !== '2-send-bitcoin'
+                        swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity' && swapFlowState !== '2-send-bitcoin'
                             ? colors.greenBackground
                             : colors.offBlackLighter2
                     }></Flex>
-                <Flex zIndex={2} mt={swapFlowState !== '3-receive-eth' ? '0px' : '-9px'}>
-                    <CircleFlex
-                        state={
-                            swapFlowState === '3-receive-eth' || swapFlowState === '4-completed'
-                                ? 'completed'
-                                : 'not-started'
-                        }
-                    />
+                <Flex zIndex={2} mt={swapFlowState !== '4-completed' ? '0px' : '-9px'}>
+                    <CircleFlex state={swapFlowState === '3-receive-eth' ? 'current' : swapFlowState === '4-completed' ? 'completed' : 'not-started'} />
                 </Flex>
-                <Flex
-                    mt='10px'
-                    h='10px'
-                    w='25%'
-                    mx='-5px'
-                    bg={
-                        swapFlowState === '3-receive-eth' || swapFlowState === '4-completed'
-                            ? colors.greenBackground
-                            : colors.offBlackLighter2
-                    }></Flex>
+                <Flex mt='10px' h='10px' w='25%' mx='-5px' bg={swapFlowState === '4-completed' ? colors.greenBackground : colors.offBlackLighter2}></Flex>
             </Flex>
         </Flex>
     );

@@ -109,7 +109,7 @@ export const SwapUI = () => {
 
         if (isConnected && address) {
             continuouslyRefreshUserDepositData();
-            const intervalId = setInterval(continuouslyRefreshUserDepositData, 10000);
+            const intervalId = setInterval(continuouslyRefreshUserDepositData, 1000);
             return () => clearInterval(intervalId);
         }
     }, [isConnected, address]);
@@ -320,6 +320,13 @@ export const SwapUI = () => {
 
         // set new exchange rate & usdt output based on new ideal reservation
         if (idealReservationDetails) {
+            // account for the prover, releaser, and protocol fees
+            const protocolFee = BigNumber.from(idealReservationDetails.totalMicroUsdtOutput).mul(protocolFeePercentage).div(protocolFeeDenominator);
+            console.log('PROTOCOL FEE:', protocolFee.toString());
+            const reservationFee = selectedInputAsset.releaserFee.add(selectedInputAsset.proverFee).add(protocolFee);
+            console.log('TOTAL reservation fee:', reservationFee.toString());
+            setReservationFeeAmountMicroUsdt(reservationFee.toString());
+
             setBtcInputSwapAmount(formatUnits(newAmountSatsSwapInput, bitcoinDecimals).toString());
             setBtcOutputAmount(formatUnits(newAmountSatsSwapInput, bitcoinDecimals).toString());
             setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(idealReservationDetails?.totalSwapExchangeRate, selectedInputAsset.decimals)).toFixed(2)));
@@ -493,7 +500,7 @@ export const SwapUI = () => {
                                             : '$0.00'}
                                     </Text>
                                 )}
-                                {btcInputSwapAmount && reservationFeeAmountMicroUsdt && !overpayingBtcInput && !isBelowMinBtcInput && (
+                                {parseFloat(btcInputSwapAmount) != 0 && btcInputSwapAmount && reservationFeeAmountMicroUsdt && !overpayingBtcInput && !isBelowMinBtcInput && (
                                     <Text
                                         ml='8px'
                                         fontSize={'13px'}

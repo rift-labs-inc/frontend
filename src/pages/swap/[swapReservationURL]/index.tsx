@@ -6,7 +6,7 @@ import { Navbar } from '../../../components/Navbar';
 import { colors } from '../../../utils/colors';
 import { bufferTo18Decimals, calculateBtcOutputAmountFromExchangeRate, decodeReservationUrl } from '../../../utils/dappHelper';
 import CurrencyModal from '../../../components/swap/CurrencyModal';
-import { Step3 } from '../../../components/swap/Step3';
+import { RecieveUsdt } from '../../../components/swap/RecieveUsdt';
 import { SwapStatusTimeline } from '../../../components/swap/SwapStatusTimeline';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
 import { SwapAmounts } from '../../../components/swap/SwapAmounts';
@@ -219,6 +219,8 @@ const ReservationDetails = () => {
                                 <Flex mb='20px' mt='0px'>
                                     <Spinner color={colors.textGray} size='xl' />
                                 </Flex>
+                            ) : swapFlowState === '3-receive-eth' || swapFlowState === '4-completed' ? (
+                                <RecieveUsdt />
                             ) : (
                                 <>
                                     {/* CHROME EXTENSION DETECTED */}

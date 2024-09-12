@@ -16,6 +16,7 @@ import { useAccount } from 'wagmi';
 import { connectorsForWallets, useConnectModal } from '@rainbow-me/rainbowkit';
 import { DepositConfirmation } from '../deposit/DepositConfirmation';
 import WebAssetTag from '../other/WebAssetTag';
+import { useContractData } from '../providers/ContractDataProvider';
 
 export const DepositUI = () => {
     const { width } = useWindowSize();
@@ -52,6 +53,7 @@ export const DepositUI = () => {
     const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const [isAwaitingConnection, setIsAwaitingConnection] = useState(false);
+    const { refreshAllDepositData, loading } = useContractData();
 
     // update token price and available liquidity
     useEffect(() => {
@@ -62,6 +64,21 @@ export const DepositUI = () => {
             setUserUsdtBalance(validAssets[selectedInputAsset.name].connectedUserBalanceFormatted);
         }
     }, [selectedInputAsset, validAssets]);
+
+    // function to continuously call refreshAllDepositData
+    useEffect(() => {
+        const continuouslyRefreshUserDepositData = () => {
+            if (isConnected && address) {
+                refreshAllDepositData();
+            }
+        };
+
+        if (isConnected && address) {
+            continuouslyRefreshUserDepositData();
+            const intervalId = setInterval(continuouslyRefreshUserDepositData, 1000);
+            return () => clearInterval(intervalId);
+        }
+    }, [isConnected, address]);
 
     // --------------- USDT INPUT ---------------
     const handleUsdtInputChange = (e, amount = null) => {

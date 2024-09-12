@@ -60,7 +60,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 }
             });
 
-            console.log(`Total expired reservations found: ${expiredReservationsCount}`);
+            // console.log(`Total expired reservations found: ${expiredReservationsCount}`);
             setTotalExpiredReservations(expiredReservationsCount);
 
             let totalAvailableLiquidity = BigNumber.from(0);
@@ -121,7 +121,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
             // console.log('All Deposit Vaults:', depositVaults);
 
             const updatedDepositVaults = calculateTrueUnreservedLiquidity(depositVaults, allFetchedSwapReservations);
-            console.log('Updated Deposit Vaults:', updatedDepositVaults);
+            // console.log('Updated Deposit Vaults:', updatedDepositVaults);
             setAllDepositVaults(updatedDepositVaults);
 
             // [1] fetch user-specific vaults (if connected)

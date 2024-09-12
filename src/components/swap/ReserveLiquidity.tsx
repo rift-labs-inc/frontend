@@ -38,6 +38,7 @@ export const ReserveLiquidity = ({}) => {
     const { openConnectModal } = useConnectModal();
     const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
     const [formattedTotalAmount, setFormattedTotalAmount] = useState<string>('0');
+    const reservationFeeAmountMicroUsdt = useStore((state) => state.reservationFeeAmountMicroUsdt);
 
     // usdt payout address
     const handleETHPayoutAddressChange = (e) => {
@@ -147,6 +148,7 @@ export const ReserveLiquidity = ({}) => {
                     <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
                         Vault Selection Algo VISUALIZER
                     </Text>
+
                     <Flex justify='center' wrap='wrap' gap={4} alignItems='center'>
                         {lowestFeeReservationParams?.vaultIndexesToReserve?.map((index, i) => (
                             <React.Fragment key={index}>
@@ -207,6 +209,10 @@ export const ReserveLiquidity = ({}) => {
                             </Text>
                         </Box>
                     </Flex>
+
+                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mt={4}>
+                        {parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name} Reservation Fee
+                    </Text>
                 </Flex>
 
                 {/* USDT Payout Address */}

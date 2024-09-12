@@ -103,18 +103,18 @@ export function useReserveLiquidity() {
                     params.expiredSwapReservationIndexes,
                 );
 
-                setTxHash(reserveTx.hash);
-                setStatus(ReserveStatus.ReservationPending);
-                await reserveTx.wait();
-                setStatus(ReserveStatus.Confirmed);
-                console.log('Liquidity reserved successfully');
-
                 const reservationDetails = await getMatchingLiquidityReservedEvent(
                     ethersRpcProvider,
                     selectedInputAsset.riftExchangeContractAddress,
                     riftExchangeABI.abi,
                     userEthAddress,
                 );
+
+                setTxHash(reserveTx.hash);
+                setStatus(ReserveStatus.ReservationPending);
+                await reserveTx.wait();
+                setStatus(ReserveStatus.Confirmed);
+                console.log('Liquidity reserved successfully');
 
                 console.log('reservationDetails', reservationDetails);
 
