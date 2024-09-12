@@ -28,6 +28,12 @@ export const colors = {
     offBlackLighter2: '#333',
     borderGray: '#282828',
     borderGrayLight: '#444',
+    toast: {
+        success: '#125641',
+        error: '#E63B3B',
+        info: '#394AFF',
+        warning: '#FF8F28',
+    },
     text: {
         orange: '#F89B63',
         blue: '#8094F6',
