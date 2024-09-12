@@ -79,15 +79,27 @@ export const RecieveUsdt = () => {
                 A hypernode will now automatically generate a proof of your transaction, and your requested USDT will be released upon 6 block confirmations. You can safely close
                 this tab.
             </Text>
-
-            {/* Error message if fetching fails */}
-            {error && (
-                <Text color='red.500' mt='10px'>
-                    {error}
-                </Text>
+            {/* Display confirmations */}
+            {confirmations !== null ? (
+                <>
+                    <Flex mt='32px' align={'flex-start'}>
+                        <Text textAlign={'center'} fontSize='14px' fontFamily={FONT_FAMILIES.AUX_MONO} color={confirmations >= 6 ? colors.greenOutline : colors.textGray}>
+                            Total Block Confirmations:
+                        </Text>
+                        <Text
+                            ml='8px'
+                            textAlign={'center'}
+                            fontSize='14px'
+                            fontFamily={FONT_FAMILIES.AUX_MONO}
+                            color={confirmations >= 6 ? colors.greenOutline : colors.RiftOrange}>
+                            {confirmations}/6
+                        </Text>
+                    </Flex>
+                </>
+            ) : (
+                <Spinner color={colors.greenOutline} mt='20px' />
             )}
-
-            <Flex mt='32px'>
+            <Flex mt='10px'>
                 <Text fontSize='14px' mr='10px' fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray}>
                     TXN Hash:{' '}
                 </Text>
@@ -118,21 +130,6 @@ export const RecieveUsdt = () => {
                     onClick={() => navigator.clipboard.writeText(bitcoinSwapTransactionHash)}
                 />
             </Flex>
-            {/* Display confirmations */}
-            {confirmations !== null ? (
-                <>
-                    <Text textAlign={'center'} mt='25px' fontSize='18px' fontFamily={FONT_FAMILIES.AUX_MONO} color={confirmations >= 6 ? colors.greenOutline : colors.offWhite}>
-                        Total Block Confirmations: {confirmations}
-                    </Text>
-                    {confirmations < 6 && (
-                        <Text textAlign={'center'} mt='0px' fontSize='12px' fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray}>
-                            {blocksNeeded} remaining...
-                        </Text>
-                    )}
-                </>
-            ) : (
-                <Spinner color={colors.greenOutline} mt='20px' />
-            )}
         </>
     );
 };

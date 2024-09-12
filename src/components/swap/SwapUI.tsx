@@ -27,6 +27,7 @@ import { useConnectModal } from '@rainbow-me/rainbowkit';
 import WebAssetTag from '../other/WebAssetTag';
 import { getSwapReservations } from '../../utils/contractReadFunctions';
 import { useContractData } from '../providers/ContractDataProvider';
+import { parse } from 'path';
 
 export const SwapUI = () => {
     const { width } = useWindowSize();
@@ -207,6 +208,7 @@ export const SwapUI = () => {
             setMaxBtcInputExceeded(formatUnits(idealReservationDetails.totalSatsUsed.add(proxyWalletSwapFastFee), bitcoinDecimals).toString());
             setUsdtDepositAmount('');
             setUsdtOutputSwapAmount('');
+            setUsdtExchangeRatePerBTC(null);
             setLowestFeeReservationParams(null);
             return;
         } else {
@@ -220,6 +222,7 @@ export const SwapUI = () => {
             setIsBelowMinBtcInput(true);
             setUsdtOutputSwapAmount('');
             setUsdtDepositAmount('');
+            setUsdtExchangeRatePerBTC(null);
             setLowestFeeReservationParams(null);
             return;
         }
@@ -234,6 +237,7 @@ export const SwapUI = () => {
             setIsBelowMinBtcInput(true);
             setUsdtOutputSwapAmount('');
             setUsdtDepositAmount('');
+            setUsdtExchangeRatePerBTC(null);
             setLowestFeeReservationParams(null);
             return;
         } else {
@@ -273,6 +277,7 @@ export const SwapUI = () => {
         } else {
             setUsdtOutputSwapAmount('');
             setUsdtDepositAmount('');
+            setUsdtExchangeRatePerBTC(null);
             setLowestFeeReservationParams(null);
         }
     };
@@ -356,7 +361,9 @@ export const SwapUI = () => {
         const btcValue = amount !== null ? amount : e.target.value;
         setIsBelowMinUsdtOutput(false);
         setIsLiquidityExceeded(false);
-
+        if (parseFloat(btcValue) === 0 || !btcValue) {
+            setUsdtExchangeRatePerBTC(null);
+        }
         if (validateBtcInput(btcValue)) {
             setBtcInputSwapAmount(btcValue);
             setBtcOutputAmount(btcValue);
@@ -394,6 +401,9 @@ export const SwapUI = () => {
     const handleUsdtOutputChange = (e, amount = null) => {
         const usdtValue = amount !== null ? amount : e.target.value;
         setIsBelowMinBtcInput(false);
+        if (parseFloat(usdtValue) === 0 || !usdtValue) {
+            setUsdtExchangeRatePerBTC(null);
+        }
 
         if (validateUsdtOutputChange(usdtValue)) {
             const isBelowMin = checkAmountBelowMinUsdtOutput(usdtValue);
@@ -487,7 +497,7 @@ export const SwapUI = () => {
                                         fontWeight={'normal'}
                                         fontFamily={'Aux'}>
                                         {overpayingBtcInput
-                                            ? `Exceeds available to swap - `
+                                            ? `Exceeds available liquidity - `
                                             : isBelowMinBtcInput
                                             ? `Below minimum required - `
                                             : bitcoinPriceUSD
