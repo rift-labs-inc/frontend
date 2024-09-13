@@ -71,6 +71,7 @@ const Home = () => {
                             <RiftSVG />
                             <Flex
                                 userSelect={'none'}
+                                cursor={'default'}
                                 sx={{
                                     WebkitTextFillColor: 'transparent',
                                     backgroundClip: 'text',
@@ -98,6 +99,7 @@ const Home = () => {
                                     mt={'8px'}
                                     fontFamily={FONT_FAMILIES.AUX_MONO}
                                     color={'#c3c3c3'}
+                                    cursor={'default'}
                                     fontWeight={'normal'}
                                     gap={'0px'}>
                                     <Text>Trustless cross-chain swaps between</Text>

@@ -21,6 +21,8 @@ import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { opaqueBackgroundColor } from '../../utils/constants';
 import { IoMdCheckmarkCircle } from 'react-icons/io';
 import { HiXCircle } from 'react-icons/hi';
+import { FaClock } from 'react-icons/fa';
+import { LockClosed } from 'react-ionicons';
 
 export const ReserveLiquidity = ({}) => {
     const { isMobile } = useWindowSize();
@@ -173,11 +175,32 @@ export const ReserveLiquidity = ({}) => {
                 </Text>
 
                 {/* Fees and Swap Time Estimate */}
-                {reservationFeeAmountMicroUsdt && (
-                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mt={4} color={colors.textGray}>
-                        {parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name} Reservation Fee
-                    </Text>
-                )}
+                <Flex w='370px' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='20px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
+                    <Flex w='50%' align='center' bg={colors.offBlack}>
+                        <Flex mx='13px' w='20px'>
+                            <LockClosed width={'20px'} color={colors.offWhite} />
+                        </Flex>
+                        <Flex direction={'column'}>
+                            <Text fontSize={'11px'}>Reservation Fee</Text>
+                            {reservationFeeAmountMicroUsdt && (
+                                <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
+                                    {parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name}
+                                </Text>
+                            )}
+                        </Flex>
+                    </Flex>
+                    <Flex w='50%' align='center' bg={colors.borderGray}>
+                        <Flex mx='15px' w='20px'>
+                            <FaClock size={20} color={colors.offWhite} />
+                        </Flex>
+                        <Flex direction={'column'}>
+                            <Text fontSize={'11px'}>Estimated Time</Text>{' '}
+                            <Text fontSize={'10px'} color={colors.textGray}>
+                                1 Hour
+                            </Text>
+                        </Flex>
+                    </Flex>
+                </Flex>
 
                 {/* USDT Payout Address */}
                 <Text ml='8px' mt='5px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
