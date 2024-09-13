@@ -18,12 +18,14 @@ import ReservationStatusModal from './ReservationStatusModal';
 import { formatUnits } from 'ethers/lib/utils';
 import { useAccount } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { opaqueBackgroundColor } from '../../utils/constants';
+import { IoMdCheckmarkCircle } from 'react-icons/io';
+import { HiXCircle } from 'react-icons/hi';
 
 export const ReserveLiquidity = ({}) => {
     const { isMobile } = useWindowSize();
     const router = useRouter();
     const fontSize = isMobile ? '20px' : '20px';
-    const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
     const swapFlowState = useStore((state) => state.swapFlowState);
@@ -38,7 +40,7 @@ export const ReserveLiquidity = ({}) => {
     const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
     const [formattedTotalAmount, setFormattedTotalAmount] = useState<string>('0');
     const reservationFeeAmountMicroUsdt = useStore((state) => state.reservationFeeAmountMicroUsdt);
-
+    const [isEthereumPayoutAddressValid, setIsEthereumPayoutAddressValid] = useState<boolean>(false);
     // usdt payout address
     const handleETHPayoutAddressChange = (e) => {
         const newEthPayoutAddress = e.target.value;
@@ -125,11 +127,44 @@ export const ReserveLiquidity = ({}) => {
         setFormattedTotalAmount(formatUnits(totalAmount, selectedInputAsset.decimals));
     }, [lowestFeeReservationParams]);
 
+    const validateEthereumPayoutAddress = (address: string): boolean => {
+        const ethereumRegex = /^0x[a-fA-F0-9]{40}$/;
+        return ethereumRegex.test(address);
+    };
+
+    const EthereumAddressValidation: React.FC<{ address: string }> = ({ address }) => {
+        const isValid = validateEthereumPayoutAddress(address);
+        setIsEthereumPayoutAddressValid(isValid);
+
+        if (address.length === 0) {
+            return <Text>...</Text>;
+        }
+
+        return (
+            <Flex align='center' fontFamily={FONT_FAMILIES.NOSTROMO} w='50px' ml='-45px' mr='0px' h='100%' justify='center' direction='column'>
+                {isValid ? (
+                    <>
+                        <IoMdCheckmarkCircle color='green' size={'24px'} />
+                        <Text fontSize={'10px'} mt='3px' color='green'>
+                            Valid
+                        </Text>
+                    </>
+                ) : (
+                    <>
+                        <HiXCircle color='red' size={'24px'} />
+                        <Text fontSize={'10px'} mt='3px' color='red'>
+                            Invalid
+                        </Text>
+                    </>
+                )}
+            </Flex>
+        );
+    };
+
     return (
         <>
             <Flex
                 // h='800px'
-                bg={colors.offBlack}
                 w='100%'
                 mt='20px'
                 borderRadius={'30px'}
@@ -138,6 +173,7 @@ export const ReserveLiquidity = ({}) => {
                 pb='30px'
                 pt='15px'
                 align={'center'}
+                {...opaqueBackgroundColor}
                 borderWidth={3}
                 borderColor={colors.borderGray}>
                 <Text fontSize='13px' maxW={'900px'} fontWeight={'normal'} color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='6px' flex='1'>
@@ -217,50 +253,57 @@ export const ReserveLiquidity = ({}) => {
                 </Flex>
 
                 {/* USDT Payout Address */}
-                <Flex mt='20px' px='10px' bg='#1C1C1C' w='100%' h='78px' border='2px solid #565656' borderRadius={'10px'}>
-                    <Flex direction={'column'}>
-                        <Text color={colors.offWhite} fontSize={'13px'} mt='7px' ml='3px' letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
-                            USDT Payout Address
-                        </Text>
+                <Text ml='8px' mt='5px' w='100%' mb='10px' fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                    Bitcoin Payout Address
+                </Text>
+                <Flex mt='-2px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
+                    <Flex direction={'row'} py='6px' px='5px'>
                         <Input
                             value={ethPayoutAddress}
                             onChange={handleETHPayoutAddressChange}
                             fontFamily={'Aux'}
                             border='none'
-                            mt='1px'
-                            mr='550px'
+                            mt='3.5px'
+                            w='868px'
+                            mr='65px'
+                            ml='-4px'
                             p='0px'
-                            letterSpacing={'-5px'}
+                            letterSpacing={'-4px'}
                             color={colors.offWhite}
                             _active={{ border: 'none', boxShadow: 'none' }}
                             _focus={{ border: 'none', boxShadow: 'none' }}
                             _selected={{ border: 'none', boxShadow: 'none' }}
-                            fontSize='26px'
-                            placeholder='Enter USDT payout address'
+                            fontSize='28px'
+                            placeholder='0xb0cb90a9a3dfd81...'
+                            _placeholder={{ color: colors.darkerGray }}
                             spellCheck={false}
-                            _placeholder={{ color: colors.textGray }}
                         />
+
+                        {ethPayoutAddress.length > 0 && (
+                            <Flex ml='-5px' mt='0px'>
+                                <EthereumAddressValidation address={ethPayoutAddress} />
+                            </Flex>
+                        )}
                     </Flex>
-                    {/* TODO: ADD LOADING INDICATOR AND ADDRESS VALIDATION CHECK CIRCLE HERE */}
                 </Flex>
 
                 {/* Reserve Button */}
             </Flex>
             <Flex
-                bg={ethPayoutAddress ? colors.purpleBackground : colors.purpleBackgroundDisabled}
+                bg={ethPayoutAddress && isEthereumPayoutAddressValid ? colors.purpleBackground : colors.purpleBackgroundDisabled}
                 _hover={{ bg: colors.purpleHover }}
                 w='400px'
                 mt='25px'
                 transition={'0.2s'}
                 h='45px'
-                onClick={ethPayoutAddress ? () => initiateReservation() : null}
+                onClick={ethPayoutAddress && isEthereumPayoutAddressValid ? () => initiateReservation() : null}
                 fontSize={'15px'}
                 align={'center'}
                 userSelect={'none'}
                 cursor={'pointer'}
                 borderRadius={'10px'}
                 justify={'center'}
-                border={ethPayoutAddress ? '3px solid #445BCB' : '3px solid #3242a8'}>
+                border={ethPayoutAddress && isEthereumPayoutAddressValid ? '3px solid #445BCB' : '3px solid #3242a8'}>
                 <Text color={ethPayoutAddress ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
                     {isConnected ? 'Reserve Liquidity' : 'Connect Wallet'}
                 </Text>

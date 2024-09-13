@@ -13,7 +13,7 @@ import { SwapAmounts } from '../../../components/swap/SwapAmounts';
 import { OpenGraph } from '../../../components/background/OpenGraph';
 import { ChromeLogoSVG, WarningSVG } from '../../../components/other/SVGs';
 import { FONT_FAMILIES } from '../../../utils/font';
-import { bitcoinDecimals } from '../../../utils/constants';
+import { bitcoinDecimals, opaqueBackgroundColor } from '../../../utils/constants';
 import { formatUnits } from 'ethers/lib/utils';
 import QRCode from 'qrcode.react';
 import swapReservationsAggregatorABI from '../../../abis/SwapReservationsAggregator.json';
@@ -86,7 +86,7 @@ const ReservationDetails = () => {
             setError(null);
 
             if (swapReservationData) {
-                const walletInfo = await window.rift.getProxyWallet({orderNonceHex: swapReservationData.nonce});
+                const walletInfo = await window.rift.getProxyWallet({ orderNonceHex: swapReservationData.nonce });
                 if (walletInfo && walletInfo.address) {
                     setAddress(walletInfo.address);
                 } else {
@@ -122,6 +122,8 @@ const ReservationDetails = () => {
             if (swapReservationURL && typeof swapReservationURL === 'string') {
                 try {
                     const reservationDetails = await fetchReservationDetails(swapReservationURL, ethersRpcProvider, selectedInputAsset);
+                    console.log('Fetching reservation details...');
+                    console.log('Reservation details:', reservationDetails);
                     setSwapReservationData(reservationDetails.swapReservationData);
                     setUsdtOutputSwapAmount(reservationDetails.totalReservedAmountInUsdt);
                     setBtcInputSwapAmount(reservationDetails.btcInputSwapAmount);
@@ -150,11 +152,12 @@ const ReservationDetails = () => {
                         )}
                         {/* MAIN CONTAINER */}
                         <Flex
-                            bg={colors.offBlack}
+                            {...opaqueBackgroundColor}
                             w='100%'
                             mt='20px'
                             borderRadius='30px'
                             px='40px'
+                            boxShadow={'0px 0px 20px 2px rgba(0, 0, 0, 0.1)'}
                             direction='column'
                             py='35px'
                             align='center'
@@ -171,12 +174,27 @@ const ReservationDetails = () => {
                                     {/* CHROME EXTENSION DETECTED */}
                                     {typeof window !== 'undefined' && window.rift ? (
                                         <>
-                                            <Text fontSize='16px' textAlign='center' w='800px' mb='20px' color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                            <Text
+                                                fontSize='16px'
+                                                textAlign='center'
+                                                w='800px'
+                                                mt='-2px'
+                                                mb='20px'
+                                                fontWeight={'normal'}
+                                                color={colors.darkerGray}
+                                                fontFamily={FONT_FAMILIES.AUX_MONO}>
                                                 Your reservation is confirmed and your Rift Proxy Wallet is detected! Please send the Bitcoin amount to the address below:
                                             </Text>
                                             <Flex mt='10px' mx='10px'>
                                                 {bitcoinUri && bitcoinUri !== '' && (
-                                                    <Flex py='10px' px='10px' w={'270px'} borderRadius='10px' bg='white' mr='30px'>
+                                                    <Flex
+                                                        py='10px'
+                                                        px='10px'
+                                                        w={'270px'}
+                                                        borderRadius='10px'
+                                                        bg='white'
+                                                        mr='40px'
+                                                        boxShadow={'0px 15px 15px rgba(0, 16, 118, 0.4)'}>
                                                         <QRCode value={bitcoinUri} size={250} />
                                                     </Flex>
                                                 )}
@@ -188,9 +206,10 @@ const ReservationDetails = () => {
                                                         {address ? (
                                                             <>
                                                                 <Text
-                                                                    mt='2px'
+                                                                    mt='6px'
                                                                     fontSize='25px'
                                                                     display='inline-flex'
+                                                                    letterSpacing={'-1px'}
                                                                     color={colors.offWhite}
                                                                     fontFamily={FONT_FAMILIES.AUX_MONO}
                                                                     whiteSpace='nowrap'
@@ -199,7 +218,12 @@ const ReservationDetails = () => {
                                                                     {address.slice(0, Math.floor((2 / 3) * address.length))}
                                                                 </Text>
                                                                 <Flex alignItems='center'>
-                                                                    <Text fontSize='25px' display='inline-flex' color={colors.offWhite} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                                                    <Text
+                                                                        letterSpacing={'-1px'}
+                                                                        fontSize='25px'
+                                                                        display='inline-flex'
+                                                                        color={colors.offWhite}
+                                                                        fontFamily={FONT_FAMILIES.AUX_MONO}>
                                                                         {address.slice(Math.floor((2 / 3) * address.length))}
                                                                     </Text>
                                                                     <LuCopy
@@ -220,11 +244,12 @@ const ReservationDetails = () => {
                                                         )}
                                                     </Flex>
 
-                                                    <Text mt='20px' fontSize='16px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                                    <Text mt='25px' fontSize='16px' mb='-18px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
                                                         Deposit Amount:{' '}
                                                     </Text>
                                                     <Flex alignItems='center'>
                                                         <Text
+                                                            letterSpacing={'-1px'}
                                                             mt='2px'
                                                             fontSize='25px'
                                                             width={'500px'}
@@ -259,7 +284,7 @@ const ReservationDetails = () => {
                                                 </Flex>
                                             </Flex>
 
-                                            <Text fontSize='12px' mt='32px' color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                            <Text fontWeight={'normal'} fontSize='13px' mt='32px' color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
                                                 {proxyWalletSwapInternalID ? 'Internal ID - ' + proxyWalletSwapInternalID : 'Loading internal id...'}
                                             </Text>
                                         </>
@@ -341,21 +366,21 @@ const ReservationDetails = () => {
                         </Flex>
                         {!loadingState && swapFlowState === '2-send-bitcoin' && (
                             <Flex
-                                bg={colors.offBlack}
-                                borderColor={colors.borderGray}
+                                bg={colors.purpleBackgroundDisabled}
+                                borderColor={colors.purpleBorderDark}
                                 borderWidth={3}
-                                borderRadius='10px'
+                                borderRadius='15px'
                                 px='20px'
-                                w='600px'
+                                w='540px'
                                 py='4px'
-                                mt={'25px'}
+                                mt={'20px'}
                                 h={'60px'}
                                 align={'center'}
                                 justify={'center'}>
-                                <Text fontSize={'17px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
                                     AWAITING BITCOIN PAYMENT
                                 </Text>
-                                <Spinner w={'20px'} h={'20px'} thickness='3px' color={colors.darkerGray} speed='0.65s' />
+                                <Spinner w={'20px'} h={'20px'} thickness='3px' color={colors.purpleBorder} speed='0.65s' />
                             </Flex>
                         )}
                     </Flex>

@@ -10,7 +10,7 @@ import { BigNumber } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
 import { btcToSats, ethToWei, formatAmountToString, weiToEth } from '../../utils/dappHelper';
 import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
-import { bitcoinDecimals, maxSwapOutputs } from '../../utils/constants';
+import { bitcoinDecimals, maxSwapOutputs, opaqueBackgroundColor } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
 import { connectorsForWallets, useConnectModal } from '@rainbow-me/rainbowkit';
@@ -44,7 +44,6 @@ export const DepositUI = () => {
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const setCurrencyModalTitle = useStore((state) => state.setCurrencyModalTitle);
     const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
-    const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
     const [userUsdtBalance, setUserUsdtBalance] = useState('0.00');
@@ -170,7 +169,7 @@ export const DepositUI = () => {
                 align='center'
                 py='25px'
                 borderRadius='20px'
-                {...backgroundColor}
+                {...opaqueBackgroundColor}
                 borderBottom={borderColor}
                 borderLeft={borderColor}
                 borderTop={borderColor}
@@ -248,7 +247,7 @@ export const DepositUI = () => {
                                                         fontSize={'13px'}
                                                         onClick={() => handleUsdtInputChange(-1, userUsdtBalance)}
                                                         _hover={{ textDecoration: 'underline' }}
-                                                        mt='2px'
+                                                        mt='5px'
                                                         mr='6px'
                                                         letterSpacing={'-1.5px'}
                                                         fontWeight={'normal'}
@@ -260,7 +259,7 @@ export const DepositUI = () => {
                                             {isConnected && (
                                                 <Text
                                                     fontSize={'13px'}
-                                                    mt='2px'
+                                                    mt='5px'
                                                     mr='-138px'
                                                     zIndex={'10'}
                                                     color={selectedInputAsset.border_color_light}
@@ -356,7 +355,7 @@ export const DepositUI = () => {
                                     </Flex>
                                     <Spacer />
                                     <Flex mr='6px'>
-                                        <WebAssetTag asset='BTC' onDropDown={() => setCurrencyModalTitle('receipt')} />
+                                        <WebAssetTag asset='BTC' onDropDown={() => setCurrencyModalTitle('recieve')} />
                                     </Flex>
                                 </Flex>
                             </Flex>{' '}
@@ -384,7 +383,7 @@ export const DepositUI = () => {
                                         }}></Box>
                                 </Text>
                                 <Spacer />
-                                <Flex ml='-3px' color={colors.textGray} fontSize={'13px'} mr='3px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                                <Flex color={colors.textGray} fontSize={'13px'} mr='3px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
                                     <Tooltip
                                         fontFamily={'Aux'}
                                         letterSpacing={'-0.5px'}
@@ -393,11 +392,11 @@ export const DepositUI = () => {
                                         fontSize={'12px'}
                                         label='Exchange rate includes the hypernode, protocol, and reservation fees. There are no additional or hidden fees.'
                                         aria-label='A tooltip'>
-                                        <Flex ml='8px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
+                                        <Flex pr='3px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
                                             <Text color={colors.textGray} fontSize={'13px'} mr='8px' mt='1px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
                                                 Includes Fees
                                             </Text>
-                                            <InfoSVG width='13' />
+                                            <InfoSVG width='13px' />
                                         </Flex>
                                     </Tooltip>
                                 </Flex>

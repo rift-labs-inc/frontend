@@ -77,7 +77,7 @@ export function useDepositLiquidity() {
                     await approveTx.wait();
                 }
 
-                setStatus(DepositStatus.WaitingForDepositApproval);
+                setStatus(DepositStatus.WaitingForWalletConfirmation);
 
                 const depositTx = await riftExchangeContractInstance.depositLiquidity(
                     params.tokenDepositAmountInSmallestTokenUnits,

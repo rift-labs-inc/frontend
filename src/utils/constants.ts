@@ -12,6 +12,7 @@ export const bitcoin_bg_color = '#c26920';
 export const bitcoin_border_color = '#FFA04C';
 export const bitcoin_dark_bg_color = '#372412';
 export const bitcoin_light_text_color = '#7d572e';
+export const opaqueBackgroundColor = { bg: 'rgba(15, 15, 15, 0.55)', backdropFilter: 'blur(10px)' };
 
 // export const riftExchangeContractAddress = '0x4f9182DBcCf9C6518b1D67181F4E5a6d3D223C0E'; // deployed for USDT on Sepolia
 export const maxSwapOutputs = 175;

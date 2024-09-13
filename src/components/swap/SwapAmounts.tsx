@@ -12,6 +12,7 @@ import { FaArrowRight } from 'react-icons/fa';
 import { MdArrowRight } from 'react-icons/md';
 import { AssetTag } from '../other/AssetTag';
 import { LoaderIcon } from 'react-hot-toast';
+import { opaqueBackgroundColor } from '../../utils/constants';
 
 export const SwapAmounts = ({}) => {
     const { isMobile } = useWindowSize();
@@ -29,7 +30,6 @@ export const SwapAmounts = ({}) => {
         router.push(route);
     };
 
-    const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
 
@@ -41,8 +41,8 @@ export const SwapAmounts = ({}) => {
         <>
             {btcInputSwapAmount === '-1' || usdtOutputSwapAmount === '-1' ? (
                 <Flex
-                    bg={colors.offBlack}
-                    border='3px solid'
+                    {...opaqueBackgroundColor}
+                    borderWidth={3}
                     borderColor={colors.borderGray}
                     borderRadius={'full'}
                     h='88px'
@@ -56,15 +56,15 @@ export const SwapAmounts = ({}) => {
                 </Flex>
             ) : (
                 <Flex
-                    bg={colors.offBlack}
-                    border='3px solid'
-                    borderColor={colors.borderGray}
                     borderRadius={'full'}
                     h='88px'
-                    pl={'35px'}
-                    pr={'28px'}
+                    {...opaqueBackgroundColor}
+                    borderWidth={3}
+                    borderColor={colors.borderGray}
+                    px={'40px'}
                     fontFamily={FONT_FAMILIES.AUX_MONO}
                     fontWeight={'normal'}
+                    boxShadow={'0px 0px 20px 5px rgba(0, 0, 0, 0.3)'}
                     py='3px'>
                     <Flex direction='column'>
                         <Flex>
@@ -74,7 +74,6 @@ export const SwapAmounts = ({}) => {
                             <Flex mt='-14px' mb='-9px'>
                                 <AssetTag assetName='BTC' width='79px' />
                             </Flex>
-                            {/* <BTCSVG width='100' height='58' viewBox='0 0 148 54' />{' '} */}
                         </Flex>
                         <Text color={colors.textGray} fontSize={'13px'} mt='-12px' ml='6px' letterSpacing={'-2px'} fontWeight={'normal'} fontFamily={'Aux'}>
                             ≈ $
@@ -87,7 +86,7 @@ export const SwapAmounts = ({}) => {
                     </Flex>
 
                     <Spacer />
-                    <Flex align='center' ml='-4px' mr='-5px' mt='-4px' justify={'center'}>
+                    <Flex align='center' ml='-4px' mr='-5px' mt='-2px' justify={'center'}>
                         <MdArrowRight size={'50px'} color={colors.darkerGray} />
                     </Flex>
                     <Spacer />
@@ -100,7 +99,7 @@ export const SwapAmounts = ({}) => {
                                 <AssetTag assetName='USDT' width='90px' />
                             </Flex>{' '}
                         </Flex>
-                        <Text color={colors.textGray} fontSize={'13px'} mt='-12px' ml='6px' letterSpacing={'-2px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                        <Text color={colors.textGray} fontSize={'13px'} mt='-10.5px' ml='6px' letterSpacing={'-2px'} fontWeight={'normal'} fontFamily={'Aux'}>
                             ≈ $
                             {(parseFloat(usdtOutputSwapAmount) * useStore.getState().validAssets[selectedInputAsset.name].priceUSD).toLocaleString(undefined, {
                                 minimumFractionDigits: 2,

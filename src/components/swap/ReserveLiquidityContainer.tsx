@@ -26,7 +26,6 @@ export const ReserveLiquidityContainer = ({}) => {
     const [activeTab, setActiveTab] = useState<ActiveTab>('swap');
     const [lpFee, setLpFee] = useState('');
 
-    const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
     const swapFlowState = useStore((state) => state.swapFlowState);

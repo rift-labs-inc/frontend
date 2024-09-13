@@ -11,7 +11,7 @@ export const SwapStatusTimeline: React.FC = () => {
     return (
         <Flex
             width='100%'
-            bg='#0D1610'
+            bg='#0C140E'
             border='3px solid'
             borderColor='#3D5A44'
             borderRadius='25px'
@@ -86,7 +86,7 @@ export const SwapStatusTimeline: React.FC = () => {
             </Flex>
 
             <Flex mt='10px'>
-                <Flex zIndex={2} mt={swapFlowState === '1-reserve-liquidity' ? '0px' : '-8px'}>
+                <Flex zIndex={2} mt={swapFlowState === '1-reserve-liquidity' ? '0px' : '-9.5px'}>
                     <CircleFlex state={swapFlowState !== '1-reserve-liquidity' ? 'completed' : 'current'} />
                 </Flex>
                 <Flex
@@ -119,7 +119,13 @@ export const SwapStatusTimeline: React.FC = () => {
                 <Flex zIndex={2} mt={swapFlowState !== '4-completed' ? '0px' : '-9px'}>
                     <CircleFlex state={swapFlowState === '3-receive-eth' ? 'current' : swapFlowState === '4-completed' ? 'completed' : 'not-started'} />
                 </Flex>
-                <Flex mt='10px' h='10px' w='25%' mx='-5px' bg={swapFlowState === '4-completed' ? colors.greenBackground : colors.offBlackLighter2}></Flex>
+                <Flex
+                    mt='10px'
+                    h='10px'
+                    w='25%'
+                    mx='-5px'
+                    borderRadius={'0px 10px 10px 0px'}
+                    bg={swapFlowState === '4-completed' ? colors.greenBackground : colors.offBlackLighter2}></Flex>
             </Flex>
         </Flex>
     );

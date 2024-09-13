@@ -93,7 +93,7 @@ export interface ProxyWalletSwapArgs {
 
 export type AssetType = 'BTC' | 'USDT' | 'ETH' | 'WETH' | 'WBTC';
 
-export type CurrencyModalTitle = 'send' | 'receipt' | 'deposit' | 'close';
+export type CurrencyModalTitle = 'send' | 'recieve' | 'deposit' | 'close';
 
 export type LiquidityReservedEvent = {
     reserver: string;

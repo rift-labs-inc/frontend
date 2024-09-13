@@ -4,7 +4,7 @@ export const colors = {
     RiftOrange: '#FF8F28',
     RiftBlue: '#394AFF',
 
-    purpleBackgroundDisabled: 'rgba(50, 66, 168, 0.1)',
+    purpleBackgroundDisabled: 'rgba(19, 16, 39, 0.8)',
     purpleBackground: 'rgba(50, 66, 168, 0.3)',
     purpleHover: 'rgba(50, 66, 168, 0.65)',
 
@@ -49,6 +49,7 @@ export const colors = {
         btc: {
             background: '#2E1C0C',
             border: '#78491F',
+            selectedColor: '#FF8F28',
         },
         usdt: {
             background: '#08221A',

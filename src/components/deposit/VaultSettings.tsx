@@ -4,11 +4,7 @@ import { BigNumber } from 'ethers';
 import { FaRegArrowAltCircleRight } from 'react-icons/fa';
 import { colors } from '../../utils/colors';
 import { bitcoin_border_color } from '../../utils/constants';
-import {
-    convertLockingScriptToBitcoinAddress,
-    calculateBtcOutputAmountFromExchangeRate,
-    formatBtcExchangeRate,
-} from '../../utils/dappHelper';
+import { convertLockingScriptToBitcoinAddress, calculateBtcOutputAmountFromExchangeRate, formatBtcExchangeRate } from '../../utils/dappHelper';
 import { FONT_FAMILIES } from '../../utils/font';
 import { AssetTag } from '../other/AssetTag';
 import VaultStatusBar from './VaultStatusBar';
@@ -26,12 +22,7 @@ interface VaultSettingsProps {
 }
 
 const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, handleGoBack, selectedInputAsset }) => {
-    const {
-        status: withdrawLiquidityStatus,
-        error: withdrawLiquidityError,
-        txHash: withdrawTxHash,
-        resetWithdrawState,
-    } = useWithdrawLiquidity();
+    const { status: withdrawLiquidityStatus, error: withdrawLiquidityError, txHash: withdrawTxHash, resetWithdrawState } = useWithdrawLiquidity();
 
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
     // const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -68,13 +59,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                 <Text fontSize='22px' color={colors.offWhite} textAlign='center' mt='-12px' flex='1'>
                     Manage Deposit Vault #{selectedVaultToManage.index}
                 </Text>
-                <Text
-                    fontSize='12px'
-                    color={colors.textGray}
-                    fontFamily={FONT_FAMILIES.AUX_MONO}
-                    textAlign='center'
-                    mt='6px'
-                    flex='1'>
+                <Text fontSize='12px' color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='6px' flex='1'>
                     Edit or Withdraw unreserved liquidity at anytime.{' '}
                 </Text>
             </Flex>
@@ -95,11 +80,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                         borderRadius={'14px'}
                         px='15px'
                         align={'center'}>
-                        <Text
-                            fontSize='16px'
-                            color={colors.offWhite}
-                            letterSpacing='-1px'
-                            fontFamily={FONT_FAMILIES.AUX_MONO}>
+                        <Text fontSize='16px' color={colors.offWhite} letterSpacing='-1px' fontFamily={FONT_FAMILIES.AUX_MONO}>
                             {convertLockingScriptToBitcoinAddress(selectedVaultToManage.btcPayoutLockingScript)}
                         </Text>
 
@@ -125,29 +106,14 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                         pl='15px'
                         pr='10px'
                         align={'center'}>
-                        <Text
-                            fontSize='16px'
-                            color={colors.offWhite}
-                            letterSpacing={'-1px'}
-                            fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {formatUnits(
-                                BigNumber.from(selectedVaultToManage.initialBalance).toString(),
-                                selectedVaultToManage.depositAsset.decimals,
-                            ).toString()}
+                        <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                            {formatUnits(BigNumber.from(selectedVaultToManage.initialBalance).toString(), selectedVaultToManage.depositAsset.decimals).toString()}
                         </Text>
                         <Spacer />
                         <AssetTag assetName={selectedVaultToManage.depositAsset.name} width='84px' />
                     </Flex>
                 </Flex>
-                <Text
-                    mt='46px'
-                    pl='12px'
-                    fontSize='20px'
-                    opacity={0.9}
-                    fontWeight={'bold'}
-                    color={colors.offWhite}
-                    letterSpacing={'-1px'}
-                    fontFamily={FONT_FAMILIES.AUX_MONO}>
+                <Text mt='46px' pl='12px' fontSize='20px' opacity={0.9} fontWeight={'bold'} color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
                     <FaRegArrowAltCircleRight color={colors.RiftOrange} />
                 </Text>
                 <Spacer />
@@ -156,22 +122,8 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                     <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
                         Output
                     </Text>
-                    <Flex
-                        h='50px'
-                        mt='6px'
-                        w='100%'
-                        bg='#2E1C0C'
-                        border={'3px solid'}
-                        borderColor={'#78491F'}
-                        borderRadius={'14px'}
-                        pl='15px'
-                        pr='10px'
-                        align={'center'}>
-                        <Text
-                            fontSize='16px'
-                            color={colors.offWhite}
-                            letterSpacing={'-1px'}
-                            fontFamily={FONT_FAMILIES.AUX_MONO}>
+                    <Flex h='50px' mt='6px' w='100%' bg='#2E1C0C' border={'3px solid'} borderColor={'#78491F'} borderRadius={'14px'} pl='15px' pr='10px' align={'center'}>
+                        <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
                             {selectedVaultToManage.btcExchangeRate &&
                                 calculateBtcOutputAmountFromExchangeRate(
                                     selectedVaultToManage.initialBalance,
@@ -225,12 +177,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                             <Text color={selectedVaultToManage.depositAsset.border_color_light}>
                                 {' '}
                                 {selectedVaultToManage.btcExchangeRate &&
-                                    Number(
-                                        formatBtcExchangeRate(
-                                            selectedVaultToManage.btcExchangeRate,
-                                            selectedVaultToManage.depositAsset.decimals,
-                                        ),
-                                    ).toLocaleString('en-US', {
+                                    Number(formatBtcExchangeRate(selectedVaultToManage.btcExchangeRate, selectedVaultToManage.depositAsset.decimals)).toLocaleString('en-US', {
                                         minimumFractionDigits: 2,
                                         maximumFractionDigits: 2,
                                     })}{' '}

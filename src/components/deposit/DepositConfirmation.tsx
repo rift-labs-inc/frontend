@@ -93,7 +93,6 @@ export const DepositConfirmation = ({}) => {
     const usdtPriceUSD = useStore.getState().validAssets[selectedInputAsset.name].priceUSD;
     const [editExchangeRateMode, setEditExchangeRateMode] = useState(false);
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
-    const backgroundColor = { bg: 'rgba(20, 20, 20, 0.55)', backdropFilter: 'blur(8px)' };
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -556,18 +555,18 @@ export const DepositConfirmation = ({}) => {
                         <Text ml='8px' mt='5px' w='100%' mb='10px' fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                             Bitcoin Payout Address
                         </Text>
-                        <Flex mt='-2px' px='10px' bg='#1C1C1C' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
+                        <Flex mt='-2px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
                             <Flex direction={'row'} py='6px' px='5px'>
                                 <Input
                                     value={payoutBTCAddress}
                                     onChange={handleBTCPayoutAddressChange}
                                     fontFamily={'Aux'}
                                     border='none'
-                                    mt='2px'
+                                    mt='3.5px'
                                     mr='20px'
-                                    ml='-5px'
+                                    ml='-4px'
                                     p='0px'
-                                    w='450px'
+                                    w='425px'
                                     letterSpacing={'-6px'}
                                     color={colors.offWhite}
                                     _active={{ border: 'none', boxShadow: 'none' }}
@@ -579,7 +578,11 @@ export const DepositConfirmation = ({}) => {
                                     spellCheck={false}
                                 />
 
-                                {payoutBTCAddress.length > 0 && <BitcoinAddressValidation address={payoutBTCAddress} />}
+                                {payoutBTCAddress.length > 0 && (
+                                    <Flex ml='-5px'>
+                                        <BitcoinAddressValidation address={payoutBTCAddress} />
+                                    </Flex>
+                                )}
                             </Flex>
                         </Flex>
 

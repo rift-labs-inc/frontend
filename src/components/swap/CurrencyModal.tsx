@@ -24,12 +24,12 @@ const CurrencyItem = ({
     const bgColor = colors.currencyCard[colorKey].background;
     const borderColor = colors.currencyCard[colorKey].border;
 
-    const selectedColor = colors.currencyCard[colorKey].border;
+    const selectedColor = colors.currencyCard[colorKey].background;
 
     return (
         <Flex
             bg={isSelected ? selectedColor : bgColor}
-            border={`2px solid ${isSelected ? selectedColor : borderColor}`}
+            border={`2px solid ${borderColor}`}
             borderRadius='14px'
             px='18px'
             py='12px'
@@ -82,11 +82,11 @@ const CurrencyModal: React.FC<CurrencyModalProps> = () => {
                     <Flex flexDir='column' gap='12px' pb='12px'>
                         <CurrencyItem
                             asset='BTC'
-                            isSelected={(currencyModalTitle == 'send' && !depositMode) || (currencyModalTitle == 'receipt' && depositMode)}
+                            isSelected={(currencyModalTitle == 'send' && !depositMode) || (currencyModalTitle == 'recieve' && depositMode)}
                             onClick={() => {
                                 if (currencyModalTitle == 'deposit' && depositMode) {
                                     setDepositMode(false);
-                                } else if (currencyModalTitle == 'receipt' && !depositMode) {
+                                } else if (currencyModalTitle == 'recieve' && !depositMode) {
                                     setDepositMode(true);
                                 }
                                 onClose();
@@ -95,17 +95,18 @@ const CurrencyModal: React.FC<CurrencyModalProps> = () => {
                         </CurrencyItem>
                         <CurrencyItem
                             asset='USDT'
-                            isSelected={(currencyModalTitle == 'receipt' && !depositMode) || (currencyModalTitle == 'deposit' && depositMode)}
+                            isSelected={(currencyModalTitle == 'recieve' && !depositMode) || (currencyModalTitle == 'deposit' && depositMode)}
                             onClick={() => {
                                 if (currencyModalTitle == 'send' && !depositMode) {
                                     setDepositMode(true);
-                                } else if (currencyModalTitle == 'receipt' && depositMode) {
+                                } else if (currencyModalTitle == 'recieve' && depositMode) {
                                     setDepositMode(false);
                                 }
                                 onClose();
                             }}>
                             Most secure but can lead to less optimal execution price as the exchange rate between BTC and ETH diverges.
                         </CurrencyItem>
+
                         <CurrencyItem asset='ETH' isComingSoon>
                             Most secure but can lead to less optimal execution price as the exchange rate between BTC and ETH diverges.
                         </CurrencyItem>

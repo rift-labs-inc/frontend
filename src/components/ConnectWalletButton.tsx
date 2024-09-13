@@ -15,24 +15,13 @@ export const ConnectWalletButton = ({}) => {
     const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const { address, isConnected } = useAccount();
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-    const localBalance = useStore(
-        (state) => state.validAssets[selectedInputAsset.name]?.connectedUserBalanceFormatted || '0',
-    );
+    const localBalance = useStore((state) => state.validAssets[selectedInputAsset.name]?.connectedUserBalanceFormatted || '0');
 
     return (
         <ConnectButton.Custom>
-            {({
-                account,
-                chain,
-                openAccountModal,
-                openChainModal,
-                openConnectModal,
-                authenticationStatus,
-                mounted,
-            }) => {
+            {({ account, chain, openAccountModal, openChainModal, openConnectModal, authenticationStatus, mounted }) => {
                 const ready = mounted && authenticationStatus !== 'loading';
-                const connected =
-                    ready && account && chain && (!authenticationStatus || authenticationStatus === 'authenticated');
+                const connected = ready && account && chain && (!authenticationStatus || authenticationStatus === 'authenticated');
 
                 return (
                     <div
@@ -58,7 +47,7 @@ export const ConnectWalletButton = ({}) => {
                                         border={`2.4px solid ${colors.purpleBorder}`}
                                         type='button'
                                         fontFamily={FONT_FAMILIES.NOSTROMO}
-                                        fontSize='0.8rem'
+                                        fontSize='0.88rem'
                                         paddingX='20px'
                                         bg='#101746'
                                         boxShadow='0px 0px 5px 3px rgba(18,18,18,1)'>
@@ -88,19 +77,11 @@ export const ConnectWalletButton = ({}) => {
                             return (
                                 <div style={{ display: 'flex', gap: 8 }}>
                                     <Button
-                                        border={`2.4px solid ${
-                                            selectedInputAsset.name === 'WETH'
-                                                ? colors.purpleBorder
-                                                : selectedInputAsset.border_color
-                                        }`}
+                                        border={`2.4px solid ${selectedInputAsset.name === 'WETH' ? colors.purpleBorder : selectedInputAsset.border_color}`}
                                         h='37px'
                                         color={colors.offWhite}
                                         pt='2px'
-                                        bg={
-                                            selectedInputAsset.name === 'WETH'
-                                                ? colors.purpleBackground
-                                                : selectedInputAsset.dark_bg_color
-                                        }
+                                        bg={selectedInputAsset.name === 'WETH' ? colors.purpleBackground : selectedInputAsset.dark_bg_color}
                                         mr='2px'
                                         _hover={{ bg: selectedInputAsset.bg_color }}
                                         _active={{ bg: selectedInputAsset.bg_color }}
@@ -115,21 +96,11 @@ export const ConnectWalletButton = ({}) => {
                                                 {(() => {
                                                     switch (selectedInputAsset.name) {
                                                         case 'WETH':
-                                                            return (
-                                                                <ETH_Icon
-                                                                    width={'12'}
-                                                                    height={'17'}
-                                                                    viewBox='0 0 23 36'
-                                                                />
-                                                            );
+                                                            return <ETH_Icon width={'12'} height={'17'} viewBox='0 0 23 36' />;
                                                         case 'USDT':
                                                             return (
                                                                 <Flex mt='-2px' mr='2px'>
-                                                                    <USDT_Icon
-                                                                        width='20'
-                                                                        height='20'
-                                                                        viewBox='0 0 80 80'
-                                                                    />
+                                                                    <USDT_Icon width='20' height='20' viewBox='0 0 80 80' />
                                                                 </Flex>
                                                             );
                                                         default:
@@ -138,9 +109,7 @@ export const ConnectWalletButton = ({}) => {
                                                 })()}
                                             </Flex>
                                             <Flex px='20px' mt='-2px' mr='-2px' fontSize={'16px'} fontFamily={'aux'}>
-                                                {`${parseFloat(localBalance).toFixed(2).toString()} ${
-                                                    selectedInputAsset.name
-                                                }`}
+                                                {`${parseFloat(localBalance).toFixed(2).toString()} ${selectedInputAsset.name}`}
                                             </Flex>
                                         </>
                                     </Button>
