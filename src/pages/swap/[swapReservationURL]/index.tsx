@@ -86,7 +86,7 @@ const ReservationDetails = () => {
             setError(null);
 
             if (swapReservationData) {
-                const walletInfo = await window.rift.getProxyWallet(swapReservationData.nonce);
+                const walletInfo = await window.rift.getProxyWallet({orderNonceHex: swapReservationData.nonce});
                 if (walletInfo && walletInfo.address) {
                     setAddress(walletInfo.address);
                 } else {
