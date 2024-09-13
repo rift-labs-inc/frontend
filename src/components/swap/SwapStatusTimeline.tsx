@@ -7,7 +7,6 @@ import { useStore } from '../../store';
 
 export const SwapStatusTimeline: React.FC = () => {
     const swapFlowState = useStore((state) => state.swapFlowState);
-    console.log('swapFlowState:', swapFlowState);
 
     return (
         <Flex

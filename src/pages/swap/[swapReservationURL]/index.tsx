@@ -57,7 +57,6 @@ const ReservationDetails = () => {
     useEffect(() => {
         if (typeof window !== 'undefined' && address && totalSwapAmountInSats) {
             const uri = `bitcoin:${address}?amount=${formatUnits(totalSwapAmountInSats, bitcoinDecimals)}&label=Rift%20Exchange%20Swap`;
-            console.log('Bitcoin URI:', uri);
             setBitcoinUri(uri);
         }
     }, [address, lowestFeeReservationParams, totalSwapAmountInSats]);
@@ -76,33 +75,6 @@ const ReservationDetails = () => {
         setUsdtOutputSwapAmount('-1');
     }, []);
 
-    // useEffect(() => {
-    //     const fetchProxyWalletAddress = async () => {
-    //         if (typeof window !== 'undefined' && window.rift && window.rift.getProxyWallet) {
-    //             try {
-    //                 console.log('Fetching wallet info...');
-    //                 console.log('Swap reservation data:', swapReservationData);
-    //                 if (swapReservationData) {
-    //                     const walletInfo = await window.rift.getProxyWallet(swapReservationData.nonce);
-    //                     console.log('Wallet info:', walletInfo);
-    //                     if (walletInfo && walletInfo.address) {
-    //                         setAddress(walletInfo.address);
-    //                     } else {
-    //                         setError('Unable to retrieve Bitcoin address from wallet info.');
-    //                     }
-    //                 }
-    //             } catch (err) {
-    //                 setError('Error fetching wallet information.');
-    //                 console.error(err);
-    //             }
-    //         } else {
-    //             setError('Rift wallet not detected or getProxyWallet not available.');
-    //         }
-    //     };
-
-    //     fetchProxyWalletAddress();
-    // }, [lowestFeeReservationParams, btcInputSwapAmount, usdtOutputSwapAmount, swapReservationData]);
-
     // constantly look for swap status updates from proxy wallet
     useEffect(() => {
         const checkSwapStatus = async () => {
@@ -115,7 +87,6 @@ const ReservationDetails = () => {
 
             if (swapReservationData) {
                 const walletInfo = await window.rift.getProxyWallet(swapReservationData.nonce);
-                console.log('Wallet info:', walletInfo);
                 if (walletInfo && walletInfo.address) {
                     setAddress(walletInfo.address);
                 } else {
