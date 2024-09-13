@@ -162,7 +162,7 @@ export const ReserveLiquidity = ({}) => {
                 w='100%'
                 mt='20px'
                 borderRadius={'30px'}
-                px='20px'
+                px='50px'
                 direction={'column'}
                 pb='30px'
                 pt='15px'
@@ -174,8 +174,43 @@ export const ReserveLiquidity = ({}) => {
                     Initiate the swap by paying fees up front to lock the seller’s ETH. After the reservation is confirmed, you will have 6 hours to send BTC to complete the swap.
                 </Text>
 
+                {/* USDT Payout Address */}
+                <Text ml='8px' mt='15px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                    USDT Payout Address
+                </Text>
+                <Flex mt='-2px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
+                    <Flex direction={'row'} py='6px' px='5px'>
+                        <Input
+                            value={ethPayoutAddress}
+                            onChange={handleETHPayoutAddressChange}
+                            fontFamily={'Aux'}
+                            border='none'
+                            mt='3.5px'
+                            w='804px'
+                            mr='65px'
+                            ml='-4px'
+                            p='0px'
+                            letterSpacing={'-4px'}
+                            color={colors.offWhite}
+                            _active={{ border: 'none', boxShadow: 'none' }}
+                            _focus={{ border: 'none', boxShadow: 'none' }}
+                            _selected={{ border: 'none', boxShadow: 'none' }}
+                            fontSize='28px'
+                            placeholder='0xb0cb90a9a3dfd81...'
+                            _placeholder={{ color: colors.darkerGray }}
+                            spellCheck={false}
+                        />
+
+                        {ethPayoutAddress.length > 0 && (
+                            <Flex ml='-5px' mt='0px'>
+                                <EthereumAddressValidation address={ethPayoutAddress} />
+                            </Flex>
+                        )}
+                    </Flex>
+                </Flex>
+
                 {/* Fees and Swap Time Estimate */}
-                <Flex w='370px' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='20px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
+                <Flex w='380px' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='20px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
                     <Flex w='50%' align='center' bg={colors.offBlack}>
                         <Flex mx='13px' w='20px'>
                             <LockClosed width={'20px'} color={colors.offWhite} />
@@ -202,41 +237,6 @@ export const ReserveLiquidity = ({}) => {
                     </Flex>
                 </Flex>
 
-                {/* USDT Payout Address */}
-                <Text ml='8px' mt='5px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
-                    USDT Payout Address
-                </Text>
-                <Flex mt='-2px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
-                    <Flex direction={'row'} py='6px' px='5px'>
-                        <Input
-                            value={ethPayoutAddress}
-                            onChange={handleETHPayoutAddressChange}
-                            fontFamily={'Aux'}
-                            border='none'
-                            mt='3.5px'
-                            w='868px'
-                            mr='65px'
-                            ml='-4px'
-                            p='0px'
-                            letterSpacing={'-4px'}
-                            color={colors.offWhite}
-                            _active={{ border: 'none', boxShadow: 'none' }}
-                            _focus={{ border: 'none', boxShadow: 'none' }}
-                            _selected={{ border: 'none', boxShadow: 'none' }}
-                            fontSize='28px'
-                            placeholder='0xb0cb90a9a3dfd81...'
-                            _placeholder={{ color: colors.darkerGray }}
-                            spellCheck={false}
-                        />
-
-                        {ethPayoutAddress.length > 0 && (
-                            <Flex ml='-5px' mt='0px'>
-                                <EthereumAddressValidation address={ethPayoutAddress} />
-                            </Flex>
-                        )}
-                    </Flex>
-                </Flex>
-
                 {/* Reserve Button */}
             </Flex>
             <Flex
@@ -254,7 +254,7 @@ export const ReserveLiquidity = ({}) => {
                 borderRadius={'10px'}
                 justify={'center'}
                 border={ethPayoutAddress && isEthereumPayoutAddressValid ? '3px solid #445BCB' : '3px solid #3242a8'}>
-                <Text color={ethPayoutAddress ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
+                <Text color={ethPayoutAddress && isEthereumPayoutAddressValid ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
                     {isConnected ? 'Reserve Liquidity' : 'Connect Wallet'}
                 </Text>
             </Flex>
