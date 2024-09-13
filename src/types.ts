@@ -30,6 +30,7 @@ export type SwapReservation = {
     ethPayoutAddress: string;
     lpReservationHash: string;
     nonce: string;
+    indexInContract?: number;
     totalSatsInputInlcudingProxyFee: BigNumber;
     totalSwapOutputAmount: BigNumber;
     prepaidFeeAmount: BigNumber;

@@ -3,7 +3,7 @@ import { ethers, BigNumber, BigNumberish } from 'ethers';
 import { ERC20ABI, protocolFeeDenominator, protocolFeePercentage } from '../../utils/constants';
 import { useStore } from '../../store';
 import { ProxyWalletLiquidityProvider } from '../../types';
-import { getMatchingLiquidityReservedEvent, getSwapReservations, getSwapReservationsLength } from '../../utils/contractReadFunctions';
+import { getSwapReservations, getSwapReservationsLength, listenForLiquidityReservedEvent } from '../../utils/contractReadFunctions';
 import swapReservationsAggregatorABI from '../../abis/SwapReservationsAggregator.json';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { bufferTo18Decimals, createReservationUrl } from '../../utils/dappHelper';
@@ -103,7 +103,7 @@ export function useReserveLiquidity() {
                     params.expiredSwapReservationIndexes,
                 );
 
-                const reservationDetails = await getMatchingLiquidityReservedEvent(
+                const reservationDetails = await listenForLiquidityReservedEvent(
                     ethersRpcProvider,
                     selectedInputAsset.riftExchangeContractAddress,
                     riftExchangeABI.abi,

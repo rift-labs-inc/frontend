@@ -13,7 +13,6 @@ interface ContractDataContextType {
     userActiveDepositVaults: any;
     userCompletedDepositVaults: any;
     allSwapReservations: any;
-    userSwapReservations: any;
     loading: boolean;
     error: any;
     refreshAllDepositData: () => Promise<void>;
@@ -33,8 +32,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const updatePriceUSD = useStore((state) => state.updatePriceUSD);
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
-    const setUserSwapReservations = useStore((state) => state.setUserSwapReservations);
-    const userSwapReservations = useStore((state) => state.userSwapReservations);
 
     // set ethers provider
     useEffect(() => {
@@ -69,8 +66,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             setUserEthAddress(address);
             if (selectedInputAsset && window.ethereum) {
                 fetchSelectedAssetUserBalance(address);
-                let userSwapReservations = allFetchedSwapReservations.filter((reservation) => reservation.owner === address);
-                setUserSwapReservations(userSwapReservations);
             }
         }
 
@@ -89,7 +84,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         userActiveDepositVaults: userActiveDepositVaults,
         userCompletedDepositVaults: userCompletedDepositVaults,
         allSwapReservations: allFetchedSwapReservations,
-        userSwapReservations: userSwapReservations,
         loading,
         error,
         refreshAllDepositData,

@@ -1,4 +1,3 @@
-// LightReservation.tsx
 import { Flex, Spacer, Text } from '@chakra-ui/react';
 import { SwapReservation, ValidAsset } from '../../types';
 import { BigNumber } from 'ethers';
@@ -8,22 +7,34 @@ import { AssetTag } from '../other/AssetTag';
 import { formatUnits } from 'ethers/lib/utils';
 import { FaRegArrowAltCircleRight } from 'react-icons/fa';
 import { IoMdSettings } from 'react-icons/io';
+import { useStore } from '../../store';
+import { useEffect, useState } from 'react';
+import { fetchReservationDetails } from '../../utils/dappHelper';
 
 interface LightReservationProps {
     reservation: SwapReservation;
+    url: string;
     onClick?: () => void;
-    selectedInputAsset: ValidAsset;
 }
 
-const LightReservation: React.FC<LightReservationProps> = ({ reservation, onClick, selectedInputAsset }) => {
-    // Calculate the total input amount by summing up the amounts to reserve
-    const totalInputAmount: BigNumber = reservation.amountsToReserve.reduce((accumulator: BigNumber, currentValue: BigNumber) => accumulator.add(currentValue), BigNumber.from(0));
+const LightReservation: React.FC<LightReservationProps> = ({ reservation, url, onClick }) => {
+    const [btcInputSwapAmount, setBtcInputSwapAmount] = useState<string>('-1');
+    const [usdtOutputSwapAmount, setUsdtOutputSwapAmount] = useState<string>('-1');
+    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
 
-    // Format the input amount using the asset's decimals
-    const inputAmountFormatted = formatUnits(totalInputAmount, selectedInputAsset.decimals);
+    useEffect(() => {
+        const fetchData = async () => {
+            console.log('usdtOutputSwapAmount', usdtOutputSwapAmount);
+            console.log('btcInputSwapAmount', btcInputSwapAmount);
+            const reservationDetails = await fetchReservationDetails(url, ethersRpcProvider, selectedInputAsset);
+            console.log('reservationDetails', reservationDetails);
+            setBtcInputSwapAmount(reservationDetails.btcInputSwapAmount);
+            setUsdtOutputSwapAmount(reservationDetails.totalReservedAmountInUsdt);
+        };
 
-    // Format the output amount (assuming totalSwapOutputAmount is in Satoshis)
-    const outputAmountFormatted = formatUnits(reservation.totalSwapOutputAmount, 8); // 8 decimals for BTC
+        fetchData();
+    }, [usdtOutputSwapAmount]);
 
     return (
         <Flex
@@ -47,33 +58,12 @@ const LightReservation: React.FC<LightReservationProps> = ({ reservation, onClic
             color={colors.textGray}
             borderColor={colors.borderGrayLight}
             gap='12px'>
-            <Text width='48px'>#{reservation.nonce}</Text>
-            <Flex flex={1} align='center' gap='12px'>
-                <Flex flex={1} direction='column'>
+            <Text width='58px'>#{reservation.indexInContract}</Text>
+            <Flex flex={1} w='100%' align='center' gap='12px'>
+                <Flex flex={1} w='100%' direction='column'>
                     <Flex
                         h='50px'
-                        w='100%'
-                        bg={selectedInputAsset.dark_bg_color}
-                        border='2px solid'
-                        borderColor={selectedInputAsset.bg_color}
-                        borderRadius={'14px'}
-                        pl='15px'
-                        pr='10px'
-                        align={'center'}>
-                        <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {inputAmountFormatted}
-                        </Text>
-                        <Spacer />
-                        <AssetTag assetName={selectedInputAsset.name} width='84px' />
-                    </Flex>
-                </Flex>
-                <Flex mt='0px' fontSize='20px' opacity={0.9}>
-                    <FaRegArrowAltCircleRight color={colors.RiftOrange} />
-                </Flex>
-                <Flex flex={1} direction='column'>
-                    <Flex
-                        h='50px'
-                        w='100%'
+                        w='230px'
                         bg={colors.currencyCard.btc.background}
                         border='2px solid'
                         borderColor={colors.currencyCard.btc.border}
@@ -82,10 +72,31 @@ const LightReservation: React.FC<LightReservationProps> = ({ reservation, onClic
                         pr='10px'
                         align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {outputAmountFormatted}
+                            {btcInputSwapAmount !== '-1' ? btcInputSwapAmount : 'Loading...'}
                         </Text>
                         <Spacer />
                         <AssetTag assetName={'BTC'} width='80px' />
+                    </Flex>
+                </Flex>
+                <Flex mt='0px' fontSize='20px' opacity={0.9}>
+                    <FaRegArrowAltCircleRight color={colors.RiftOrange} />
+                </Flex>
+                <Flex flex={1} direction='column'>
+                    <Flex
+                        h='50px'
+                        w='230px'
+                        bg={selectedInputAsset.dark_bg_color}
+                        border='2px solid'
+                        borderColor={selectedInputAsset.bg_color}
+                        borderRadius={'14px'}
+                        pl='15px'
+                        pr='10px'
+                        align={'center'}>
+                        <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                            {usdtOutputSwapAmount !== '-1' ? usdtOutputSwapAmount : 'Loading...'}
+                        </Text>
+                        <Spacer />
+                        <AssetTag assetName={selectedInputAsset.name} width='84px' />
                     </Flex>
                 </Flex>
             </Flex>

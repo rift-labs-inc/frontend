@@ -27,8 +27,8 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
     const isLoading = !isCompleted && !isError;
     const showManageDepositVaultsScreen = useStore((state) => state.showManageDepositVaultsScreen);
     const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
-    const router = useRouter();
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
+    const router = useRouter();
 
     const handleNavigation = (route: string) => {
         router.push(route);

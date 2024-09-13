@@ -6,6 +6,9 @@ import * as bitcoin from 'bitcoinjs-lib';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { bitcoinDecimals, maxSwapOutputs, SATS_PER_BTC } from './constants';
 import { format } from 'path';
+import swapReservationsAggregatorABI from '../abis/SwapReservationsAggregator.json';
+import { getDepositVaults, getSwapReservations } from '../utils/contractReadFunctions';
+import depositVaultAggregatorABI from '../abis/DepositVaultsAggregator.json';
 
 // HELPER FUCTIONS
 export function weiToEth(wei: BigNumber): BigNumberish {
@@ -237,21 +240,34 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
         // [1] calculate amount of USDT to take from current vault based on remaining input sats
         const vault = sortedVaults[i];
         const bufferedMicroUSDTStillNeeded = vault.btcExchangeRate.mul(satsToSpend);
+        console.log('TACO bufferedMicroUSDTStillNeeded:', bufferedMicroUSDTStillNeeded.toString());
         const MicroUsdtStillNeeded = unBufferFrom18Decimals(bufferedMicroUSDTStillNeeded, vault.depositAsset.decimals);
 
         // [2] if we need more USDT than is in the vault, take all of it otherwise take remaining amount needed
         const MicroUsdtToTakeFromVault = MicroUsdtStillNeeded.gt(vault.trueUnreservedBalance) ? vault.trueUnreservedBalance : MicroUsdtStillNeeded;
+        console.log('TACO MicroUsdtToTakeFromVault:', MicroUsdtToTakeFromVault.toString());
+
         const bufferedMicroUSDTToTakeFromVault = bufferTo18Decimals(MicroUsdtToTakeFromVault, vault.depositAsset.decimals);
+        const exchangeRate = vault.btcExchangeRate;
+        console.log('TACO exchangeRate:', exchangeRate.toString());
+
+        // console.log('TACO bufferedMicroUSDTToTakeFromVault:',, bufferedMicroUSDTToTakeFromVault.toString());
+
         const fixedNumberBufferedMicroUSDTToTakeFromVault = FixedNumber.from(bufferedMicroUSDTToTakeFromVault);
         const fixedNumberExchangeRate = FixedNumber.from(vault.btcExchangeRate.toString());
         const satsUsed = Math.floor(fixedNumberBufferedMicroUSDTToTakeFromVault.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
+        console.log('TACO satsUsed:', satsUsed);
+        const trueBufferedMicroUsdtOut = BigNumber.from(satsUsed).mul(exchangeRate);
+        console.log('TACO trueBufferedMicroUsdtOut:', trueBufferedMicroUsdtOut.toString());
+        const trueMicroUsdtToTakeFromVault = unBufferFrom18Decimals(trueBufferedMicroUsdtOut, vault.depositAsset.decimals);
+        console.log('TACO trueMicroUsdtOut:', trueMicroUsdtToTakeFromVault.toString());
 
         // [3] update tracked amounts, but skip vaults with 0 sats or 0 micro USDT
-        if (MicroUsdtToTakeFromVault.gt(0) && satsUsed > 0) {
-            totalMicroUsdtSwapOutput = totalMicroUsdtSwapOutput.add(MicroUsdtToTakeFromVault);
+        if (trueMicroUsdtToTakeFromVault.gt(0) && satsUsed > 0) {
+            totalMicroUsdtSwapOutput = totalMicroUsdtSwapOutput.add(trueMicroUsdtToTakeFromVault);
             totalSatsUsed = totalSatsUsed.add(satsUsed);
             vaultIndexes.push(vault.index); // Store the index of the vault used
-            amountsInMicroUsdtToReserve.push(MicroUsdtToTakeFromVault); // Store the amount of MicroUSDT used from this vault
+            amountsInMicroUsdtToReserve.push(trueMicroUsdtToTakeFromVault); // Store the amount of MicroUSDT used from this vault
             amountsInSatsToBePaid.push(satsUsed); // Store the amount of sats used from this vault
             btcPayoutLockingScripts.push(vault.btcPayoutLockingScript); // Store the BTC payout locking script
             btcExchangeRates.push(vault.btcExchangeRate); // Store the BTC exchange rate
@@ -313,12 +329,17 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
 
         // [1] calculate the amount of μUSDT to take from the current vault
         const microUsdtToTake = microUsdtAvailable.lt(remainingUsdtToAchieve) ? microUsdtAvailable : remainingUsdtToAchieve;
+        console.log('TACO microUsdtToTake:', microUsdtToTake.toString());
         const bufferedMicroUsdtToTake = bufferTo18Decimals(microUsdtToTake, vault.depositAsset.decimals);
 
         // [2] calculate the equivalent sats needed for the μUSDT taken
         const fixedNumberBufferedMicroUsdtToTake = FixedNumber.from(bufferedMicroUsdtToTake.toString());
+        console.log('TACO fixedNumberBufferedMicroUsdtToTake:', fixedNumberBufferedMicroUsdtToTake.toString());
         const fixedNumberExchangeRate = FixedNumber.from(vault.btcExchangeRate.toString());
         const satsNeeded = Math.floor(fixedNumberBufferedMicroUsdtToTake.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
+        console.log('TACO satsNeeded:', satsNeeded);
+        const exchangeRate = vault.btcExchangeRate;
+        console.log('TACO exchangeRate:', exchangeRate.toString());
 
         // [3] update tracked amounts, but skip vaults with 0 sats or 0 micro USDT
         if (microUsdtToTake.gt(0) && satsNeeded > 0) {
@@ -369,3 +390,69 @@ export function decodeReservationUrl(url: string): { orderNonce: string; reserva
 
     return { orderNonce, reservationId };
 }
+
+export const fetchReservationDetails = async (swapReservationURL: string, ethersRpcProvider: ethers.providers.Provider, selectedInputAsset: any) => {
+    if (swapReservationURL) {
+        try {
+            // [0] Decode swap reservation details from URL
+            const reservationDetails = decodeReservationUrl(swapReservationURL);
+
+            console.log('URL reservationDetails:', reservationDetails);
+
+            // [1] Fetch and decode swap reservation details from contract
+            const swapAggregatorBytecode = swapReservationsAggregatorABI.bytecode;
+            const swapAggregatorAbi = swapReservationsAggregatorABI.abi;
+            const swapReservations = await getSwapReservations(
+                ethersRpcProvider,
+                swapAggregatorBytecode.object,
+                swapAggregatorAbi,
+                selectedInputAsset.riftExchangeContractAddress,
+                [parseInt(reservationDetails.reservationId)],
+            );
+
+            const swapReservationData: SwapReservation = swapReservations[0];
+            console.log('swapReservationData from URL:', swapReservationData);
+
+            const totalInputAmountInSatsIncludingProxyWalletFee = swapReservationData.totalSatsInputInlcudingProxyFee;
+            const totalReservedAmountInMicroUsdt = swapReservationData.totalSwapOutputAmount;
+
+            // [2] Convert BigNumber reserved vault indexes to numbers
+            const reservedVaultIndexesConverted = swapReservationData.vaultIndexes.map((index) => index);
+
+            // [3] Fetch the reserved deposit vaults on the reservation
+            const depositVaultBytecode = depositVaultAggregatorABI.bytecode;
+            const depositVaultAbi = depositVaultAggregatorABI.abi;
+            const reservedVaults = await getDepositVaults(
+                ethersRpcProvider,
+                depositVaultBytecode.object,
+                depositVaultAbi,
+                selectedInputAsset.riftExchangeContractAddress,
+                reservedVaultIndexesConverted,
+            );
+
+            const reservedAmounts = swapReservationData.amountsToReserve;
+            console.log('reservedVaults:', reservedVaults);
+            console.log('reservedAmounts:', reservedAmounts[0].toString());
+
+            // Convert to USDT
+            const totalReservedAmountInUsdt = formatUnits(totalReservedAmountInMicroUsdt, selectedInputAsset.decimals);
+
+            const btcInputSwapAmount = formatUnits(totalInputAmountInSatsIncludingProxyWalletFee.toString(), bitcoinDecimals).toString();
+
+            const totalSwapAmountInSats = totalInputAmountInSatsIncludingProxyWalletFee.toNumber();
+
+            return {
+                swapReservationData,
+                totalReservedAmountInUsdt,
+                btcInputSwapAmount,
+                totalSwapAmountInSats,
+                reservedVaults,
+                reservedAmounts,
+            };
+        } catch (error) {
+            console.error('Error fetching reservation details:', error);
+            throw error;
+        }
+    }
+    throw new Error('swapReservationURL is required');
+};

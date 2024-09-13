@@ -4,7 +4,7 @@ import { useStore } from '../../../store';
 import { Text, Flex, Image, Center, Box, Button, color, Spinner } from '@chakra-ui/react';
 import { Navbar } from '../../../components/Navbar';
 import { colors } from '../../../utils/colors';
-import { bufferTo18Decimals, calculateBtcOutputAmountFromExchangeRate, decodeReservationUrl } from '../../../utils/dappHelper';
+import { bufferTo18Decimals, calculateBtcOutputAmountFromExchangeRate, decodeReservationUrl, fetchReservationDetails } from '../../../utils/dappHelper';
 import CurrencyModal from '../../../components/swap/CurrencyModal';
 import { RecieveUsdt } from '../../../components/swap/RecieveUsdt';
 import { SwapStatusTimeline } from '../../../components/swap/SwapStatusTimeline';
@@ -130,65 +130,23 @@ const ReservationDetails = () => {
         }
     }, [swapReservationData?.nonce]);
 
-    // fetch reservation details from url
     useEffect(() => {
-        const fetchReservationDetails = async () => {
-            if (swapReservationURL) {
+        const fetchData = async () => {
+            if (swapReservationURL && typeof swapReservationURL === 'string') {
                 try {
-                    // [0] decode swap reservaiton details from url
-                    const reservationDetails = decodeReservationUrl(swapReservationURL as string);
-
-                    console.log('URL reservationDetails:', reservationDetails);
-                    // [1] fetch & decode swap reservation details from contract
-                    const swapAggregatorBytecode = swapReservationsAggregatorABI.bytecode;
-                    const swapAggregatorAbi = swapReservationsAggregatorABI.abi;
-                    const swapReservations = await getSwapReservations(
-                        ethersRpcProvider,
-                        swapAggregatorBytecode.object,
-                        swapAggregatorAbi,
-                        selectedInputAsset.riftExchangeContractAddress,
-                        [parseInt(reservationDetails.reservationId)], // TODO: update this if we add overwriting slots
-                    );
-
-                    const swapReservationData: SwapReservation = swapReservations[0];
-                    console.log('swapReservationData from URL:', swapReservationData);
-                    const totalInputAmountInSatsIncludingProxyWalletFee = swapReservationData.totalSatsInputInlcudingProxyFee;
-                    const totalReservedAmountInMicroUsdt = swapReservationData.totalSwapOutputAmount;
-                    setSwapReservationData(swapReservationData);
-
-                    // [2] convert BigNumber reserved vault indexes to numbers
-                    const reservedVaultIndexesConverted = swapReservationData.vaultIndexes.map((index) => index);
-
-                    // [3] fetch the reserved deposit vaults on the reservation
-                    const depositVaultBytecode = depositVaultAggregatorABI.bytecode;
-                    const depositVaultAbi = depositVaultAggregatorABI.abi;
-                    const reservedVaults = await getDepositVaults(
-                        ethersRpcProvider,
-                        depositVaultBytecode.object,
-                        depositVaultAbi,
-                        selectedInputAsset.riftExchangeContractAddress,
-                        reservedVaultIndexesConverted,
-                    );
-
-                    const reservedAmounts = swapReservationData.amountsToReserve;
-                    console.log('reservedVaults:', reservedVaults);
-                    console.log('reservedAmounts:', reservedAmounts[0].toString());
-
-                    // convert to USDT
-                    const totalReservedAmountInUsdt = formatUnits(totalReservedAmountInMicroUsdt, selectedInputAsset.decimals);
-
-                    setUsdtOutputSwapAmount(totalReservedAmountInUsdt);
-
-                    setBtcInputSwapAmount(formatUnits(totalInputAmountInSatsIncludingProxyWalletFee.toString(), bitcoinDecimals).toString());
-                    setTotalSwapAmountInSats(totalInputAmountInSatsIncludingProxyWalletFee.toNumber());
+                    const reservationDetails = await fetchReservationDetails(swapReservationURL, ethersRpcProvider, selectedInputAsset);
+                    setSwapReservationData(reservationDetails.swapReservationData);
+                    setUsdtOutputSwapAmount(reservationDetails.totalReservedAmountInUsdt);
+                    setBtcInputSwapAmount(reservationDetails.btcInputSwapAmount);
+                    setTotalSwapAmountInSats(reservationDetails.totalSwapAmountInSats);
                 } catch (error) {
                     console.error('Error fetching reservation details:', error);
                 }
             }
         };
 
-        fetchReservationDetails();
-    }, [swapReservationURL]);
+        fetchData();
+    }, [swapReservationURL, ethersRpcProvider, selectedInputAsset]);
 
     return (
         <>

@@ -11,6 +11,8 @@ import LightVault from './LightVault';
 import { useAccount } from 'wagmi';
 import { ConnectWalletButton } from '../ConnectWalletButton';
 import LightReservation from './LightReservation';
+import { createReservationUrl } from '../../utils/dappHelper';
+import { useRouter } from 'next/router';
 
 export const ManageVaultsReservations = ({}) => {
     const {
@@ -27,15 +29,24 @@ export const ManageVaultsReservations = ({}) => {
     const [hideCompletedVaults, setHideCompletedVaults] = useState(false);
     const vaultsToDisplay = hideCompletedVaults ? userActiveDepositVaults : userActiveDepositVaults.concat(userCompletedDepositVaults);
     const { address, isConnected } = useAccount();
-    const userSwapReservations = useStore((state) => state.userSwapReservations);
+    const allSwapReservations = useStore((state) => state.allSwapReservations);
+    const userSwapReservations = allSwapReservations
+        ? allSwapReservations.filter((reservation: SwapReservation) => reservation.owner.toLowerCase() === address?.toLowerCase())
+        : [];
+
     const handleGoBack = () => {
         setSelectedVaultToManage(null);
     };
 
+    const router = useRouter();
+
+    const handleNavigation = (route: string) => {
+        router.push(route);
+    };
     // useeffect to console log user sawp reservations
     useEffect(() => {
-        console.log('userSwapReservations', userSwapReservations);
-    }, [userSwapReservations]);
+        console.log('allSwapReservations', allSwapReservations);
+    }, [allSwapReservations]);
 
     // Update selected vault with new data
     useEffect(() => {
@@ -158,9 +169,9 @@ export const ManageVaultsReservations = ({}) => {
                                 gap='12px'>
                                 <Text width='48px'>ID</Text>
                                 <Flex flex={1} gap='12px'>
-                                    <Text flex={1}>{selectedButtonVaultsVsReservations === 'Vaults' ? 'SWAP INPUT' : 'RESERVATION INPUT'}</Text>
+                                    <Text flex={1}>{selectedButtonVaultsVsReservations === 'Vaults' ? 'SWAP INPUT' : 'INPUT'}</Text>
                                     <Flex w='20px' />
-                                    <Text flex={1}>{selectedButtonVaultsVsReservations === 'Vaults' ? 'SWAP OUTPUT' : 'RESERVATION OUTPUT'}</Text>
+                                    <Text flex={1}>{selectedButtonVaultsVsReservations === 'Vaults' ? 'SWAP OUTPUT' : 'OUTPUT'}</Text>
                                 </Flex>
                                 <Text width='120px' mr='72px'>
                                     STATUS
@@ -200,9 +211,10 @@ export const ManageVaultsReservations = ({}) => {
                                         <LightReservation
                                             key={index}
                                             reservation={reservation}
-                                            selectedInputAsset={selectedInputAsset}
+                                            url={createReservationUrl(reservation.nonce, reservation.indexInContract.toString())}
                                             onClick={() => {
-                                                // Handle reservation click if needed
+                                                const reservationUrl = createReservationUrl(reservation.nonce, reservation.indexInContract.toString());
+                                                handleNavigation(`/swap/${reservationUrl}`);
                                             }}
                                         />
                                     ))

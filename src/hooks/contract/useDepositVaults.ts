@@ -97,7 +97,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
         [updateTotalAvailableLiquidity, setTotalExpiredReservations, selectedInputAsset.name],
     );
 
-    const fetchDepositVaultsData = useCallback(async () => {
+    const fetchDepositVaultsReservationsData = useCallback(async () => {
         if (!ethersRpcProvider || !selectedInputAsset.riftExchangeContractAddress) {
             setUserActiveDepositVaults([]);
             setUserCompletedDepositVaults([]);
@@ -175,7 +175,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
             try {
                 // fetch all deposit vaults
-                await fetchDepositVaultsData();
+                await fetchDepositVaultsReservationsData();
             } catch (err) {
                 console.error('Error fetching data:', err);
                 if (isMounted) setError(err instanceof Error ? err : new Error('An unknown error occurred'));
@@ -191,7 +191,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
         return () => {
             isMounted = false;
         };
-    }, [fetchDepositVaultsData, swapReservationsLoading]);
+    }, [fetchDepositVaultsReservationsData, swapReservationsLoading]);
 
     useEffect(() => {
         if (swapReservationsError) {
@@ -201,12 +201,12 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
     const refreshAllDepositData = useCallback(async () => {
         try {
-            await fetchDepositVaultsData();
+            await fetchDepositVaultsReservationsData();
         } catch (error) {
             console.error('Error refreshing user deposit data:', error);
             throw error;
         }
-    }, [fetchDepositVaultsData]);
+    }, [fetchDepositVaultsReservationsData]);
 
     return {
         allFetchedDepositVaults: Array.isArray(allDepositVaults) ? allDepositVaults : [],

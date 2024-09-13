@@ -218,7 +218,7 @@ function decodeSwapReservations(data: string): SwapReservation[] {
     return swapReservations;
 }
 
-export function getMatchingLiquidityReservedEvent(
+export function listenForLiquidityReservedEvent(
     provider: ethers.providers.Provider,
     contractAddress: string,
     abi: ethers.ContractInterface,
