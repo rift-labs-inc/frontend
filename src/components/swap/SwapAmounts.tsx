@@ -25,6 +25,7 @@ export const SwapAmounts = ({}) => {
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
+    const swapReservationNotFound = useStore((state) => state.swapReservationNotFound);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -40,20 +41,22 @@ export const SwapAmounts = ({}) => {
     return (
         <>
             {btcInputSwapAmount === '-1' || usdtOutputSwapAmount === '-1' ? (
-                <Flex
-                    {...opaqueBackgroundColor}
-                    borderWidth={3}
-                    borderColor={colors.borderGray}
-                    borderRadius={'full'}
-                    h='88px'
-                    px={'35px'}
-                    fontFamily={FONT_FAMILIES.AUX_MONO}
-                    fontWeight={'normal'}
-                    py='3px'>
-                    <Flex align={'center'} justify={'center'}>
-                        <Spinner size='lg' thickness='3px' color={colors.textGray} speed='0.65s' />
+                swapReservationNotFound ? null : (
+                    <Flex
+                        {...opaqueBackgroundColor}
+                        borderWidth={3}
+                        borderColor={colors.borderGray}
+                        borderRadius={'full'}
+                        h='88px'
+                        px={'35px'}
+                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                        fontWeight={'normal'}
+                        py='3px'>
+                        <Flex align={'center'} justify={'center'}>
+                            <Spinner size='lg' thickness='3px' color={colors.textGray} speed='0.65s' />
+                        </Flex>
                     </Flex>
-                </Flex>
+                )
             ) : (
                 <Flex
                     borderRadius={'full'}

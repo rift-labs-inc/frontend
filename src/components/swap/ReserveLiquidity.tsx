@@ -253,8 +253,8 @@ export const ReserveLiquidity = ({}) => {
                 </Flex>
 
                 {/* USDT Payout Address */}
-                <Text ml='8px' mt='5px' w='100%' mb='10px' fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
-                    Bitcoin Payout Address
+                <Text ml='8px' mt='5px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                    USDT Payout Address
                 </Text>
                 <Flex mt='-2px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
                     <Flex direction={'row'} py='6px' px='5px'>

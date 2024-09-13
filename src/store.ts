@@ -71,6 +71,12 @@ type Store = {
     setWithdrawAmount: (amount: string) => void;
     reservationFeeAmountMicroUsdt: string;
     setReservationFeeAmountMicroUsdt: (amount: string) => void;
+    swapReservationNotFound: boolean;
+    setSwapReservationNotFound: (notFound: boolean) => void;
+    currentReservationState: string;
+    setCurrentReservationState: (state: string) => void;
+    swapReservationData: SwapReservation | null;
+    setSwapReservationData: (data: SwapReservation | null) => void;
 
     // modals
     currencyModalTitle: CurrencyModalTitle;
@@ -251,5 +257,11 @@ export const useStore = create<Store>((set) => {
         setBitcoinSwapTransactionHash: (bitcoinSwapTransactionHash) => set({ bitcoinSwapTransactionHash }),
         reservationFeeAmountMicroUsdt: '',
         setReservationFeeAmountMicroUsdt: (reservationFeeAmountMicroUsdt) => set({ reservationFeeAmountMicroUsdt }),
+        swapReservationNotFound: false,
+        setSwapReservationNotFound: (swapReservationNotFound) => set({ swapReservationNotFound }),
+        currentReservationState: '',
+        setCurrentReservationState: (currentReservationState) => set({ currentReservationState }),
+        swapReservationData: null,
+        setSwapReservationData: (swapReservationData) => set({ swapReservationData }),
     };
 });

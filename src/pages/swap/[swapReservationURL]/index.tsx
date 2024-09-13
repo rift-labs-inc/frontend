@@ -51,8 +51,17 @@ const ReservationDetails = () => {
     const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
-    const [swapReservationData, setSwapReservationData] = useState<SwapReservation | null>(null);
+    const swapReservationData = useStore((state) => state.swapReservationData);
+    const setSwapReservationData = useStore((state) => state.setSwapReservationData);
     const [proxyWalletSwapInternalID, setProxyWalletSwapInternalID] = useState('');
+    const currentReservationState = useStore((state) => state.currentReservationState);
+    const setCurrentReservationState = useStore((state) => state.setCurrentReservationState);
+    const swapReservationNotFound = useStore((state) => state.swapReservationNotFound);
+    const setSwapReservationNotFound = useStore((state) => state.setSwapReservationNotFound);
+
+    const handleNavigation = (route: string) => {
+        router.push(route);
+    };
 
     useEffect(() => {
         if (typeof window !== 'undefined' && address && totalSwapAmountInSats) {
@@ -112,7 +121,7 @@ const ReservationDetails = () => {
 
         if (typeof window !== 'undefined') {
             checkSwapStatus();
-            const intervalId = setInterval(checkSwapStatus, 1000);
+            const intervalId = setInterval(checkSwapStatus, 1000); // check every second
             return () => clearInterval(intervalId);
         }
     }, [swapReservationData?.nonce]);
@@ -124,18 +133,57 @@ const ReservationDetails = () => {
                     const reservationDetails = await fetchReservationDetails(swapReservationURL, ethersRpcProvider, selectedInputAsset);
                     console.log('Fetching reservation details...');
                     console.log('Reservation details:', reservationDetails);
+                    setSwapReservationNotFound(false);
+
+                    const currentReservationStateFromContract = getReservationStateString(reservationDetails.swapReservationData.state);
+                    setCurrentReservationState(currentReservationStateFromContract);
+                    if (currentReservationStateFromContract === 'Unlocked') {
+                        setSwapFlowState('3-receive-eth');
+                    } else if (currentReservationStateFromContract === 'Completed') {
+                        setSwapFlowState('4-completed');
+                    }
+
                     setSwapReservationData(reservationDetails.swapReservationData);
                     setUsdtOutputSwapAmount(reservationDetails.totalReservedAmountInUsdt);
                     setBtcInputSwapAmount(reservationDetails.btcInputSwapAmount);
                     setTotalSwapAmountInSats(reservationDetails.totalSwapAmountInSats);
                 } catch (error) {
+                    setSwapReservationNotFound(true);
                     console.error('Error fetching reservation details:', error);
                 }
             }
         };
 
         fetchData();
+        const intervalId = setInterval(fetchData, 5000); // refresh every 5 seconds
+        return () => clearInterval(intervalId);
     }, [swapReservationURL, ethersRpcProvider, selectedInputAsset]);
+
+    enum ReservationState {
+        None = 0,
+        Created = 1,
+        Unlocked = 2,
+        ExpiredAndAddedBackToVault = 3,
+        Completed = 4,
+    }
+
+    // convert reservation state from contract to string
+    function getReservationStateString(state: number): string {
+        switch (state) {
+            case ReservationState.None:
+                return 'None';
+            case ReservationState.Created:
+                return 'Created';
+            case ReservationState.Unlocked:
+                return 'Unlocked';
+            case ReservationState.ExpiredAndAddedBackToVault:
+                return 'ExpiredAndAddedBackToVault';
+            case ReservationState.Completed:
+                return 'Completed';
+            default:
+                return 'Unknown State';
+        }
+    }
 
     return (
         <>
@@ -164,10 +212,57 @@ const ReservationDetails = () => {
                             borderWidth={3}
                             borderColor={colors.borderGray}>
                             {loadingState ? (
-                                <Flex mb='20px' mt='20px'>
-                                    <Spinner color={colors.textGray} h={'50px'} w={'50px'} thickness='3px' speed='0.65s' />
-                                </Flex>
-                            ) : swapFlowState === '3-receive-eth' || swapFlowState === '4-completed' ? (
+                                swapReservationNotFound ? (
+                                    <Flex mb='20px' mt='20px' direction={'column'} align='center'>
+                                        <Text
+                                            fontSize='18px'
+                                            textAlign='center'
+                                            w='800px'
+                                            mt='-4px'
+                                            mb='0px'
+                                            fontWeight={'normal'}
+                                            color={colors.offWhite}
+                                            fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                            Invalid Swap Reservation
+                                        </Text>
+                                        <Flex>
+                                            <Text
+                                                fontSize='15px'
+                                                textAlign='center'
+                                                // w='800px'
+                                                mt='10px'
+                                                mb='0px'
+                                                fontWeight={'normal'}
+                                                color={colors.textGray}
+                                                fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                                Please check your swap reservations on the
+                                            </Text>
+                                            <Text
+                                                fontSize='15px'
+                                                textAlign='center'
+                                                // w='800px'
+                                                mt='10px'
+                                                cursor={'pointer'}
+                                                mb='0px'
+                                                textDecoration={'underline'}
+                                                onClick={() => handleNavigation('/manage')}
+                                                ml='10px'
+                                                fontWeight={'normal'}
+                                                color={colors.RiftOrange}
+                                                fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                                manage page
+                                            </Text>
+                                        </Flex>
+                                    </Flex>
+                                ) : (
+                                    <Flex mb='20px' mt='20px'>
+                                        <Spinner color={colors.textGray} h={'50px'} w={'50px'} thickness='3px' speed='0.65s' />
+                                    </Flex>
+                                )
+                            ) : swapFlowState === '3-receive-eth' ||
+                              swapFlowState === '4-completed' ||
+                              currentReservationState === 'Unlocked' ||
+                              currentReservationState === 'Completed' ? (
                                 <RecieveUsdt />
                             ) : (
                                 <>
@@ -364,7 +459,7 @@ const ReservationDetails = () => {
                                 </>
                             )}
                         </Flex>
-                        {!loadingState && swapFlowState === '2-send-bitcoin' && (
+                        {!loadingState && swapFlowState === '2-send-bitcoin' && currentReservationState !== 'Unlocked' && currentReservationState !== 'Completed' && (
                             <Flex
                                 bg={colors.purpleBackgroundDisabled}
                                 borderColor={colors.purpleBorderDark}
@@ -380,7 +475,7 @@ const ReservationDetails = () => {
                                 <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
                                     AWAITING BITCOIN PAYMENT
                                 </Text>
-                                <Spinner w={'20px'} h={'20px'} thickness='3px' color={colors.purpleBorder} speed='0.65s' />
+                                <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
                             </Flex>
                         )}
                     </Flex>
