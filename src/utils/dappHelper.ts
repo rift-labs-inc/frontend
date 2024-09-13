@@ -240,27 +240,19 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
         // [1] calculate amount of USDT to take from current vault based on remaining input sats
         const vault = sortedVaults[i];
         const bufferedMicroUSDTStillNeeded = vault.btcExchangeRate.mul(satsToSpend);
-        console.log('TACO bufferedMicroUSDTStillNeeded:', bufferedMicroUSDTStillNeeded.toString());
         const MicroUsdtStillNeeded = unBufferFrom18Decimals(bufferedMicroUSDTStillNeeded, vault.depositAsset.decimals);
 
         // [2] if we need more USDT than is in the vault, take all of it otherwise take remaining amount needed
         const MicroUsdtToTakeFromVault = MicroUsdtStillNeeded.gt(vault.trueUnreservedBalance) ? vault.trueUnreservedBalance : MicroUsdtStillNeeded;
-        console.log('TACO MicroUsdtToTakeFromVault:', MicroUsdtToTakeFromVault.toString());
-
         const bufferedMicroUSDTToTakeFromVault = bufferTo18Decimals(MicroUsdtToTakeFromVault, vault.depositAsset.decimals);
         const exchangeRate = vault.btcExchangeRate;
-        console.log('TACO exchangeRate:', exchangeRate.toString());
 
-        // console.log('TACO bufferedMicroUSDTToTakeFromVault:',, bufferedMicroUSDTToTakeFromVault.toString());
-
+        // fix for rounding/precision errors
         const fixedNumberBufferedMicroUSDTToTakeFromVault = FixedNumber.from(bufferedMicroUSDTToTakeFromVault);
         const fixedNumberExchangeRate = FixedNumber.from(vault.btcExchangeRate.toString());
         const satsUsed = Math.floor(fixedNumberBufferedMicroUSDTToTakeFromVault.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
-        console.log('TACO satsUsed:', satsUsed);
         const trueBufferedMicroUsdtOut = BigNumber.from(satsUsed).mul(exchangeRate);
-        console.log('TACO trueBufferedMicroUsdtOut:', trueBufferedMicroUsdtOut.toString());
         const trueMicroUsdtToTakeFromVault = unBufferFrom18Decimals(trueBufferedMicroUsdtOut, vault.depositAsset.decimals);
-        console.log('TACO trueMicroUsdtOut:', trueMicroUsdtToTakeFromVault.toString());
 
         // [3] update tracked amounts, but skip vaults with 0 sats or 0 micro USDT
         if (trueMicroUsdtToTakeFromVault.gt(0) && satsUsed > 0) {
@@ -329,17 +321,13 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
 
         // [1] calculate the amount of μUSDT to take from the current vault
         const microUsdtToTake = microUsdtAvailable.lt(remainingUsdtToAchieve) ? microUsdtAvailable : remainingUsdtToAchieve;
-        console.log('TACO microUsdtToTake:', microUsdtToTake.toString());
         const bufferedMicroUsdtToTake = bufferTo18Decimals(microUsdtToTake, vault.depositAsset.decimals);
 
         // [2] calculate the equivalent sats needed for the μUSDT taken
         const fixedNumberBufferedMicroUsdtToTake = FixedNumber.from(bufferedMicroUsdtToTake.toString());
-        console.log('TACO fixedNumberBufferedMicroUsdtToTake:', fixedNumberBufferedMicroUsdtToTake.toString());
         const fixedNumberExchangeRate = FixedNumber.from(vault.btcExchangeRate.toString());
         const satsNeeded = Math.floor(fixedNumberBufferedMicroUsdtToTake.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
-        console.log('TACO satsNeeded:', satsNeeded);
         const exchangeRate = vault.btcExchangeRate;
-        console.log('TACO exchangeRate:', exchangeRate.toString());
 
         // [3] update tracked amounts, but skip vaults with 0 sats or 0 micro USDT
         if (microUsdtToTake.gt(0) && satsNeeded > 0) {

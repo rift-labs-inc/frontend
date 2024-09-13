@@ -41,7 +41,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen 
             case ReserveStatus.WaitingForTokenApproval:
                 return 'Waiting for token approval...';
             case ReserveStatus.ApprovalPending:
-                return 'Confirming token approval confirming...';
+                return 'Confirming token approval...';
             case ReserveStatus.ReservingLiquidity:
                 return 'Reserving liquidity...';
             case ReserveStatus.Confirmed:

@@ -110,7 +110,7 @@ export const SwapUI = () => {
 
         if (isConnected && address) {
             continuouslyRefreshUserDepositData();
-            const intervalId = setInterval(continuouslyRefreshUserDepositData, 1000);
+            const intervalId = setInterval(continuouslyRefreshUserDepositData, 2000);
             return () => clearInterval(intervalId);
         }
     }, [isConnected, address]);
@@ -125,7 +125,7 @@ export const SwapUI = () => {
 
         if (allDepositVaults) {
             continuouslyCalculateMinReservation();
-            const intervalId = setInterval(continuouslyCalculateMinReservation, 2000);
+            const intervalId = setInterval(continuouslyCalculateMinReservation, 5000);
             return () => clearInterval(intervalId);
         }
     }, [allDepositVaults]);

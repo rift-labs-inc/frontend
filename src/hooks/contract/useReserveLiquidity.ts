@@ -93,6 +93,8 @@ export function useReserveLiquidity() {
                     await approveTx.wait();
                 }
 
+                setStatus(ReserveStatus.WaitingForWalletConfirmation);
+
                 console.log('Reserving liquidity with params SATS:', params.totalSatsInputInlcudingProxyFee.toString());
 
                 const reserveTx = await riftExchangeContractInstance.reserveLiquidity(
@@ -102,6 +104,8 @@ export function useReserveLiquidity() {
                     params.totalSatsInputInlcudingProxyFee,
                     params.expiredSwapReservationIndexes,
                 );
+
+                setStatus(ReserveStatus.ReservingLiquidity);
 
                 const reservationDetails = await listenForLiquidityReservedEvent(
                     ethersRpcProvider,
