@@ -26,6 +26,7 @@ export const colors = {
     offBlack: '#151515',
     offBlackLighter: '#1B1B1B',
     offBlackLighter2: '#333',
+    offBlackLighter3: '#353535',
     borderGray: '#282828',
     borderGrayLight: '#444',
     toast: {

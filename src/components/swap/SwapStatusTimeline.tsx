@@ -4,6 +4,7 @@ import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
 import CircleFlex from '../other/CircleFlex';
 import { useStore } from '../../store';
+import { bitcoin_bg_color } from '../../utils/constants';
 
 export const SwapStatusTimeline: React.FC = () => {
     const swapFlowState = useStore((state) => state.swapFlowState);
@@ -94,7 +95,7 @@ export const SwapStatusTimeline: React.FC = () => {
                     h='10px'
                     w='37.7%'
                     mx='-5px'
-                    bg={swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity' ? colors.greenBackground : colors.offBlackLighter2}></Flex>
+                    bg={swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity' ? colors.greenBackground : colors.offBlackLighter3}></Flex>
                 <Flex zIndex={2} mt={swapFlowState === '1-reserve-liquidity' || swapFlowState === '0-not-started' || swapFlowState === '2-send-bitcoin' ? '0px' : '-9px'}>
                     <CircleFlex
                         state={
@@ -114,7 +115,7 @@ export const SwapStatusTimeline: React.FC = () => {
                     bg={
                         swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity' && swapFlowState !== '2-send-bitcoin'
                             ? colors.greenBackground
-                            : colors.offBlackLighter2
+                            : colors.offBlackLighter3
                     }></Flex>
                 <Flex zIndex={2} mt={swapFlowState !== '4-completed' ? '0px' : '-9px'}>
                     <CircleFlex state={swapFlowState === '3-receive-eth' ? 'current' : swapFlowState === '4-completed' ? 'completed' : 'not-started'} />
@@ -125,7 +126,7 @@ export const SwapStatusTimeline: React.FC = () => {
                     w='25%'
                     mx='-5px'
                     borderRadius={'0px 10px 10px 0px'}
-                    bg={swapFlowState === '4-completed' ? colors.greenBackground : colors.offBlackLighter2}></Flex>
+                    bg={swapFlowState === '4-completed' ? colors.greenBackground : colors.offBlackLighter3}></Flex>
             </Flex>
         </Flex>
     );

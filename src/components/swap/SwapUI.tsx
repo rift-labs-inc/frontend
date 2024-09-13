@@ -85,9 +85,12 @@ export const SwapUI = () => {
     const [dots, setDots] = useState('');
     const [isNoLiquidityAvailable, setIsNoLiquidityAvailable] = useState(false);
 
-    useEffect(() => {
-        console.log('reservationFeeAmountMicroUsdt:', reservationFeeAmountMicroUsdt);
-    }, [reservationFeeAmountMicroUsdt]);
+    // TODO: populate exchagne rate if btc input and usdt output are already set and you press the back button
+    // useEffect(() => {
+    //     if (btcInputSwapAmount && usdtOutputSwapAmount) {
+    //         setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(lowestFeeReservationParams?.totalSwapExchangeRate, selectedInputAsset.decimals)).toFixed(2)));
+    //     }
+    // }, []);
 
     // loading dots effect
     useEffect(() => {
@@ -179,11 +182,15 @@ export const SwapUI = () => {
 
     // calculate ideal reservation for bitcoin input
     const calculateIdealReservationBitcoinInput = async (amountBtcSwapInput) => {
+        // ensure there is liquidity available
         setOverpayingBtcInput(false);
+
+        if (allDepositVaults.length === 0 || availableLiquidity.lt(BigNumber.from(1000000))) {
+            setIsNoLiquidityAvailable(true);
+        }
 
         // [0] ensure deposit vaults exist and swap input is valid (convert to sats)
         if (!amountBtcSwapInput || amountBtcSwapInput == '.' || allDepositVaults.length === 0) {
-            setIsNoLiquidityAvailable(true);
             setUsdtOutputSwapAmount('');
             setUsdtDepositAmount('');
             setLowestFeeReservationParams(null);
@@ -307,9 +314,13 @@ export const SwapUI = () => {
 
     // calculate ideal reservation for usdt output
     const calculateIdealReservationUsdtOutput = async (amountUsdtSwapOutput) => {
+        // ensure there is liquidity available
+        if (allDepositVaults.length === 0 || availableLiquidity.lt(BigNumber.from(1000000))) {
+            setIsNoLiquidityAvailable(true);
+        }
+
         // [0] ensure deposit vaults exist and swap input is valid (convert to sats)
         if (!amountUsdtSwapOutput || amountUsdtSwapOutput == '.' || allDepositVaults.length === 0) {
-            setIsNoLiquidityAvailable(true);
             setBtcInputSwapAmount('');
             setBtcOutputAmount('');
             setLowestFeeReservationParams(null);

@@ -12,7 +12,7 @@ interface CircleFlexProps {
 const CircleFlex: React.FC<CircleFlexProps> = ({ state }) => {
     switch (state) {
         case 'not-started':
-            return <Flex zIndex={2} borderRadius='full' w='30px' h='30px' borderColor='#333' borderWidth='6px' bg='#222' />;
+            return <Flex zIndex={2} borderRadius='full' w='30px' h='30px' borderColor={colors.offBlackLighter3} borderWidth='6px' bg='#222' />;
         case 'current':
             return <Flex zIndex={2} borderRadius='full' w='30px' h='30px' bg='#9C5B1F' borderWidth='6px' borderColor={colors.RiftOrange} />;
         case 'completed':

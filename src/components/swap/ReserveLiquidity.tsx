@@ -38,8 +38,8 @@ export const ReserveLiquidity = ({}) => {
     const [isAwaitingConnection, setIsAwaitingConnection] = useState(false);
     const { openConnectModal } = useConnectModal();
     const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
-    const [formattedTotalAmount, setFormattedTotalAmount] = useState<string>('0');
     const reservationFeeAmountMicroUsdt = useStore((state) => state.reservationFeeAmountMicroUsdt);
+
     const [isEthereumPayoutAddressValid, setIsEthereumPayoutAddressValid] = useState<boolean>(false);
     // usdt payout address
     const handleETHPayoutAddressChange = (e) => {
@@ -119,14 +119,6 @@ export const ReserveLiquidity = ({}) => {
         }
     };
 
-    useEffect(() => {
-        if (!lowestFeeReservationParams) {
-            return;
-        }
-        const totalAmount = lowestFeeReservationParams?.amountsInMicroUsdtToReserve.reduce((acc, curr) => BigNumber.from(acc).add(curr), ethers.BigNumber.from(0));
-        setFormattedTotalAmount(formatUnits(totalAmount, selectedInputAsset.decimals));
-    }, [lowestFeeReservationParams]);
-
     const validateEthereumPayoutAddress = (address: string): boolean => {
         const ethereumRegex = /^0x[a-fA-F0-9]{40}$/;
         return ethereumRegex.test(address);
@@ -179,78 +171,13 @@ export const ReserveLiquidity = ({}) => {
                 <Text fontSize='13px' maxW={'900px'} fontWeight={'normal'} color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='6px' flex='1'>
                     Initiate the swap by paying fees up front to lock the seller’s ETH. After the reservation is confirmed, you will have 6 hours to send BTC to complete the swap.
                 </Text>
-                <Flex direction='column' my='40px' align='center' width='100%'>
-                    <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
-                        Vault Selection Algo VISUALIZER
+
+                {/* Fees and Swap Time Estimate */}
+                {reservationFeeAmountMicroUsdt && (
+                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mt={4} color={colors.textGray}>
+                        {parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name} Reservation Fee
                     </Text>
-
-                    <Flex justify='center' wrap='wrap' gap={4} alignItems='center'>
-                        {lowestFeeReservationParams?.vaultIndexesToReserve?.map((index, i) => (
-                            <React.Fragment key={index}>
-                                <Box
-                                    border='3px solid'
-                                    borderColor={colors.purpleBorder}
-                                    borderRadius='md'
-                                    p={3}
-                                    pt='10px'
-                                    bg={colors.purpleBackground}
-                                    width='250px'
-                                    height='95px'
-                                    display='flex'
-                                    flexDirection='column'
-                                    alignItems='center'
-                                    justifyContent='space-between'
-                                    boxShadow='md'>
-                                    <Text fontSize='12px' color={colors.textGray} fontWeight='bold'>
-                                        Vault #{index}
-                                    </Text>
-                                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={'-2px'} fontSize='25px'>
-                                        {parseFloat(formatUnits(lowestFeeReservationParams.amountsInMicroUsdtToReserve[i], selectedInputAsset.decimals)).toFixed(2)}{' '}
-                                        {selectedInputAsset.name}
-                                    </Text>
-                                    <Text fontSize='8px' color={colors.textGray} fontWeight='bold'>
-                                        {BigNumber.from(lowestFeeReservationParams.btcExchangeRates[i]).toString()} μUsdt/Sat
-                                    </Text>
-                                </Box>
-                                {i < lowestFeeReservationParams.vaultIndexesToReserve.length - 1 ? (
-                                    <Text fontSize='24px' fontWeight='bold'>
-                                        +
-                                    </Text>
-                                ) : (
-                                    <Text fontSize='24px' fontWeight='bold'>
-                                        =
-                                    </Text>
-                                )}
-                            </React.Fragment>
-                        ))}
-                        <Box
-                            border='3px solid'
-                            borderColor={colors.greenOutline}
-                            borderRadius='md'
-                            p={3}
-                            bg={colors.greenBackground}
-                            width='250px'
-                            height='90px'
-                            display='flex'
-                            flexDirection='column'
-                            alignItems='center'
-                            justifyContent='space-between'
-                            boxShadow='md'>
-                            <Text fontSize='12px' color={colors.offerWhite} fontWeight='bold'>
-                                TOTAL AMOUNT
-                            </Text>
-                            <Text fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={'-2px'} fontSize='25px'>
-                                {parseFloat(formattedTotalAmount.toString()).toFixed(2)} {selectedInputAsset.name}
-                            </Text>
-                        </Box>
-                    </Flex>
-
-                    {reservationFeeAmountMicroUsdt && (
-                        <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mt={4} color={colors.textGray}>
-                            {parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name} Reservation Fee
-                        </Text>
-                    )}
-                </Flex>
+                )}
 
                 {/* USDT Payout Address */}
                 <Text ml='8px' mt='5px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
