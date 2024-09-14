@@ -171,6 +171,7 @@ export const DepositUI = () => {
                 w={depositFlowState === '1-confirm-deposit' ? '800px' : ''}
                 borderRadius='20px'
                 {...opaqueBackgroundColor}
+                w={'580px'}
                 borderBottom={borderColor}
                 borderLeft={borderColor}
                 borderTop={borderColor}

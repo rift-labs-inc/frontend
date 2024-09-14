@@ -38,6 +38,7 @@ import { getSwapReservations } from '../../utils/contractReadFunctions';
 import { useContractData } from '../providers/ContractDataProvider';
 import { parse } from 'path';
 import { toastError, toastInfo, toastLoad, toastSuccess } from '../../hooks/toast';
+import { getRiftSwapFees } from '../../utils/btcFeeCalc';
 
 export const SwapUI = () => {
     const { isMobile } = useWindowSize();
@@ -87,6 +88,7 @@ export const SwapUI = () => {
     const [isNoLiquidityAvailable, setIsNoLiquidityAvailable] = useState(false);
     const [isAboveMaxSwapLimitBtcInput, setIsAboveMaxSwapLimitBtcInput] = useState(false);
     const [isAboveMaxSwapLimitUsdtOutput, setIsAboveMaxSwapLimitUsdtOutput] = useState(false);
+    const [fastestProxyWalletFeeInSats, setFastestProxyWalletFeeInSats] = useState(500);
 
     // TODO: populate exchagne rate if btc input and usdt output are already set and you press the back button
     // useEffect(() => {
@@ -163,20 +165,18 @@ export const SwapUI = () => {
         [selectedInputAsset.decimals],
     );
 
-    const fetchProxyWalletSwapFee = async (numOutputs) => {
-        if (window.rift) {
-            try {
-                const proxyWalletSwapFee = await window.rift.getRiftSwapFees({ lps: numOutputs });
-                setProxyWalletSwapFastFee(proxyWalletSwapFee.fastFeeAmount);
-                return proxyWalletSwapFee.fastFeeAmount;
-            } catch (err) {
-                console.log('Error fetching wallet information.');
-                console.error(err);
-            }
-        } else {
-            console.log('Rift wallet not detected or getProxyWallet not available.');
-        }
-    };
+    useEffect(() => {
+        const continuouslyCalculateProxyWalletFee = () => {
+            getRiftSwapFees(1).then((fees) => {
+                console.log('HELPPP fastest fee in sats:', fees.fastFeeAmount);
+                setFastestProxyWalletFeeInSats(fees.fastFeeAmount);
+            });
+        };
+
+        continuouslyCalculateProxyWalletFee();
+        const intervalId = setInterval(continuouslyCalculateProxyWalletFee, 5000);
+        return () => clearInterval(intervalId);
+    }, []);
 
     // calculate ideal reservation for bitcoin input
     const calculateIdealReservationBitcoinInput = async (amountBtcSwapInput) => {
@@ -212,7 +212,7 @@ export const SwapUI = () => {
         }
 
         // [3] calculate the proxy wallet fee using number of LP outputs, then subtract fee from the "input"
-        const proxyWalletSwapFeeInSats = await fetchProxyWalletSwapFee(idealReservationDetails.vaultIndexes.length);
+        const proxyWalletSwapFeeInSats = fastestProxyWalletFeeInSats;
         const newAmountSatsSwapInput = amountSatsSwapInput.sub(BigNumber.from(proxyWalletSwapFeeInSats));
 
         console.log('typed sats input amount', amountSatsSwapInput.toString());
@@ -328,7 +328,7 @@ export const SwapUI = () => {
     const calcuateMinimumReservationSatsInputAmount = async () => {
         const minReservation = calculateBestVaultsForUsdtOutput(allDepositVaults, parseUnits('1', selectedInputAsset.decimals)); // min 1 usdt output
         if (!minReservation) return;
-        const minProxyFee = await fetchProxyWalletSwapFee(minReservation.vaultIndexes.length);
+        const minProxyFee = fastestProxyWalletFeeInSats;
         if (!minProxyFee) return;
         const updatedMinReservationSatsInputAmount = minReservation.totalSatsUsed.add(BigNumber.from(minProxyFee));
         const minReservationBtcInputAmount = formatUnits(updatedMinReservationSatsInputAmount.add(BigNumber.from(1)), bitcoinDecimals).toString();
@@ -379,7 +379,7 @@ export const SwapUI = () => {
         }
 
         // [3] calculate the proxy wallet fee using number of LP outputs, then subtract fee from the "input"
-        const proxyWalletSwapFeeInSats = await fetchProxyWalletSwapFee(idealReservationDetails.vaultIndexes.length);
+        const proxyWalletSwapFeeInSats = fastestProxyWalletFeeInSats;
         const newAmountSatsSwapInput = idealReservationDetails.totalSatsUsed.add(BigNumber.from(proxyWalletSwapFeeInSats));
         console.log('og calculated sats input amount', idealReservationDetails.totalSatsUsed.toString());
         console.log('+ proxy wallet fee in sats', proxyWalletSwapFeeInSats);
@@ -524,6 +524,7 @@ export const SwapUI = () => {
             direction='column'
             align='center'
             py='25px'
+            w={'580px'}
             borderRadius='20px'
             {...opaqueBackgroundColor}
             borderBottom={borderColor}
