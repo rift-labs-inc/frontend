@@ -50,7 +50,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
             color={'#c3c3c3'}
             fontWeight={'normal'}
             gap={'0px'}>
-            <Flex w='100%' mt='-4px' ml='0px'>
+            <Flex w='100%' mt='-25px' ml='0px'>
                 <Button bg='none' w='12px' _hover={{ bg: colors.borderGrayLight }} onClick={() => handleGoBack()}>
                     <ChevronLeftIcon width={'40px'} height={'40px'} bg='none' color={colors.offWhite} />
                 </Button>

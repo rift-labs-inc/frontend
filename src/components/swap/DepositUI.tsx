@@ -228,7 +228,7 @@ export const DepositUI = () => {
                                                 fontWeight={'normal'}
                                                 fontFamily={'Aux'}>
                                                 {userBalanceExceeded
-                                                    ? `Exceeds available liquidity - `
+                                                    ? `Exceeds your available liquidity - `
                                                     : usdtPriceUSD
                                                     ? usdtDepositAmount
                                                         ? (usdtPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
@@ -259,7 +259,7 @@ export const DepositUI = () => {
                                             {isConnected && (
                                                 <Text
                                                     fontSize={'13px'}
-                                                    mt='5px'
+                                                    mt={userBalanceExceeded ? '3px' : '5px'}
                                                     mr='-138px'
                                                     zIndex={'10'}
                                                     color={selectedInputAsset.border_color_light}
