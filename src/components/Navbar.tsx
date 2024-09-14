@@ -13,6 +13,7 @@ import React, { useEffect, useState } from 'react';
 import { ValidAsset } from '../types';
 import { formatUnits } from 'ethers/lib/utils';
 import { isDismissWarning, onDismiss } from '../utils/warningHelper';
+import GlowingShimmerText from './other/GlowingText';
 
 export const Navbar = ({}) => {
     const { isMobile, isTablet, isSmallLaptop, windowSize } = useWindowSize();
@@ -134,16 +135,7 @@ export const Navbar = ({}) => {
                         w='100%'
                         minH='40px'
                         position='relative'>
-                        <Text
-                            w='80%'
-                            textShadow={'0px 0px 10px rgba(0, 0, 0, 0.5)'}
-                            color={colors.offWhite}
-                            fontFamily={FONT_FAMILIES.NOSTROMO}
-                            fontSize='15px'
-                            fontWeight='normal'
-                            textAlign={'center'}>
-                            The Rift early alpha is awaiting audits - swaps are limited to 20 USDT - use at your own risk
-                        </Text>
+                        <GlowingShimmerText>The Rift early alpha is awaiting audits - swaps are limited to 20 USDT - use at your own risk</GlowingShimmerText>
                         <Flex
                             h='100%'
                             align='center'
