@@ -171,7 +171,7 @@ export const ReserveLiquidity = ({}) => {
                 borderWidth={3}
                 borderColor={colors.borderGray}>
                 {/* Fees and Swap Time Estimate */}
-                <Flex w='380px' h='60px' borderRadius={'10px'} overflow={'hidden'} my='20px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
+                <Flex w='380px' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='10px' mb='20px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
                     <Flex w='50%' align='center' bg={colors.offBlack}>
                         <Flex mx='13px' w='20px'>
                             <LockClosed width={'20px'} color={colors.offWhite} />
@@ -192,13 +192,13 @@ export const ReserveLiquidity = ({}) => {
                         <Flex direction={'column'}>
                             <Text fontSize={'11px'}>Estimated Time</Text>{' '}
                             <Text fontSize={'10px'} color={colors.textGray}>
-                                1 Hour
+                                70 Minutes
                             </Text>
                         </Flex>
                     </Flex>
                 </Flex>
                 <Text
-                    fontSize='13px'
+                    fontSize='14px'
                     mb='18px'
                     maxW={'900px'}
                     fontWeight={'normal'}

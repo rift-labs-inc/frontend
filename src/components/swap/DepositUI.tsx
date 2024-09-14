@@ -168,6 +168,7 @@ export const DepositUI = () => {
                 direction='column'
                 align='center'
                 py='25px'
+                w={depositFlowState === '1-confirm-deposit' ? '800px' : ''}
                 borderRadius='20px'
                 {...opaqueBackgroundColor}
                 borderBottom={borderColor}

@@ -22,7 +22,7 @@ export const SwapContainer = ({}) => {
     const depositMode = useStore((state) => state.depositMode);
 
     return (
-        <Flex w='100%' maxW='600px' mt='30px' px='20px' direction={'column'} overflow={'visible'}>
+        <Flex align={'center'} justify={'center'} w='100%' maxW='600px' mt='30px' px='20px' direction={'column'} overflow={'visible'}>
             {/* Content */}
             {depositMode ? (
                 // DEPOSIT UI

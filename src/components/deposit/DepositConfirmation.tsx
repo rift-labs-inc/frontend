@@ -391,21 +391,15 @@ export const DepositConfirmation = ({}) => {
             fontWeight={'normal'}
             overflow={'visible'}
             gap={'0px'}>
-            <Flex w='100%' mt='-25px' mb='-20px' ml='-90px' overflow={'visible'}>
-                <Button
-                    bg={colors.offBlack}
-                    border={borderColor}
-                    w='12px'
-                    overflow={'visible'}
-                    _hover={{ bg: colors.borderGray }}
-                    onClick={() => setDepositFlowState('0-not-started')}>
-                    <ChevronLeftIcon overflow={'visible'} width={'30px'} height={'40px'} bg='none' color={colors.offWhite} />
+            <Flex w='100%' mt='-10px' mb='-35px' ml='0px' overflow={'visible'}>
+                <Button bg={'none'} w='12px' overflow={'visible'} _hover={{ bg: colors.borderGray }} onClick={() => setDepositFlowState('0-not-started')}>
+                    <ChevronLeftIcon overflow={'visible'} width={'36px'} height={'40px'} bg='none' color={colors.offWhite} />
                 </Button>
             </Flex>
-            <Text align='center' w='100%' mb='12px' fontSize='18px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+            <Text align='center' w='100%' mb='24px' fontSize='21px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                 CREATE DEPOSIT VAULT
             </Text>
-            <Text justifyContent='center' w='100%' fontSize={'11px'} letterSpacing={'-1px'} textAlign={'center'}>
+            <Text justifyContent='center' w='100%' fontSize={'13px'} letterSpacing={'-1px'} textAlign={'center'}>
                 Create a sell order deposit vault, get payed out in
                 <OrangeText> BTC</OrangeText> when your order is filled by a buyer. Withdraw unreserved liquidity anytime.
             </Text>
