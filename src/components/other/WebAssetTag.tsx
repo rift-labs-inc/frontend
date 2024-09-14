@@ -15,9 +15,10 @@ interface WebAssetTagProps {
     px?: string | number;
     pointer?: boolean;
     greyedOut?: boolean;
+    cursor?: string;
 }
 
-const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, fontSize, borderWidth, px, pointer, greyedOut = false }) => {
+const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, fontSize, borderWidth, px, pointer, greyedOut = false, cursor = 'default' }) => {
     const { isMobile } = useWindowSize();
 
     const adjustedH = h ?? isMobile ? '30px' : '36px';
@@ -34,9 +35,10 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, font
     const pX = px ?? '20px';
 
     return (
-        <Flex align='center'>
+        <Flex align='center' cursor={cursor}>
             <Flex
                 userSelect='none'
+                cursor={cursor}
                 aspectRatio={1}
                 h={`calc(${adjustedH} + 2px)`}
                 bg={borderColor}
@@ -46,7 +48,7 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, font
                 zIndex={1}
                 align='center'
                 justify='center'
-                cursor={onDropDown || pointer ? 'pointer' : 'auto'}
+                // cursor={onDropDown || pointer ? 'pointer' : 'auto'}
                 onClick={onDropDown}>
                 <Image src={`/images/assets/icons/${imgKey}.svg`} h={asset == 'WBTC' ? adjustedH : `calc(${adjustedH} - 14px)`} userSelect='none' />
             </Flex>
@@ -61,7 +63,7 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, font
                 pr={pX}
                 pl={`calc(${adjustedH} / 2  + ${pX} / 2)`}
                 gap='8px'
-                cursor={onDropDown || pointer ? 'pointer' : 'auto'}
+                cursor={cursor}
                 onClick={onDropDown}>
                 <Text fontSize={adjustedFontSize} color={'white'} fontFamily={FONT_FAMILIES.NOSTROMO} userSelect='none'>
                     {asset}

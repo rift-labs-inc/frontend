@@ -277,7 +277,7 @@ export const DepositUI = () => {
                                     </Flex>
                                     <Spacer />
                                     <Flex mr='6px'>
-                                        <WebAssetTag asset='USDT' onDropDown={() => setCurrencyModalTitle('deposit')} />
+                                        <WebAssetTag cursor='pointer' asset='USDT' onDropDown={() => setCurrencyModalTitle('deposit')} />
                                     </Flex>
                                 </Flex>
                                 {/* Switch Button */}
@@ -356,7 +356,7 @@ export const DepositUI = () => {
                                     </Flex>
                                     <Spacer />
                                     <Flex mr='6px'>
-                                        <WebAssetTag asset='BTC' onDropDown={() => setCurrencyModalTitle('recieve')} />
+                                        <WebAssetTag cursor='pointer' asset='BTC' onDropDown={() => setCurrencyModalTitle('recieve')} />
                                     </Flex>
                                 </Flex>
                             </Flex>{' '}

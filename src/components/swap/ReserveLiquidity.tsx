@@ -180,7 +180,7 @@ export const ReserveLiquidity = ({}) => {
                             <LockClosed width={'20px'} color={colors.offWhite} />
                         </Flex>
                         <Flex direction={'column'}>
-                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={-0.3}>
+                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3}>
                                 Reservation Fee
                             </Text>
                             {reservationFeeAmountMicroUsdt && (
@@ -195,7 +195,7 @@ export const ReserveLiquidity = ({}) => {
                             <FaClock size={20} color={colors.offWhite} />
                         </Flex>
                         <Flex direction={'column'}>
-                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={-0.3}>
+                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3}>
                                 Estimated Time
                             </Text>{' '}
                             <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
@@ -218,7 +218,7 @@ export const ReserveLiquidity = ({}) => {
                 </Text>
 
                 <Text ml='8px' mt='15px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
-                    Pay Fees Using
+                    Pay Reservation Fee In
                 </Text>
                 <Flex h='60px' w='100%' mb='20px'>
                     <Flex
@@ -227,7 +227,7 @@ export const ReserveLiquidity = ({}) => {
                         justify='center'
                         bg={colors.currencyCard.usdt.background}
                         border={`2px solid ${colors.currencyCard.usdt.border}`}
-                        borderRadius={'20px 0px 0px 20px'}>
+                        borderRadius={'10px 0px 0px 10px'}>
                         <WebAssetTag asset='USDT' />
                     </Flex>
                     <Flex
@@ -238,8 +238,10 @@ export const ReserveLiquidity = ({}) => {
                         bg={colors.currencyCard.disabled.background}
                         border={`2px solid ${colors.currencyCard.disabled.border}`}
                         borderLeft='none'
-                        borderRadius={'0px 20px 20px 0px'}>
-                        <WebAssetTag asset='BTC' greyedOut />
+                        zIndex={1}
+                        cursor={'pointer'}
+                        borderRadius={'0px 10px 10px 0px'}>
+                        <WebAssetTag asset='BTC' cursor='pointer' greyedOut />
                     </Flex>
                 </Flex>
 

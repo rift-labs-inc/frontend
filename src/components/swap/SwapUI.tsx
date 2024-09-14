@@ -674,7 +674,7 @@ export const SwapUI = () => {
                         </Flex>
                         <Spacer />
                         <Flex mr='6px'>
-                            <WebAssetTag asset='BTC' onDropDown={() => setCurrencyModalTitle('send')} />
+                            <WebAssetTag asset='BTC' cursor='pointer' onDropDown={() => setCurrencyModalTitle('send')} />
                         </Flex>
                     </Flex>
 
@@ -855,6 +855,7 @@ export const SwapUI = () => {
                         <Flex mr='6px'>
                             <WebAssetTag
                                 asset='USDT'
+                                cursor='pointer'
                                 onDropDown={() => {
                                     console.log('CALLING');
                                     setCurrencyModalTitle('recieve');
