@@ -70,7 +70,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         }
 
         // Set up an interval to fetch prices every 30 seconds
-        const intervalId = setInterval(fetchPriceData, 30000);
+        const intervalId = setInterval(fetchPriceData && fetchSelectedAssetUserBalance, 30000);
 
         // Clean up the interval on component unmount
         return () => clearInterval(intervalId);
