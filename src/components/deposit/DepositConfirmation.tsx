@@ -393,7 +393,7 @@ export const DepositConfirmation = ({}) => {
             gap={'0px'}>
             <Flex w='100%' mt='-25px' mb='-20px' ml='-90px' overflow={'visible'}>
                 <Button
-                    bg={colors.offBlackLighter}
+                    bg={colors.offBlack}
                     border={borderColor}
                     w='12px'
                     overflow={'visible'}

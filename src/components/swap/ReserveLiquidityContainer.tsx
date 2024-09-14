@@ -40,7 +40,7 @@ export const ReserveLiquidityContainer = ({}) => {
     // });
 
     return (
-        <Flex width='1000px' align={'center'} direction={'column'}>
+        <Flex width='1000px' mt='30px' align={'center'} direction={'column'}>
             <SwapAmounts />
             <Flex w='100%' mt='-69px' ml='0px'>
                 <Button bg='none' w='12px' _hover={{ bg: colors.borderGray }} onClick={() => setSwapFlowState('0-not-started')}>
