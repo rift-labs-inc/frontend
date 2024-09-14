@@ -1,21 +1,8 @@
-import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
+import { Flex } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
-import { useRouter } from 'next/router';
-import { useCallback, useEffect, useState } from 'react';
-import styled from 'styled-components';
-import { colors } from '../../utils/colors';
 import { useStore } from '../../store';
-import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
-import { BigNumber } from 'ethers';
-import { parseEther } from 'ethers/lib/utils';
-import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
-import { bitcoinDecimals, maxSwapOutputs } from '../../utils/constants';
-import { AssetTag } from '../other/AssetTag';
-import { useAccount } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { SwapUI } from './SwapUI';
 import { DepositUI } from './DepositUI';
-import { DepositConfirmation } from '../deposit/DepositConfirmation';
+import { SwapUI } from './SwapUI';
 
 export const SwapContainer = ({}) => {
     const { isMobile } = useWindowSize();

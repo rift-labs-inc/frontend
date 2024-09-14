@@ -12,9 +12,10 @@ import { BigNumber, ethers } from 'ethers';
 import React, { useEffect, useState } from 'react';
 import { ValidAsset } from '../types';
 import { formatUnits } from 'ethers/lib/utils';
+import { isDismissWarning, onDismiss } from '../utils/warningHelper';
 
 export const Navbar = ({}) => {
-    const { isMobile, isTablet, windowSize } = useWindowSize();
+    const { isMobile, isTablet, isSmallLaptop, windowSize } = useWindowSize();
     const router = useRouter();
     const fontSize = isMobile ? '20px' : '20px';
     const allSwapReservations = useStore((state) => state.allSwapReservations);
@@ -31,6 +32,12 @@ export const Navbar = ({}) => {
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
     const [formattedTotalAmount, setFormattedTotalAmount] = useState<string>('0');
     const reservationFeeAmountMicroUsdt = useStore((state) => state.reservationFeeAmountMicroUsdt);
+
+    const [displayWarning, setDisplayWarning] = useState<boolean | undefined>(undefined);
+
+    useEffect(() => {
+        setDisplayWarning(!isDismissWarning('dismissAlphaWarning'));
+    }, []);
 
     useEffect(() => {
         const totalAvailableLiquidity = validAssets[selectedInputAsset.name]?.totalAvailableLiquidity;
@@ -116,29 +123,53 @@ export const Navbar = ({}) => {
     return (
         <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1000}>
             <Flex bgGradient='linear(0deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))' position='absolute' w='100%' h='130%'></Flex>
-            <Flex bgGradient='linear(90deg, rgba(223, 111, 19, 1), rgba(39, 46, 221, 1))' zIndex='2' alignSelf={'center'} align={'center'} justify={'center'} w='100%' h='40px'>
-                <Text
-                    textShadow={'0px 0px 10px rgba(0, 0, 0, 0.5)'}
-                    color={colors.offWhite}
-                    fontFamily={FONT_FAMILIES.NOSTROMO}
-                    mt='15px'
-                    fontSize='15px'
-                    fontWeight='normal'
-                    textAlign={'center'}
-                    mb={4}>
-                    The Rift early alpha is awaiting audits - swaps are limited to 20 USDT - use at your own risk
-                </Text>
-                {/* TODO: advaith add dismiss button on far right that also saves to cookies */}
-            </Flex>
-            <Flex
-                bgGradient='linear(-90deg, rgba(251, 142, 45, 0.5), rgba(69, 76, 251, 0.5))'
-                zIndex='2'
-                alignSelf={'center'}
-                align={'center'}
-                justify={'center'}
-                w='100%'
-                h='2px'
-                mb='-10px'></Flex>
+            {displayWarning == true && (
+                <>
+                    <Flex
+                        bgGradient='linear(90deg, rgba(223, 111, 19, 1), rgba(39, 46, 221, 1))'
+                        zIndex='2'
+                        alignSelf={'center'}
+                        align={'center'}
+                        justify={'center'}
+                        w='100%'
+                        minH='40px'
+                        position='relative'>
+                        <Text
+                            w='80%'
+                            textShadow={'0px 0px 10px rgba(0, 0, 0, 0.5)'}
+                            color={colors.offWhite}
+                            fontFamily={FONT_FAMILIES.NOSTROMO}
+                            fontSize='15px'
+                            fontWeight='normal'
+                            textAlign={'center'}>
+                            The Rift early alpha is awaiting audits - swaps are limited to 20 USDT - use at your own risk
+                        </Text>
+                        <Flex
+                            h='100%'
+                            align='center'
+                            position='absolute'
+                            right='32px'
+                            onClick={() => {
+                                onDismiss('dismissAlphaWarning');
+                                setDisplayWarning(false);
+                            }}>
+                            <Text textShadow={'0px 0px 10px rgba(0, 0, 0, 0.5)'} color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='15px'>
+                                {isSmallLaptop ? 'X' : 'Dismiss'}
+                            </Text>
+                        </Flex>
+                    </Flex>
+                    <Flex
+                        bgGradient='linear(-90deg, rgba(251, 142, 45, 0.5), rgba(69, 76, 251, 0.5))'
+                        zIndex='2'
+                        alignSelf={'center'}
+                        align={'center'}
+                        justify={'center'}
+                        w='100%'
+                        h='2px'
+                        mb='-10px'
+                    />
+                </>
+            )}
 
             <Flex direction='row' w='100%' px={'30px'} pt='25px'>
                 <Flex gap='12px'>
