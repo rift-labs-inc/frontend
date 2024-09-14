@@ -170,7 +170,43 @@ export const ReserveLiquidity = ({}) => {
                 {...opaqueBackgroundColor}
                 borderWidth={3}
                 borderColor={colors.borderGray}>
-                <Text fontSize='13px' maxW={'900px'} fontWeight={'normal'} color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='6px' flex='1'>
+                {/* Fees and Swap Time Estimate */}
+                <Flex w='380px' h='60px' borderRadius={'10px'} overflow={'hidden'} my='20px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
+                    <Flex w='50%' align='center' bg={colors.offBlack}>
+                        <Flex mx='13px' w='20px'>
+                            <LockClosed width={'20px'} color={colors.offWhite} />
+                        </Flex>
+                        <Flex direction={'column'}>
+                            <Text fontSize={'11px'}>Reservation Fee</Text>
+                            {reservationFeeAmountMicroUsdt && (
+                                <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
+                                    {parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name}
+                                </Text>
+                            )}
+                        </Flex>
+                    </Flex>
+                    <Flex w='50%' align='center' bg={colors.borderGray}>
+                        <Flex mx='15px' w='20px'>
+                            <FaClock size={20} color={colors.offWhite} />
+                        </Flex>
+                        <Flex direction={'column'}>
+                            <Text fontSize={'11px'}>Estimated Time</Text>{' '}
+                            <Text fontSize={'10px'} color={colors.textGray}>
+                                1 Hour
+                            </Text>
+                        </Flex>
+                    </Flex>
+                </Flex>
+                <Text
+                    fontSize='13px'
+                    mb='18px'
+                    maxW={'900px'}
+                    fontWeight={'normal'}
+                    color={colors.textGray}
+                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                    textAlign='center'
+                    mt='6px'
+                    flex='1'>
                     Initiate the swap by paying fees up front to lock the seller’s ETH. After the reservation is confirmed, you will have 6 hours to send BTC to complete the swap.
                 </Text>
 
@@ -206,34 +242,6 @@ export const ReserveLiquidity = ({}) => {
                                 <EthereumAddressValidation address={ethPayoutAddress} />
                             </Flex>
                         )}
-                    </Flex>
-                </Flex>
-
-                {/* Fees and Swap Time Estimate */}
-                <Flex w='380px' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='20px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
-                    <Flex w='50%' align='center' bg={colors.offBlack}>
-                        <Flex mx='13px' w='20px'>
-                            <LockClosed width={'20px'} color={colors.offWhite} />
-                        </Flex>
-                        <Flex direction={'column'}>
-                            <Text fontSize={'11px'}>Reservation Fee</Text>
-                            {reservationFeeAmountMicroUsdt && (
-                                <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
-                                    {parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name}
-                                </Text>
-                            )}
-                        </Flex>
-                    </Flex>
-                    <Flex w='50%' align='center' bg={colors.borderGray}>
-                        <Flex mx='15px' w='20px'>
-                            <FaClock size={20} color={colors.offWhite} />
-                        </Flex>
-                        <Flex direction={'column'}>
-                            <Text fontSize={'11px'}>Estimated Time</Text>{' '}
-                            <Text fontSize={'10px'} color={colors.textGray}>
-                                1 Hour
-                            </Text>
-                        </Flex>
                     </Flex>
                 </Flex>
 
