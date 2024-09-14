@@ -163,9 +163,7 @@ export const Navbar = ({}) => {
                             bg={'none'}
                             onClick={() => {
                                 setShowDeveloperMode(!showDeveloperMode);
-                            }}>
-                            웃
-                        </Button>
+                            }}></Button>
                     )}
                     {showDeveloperMode && (
                         <>

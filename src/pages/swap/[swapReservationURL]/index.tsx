@@ -190,7 +190,7 @@ const ReservationDetails = () => {
             <OpenGraph />
             <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
                 <Navbar />
-                <Flex direction={'column'} align='center' w='100%' mt={'100px'}>
+                <Flex direction={'column'} align='center' w='100%' mt={'130px'}>
                     <Flex width='1000px' align={'center'} direction={'column'}>
                         <SwapAmounts />
                         {!loadingState && (

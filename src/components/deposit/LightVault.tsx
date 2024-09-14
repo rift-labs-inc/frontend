@@ -1,9 +1,5 @@
 import { Flex, Spacer, Text } from '@chakra-ui/react';
-import {
-    calculateBtcOutputAmountFromExchangeRate,
-    calculateFillPercentage,
-    formatBtcExchangeRate,
-} from '../../utils/dappHelper';
+import { calculateBtcOutputAmountFromExchangeRate, calculateFillPercentage, formatBtcExchangeRate } from '../../utils/dappHelper';
 import { DepositVault, ValidAsset } from '../../types';
 import { BigNumber } from 'ethers';
 import { colors } from '../../utils/colors';
@@ -32,7 +28,7 @@ const LightVault: React.FC<LightVaultProps> = ({ vault, onClick, selectedInputAs
             onClick={onClick}
             cursor={'pointer'}
             letterSpacing={'-2px'}
-            bg={colors.offBlackLighter}
+            bg={colors.offBlack}
             w='calc(100% - 4px)'
             mb='10px'
             fontSize={'18px'}
@@ -43,7 +39,7 @@ const LightVault: React.FC<LightVaultProps> = ({ vault, onClick, selectedInputAs
             borderRadius={'10px'}
             border='2px solid '
             color={colors.textGray}
-            borderColor={colors.borderGrayLight}
+            borderColor={colors.borderGray}
             gap='12px'>
             <Text width='48px'>#{vault.index}</Text>
             <Flex flex={1} align='center' gap='12px'>
@@ -58,16 +54,8 @@ const LightVault: React.FC<LightVaultProps> = ({ vault, onClick, selectedInputAs
                         pl='15px'
                         pr='10px'
                         align={'center'}>
-                        <Text
-                            fontSize='16px'
-                            color={colors.offWhite}
-                            letterSpacing={'-1px'}
-                            fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {vault?.initialBalance &&
-                                formatUnits(
-                                    BigNumber.from(vault.initialBalance).toString(),
-                                    vault.depositAsset?.decimals,
-                                ).toString()}
+                        <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                            {vault?.initialBalance && formatUnits(BigNumber.from(vault.initialBalance).toString(), vault.depositAsset?.decimals).toString()}
                         </Text>
                         <Spacer />
                         <AssetTag assetName={vault?.depositAsset?.name} width='84px' />
@@ -87,17 +75,8 @@ const LightVault: React.FC<LightVaultProps> = ({ vault, onClick, selectedInputAs
                         pl='15px'
                         pr='10px'
                         align={'center'}>
-                        <Text
-                            fontSize='16px'
-                            color={colors.offWhite}
-                            letterSpacing={'-1px'}
-                            fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {vault.btcExchangeRate &&
-                                calculateBtcOutputAmountFromExchangeRate(
-                                    vault.initialBalance,
-                                    vault.depositAsset.decimals,
-                                    vault.btcExchangeRate,
-                                )}
+                        <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                            {vault.btcExchangeRate && calculateBtcOutputAmountFromExchangeRate(vault.initialBalance, vault.depositAsset.decimals, vault.btcExchangeRate)}
                         </Text>
                         <Spacer />
                         <AssetTag assetName={'BTC'} width='80px' />
@@ -108,13 +87,7 @@ const LightVault: React.FC<LightVaultProps> = ({ vault, onClick, selectedInputAs
                 <Text color={fillPercentage > 0 ? colors.greenOutline : colors.textGray}>{`${fillPercentage}%`}</Text>
                 <Flex
                     width='60px'
-                    bg={
-                        fillPercentage > 0
-                            ? fillPercentage == 100
-                                ? colors.greenOutline
-                                : colors.greenBackground
-                            : colors.offBlackLighter2
-                    }
+                    bg={fillPercentage > 0 ? (fillPercentage == 100 ? colors.greenOutline : colors.greenBackground) : colors.offBlackLighter2}
                     borderRadius='10px'
                     height='17px'
                     border={`1.5px solid`}

@@ -13,6 +13,7 @@ import { ConnectWalletButton } from '../ConnectWalletButton';
 import LightReservation from './LightReservation';
 import { createReservationUrl } from '../../utils/dappHelper';
 import { useRouter } from 'next/router';
+import { opaqueBackgroundColor } from '../../utils/constants';
 
 export const ManageVaultsReservations = ({}) => {
     const {
@@ -85,10 +86,10 @@ export const ManageVaultsReservations = ({}) => {
                 justify='center'
                 py='12px'
                 align={'center'}
-                bg={colors.offBlack}
                 borderRadius={'20px'}
                 mt={selectedVaultToManage ? '56px' : '16px'}
-                border='3px solid'
+                border='2px solid'
+                {...opaqueBackgroundColor}
                 borderColor={colors.borderGray}
                 flexDir='column'>
                 <Text textAlign={'center'} fontSize={'16px'} px='20px' mb='30px'>
@@ -111,17 +112,6 @@ export const ManageVaultsReservations = ({}) => {
             gap={'0px'}
             align='center'
             mt='24px'>
-            {!selectedVaultToManage && (
-                <Flex justify={'center'}>
-                    <HorizontalButtonSelector
-                        w='350px'
-                        h='40px'
-                        fontSize={'14px'}
-                        options={optionsButtonVaultsVsReservations}
-                        onSelectItem={setOptionsButtonVaultsVsReservations}
-                    />
-                </Flex>
-            )}
             <Flex
                 w='100%'
                 maxW='1000px'
@@ -138,10 +128,10 @@ export const ManageVaultsReservations = ({}) => {
                 }
                 py='12px'
                 align={'center'}
-                bg={colors.offBlack}
+                {...opaqueBackgroundColor}
                 borderRadius={'20px'}
-                mt={selectedVaultToManage ? '56px' : '16px'}
-                border='3px solid'
+                mt={'16px'}
+                border='2px solid'
                 borderColor={colors.borderGray}
                 flexDir='column'>
                 {selectedVaultToManage ? (
@@ -151,7 +141,6 @@ export const ManageVaultsReservations = ({}) => {
                         {(selectedButtonVaultsVsReservations === 'Vaults' && vaultsToDisplay && vaultsToDisplay.length > 0) ||
                         (selectedButtonVaultsVsReservations === 'Reservations' && userSwapReservations && userSwapReservations.length > 0) ? (
                             <Flex
-                                bg={colors.offBlack}
                                 w='100%'
                                 h='30px'
                                 py='5px'
@@ -169,11 +158,11 @@ export const ManageVaultsReservations = ({}) => {
                                 gap='12px'>
                                 <Text width='48px'>ID</Text>
                                 <Flex flex={1} gap='12px'>
-                                    <Text flex={1}>{selectedButtonVaultsVsReservations === 'Vaults' ? 'SWAP INPUT' : 'INPUT'}</Text>
+                                    <Text flex={1}>SWAP INPUT</Text>
                                     <Flex w='20px' />
-                                    <Text flex={1}>{selectedButtonVaultsVsReservations === 'Vaults' ? 'SWAP OUTPUT' : 'OUTPUT'}</Text>
+                                    <Text flex={1}>SWAP OUTPUT</Text>
                                 </Flex>
-                                <Text width='120px' mr='72px'>
+                                <Text width='120px' ml='20px' mr='52px'>
                                     STATUS
                                 </Text>
                             </Flex>
@@ -205,32 +194,31 @@ export const ManageVaultsReservations = ({}) => {
                             }
                             direction='column'
                             w='100%'>
-                            {selectedButtonVaultsVsReservations === 'Reservations' ? (
-                                userSwapReservations && userSwapReservations.length > 0 ? (
-                                    userSwapReservations.map((reservation: SwapReservation, index: number) => (
-                                        <LightReservation
-                                            key={index}
-                                            reservation={reservation}
-                                            url={createReservationUrl(reservation.nonce, reservation.indexInContract.toString())}
-                                            onClick={() => {
-                                                const reservationUrl = createReservationUrl(reservation.nonce, reservation.indexInContract.toString());
-                                                handleNavigation(`/swap/${reservationUrl}`);
-                                            }}
-                                        />
-                                    ))
-                                ) : (
-                                    <Flex justify={'center'} fontSize={'16px'} alignItems={'center'}>
-                                        <Text>No swap reservations found with your address</Text>
-                                    </Flex>
-                                )
-                            ) : vaultsToDisplay && vaultsToDisplay.length > 0 ? (
-                                vaultsToDisplay.map((vault: DepositVault, index: number) => (
-                                    <LightVault key={index} vault={vault} onClick={() => setSelectedVaultToManage(vault)} selectedInputAsset={selectedInputAsset} />
-                                ))
-                            ) : (
+                            {(userSwapReservations == null || userSwapReservations.length === 0) && (vaultsToDisplay == null || vaultsToDisplay.length === 0) ? (
                                 <Flex justify={'center'} fontSize={'16px'} alignItems={'center'}>
-                                    <Text>No deposit vaults found with your address</Text>
+                                    <Text>No active swaps found with your address</Text>
                                 </Flex>
+                            ) : (
+                                <>
+                                    {userSwapReservations &&
+                                        userSwapReservations.length > 0 &&
+                                        userSwapReservations.map((reservation: SwapReservation, index: number) => (
+                                            <LightReservation
+                                                key={index}
+                                                reservation={reservation}
+                                                url={createReservationUrl(reservation.nonce, reservation.indexInContract.toString())}
+                                                onClick={() => {
+                                                    const reservationUrl = createReservationUrl(reservation.nonce, reservation.indexInContract.toString());
+                                                    handleNavigation(`/swap/${reservationUrl}`);
+                                                }}
+                                            />
+                                        ))}
+                                    {vaultsToDisplay &&
+                                        vaultsToDisplay.length > 0 &&
+                                        vaultsToDisplay.map((vault: DepositVault, index: number) => (
+                                            <LightVault key={index} vault={vault} onClick={() => setSelectedVaultToManage(vault)} selectedInputAsset={selectedInputAsset} />
+                                        ))}
+                                </>
                             )}
                         </Flex>
                     </>

@@ -1,5 +1,5 @@
 import { Flex, Spacer, Text } from '@chakra-ui/react';
-import { SwapReservation, ValidAsset } from '../../types';
+import { ReservationState, SwapReservation, ValidAsset } from '../../types';
 import { BigNumber } from 'ethers';
 import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
@@ -45,7 +45,7 @@ const LightReservation: React.FC<LightReservationProps> = ({ reservation, url, o
             onClick={onClick}
             cursor={'pointer'}
             letterSpacing={'-2px'}
-            bg={colors.offBlackLighter}
+            bg={colors.offBlack}
             w='calc(100% - 4px)'
             mb='10px'
             fontSize={'18px'}
@@ -56,14 +56,14 @@ const LightReservation: React.FC<LightReservationProps> = ({ reservation, url, o
             borderRadius={'10px'}
             border='2px solid '
             color={colors.textGray}
-            borderColor={colors.borderGrayLight}
+            borderColor={colors.borderGray}
             gap='12px'>
-            <Text width='58px'>#{reservation.indexInContract}</Text>
+            <Text width='48px'>#{reservation.indexInContract}</Text>
             <Flex flex={1} w='100%' align='center' gap='12px'>
                 <Flex flex={1} w='100%' direction='column'>
                     <Flex
                         h='50px'
-                        w='230px'
+                        w='100%'
                         bg={colors.currencyCard.btc.background}
                         border='2px solid'
                         borderColor={colors.currencyCard.btc.border}
@@ -79,12 +79,12 @@ const LightReservation: React.FC<LightReservationProps> = ({ reservation, url, o
                     </Flex>
                 </Flex>
                 <Flex mt='0px' fontSize='20px' opacity={0.9}>
-                    <FaRegArrowAltCircleRight color={colors.RiftOrange} />
+                    <FaRegArrowAltCircleRight color={selectedInputAsset.border_color} />
                 </Flex>
                 <Flex flex={1} direction='column'>
                     <Flex
                         h='50px'
-                        w='230px'
+                        w='100%'
                         bg={selectedInputAsset.dark_bg_color}
                         border='2px solid'
                         borderColor={selectedInputAsset.bg_color}
@@ -100,8 +100,8 @@ const LightReservation: React.FC<LightReservationProps> = ({ reservation, url, o
                     </Flex>
                 </Flex>
             </Flex>
-            <Flex width='120px' align='center' justify='flex-end' gap='12px'>
-                <Text color={colors.textGray}>{reservation.state}</Text>
+            <Flex width='120px' justify='flex-end' gap='12px'>
+                <Text color={ReservationState[reservation.state] === 'Completed' ? colors.greenOutline : colors.textGray}>{ReservationState[reservation.state]}</Text>
             </Flex>
             <Flex w='30px' justify='flex-end'>
                 <IoMdSettings size={'18px'} color={colors.offWhite} />

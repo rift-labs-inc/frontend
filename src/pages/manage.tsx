@@ -72,7 +72,7 @@ const Manage = () => {
                             }}
                             bgGradient={`linear(-90deg, #394AFF, #FF8F28)`}
                             letterSpacing={'2px'}
-                            mt='-35px'>
+                            mt='-10px'>
                             <Text userSelect={'none'} fontSize='60px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
                                 Manage Swaps
                             </Text>
