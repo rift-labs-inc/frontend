@@ -55,6 +55,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         fetchPriceData();
 
         const fetchSelectedAssetUserBalance = async (address) => {
+            if (!address || !selectedInputAsset || !ethersRpcProvider) return;
             const balance = await getTokenBalance(ethersRpcProvider, selectedInputAsset.tokenAddress, address, ERC20ABI);
 
             updateConnectedUserBalanceRaw(selectedInputAsset.name, balance);
