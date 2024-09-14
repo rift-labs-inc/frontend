@@ -14,9 +14,10 @@ interface WebAssetTagProps {
     borderWidth?: string | number;
     px?: string | number;
     pointer?: boolean;
+    greyedOut?: boolean;
 }
 
-const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, fontSize, borderWidth, px, pointer }) => {
+const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, fontSize, borderWidth, px, pointer, greyedOut = false }) => {
     const { isMobile } = useWindowSize();
 
     const adjustedH = h ?? isMobile ? '30px' : '36px';
@@ -27,8 +28,8 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, font
     const colorKey = asset == 'WBTC' ? 'btc' : asset.toLowerCase();
     const imgKey = asset == 'WETH' ? 'ETH' : asset;
 
-    const bgColor = colors.assetTag[colorKey].background;
-    const borderColor = colors.assetTag[colorKey].border;
+    const bgColor = greyedOut ? '#383838' : colors.assetTag[colorKey].background;
+    const borderColor = greyedOut ? '#838383' : colors.assetTag[colorKey].border;
 
     const pX = px ?? '20px';
 

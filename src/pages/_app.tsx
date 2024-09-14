@@ -95,7 +95,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                                 toastOptions={{
                                     position: 'bottom-center',
                                     style: {
-                                        borderRadius: '5px',
+                                        borderRadius: '10px',
                                         background: '#333',
                                         color: '#fff',
                                         minWidth: '300px',

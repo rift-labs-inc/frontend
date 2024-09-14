@@ -23,6 +23,9 @@ import { IoMdCheckmarkCircle } from 'react-icons/io';
 import { HiXCircle } from 'react-icons/hi';
 import { FaClock } from 'react-icons/fa';
 import { LockClosed } from 'react-ionicons';
+import { AssetTag } from '../other/AssetTag';
+import WebAssetTag from '../other/WebAssetTag';
+import { toastInfo } from '../../hooks/toast';
 
 export const ReserveLiquidity = ({}) => {
     const { isMobile } = useWindowSize();
@@ -177,7 +180,9 @@ export const ReserveLiquidity = ({}) => {
                             <LockClosed width={'20px'} color={colors.offWhite} />
                         </Flex>
                         <Flex direction={'column'}>
-                            <Text fontSize={'11px'}>Reservation Fee</Text>
+                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={-0.3}>
+                                Reservation Fee
+                            </Text>
                             {reservationFeeAmountMicroUsdt && (
                                 <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
                                     {parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name}
@@ -190,8 +195,10 @@ export const ReserveLiquidity = ({}) => {
                             <FaClock size={20} color={colors.offWhite} />
                         </Flex>
                         <Flex direction={'column'}>
-                            <Text fontSize={'11px'}>Estimated Time</Text>{' '}
-                            <Text fontSize={'10px'} color={colors.textGray}>
+                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={-0.3}>
+                                Estimated Time
+                            </Text>{' '}
+                            <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
                                 70 Minutes
                             </Text>
                         </Flex>
@@ -209,6 +216,32 @@ export const ReserveLiquidity = ({}) => {
                     flex='1'>
                     Initiate the swap by paying fees up front to lock the seller’s ETH. After the reservation is confirmed, you will have 6 hours to send BTC to complete the swap.
                 </Text>
+
+                <Text ml='8px' mt='15px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                    Pay Fees Using
+                </Text>
+                <Flex h='60px' w='100%' mb='20px'>
+                    <Flex
+                        flex={1}
+                        align='center'
+                        justify='center'
+                        bg={colors.currencyCard.usdt.background}
+                        border={`2px solid ${colors.currencyCard.usdt.border}`}
+                        borderRadius={'20px 0px 0px 20px'}>
+                        <WebAssetTag asset='USDT' />
+                    </Flex>
+                    <Flex
+                        onClick={() => toastInfo({ title: 'Coming soon' })}
+                        flex={1}
+                        align='center'
+                        justify='center'
+                        bg={colors.currencyCard.disabled.background}
+                        border={`2px solid ${colors.currencyCard.disabled.border}`}
+                        borderLeft='none'
+                        borderRadius={'0px 20px 20px 0px'}>
+                        <WebAssetTag asset='BTC' greyedOut />
+                    </Flex>
+                </Flex>
 
                 {/* USDT Payout Address */}
                 <Text ml='8px' mt='15px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>

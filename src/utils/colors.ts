@@ -33,7 +33,7 @@ export const colors = {
     toast: {
         success: '#125641',
         error: '#E63B3B',
-        info: '#394AFF',
+        info: '#303F9F',
         warning: '#FF8F28',
     },
     text: {
@@ -64,6 +64,10 @@ export const colors = {
         weth: {
             background: '#1B1C22',
             border: '#505770',
+        },
+        disabled: {
+            background: '#181818',
+            border: '#565656',
         },
     },
     assetTag: {

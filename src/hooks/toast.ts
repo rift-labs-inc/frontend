@@ -68,7 +68,7 @@ export const toastInfo = (details: ToastDetails = { title: 'Info', description: 
             // background: 'linear-gradient(155deg, rgba(20,41,77,1) 0%, rgba(45,102,196,1) 42%, rgba(48,123,244,1) 100%)',
             background: colors.toast.info,
         },
-        duration: 30000,
+        duration: 3000,
         iconTheme: {
             primary: colors.offWhite,
             secondary: colors.toast.info,
