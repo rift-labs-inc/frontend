@@ -137,16 +137,23 @@ export const Navbar = ({}) => {
                         position='relative'>
                         <GlowingShimmerText>The Rift early alpha is awaiting audits - swaps are limited to 20 USDT - use at your own risk</GlowingShimmerText>
                         <Flex
-                            h='100%'
+                            // h='100%'
+                            h='38px'
+                            w={isSmallLaptop ? '38px' : '100px'}
                             align='center'
+                            borderRadius={'4px'}
+                            justify={'center'}
                             position='absolute'
-                            right='32px'
+                            cursor={'pointer'}
+                            right={isSmallLaptop ? '10px' : '10px'}
+                            color={isSmallLaptop ? colors.textGray : colors.offWhite}
+                            _hover={{ bg: colors.purpleButtonBG, color: colors.offWhite }}
                             onClick={() => {
                                 onDismiss('dismissAlphaWarning');
                                 setDisplayWarning(false);
                             }}>
-                            <Text textShadow={'0px 0px 10px rgba(0, 0, 0, 0.5)'} color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='15px'>
-                                {isSmallLaptop ? 'X' : 'Dismiss'}
+                            <Text textShadow={'0px 0px 10px rgba(0, 0, 0, 0.5)'} fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px'>
+                                {isSmallLaptop ? 'X' : 'DISMISS'}
                             </Text>
                         </Flex>
                     </Flex>
