@@ -136,7 +136,12 @@ const ReservationDetails = () => {
 
                     const currentReservationStateFromContract = getReservationStateString(reservationDetails.swapReservationData.state);
                     setCurrentReservationState(currentReservationStateFromContract);
-                    if (currentReservationStateFromContract === 'Unlocked') {
+                    // set swap flow state to expired if its been 8 hours since the reservation was created
+                    const isReservationExpired = Date.now() - reservationDetails.swapReservationData.reservationTimestamp * 1000 > 8 * 60 * 60 * 1000;
+
+                    if (currentReservationStateFromContract === 'Created' && isReservationExpired) {
+                        setSwapFlowState('5-expired');
+                    } else if (currentReservationStateFromContract === 'Unlocked') {
                         setSwapFlowState('3-receive-eth');
                     } else if (currentReservationStateFromContract === 'Completed') {
                         setSwapFlowState('4-completed');
