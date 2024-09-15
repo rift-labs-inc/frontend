@@ -107,8 +107,7 @@ const ReservationDetails = () => {
                 .getRiftSwapStatus({ internalId: swapReservationData.nonce })
                 .then((status) => {
                     console.log('Swap status:', status);
-                    if (status.status === 1 && swapFlowState != '3-receive-eth') {
-                        console.log('Proxy wallet has recieved payment & broadcasted txn!');
+                    if (status.status === 1 && swapFlowState === '2-send-bitcoin') {
                         setSwapFlowState('3-receive-eth');
                         setBitcoinSwapTransactionHash(status.paymentTxid);
                     }

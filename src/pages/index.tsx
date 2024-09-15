@@ -68,56 +68,59 @@ const Home = () => {
                     ) : (
                         // {/* LOGOS & TEXT */}
                         <>
-                            <RiftSVG />
-                            <Flex
-                                userSelect={'none'}
-                                cursor={'default'}
-                                sx={{
-                                    WebkitTextFillColor: 'transparent',
-                                    backgroundClip: 'text',
-                                    WebkitBackgroundClip: 'text',
-                                }}
-                                bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
-                                letterSpacing={isTablet ? '1px' : '2px'}
-                                fontSize={isMobile ? '44px' : isTablet ? '60px' : '94px'}
-                                fontFamily={'Klein'}
-                                fontWeight='bold'
-                                mt={isTablet ? '-18px' : '-25px'}>
-                                <Text px='12px' as='h1'>
-                                    HyperBrid
-                                </Text>
-                                <Text ml={isTablet ? '-18px' : '-20px'} as='h1'>
-                                    ge
-                                </Text>
-                            </Flex>
                             {depositFlowState === '0-not-started' && (
-                                <Flex
-                                    flexDir={'column'}
-                                    textAlign={'center'}
-                                    userSelect={'none'}
-                                    fontSize={isTablet ? '12px' : '14px'}
-                                    mt={'8px'}
-                                    fontFamily={FONT_FAMILIES.AUX_MONO}
-                                    color={'#c3c3c3'}
-                                    cursor={'default'}
-                                    fontWeight={'normal'}
-                                    gap={'0px'}>
-                                    <Text>Trustless cross-chain swaps between</Text>
-                                    <Text>
-                                        <OrangeText>Bitcoin</OrangeText> and <BlueText>Ethereum</BlueText>. See{' '}
-                                        <Box
-                                            as='span'
-                                            // go to https://rift.exchange
-                                            onClick={() => (window.location.href = 'https://rift.exchange')}
-                                            style={{
-                                                textDecoration: 'underline',
-                                                cursor: 'pointer !important',
-                                            }}
-                                            fontWeight={'bold'}>
-                                            how it works
-                                        </Box>
-                                    </Text>
-                                </Flex>
+                                <>
+                                    <RiftSVG />
+                                    <Flex
+                                        userSelect={'none'}
+                                        cursor={'default'}
+                                        sx={{
+                                            WebkitTextFillColor: 'transparent',
+                                            backgroundClip: 'text',
+                                            WebkitBackgroundClip: 'text',
+                                        }}
+                                        bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
+                                        letterSpacing={isTablet ? '1px' : '2px'}
+                                        fontSize={isMobile ? '44px' : isTablet ? '60px' : '94px'}
+                                        fontFamily={'Klein'}
+                                        fontWeight='bold'
+                                        mt={isTablet ? '-18px' : '-25px'}>
+                                        <Text px='12px' as='h1'>
+                                            HyperBrid
+                                        </Text>
+                                        <Text ml={isTablet ? '-18px' : '-20px'} as='h1'>
+                                            ge
+                                        </Text>
+                                    </Flex>
+
+                                    <Flex
+                                        flexDir={'column'}
+                                        textAlign={'center'}
+                                        userSelect={'none'}
+                                        fontSize={isTablet ? '12px' : '14px'}
+                                        mt={'8px'}
+                                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                                        color={'#c3c3c3'}
+                                        cursor={'default'}
+                                        fontWeight={'normal'}
+                                        gap={'0px'}>
+                                        <Text>Trustless cross-chain swaps between</Text>
+                                        <Text>
+                                            <OrangeText>Bitcoin</OrangeText> and <BlueText>Ethereum</BlueText>. See{' '}
+                                            <Box
+                                                as='span'
+                                                // go to https://rift.exchange
+                                                onClick={() => (window.location.href = 'https://rift.exchange')}
+                                                style={{
+                                                    textDecoration: 'underline',
+                                                    cursor: 'pointer !important',
+                                                }}
+                                                fontWeight={'bold'}>
+                                                how it works
+                                            </Box>
+                                        </Text>
+                                    </Flex>
+                                </>
                             )}
                             <SwapContainer />
                         </>

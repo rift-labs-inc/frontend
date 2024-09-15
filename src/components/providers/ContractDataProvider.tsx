@@ -8,6 +8,7 @@ import { formatUnits } from 'ethers/lib/utils';
 import { checkIfNewDepositsArePaused, getLiquidityProvider, getTokenBalance } from '../../utils/contractReadFunctions';
 import { ERC20ABI } from '../../utils/constants';
 import riftExchangeABI from '../../abis/RiftExchange.json';
+import { getLatestAnswerFromChainlinkUsdtPriceOracle, getWBTCPrice } from '../../utils/fetchUniswapPrices';
 
 interface ContractDataContextType {
     allDepositVaults: any;
@@ -46,17 +47,16 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     // fetch price data, user address, & selected asset balance
     useEffect(() => {
         const fetchPriceData = async () => {
-            // TESTING VALUES - TODO: get this data from uniswap
-            const btcPriceUSD = 59624.35;
-            const usdtPriceUSD = 1;
-            const btcToUsdtRate = btcPriceUSD / usdtPriceUSD;
+            const usdtPriceUSDBufferedTo8Decimals = await getLatestAnswerFromChainlinkUsdtPriceOracle();
+            const usdtPriceUSD = formatUnits(usdtPriceUSDBufferedTo8Decimals, 8);
+            const btcPriceUSD = await getWBTCPrice();
+            const btcToUsdtRate = parseFloat(btcPriceUSD) / parseFloat(usdtPriceUSD);
 
-            setBitcoinPriceUSD(btcPriceUSD);
+            setBitcoinPriceUSD(parseFloat(btcPriceUSD));
             updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
         };
-        fetchPriceData();
 
-        const fetchSelectedAssetUserBalance = async (address) => {
+        const fetchSelectedAssetUserBalance = async () => {
             if (!address || !selectedInputAsset || !ethersRpcProvider) return;
             const balance = await getTokenBalance(ethersRpcProvider, selectedInputAsset.tokenAddress, address, ERC20ABI);
             updateConnectedUserBalanceRaw(selectedInputAsset.name, balance);
@@ -64,7 +64,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
         };
 
-        const checIfNewDepositsArePausedFromContract = async () => {
+        const checkIfNewDepositsArePausedFromContract = async () => {
             if (!ethersRpcProvider || !selectedInputAsset) return;
             const areNewDepositsPausedBool = await checkIfNewDepositsArePaused(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress);
             setAreNewDepositsPaused(areNewDepositsPausedBool);
@@ -73,12 +73,16 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         if (address) {
             setUserEthAddress(address);
             if (selectedInputAsset && window.ethereum) {
-                fetchSelectedAssetUserBalance(address);
+                fetchSelectedAssetUserBalance();
             }
         }
 
-        // set up an interval to fetch every 10 seconds
-        const intervalId = setInterval(fetchPriceData && fetchSelectedAssetUserBalance && checIfNewDepositsArePausedFromContract, 10000);
+        // set up an interval to fetch every 5 seconds
+        const intervalId = setInterval(() => {
+            fetchPriceData();
+            fetchSelectedAssetUserBalance();
+            checkIfNewDepositsArePausedFromContract();
+        }, 5000);
 
         return () => clearInterval(intervalId);
     }, [selectedInputAsset, address, isConnected]);

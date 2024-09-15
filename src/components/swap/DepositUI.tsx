@@ -18,6 +18,7 @@ import { DepositConfirmation } from '../deposit/DepositConfirmation';
 import WebAssetTag from '../other/WebAssetTag';
 import { useContractData } from '../providers/ContractDataProvider';
 import { toastInfo } from '../../hooks/toast';
+import { DepositAmounts } from '../deposit/DepositAmounts';
 
 export const DepositUI = () => {
     const { isMobile } = useWindowSize();
@@ -164,6 +165,11 @@ export const DepositUI = () => {
     // DEPOSIT INPUTS UI
     return (
         <>
+            {depositFlowState === '1-confirm-deposit' && (
+                <Flex mt='-50px' mb='30px'>
+                    <DepositAmounts />
+                </Flex>
+            )}
             <Flex
                 direction='column'
                 align='center'

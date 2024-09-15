@@ -19,11 +19,8 @@ export const SwapAmounts = ({}) => {
     const router = useRouter();
     const fontSize = isMobile ? '20px' : '20px';
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
-    const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
-    const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
-    const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const swapReservationNotFound = useStore((state) => state.swapReservationNotFound);
 
