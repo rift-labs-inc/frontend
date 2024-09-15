@@ -79,6 +79,11 @@ export async function getTokenBalance(
     }
 }
 
+export async function checkIfNewDepositsArePaused(provider: ethers.providers.Provider, abi: ethers.ContractInterface, riftExchangeContract: string): Promise<boolean> {
+    const contract = new ethers.Contract(riftExchangeContract, abi, provider);
+    return await contract.getAreDepositsPaused();
+}
+
 // MULTICALL
 
 export async function getDepositVaults(

@@ -5,8 +5,9 @@ import { useSwapReservations } from '../../hooks/contract/useSwapReservations';
 import { useDepositVaults } from '../../hooks/contract/useDepositVaults';
 import { useAccount } from 'wagmi';
 import { formatUnits } from 'ethers/lib/utils';
-import { getLiquidityProvider, getTokenBalance } from '../../utils/contractReadFunctions';
+import { checkIfNewDepositsArePaused, getLiquidityProvider, getTokenBalance } from '../../utils/contractReadFunctions';
 import { ERC20ABI } from '../../utils/constants';
+import riftExchangeABI from '../../abis/RiftExchange.json';
 
 interface ContractDataContextType {
     allDepositVaults: any;
@@ -32,6 +33,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const updatePriceUSD = useStore((state) => state.updatePriceUSD);
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
+    const setAreNewDepositsPaused = useStore((state) => state.setAreNewDepositsPaused);
 
     // set ethers provider
     useEffect(() => {
@@ -57,10 +59,15 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         const fetchSelectedAssetUserBalance = async (address) => {
             if (!address || !selectedInputAsset || !ethersRpcProvider) return;
             const balance = await getTokenBalance(ethersRpcProvider, selectedInputAsset.tokenAddress, address, ERC20ABI);
-
             updateConnectedUserBalanceRaw(selectedInputAsset.name, balance);
             const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedInputAsset.name].decimals);
             updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
+        };
+
+        const checIfNewDepositsArePausedFromContract = async () => {
+            if (!ethersRpcProvider || !selectedInputAsset) return;
+            const areNewDepositsPausedBool = await checkIfNewDepositsArePaused(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress);
+            setAreNewDepositsPaused(areNewDepositsPausedBool);
         };
 
         if (address) {
@@ -70,10 +77,9 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             }
         }
 
-        // Set up an interval to fetch prices every 30 seconds
-        const intervalId = setInterval(fetchPriceData && fetchSelectedAssetUserBalance, 30000);
+        // set up an interval to fetch every 10 seconds
+        const intervalId = setInterval(fetchPriceData && fetchSelectedAssetUserBalance && checIfNewDepositsArePausedFromContract, 10000);
 
-        // Clean up the interval on component unmount
         return () => clearInterval(intervalId);
     }, [selectedInputAsset, address, isConnected]);
 

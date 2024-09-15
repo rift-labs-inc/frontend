@@ -49,8 +49,8 @@ type Store = {
     setShowManageDepositVaultsScreen: (show: boolean) => void;
 
     // swap flow
-    swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed';
-    setSwapFlowState: (state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed') => void;
+    swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed' | '5-expired';
+    setSwapFlowState: (state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed' | '5-expired') => void;
     depositFlowState: '0-not-started' | '1-confirm-deposit';
     setDepositFlowState: (state: '0-not-started' | '1-confirm-deposit') => void;
     btcInputSwapAmount: string;
@@ -77,6 +77,8 @@ type Store = {
     setCurrentReservationState: (state: string) => void;
     swapReservationData: SwapReservation | null;
     setSwapReservationData: (data: SwapReservation | null) => void;
+    areNewDepositsPaused: boolean;
+    setAreNewDepositsPaused: (paused: boolean) => void;
 
     // modals
     currencyModalTitle: CurrencyModalTitle;
@@ -263,5 +265,7 @@ export const useStore = create<Store>((set) => {
         setCurrentReservationState: (currentReservationState) => set({ currentReservationState }),
         swapReservationData: null,
         setSwapReservationData: (swapReservationData) => set({ swapReservationData }),
+        areNewDepositsPaused: false,
+        setAreNewDepositsPaused: (areNewDepositsPaused) => set({ areNewDepositsPaused }),
     };
 });

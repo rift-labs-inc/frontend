@@ -141,6 +141,8 @@ const ReservationDetails = () => {
                         setSwapFlowState('3-receive-eth');
                     } else if (currentReservationStateFromContract === 'Completed') {
                         setSwapFlowState('4-completed');
+                    } else if (currentReservationStateFromContract === 'Expired') {
+                        setSwapFlowState('5-expired');
                     }
 
                     setSwapReservationData(reservationDetails.swapReservationData);
@@ -163,8 +165,8 @@ const ReservationDetails = () => {
         None = 0,
         Created = 1,
         Unlocked = 2,
-        ExpiredAndAddedBackToVault = 3,
-        Completed = 4,
+        Completed = 3,
+        Expired = 4,
     }
 
     // convert reservation state from contract to string
@@ -176,10 +178,10 @@ const ReservationDetails = () => {
                 return 'Created';
             case ReservationState.Unlocked:
                 return 'Unlocked';
-            case ReservationState.ExpiredAndAddedBackToVault:
-                return 'ExpiredAndAddedBackToVault';
             case ReservationState.Completed:
                 return 'Completed';
+            case ReservationState.Expired:
+                return 'Expired';
             default:
                 return 'Unknown State';
         }
@@ -193,7 +195,7 @@ const ReservationDetails = () => {
                 <Flex direction={'column'} align='center' w='100%' mt={'130px'}>
                     <Flex width='1000px' align={'center'} direction={'column'}>
                         <SwapAmounts />
-                        {!loadingState && (
+                        {!loadingState && swapFlowState !== '5-expired' && (
                             <Flex justify={'center'} w='100%' mt='20px'>
                                 <SwapStatusTimeline />
                             </Flex>
@@ -261,7 +263,9 @@ const ReservationDetails = () => {
                                 )
                             ) : swapFlowState === '3-receive-eth' ||
                               swapFlowState === '4-completed' ||
+                              swapFlowState === '5-expired' ||
                               currentReservationState === 'Unlocked' ||
+                              currentReservationState === 'Expired' ||
                               currentReservationState === 'Completed' ? (
                                 <RecieveUsdt />
                             ) : (

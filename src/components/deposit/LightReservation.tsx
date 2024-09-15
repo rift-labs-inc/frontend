@@ -58,7 +58,9 @@ const LightReservation: React.FC<LightReservationProps> = ({ reservation, url, o
             color={colors.textGray}
             borderColor={colors.borderGray}
             gap='12px'>
-            <Text width='48px'>#{reservation.indexInContract}</Text>
+            <Text width='48px' fontSize={'14px'}>
+                r-{reservation.indexInContract}
+            </Text>
             <Flex flex={1} w='100%' align='center' gap='12px'>
                 <Flex flex={1} w='100%' direction='column'>
                     <Flex

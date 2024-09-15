@@ -42,7 +42,9 @@ const LightVault: React.FC<LightVaultProps> = ({ vault, onClick, selectedInputAs
             color={colors.textGray}
             borderColor={colors.borderGray}
             gap='12px'>
-            <Text width='48px'>#{vault.index}</Text>
+            <Text width='48px' fontSize={'14px'}>
+                d-{vault.index}
+            </Text>
             <Flex flex={1} align='center' gap='12px'>
                 <Flex flex={1} direction='column'>
                     <Flex

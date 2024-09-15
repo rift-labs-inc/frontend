@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Flex, Spinner, Text } from '@chakra-ui/react';
+import { Button, Flex, Spinner, Text } from '@chakra-ui/react';
 import { colors } from '../../utils/colors';
 import { IoIosCheckmarkCircle } from 'react-icons/io';
 import { LuCopy } from 'react-icons/lu';
 import { FONT_FAMILIES } from '../../utils/font';
 import { useStore } from '../../store';
 import { FaClock } from 'react-icons/fa';
+import { useRouter } from 'next/router';
 
 declare global {
     interface Window {
@@ -27,6 +28,11 @@ export const RecieveUsdt = () => {
     const currentReservationState = useStore((state) => state.currentReservationState);
     const swapReservationData = useStore((state) => state.swapReservationData);
     const [timeLeft, setTimeLeft] = useState(0);
+    const router = useRouter();
+
+    const handleNavigation = (route: string) => {
+        router.push(route);
+    };
 
     useEffect(() => {
         const fetchConfirmations = async () => {
@@ -291,6 +297,40 @@ export const RecieveUsdt = () => {
                             onClick={() => navigator.clipboard.writeText(bitcoinSwapTransactionHash)}
                         />
                     </Flex> */}
+                </>
+            )}
+
+            {currentReservationState === 'Expired' && (
+                <>
+                    <Flex mb='10px' ml='4px' opacity={1}>
+                        <FaClock size={38} color={colors.red} />
+                    </Flex>
+                    <Text textAlign={'center'} mt='12px' fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.redHover} mb='20px'>
+                        Your swap reservation has expired.
+                    </Text>
+                    <Text
+                        fontSize='14px'
+                        maxW={'900px'}
+                        fontWeight={'normal'}
+                        color={colors.textGray}
+                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                        textAlign='center'
+                        mt='0px'
+                        flex='1'
+                        letterSpacing={'-1.2px'}>
+                        No bitcoin transaction was detected and proved within the 8 hour reservation window. Please use the button below to start a new swap.
+                    </Text>
+                    <Button
+                        mt='38px'
+                        px='38px'
+                        bg={colors.purpleBackground}
+                        _hover={{ bg: colors.purpleHover }}
+                        onClick={() => handleNavigation('/')}
+                        color={colors.offWhite}
+                        border={'2px solid'}
+                        borderColor={colors.purpleBorder}>
+                        <Text>Start a new swap</Text>
+                    </Button>
                 </>
             )}
         </>
