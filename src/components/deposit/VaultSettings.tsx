@@ -7,7 +7,7 @@ import { bitcoin_border_color } from '../../utils/constants';
 import { convertLockingScriptToBitcoinAddress, calculateBtcOutputAmountFromExchangeRate, formatBtcExchangeRate } from '../../utils/dappHelper';
 import { FONT_FAMILIES } from '../../utils/font';
 import { AssetTag } from '../other/AssetTag';
-import VaultStatusBar from './VaultStatusBar';
+import { VaultStatusBar } from './VaultStatusBar';
 import WithdrawStatusModal from './WithdrawStatusModal';
 import { DepositVault, ValidAsset } from '../../types';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
@@ -143,7 +143,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                     <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
                         Status
                     </Text>
-                    <VaultStatusBar selectedVault={selectedVaultToManage} />
+                    <VaultStatusBar selectedVault={selectedVaultToManage} minPercentageForText={5} />
                 </Flex>
             </Flex>
 
@@ -192,7 +192,8 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                         </Flex>
 
                         <Spacer />
-                        <Button
+                        {/* // TODO: add edit exchange rate functionality */}
+                        {/* <Button
                             color={colors.offWhite}
                             bg={colors.purpleButtonBG}
                             borderRadius='10px'
@@ -205,7 +206,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                             h='114%'
                             w='280px'>
                             Edit Exchange Rate
-                        </Button>
+                        </Button> */}
                     </Flex>
                 </Flex>
             </Flex>

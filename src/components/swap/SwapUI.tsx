@@ -168,7 +168,6 @@ export const SwapUI = () => {
     useEffect(() => {
         const continuouslyCalculateProxyWalletFee = () => {
             getRiftSwapFees(1).then((fees) => {
-                console.log('HELPPP fastest fee in sats:', fees.fastFeeAmount);
                 setFastestProxyWalletFeeInSats(fees.fastFeeAmount);
             });
         };

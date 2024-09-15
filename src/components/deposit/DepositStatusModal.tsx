@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Text, Flex, Box, Spacer, Button, Icon } from '@chakra-ui/react';
+import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Text, Flex, Box, Spacer, Button, Icon, Spinner } from '@chakra-ui/react';
 import { DepositStatus } from '../../hooks/contract/useDepositLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
@@ -29,6 +29,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
     const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const router = useRouter();
+    const [isLoadingRedirect, setIsLoadingRedirect] = React.useState(false);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -113,7 +114,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                 </Flex>
                             )}
                             {isError && (
-                                <Flex mt='6px' ml='4px'>
+                                <Flex mt='-20px' ml='4px'>
                                     <AlertCircleOutline width='38px' height={'38px'} color={colors.red} />
                                 </Flex>
                             )}
@@ -153,16 +154,23 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     fontWeight={'normal'}
                                     onClick={() => {
                                         handleNavigation('/manage');
-                                        onClose();
+                                        setIsLoadingRedirect(true);
+                                        // onClose();
                                     }}
                                     _hover={{ bg: colors.purpleHover }}
                                     borderRadius='md'>
-                                    <Flex mt='-2px ' mr='8px'>
-                                        <IoMdSettings size={'17px'} color={colors.offWhite} />
-                                    </Flex>
-                                    <Text fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
-                                        Manage Deposit Vaults
-                                    </Text>
+                                    {!isLoadingRedirect && (
+                                        <Flex mt='-2px ' mr='8px'>
+                                            <IoMdSettings size={'17px'} color={colors.offWhite} />
+                                        </Flex>
+                                    )}
+                                    {isLoadingRedirect ? (
+                                        <Spinner size='sm' color={colors.offWhite} />
+                                    ) : (
+                                        <Text fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                                            Manage Deposit Vaults
+                                        </Text>
+                                    )}
                                 </Button>
                             </Flex>
                         )}
@@ -170,7 +178,9 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                             <>
                                 <Box mt={4} p={2} bg='#2E1C0C' border='1px solid #78491F' borderRadius='md'>
                                     <Text overflowWrap={'anywhere'} fontSize='12px' color='#FF6B6B'>
-                                        {error}
+                                        {typeof error === 'string' && error.toLowerCase().includes('user rejected transaction')
+                                            ? 'User rejected the transaction, please try again.'
+                                            : error?.toString()}
                                     </Text>
                                 </Box>
                                 <Button

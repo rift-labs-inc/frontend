@@ -108,12 +108,13 @@ export function decodeDepositVaults(data: string): DepositVault[] {
 
     // decode each element in the array
     const depositVaults: DepositVault[] = decodedArray.map((item: string) => {
-        const [initialBalance, unreservedBalanceFromContract, withdrawnAmount, btcExchangeRate, btcPayoutLockingScript] = abiCoder.decode(
-            ['uint256', 'uint256', 'uint256', 'uint64', 'bytes22'],
+        const [owner, initialBalance, unreservedBalanceFromContract, withdrawnAmount, btcExchangeRate, btcPayoutLockingScript] = abiCoder.decode(
+            ['address', 'uint256', 'uint256', 'uint256', 'uint64', 'bytes22'],
             item,
         );
 
         return {
+            vaultOwnerAddress: owner,
             initialBalance: initialBalance,
             unreservedBalanceFromContract: unreservedBalanceFromContract,
             withdrawnAmount: withdrawnAmount,

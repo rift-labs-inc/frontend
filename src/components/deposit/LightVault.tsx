@@ -8,6 +8,7 @@ import { AssetTag } from '../other/AssetTag';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { FaRegArrowAltCircleRight } from 'react-icons/fa';
 import { IoMdSettings } from 'react-icons/io';
+import MiniStatusBar from './MiniDepositStatusBar';
 
 interface LightVaultProps {
     vault: DepositVault;
@@ -83,17 +84,7 @@ const LightVault: React.FC<LightVaultProps> = ({ vault, onClick, selectedInputAs
                     </Flex>
                 </Flex>
             </Flex>
-            <Flex width='120px' align='center' justify='flex-end' gap='12px'>
-                <Text color={fillPercentage > 0 ? colors.greenOutline : colors.textGray}>{`${fillPercentage}%`}</Text>
-                <Flex
-                    width='60px'
-                    bg={fillPercentage > 0 ? (fillPercentage == 100 ? colors.greenOutline : colors.greenBackground) : colors.offBlackLighter2}
-                    borderRadius='10px'
-                    height='17px'
-                    border={`1.5px solid`}
-                    borderColor={fillPercentage > 0 ? colors.greenOutline : colors.borderGrayLight}
-                />
-            </Flex>
+            <MiniStatusBar selectedVault={vault} />
             <Flex w='30px' justify='flex-end'>
                 <IoMdSettings size={'18px'} color={colors.offWhite} />
             </Flex>

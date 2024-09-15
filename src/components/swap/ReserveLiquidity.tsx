@@ -16,7 +16,7 @@ import { BigNumber, ethers } from 'ethers';
 import { useReserveLiquidity } from '../../hooks/contract/useReserveLiquidity';
 import ReservationStatusModal from './ReservationStatusModal';
 import { formatUnits } from 'ethers/lib/utils';
-import { useAccount } from 'wagmi';
+import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { opaqueBackgroundColor } from '../../utils/constants';
 import { IoMdCheckmarkCircle } from 'react-icons/io';
@@ -32,6 +32,8 @@ export const ReserveLiquidity = ({}) => {
     const router = useRouter();
     const fontSize = isMobile ? '20px' : '20px';
     const actualBorderColor = '#323232';
+    const chainId = useChainId();
+    const { chains, error, switchChain } = useSwitchChain();
     const borderColor = `2px solid ${actualBorderColor}`;
     const swapFlowState = useStore((state) => state.swapFlowState);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
@@ -44,7 +46,7 @@ export const ReserveLiquidity = ({}) => {
     const { openConnectModal } = useConnectModal();
     const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
     const reservationFeeAmountMicroUsdt = useStore((state) => state.reservationFeeAmountMicroUsdt);
-
+    const [isWaitingForCorrectNetwork, setIsWaitingForCorrectNetwork] = useState(false);
     const [isEthereumPayoutAddressValid, setIsEthereumPayoutAddressValid] = useState<boolean>(false);
     // usdt payout address
     const handleETHPayoutAddressChange = (e) => {
@@ -73,13 +75,24 @@ export const ReserveLiquidity = ({}) => {
             setIsAwaitingConnection(false);
             proceedWithReservation();
         }
-    }, [isConnected, isAwaitingConnection]);
+
+        if (isWaitingForCorrectNetwork && chainId === selectedInputAsset.contractChainID) {
+            setIsWaitingForCorrectNetwork(false);
+            proceedWithReservation();
+        }
+    }, [isConnected, isAwaitingConnection, chainId, isWaitingForCorrectNetwork]);
 
     const initiateReservation = async () => {
         if (!isConnected) {
             setIsAwaitingConnection(true);
-
             openConnectModal();
+            return;
+        }
+
+        if (chainId !== selectedInputAsset.contractChainID) {
+            console.log('Switching network');
+            setIsWaitingForCorrectNetwork(true);
+            switchChain({ chainId: selectedInputAsset.contractChainID });
             return;
         }
 
@@ -214,7 +227,8 @@ export const ReserveLiquidity = ({}) => {
                     textAlign='center'
                     mt='6px'
                     flex='1'>
-                    Initiate the swap by paying fees up front to lock the seller’s ETH. After the reservation is confirmed, you will have 6 hours to send BTC to complete the swap.
+                    Initiate the swap by paying a reservation fee to lock the seller’s USDT. After the reservation is confirmed, you will have 6 hours to send BTC to complete the
+                    swap.
                 </Text>
 
                 <Text ml='8px' mt='15px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
@@ -231,7 +245,7 @@ export const ReserveLiquidity = ({}) => {
                         <WebAssetTag asset='USDT' />
                     </Flex>
                     <Flex
-                        onClick={() => toastInfo({ title: 'Coming soon' })}
+                        onClick={() => toastInfo({ title: 'This feature is coming soon' })}
                         flex={1}
                         align='center'
                         justify='center'
@@ -249,7 +263,7 @@ export const ReserveLiquidity = ({}) => {
                 <Text ml='8px' mt='15px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                     USDT Payout Address
                 </Text>
-                <Flex mt='-2px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
+                <Flex mt='-2px' mb='15px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
                     <Flex direction={'row'} py='6px' px='5px'>
                         <Input
                             value={ethPayoutAddress}

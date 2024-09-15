@@ -199,7 +199,7 @@ export const formatAmountToString = (selectedInputAsset, number) => {
 };
 
 export function calculateFillPercentage(vault: DepositVault) {
-    // return 80;
+    // return 20;
     const fillPercentageBigNumber = BigNumber.from(vault.initialBalance)
         .sub(BigNumber.from(vault.unreservedBalanceFromContract))
         .div(BigNumber.from(vault.initialBalance))

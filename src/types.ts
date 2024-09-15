@@ -5,8 +5,8 @@ export enum ReservationState {
     None,
     Created,
     Unlocked,
-    ExpiredAndAddedBackToVault,
     Completed,
+    ExpiredAndAddedBackToVault,
 }
 
 export type ReserveLiquidityParams = {

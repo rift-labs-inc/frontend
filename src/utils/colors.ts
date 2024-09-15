@@ -13,7 +13,8 @@ export const colors = {
     purpleButtonBG: '#1B2144',
 
     greenBackground: '#1A4734',
-    greenOutline: '#8CE077',
+    greenOutline: '#48C94D',
+    green: '#125641',
 
     red: '#E63B3B',
     redHover: '#C32D2D',

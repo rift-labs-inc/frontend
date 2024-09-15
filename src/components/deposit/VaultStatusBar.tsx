@@ -27,11 +27,19 @@ export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, m
         return `${formatUnits(amount, selectedVault.depositAsset.decimals)} ${selectedVault.depositAsset.name}`;
     };
 
+    // Calculate percentages
+    const withdrawnPercentage = calculatePercentage(withdrawnAmount);
+    const swappedPercentage = calculatePercentage(swappedAmount);
+    const reservedPercentage = calculatePercentage(reservedAmount);
+
+    // Dynamically adjust the last section to fill any remaining space
+    const unreservedPercentage = 100 - (withdrawnPercentage + swappedPercentage + reservedPercentage);
+
     const BarSection = ({ percentage, color, tooltipBg, label, amount }) => {
         const showInternalText = percentage >= minPercentageForText;
 
         return (
-            <Tooltip px='14px' py='6px' fontFamily={FONT_FAMILIES.AUX_MONO} label={`${label}: ${amount}`} borderRadius='14px' bg={tooltipBg} color={colors.offerWhite} hasArrow>
+            <Tooltip px='14px' py='6px' fontFamily={FONT_FAMILIES.AUX_MONO} label={`${label} - ${amount}`} borderRadius='14px' bg={tooltipBg} color={colors.offerWhite} hasArrow>
                 <Flex w={`${percentage}%`} bg={color} h='100%' alignItems='center' justifyContent='center' position='relative' minWidth={showInternalText ? '60px' : '0'}>
                     {showInternalText && (
                         <Box
@@ -43,9 +51,16 @@ export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, m
                             textOverflow='ellipsis'
                             color={colors.offerWhite}
                             mt='1px'
-                            fontSize='13px'
-                            fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {amount} - {label}
+                            fontSize='13px'>
+                            <Box as='span' fontFamily='Nostromo'>
+                                {label.toUpperCase()}
+                            </Box>
+
+                            {' - '}
+
+                            <Box as='span' fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                {amount}
+                            </Box>
                         </Box>
                     )}
                 </Flex>
@@ -56,23 +71,11 @@ export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, m
     return (
         <Flex w='100%' direction='column'>
             <Flex h='50px' mt='6px' border='3px solid' textAlign={'center'} borderColor={colors.borderGrayLight} borderRadius='14px' overflow='hidden'>
+                <BarSection percentage={withdrawnPercentage} color={colors.redHover} tooltipBg={colors.red} label='Withdrawn' amount={formatAmount(withdrawnAmount)} />
+                <BarSection percentage={swappedPercentage} color={colors.greenOutline} tooltipBg={colors.greenBackground} label='Swapped' amount={formatAmount(swappedAmount)} />
+                <BarSection percentage={reservedPercentage} color={'orange.600'} tooltipBg={'orange.700'} label='Reserved' amount={formatAmount(reservedAmount)} />
                 <BarSection
-                    percentage={calculatePercentage(withdrawnAmount)}
-                    color={colors.redHover}
-                    tooltipBg={colors.red}
-                    label='Withdrawn'
-                    amount={formatAmount(withdrawnAmount)}
-                />
-                <BarSection
-                    percentage={calculatePercentage(swappedAmount)}
-                    color={colors.greenOutline}
-                    tooltipBg={colors.greenBackground}
-                    label='Swapped'
-                    amount={formatAmount(swappedAmount)}
-                />
-                <BarSection percentage={calculatePercentage(reservedAmount)} color={'orange.600'} tooltipBg={'orange.700'} label='Reserved' amount={formatAmount(reservedAmount)} />
-                <BarSection
-                    percentage={calculatePercentage(unreservedAmount)}
+                    percentage={unreservedPercentage}
                     color={selectedVault.depositAsset.dark_bg_color}
                     tooltipBg={selectedVault.depositAsset.bg_color}
                     label='Unreserved'
@@ -82,5 +85,3 @@ export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, m
         </Flex>
     );
 };
-
-export default VaultStatusBar;

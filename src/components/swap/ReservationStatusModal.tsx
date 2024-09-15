@@ -98,7 +98,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen 
                                 </Flex>
                             )}
                             {isError && (
-                                <Flex mt='6px' ml='4px'>
+                                <Flex mt='-20px' ml='4px'>
                                     <CustomAlertCircleOutline width='38px' height={'38px'} color={colors.red} />
                                 </Flex>
                             )}
@@ -152,7 +152,9 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen 
                             <>
                                 <Box mt={4} p={2} bg='#2E1C0C' border='1px solid #78491F' borderRadius='md'>
                                     <Text overflowWrap={'anywhere'} fontSize='12px' color='#FF6B6B'>
-                                        {error}
+                                        {typeof error === 'string' && error.toLowerCase().includes('user rejected transaction')
+                                            ? 'User rejected the transaction, please try again.'
+                                            : error?.toString()}
                                     </Text>
                                 </Box>
                                 <Button

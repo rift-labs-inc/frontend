@@ -65,8 +65,8 @@ export const DepositConfirmation = ({}) => {
     const { openConnectModal } = useConnectModal();
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
-    const { data: walletClient } = useWalletClient();
     const { chains, error, switchChain } = useSwitchChain();
+    const { data: walletClient } = useWalletClient();
     const { depositLiquidity, status: depositLiquidityStatus, error: depositLiquidityError, txHash, resetDepositState } = useDepositLiquidity();
     const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
@@ -90,6 +90,7 @@ export const DepositConfirmation = ({}) => {
     const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
+    const [isWaitingForCorrectNetwork, setIsWaitingForCorrectNetwork] = useState(false);
     const usdtPriceUSD = useStore.getState().validAssets[selectedInputAsset.name].priceUSD;
     const [editExchangeRateMode, setEditExchangeRateMode] = useState(false);
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
@@ -105,7 +106,12 @@ export const DepositConfirmation = ({}) => {
             setIsWaitingForConnection(false);
             proceedWithDeposit();
         }
-    }, [isConnected, isWaitingForConnection]);
+
+        if (isWaitingForCorrectNetwork && chainId === selectedInputAsset.contractChainID) {
+            setIsWaitingForCorrectNetwork(false);
+            proceedWithDeposit();
+        }
+    }, [isConnected, isWaitingForConnection, chainId, isWaitingForCorrectNetwork]);
 
     // calculate profit amount in USD
     useEffect(() => {
@@ -331,16 +337,17 @@ export const DepositConfirmation = ({}) => {
             return;
         }
 
+        if (chainId !== selectedInputAsset.contractChainID) {
+            console.log('Switching network');
+            setIsWaitingForCorrectNetwork(true);
+            switchChain({ chainId: selectedInputAsset.contractChainID });
+            return;
+        }
+
         proceedWithDeposit();
     };
 
     const proceedWithDeposit = async () => {
-        if (chainId !== selectedInputAsset.contractChainID) {
-            console.log('Switching network');
-            // TODO: Implement network switching logic here
-            throw new Error('Please switch to the correct network');
-        }
-
         if (window.ethereum) {
             // Reset the deposit state before starting a new deposit
             resetDepositState();
@@ -560,14 +567,14 @@ export const DepositConfirmation = ({}) => {
                                     mr='20px'
                                     ml='-4px'
                                     p='0px'
-                                    w='425px'
+                                    w='640px'
                                     letterSpacing={'-6px'}
                                     color={colors.offWhite}
                                     _active={{ border: 'none', boxShadow: 'none' }}
                                     _focus={{ border: 'none', boxShadow: 'none' }}
                                     _selected={{ border: 'none', boxShadow: 'none' }}
                                     fontSize='28px'
-                                    placeholder='bc1q5d7rjq7g6rd2...'
+                                    placeholder='bc1q5d7rjq7g6rd2d94ca69...'
                                     _placeholder={{ color: colors.darkerGray }}
                                     spellCheck={false}
                                 />

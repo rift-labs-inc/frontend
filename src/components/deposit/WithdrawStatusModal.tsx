@@ -16,6 +16,7 @@ import { getLiquidityProvider } from '../../utils/contractReadFunctions';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import GooSpinner from '../other/GooSpiner';
 import { IoIosCheckmarkCircle } from 'react-icons/io';
+import { useChainId, useSwitchChain } from 'wagmi';
 
 interface WithdrawStatusModalProps {
     isOpen: boolean;
@@ -31,8 +32,11 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
     const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
     const [_refreshKey, setRefreshKey] = useState(0);
-
+    const [isWaitingForCorrectNetwork, setIsWaitingForCorrectNetwork] = useState(false);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const { status, error, txHash, resetWithdrawState, withdrawLiquidity } = useWithdrawLiquidity();
+    const chainId = useChainId();
+    const { chains, switchChain } = useSwitchChain();
 
     useEffect(() => {
         if (isOpen) {
@@ -40,6 +44,13 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
             setIsConfirmStep(true);
         }
     }, [isOpen, setWithdrawAmount]);
+
+    useEffect(() => {
+        if (isWaitingForCorrectNetwork && chainId === selectedInputAsset.contractChainID) {
+            setIsWaitingForCorrectNetwork(false);
+            handleConfirmWithdraw();
+        }
+    }, [isWaitingForCorrectNetwork, chainId, selectedInputAsset.contractChainID]);
 
     // handle withdraw liquidity
     const handleWithdraw = async () => {
@@ -134,6 +145,13 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
     };
 
     const handleConfirmWithdraw = () => {
+        if (chainId !== selectedInputAsset.contractChainID) {
+            console.log('Switching network');
+            setIsWaitingForCorrectNetwork(true);
+            switchChain({ chainId: selectedInputAsset.contractChainID });
+            return;
+        }
+
         setIsConfirmStep(false);
         handleWithdraw();
     };
@@ -285,7 +303,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                                     </Flex>
                                 )}
                                 {isError && (
-                                    <Flex mt='6px' ml='4px'>
+                                    <Flex mt='-20px' ml='4px'>
                                         <AlertCircleOutline width='38px' height={'38px'} color={colors.red} />
                                     </Flex>
                                 )}
@@ -341,7 +359,9 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                                 <>
                                     <Box mt={4} p={2} bg='#2E1C0C' border='1px solid #78491F' borderRadius='md'>
                                         <Text overflowWrap={'anywhere'} fontSize='12px' color='#FF6B6B'>
-                                            {error && error.toLowerCase().includes('user rejected transaction') ? 'User rejected transaction' : `Error: ${error}`}
+                                            {typeof error === 'string' && error.toLowerCase().includes('user rejected transaction')
+                                                ? 'User rejected the transaction, please try again.'
+                                                : error?.toString()}
                                         </Text>
                                     </Box>
                                     <Button
