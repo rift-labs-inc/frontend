@@ -7,7 +7,6 @@ import { FONT_FAMILIES } from '../../utils/font';
 import { AssetTag } from '../other/AssetTag';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { FaRegArrowAltCircleRight } from 'react-icons/fa';
-import VaultStatusBar from './VaultStatusBar';
 import LightVaultStatusBar from './LightVaultStatusBar';
 
 interface DetailedVaultProps {

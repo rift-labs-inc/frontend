@@ -186,6 +186,19 @@ export const ReserveLiquidity = ({}) => {
                 {...opaqueBackgroundColor}
                 borderWidth={3}
                 borderColor={colors.borderGray}>
+                <Text
+                    fontSize='14px'
+                    mb='18px'
+                    maxW={'900px'}
+                    fontWeight={'normal'}
+                    color={colors.textGray}
+                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                    textAlign='center'
+                    mt='25px'
+                    flex='1'>
+                    Initiate the swap by paying a reservation fee to lock the seller’s USDT. After the reservation is confirmed, you will have 6 hours to send BTC to complete the
+                    swap.
+                </Text>
                 {/* Fees and Swap Time Estimate */}
                 <Flex w='380px' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='10px' mb='20px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
                     <Flex w='50%' align='center' bg={colors.offBlack}>
@@ -217,19 +230,6 @@ export const ReserveLiquidity = ({}) => {
                         </Flex>
                     </Flex>
                 </Flex>
-                <Text
-                    fontSize='14px'
-                    mb='18px'
-                    maxW={'900px'}
-                    fontWeight={'normal'}
-                    color={colors.textGray}
-                    fontFamily={FONT_FAMILIES.AUX_MONO}
-                    textAlign='center'
-                    mt='6px'
-                    flex='1'>
-                    Initiate the swap by paying a reservation fee to lock the seller’s USDT. After the reservation is confirmed, you will have 6 hours to send BTC to complete the
-                    swap.
-                </Text>
 
                 <Text ml='8px' mt='15px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                     Pay Reservation Fee In
