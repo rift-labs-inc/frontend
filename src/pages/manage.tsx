@@ -8,7 +8,7 @@ import HorizontalButtonSelector from '../components/HorizontalButtonSelector';
 import OrangeText from '../components/other/OrangeText';
 import WhiteText from '../components/other/WhiteText';
 import { Navbar } from '../components/Navbar';
-import { ManageVaultsReservations } from '../components/deposit/ManageVaultsReservations';
+import { ManageSwaps } from '../components/deposit/ManageSwaps';
 import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
 import useWindowSize from '../hooks/useWindowSize';
 import { useStore } from '../store';
@@ -79,7 +79,7 @@ const Manage = () => {
                         </Flex>
                     </Flex>
                     <Flex w='100%' maxW='1200px' align={'center'} justify={'center'}>
-                        <ManageVaultsReservations />
+                        <ManageSwaps />
                     </Flex>
                 </Flex>
             </Flex>

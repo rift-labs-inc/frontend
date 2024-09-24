@@ -16,7 +16,7 @@ import { useRouter } from 'next/router';
 import { opaqueBackgroundColor } from '../../utils/constants';
 import { useContractData } from '../providers/ContractDataProvider';
 
-export const ManageVaultsReservations = ({}) => {
+export const ManageSwaps = ({}) => {
     const {
         options: optionsButtonVaultsVsReservations,
         selected: selectedButtonVaultsVsReservations,

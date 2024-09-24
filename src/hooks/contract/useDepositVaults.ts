@@ -9,6 +9,7 @@ import { useSwapReservations } from './useSwapReservations';
 import { DepositVault, SwapReservation, ReservationState } from '../../types';
 import { calculateFillPercentage } from '../../utils/dappHelper';
 import { formatUnits } from 'ethers/lib/utils';
+import { FRONTEND_RESERVATION_EXPIRY_TIME } from '../../utils/constants';
 
 type UseDepositVaultsResult = {
     allFetchedDepositVaults: DepositVault[];
@@ -19,7 +20,6 @@ type UseDepositVaultsResult = {
     error: Error | null;
     refreshAllDepositData: () => Promise<void>;
 };
-const EIGHT_HOURS_IN_SECONDS = 8 * 60 * 60; // 8 hours
 
 export function useDepositVaults(): UseDepositVaultsResult {
     const { address, isConnected } = useAccount();
@@ -31,6 +31,8 @@ export function useDepositVaults(): UseDepositVaultsResult {
         setUserCompletedDepositVaults,
         updateTotalAvailableLiquidity,
         setTotalExpiredReservations,
+        setTotalUnlockedReservations,
+        setTotalCompletedReservations,
         selectedInputAsset,
     } = useStore();
     const [loading, setLoading] = useState<boolean>(true);
@@ -43,14 +45,23 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const currentTimestamp = Math.floor(Date.now() / 1000);
             const additionalBalances = new Map<number, BigNumber>();
             let expiredReservationsCount = 0;
+            let completedReservationsCount = 0;
+            let unlockedReservationsCount = 0;
 
             // Process all reservations first
             swapReservations.forEach((reservation, reservationIndex) => {
+                const isCompleted = reservation.state === ReservationState.Completed;
                 const isCreated = reservation.state === ReservationState.Created;
-                const isExpired = currentTimestamp - reservation.reservationTimestamp > EIGHT_HOURS_IN_SECONDS;
+                const isExpired = currentTimestamp - reservation.reservationTimestamp > FRONTEND_RESERVATION_EXPIRY_TIME;
+                const isUnlocked = reservation.unlockTimestamp && currentTimestamp > reservation.unlockTimestamp;
 
-                if (isCreated && isExpired) {
+                if (isCompleted) {
+                    completedReservationsCount++;
+                } else if (isUnlocked) {
+                    unlockedReservationsCount++;
+                } else if (isCreated && isExpired) {
                     expiredReservationsCount++;
+                    reservation.state = ReservationState.Expired;
                     reservation.vaultIndexes.forEach((vaultIndex, i) => {
                         const vaultIndexNumber = vaultIndex;
                         const amountToAdd = reservation.amountsToReserve[i];
@@ -62,6 +73,8 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
             // console.log(`Total expired reservations found: ${expiredReservationsCount}`);
             setTotalExpiredReservations(expiredReservationsCount);
+            setTotalCompletedReservations(completedReservationsCount);
+            setTotalUnlockedReservations(unlockedReservationsCount);
 
             let totalAvailableLiquidity = BigNumber.from(0);
 

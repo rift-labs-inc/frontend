@@ -2,6 +2,7 @@ import toaster, { Renderable } from 'react-hot-toast';
 import { IoWarning } from 'react-icons/io5';
 import { colors } from '../utils/colors';
 import { useStore } from '../store';
+import { FONT_FAMILIES } from '../utils/font';
 
 interface ToastDetails {
     title: string;

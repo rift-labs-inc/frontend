@@ -9,6 +9,8 @@ export const etherScanBaseUrl = 'https://sepolia.etherscan.io';
 export const mainnetEthRpcUrl = 'https://archive-node.tail0a0b83.ts.net/ethereum/?key=7a29b610f3c03ebe55c4dcc5138884bea1976a7b9804fefc796da213610e0bf5';
 export const bitcoinDecimals = 8;
 export const SATS_PER_BTC = 100000000; // 10^8
+export const CONTRACT_RESERVATION_EXPIRY_TIME = 8 * 60 * 60; // 8 hours
+export const FRONTEND_RESERVATION_EXPIRY_TIME = 4 * 60 * 60; // 8 hours
 export const bitcoin_bg_color = '#c26920';
 export const bitcoin_border_color = '#FFA04C';
 export const bitcoin_dark_bg_color = '#372412';

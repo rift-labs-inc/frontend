@@ -9,18 +9,6 @@ export enum ReservationState {
     Expired,
 }
 
-export type ReserveLiquidityParams = {
-    swapAmountInSats: number;
-    vaultIndexesToReserve: number[];
-    amountsInMicroUsdtToReserve: BigNumberish[];
-    amountsInSatsToBePaid: BigNumberish[];
-    btcPayoutLockingScripts: string[];
-    btcExchangeRates: BigNumberish[];
-    ethPayoutAddress: string;
-    expiredSwapReservationIndexes: number[];
-    totalSatsInputInlcudingProxyFee: BigNumber;
-};
-
 export type SwapReservation = {
     owner: string;
     confirmationBlockHeight: number;
@@ -38,6 +26,18 @@ export type SwapReservation = {
     proposedBlockHash: string;
     vaultIndexes: number[];
     amountsToReserve: BigNumber[];
+};
+
+export type ReserveLiquidityParams = {
+    swapAmountInSats: number;
+    vaultIndexesToReserve: number[];
+    amountsInMicroUsdtToReserve: BigNumberish[];
+    amountsInSatsToBePaid: BigNumberish[];
+    btcPayoutLockingScripts: string[];
+    btcExchangeRates: BigNumberish[];
+    ethPayoutAddress: string;
+    expiredSwapReservationIndexes: number[];
+    totalSatsInputInlcudingProxyFee: BigNumber;
 };
 
 export type DepositVault = {

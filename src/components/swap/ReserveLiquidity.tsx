@@ -245,7 +245,7 @@ export const ReserveLiquidity = ({}) => {
                         <WebAssetTag asset='USDT' />
                     </Flex>
                     <Flex
-                        onClick={() => toastInfo({ title: 'This feature is coming soon' })}
+                        onClick={() => toastInfo({ title: 'Reserve using Bitcoin is coming soon' })}
                         flex={1}
                         align='center'
                         justify='center'

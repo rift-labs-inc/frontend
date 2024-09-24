@@ -79,7 +79,7 @@ const LightVault: React.FC<LightVaultProps> = ({ vault, onClick, selectedInputAs
                         pr='10px'
                         align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {vault.btcExchangeRate && calculateBtcOutputAmountFromExchangeRate(vault.initialBalance, vault.depositAsset.decimals, vault.btcExchangeRate)}
+                            {vault.btcExchangeRate && calculateBtcOutputAmountFromExchangeRate(vault.initialBalance, vault.depositAsset?.decimals, vault.btcExchangeRate)}
                         </Text>
                         <Spacer />
                         <AssetTag assetName={'BTC'} width='80px' />

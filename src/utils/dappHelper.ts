@@ -4,7 +4,7 @@ import { useStore } from '../store';
 import { sepolia } from 'viem/chains';
 import * as bitcoin from 'bitcoinjs-lib';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { bitcoinDecimals, maxSwapOutputs, SATS_PER_BTC } from './constants';
+import { bitcoinDecimals, FRONTEND_RESERVATION_EXPIRY_TIME, maxSwapOutputs, SATS_PER_BTC } from './constants';
 import { format } from 'path';
 import swapReservationsAggregatorABI from '../abis/SwapReservationsAggregator.json';
 import { getDepositVaults, getSwapReservations } from '../utils/contractReadFunctions';
@@ -399,6 +399,13 @@ export const fetchReservationDetails = async (swapReservationURL: string, ethers
             );
 
             const swapReservationData: SwapReservation = swapReservations[0];
+
+            // check if expired and update state
+            const currentTimestamp = Math.floor(Date.now() / 1000);
+            const isExpired = currentTimestamp - swapReservationData.reservationTimestamp > FRONTEND_RESERVATION_EXPIRY_TIME;
+            if (isExpired) {
+                swapReservationData.state = ReservationState.Expired;
+            }
             console.log('swapReservationData from URL:', swapReservationData);
 
             const totalInputAmountInSatsIncludingProxyWalletFee = swapReservationData.totalSatsInputInlcudingProxyFee;

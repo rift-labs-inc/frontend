@@ -41,6 +41,10 @@ type Store = {
     setUserSwapReservations: (reservations: SwapReservation[]) => void;
     totalExpiredReservations: number;
     setTotalExpiredReservations: (totalExpiredReservations: number) => void;
+    totalUnlockedReservations: number;
+    setTotalUnlockedReservations: (totalUnlockedReservations: number) => void;
+    totalCompletedReservations: number;
+    setTotalCompletedReservations: (totalCompletedReservations: number) => void;
 
     // manage deposits
     selectedVaultToManage: DepositVault | null;
@@ -223,6 +227,10 @@ export const useStore = create<Store>((set) => {
         setUserSwapReservations: (userSwapReservations) => set({ userSwapReservations }),
         totalExpiredReservations: 0,
         setTotalExpiredReservations: (totalExpiredReservations) => set({ totalExpiredReservations }),
+        totalUnlockedReservations: 0,
+        setTotalUnlockedReservations: (totalUnlockedReservations) => set({ totalUnlockedReservations }),
+        totalCompletedReservations: 0,
+        setTotalCompletedReservations: (totalCompletedReservations) => set({ totalCompletedReservations }),
 
         // manage deposits
         selectedVaultToManage: null,

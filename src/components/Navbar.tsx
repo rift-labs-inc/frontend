@@ -23,8 +23,10 @@ export const Navbar = ({}) => {
     const allDepositVaults = useStore((state) => state.allDepositVaults);
     const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
     const userCompletedDepositVaults = useStore((state) => state.userCompletedDepositVaults);
-    const setTotalExpiredReservations = useStore((state) => state.setTotalExpiredReservations);
     const totalExpiredReservations = useStore((state) => state.totalExpiredReservations);
+    const setTotalUnlockedReservations = useStore((state) => state.setTotalUnlockedReservations);
+    const totalUnlockedReservations = useStore((state) => state.totalUnlockedReservations);
+    const totalCompletedReservations = useStore((state) => state.totalCompletedReservations);
     const [showDeveloperMode, setShowDeveloperMode] = useState(false);
     const [isLocalhost, setIsLocalhost] = useState(false);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
@@ -289,7 +291,12 @@ export const Navbar = ({}) => {
                                 <StatCard label='Total Deposits' value={allDepositVaults.length} />
                                 <StatCard label='My Active Deposits' value={userActiveDepositVaults.length} />
                                 <StatCard label='My Completed Deposits' value={userCompletedDepositVaults.length} />
-                                <StatCard label='Total Reservations' value={allSwapReservations.length} />
+                                <StatCard
+                                    label='Total Active Reservations'
+                                    value={allSwapReservations.length - totalUnlockedReservations - totalCompletedReservations - totalExpiredReservations}
+                                />
+                                <StatCard label='Total Unlocked Reservations' value={totalUnlockedReservations} />
+                                <StatCard label='Total Completed Reservations' value={totalCompletedReservations} />
                                 <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />
                             </Flex>
                         </>

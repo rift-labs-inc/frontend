@@ -181,6 +181,7 @@ export const SwapUI = () => {
     const calculateIdealReservationBitcoinInput = async (amountBtcSwapInput) => {
         // ensure there is liquidity available
         setOverpayingBtcInput(false);
+        setIsBelowMinBtcInput(false);
 
         if (allDepositVaults.length === 0 || availableLiquidity.lt(BigNumber.from(1000000))) {
             setIsNoLiquidityAvailable(true);

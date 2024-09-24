@@ -6,10 +6,16 @@ import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
 
 const MiniStatusBar = ({ selectedVault }) => {
+    if (!selectedVault) return null;
+
     const totalAmount = BigNumber.from(selectedVault.initialBalance);
     const withdrawnAmount = BigNumber.from(selectedVault.withdrawnAmount);
-    const reservedAmount = BigNumber.from(selectedVault.reservedBalance);
-    const swappedAmount = BigNumber.from(selectedVault.initialBalance).sub(withdrawnAmount).sub(BigNumber.from(selectedVault.trueUnreservedBalance)).sub(reservedAmount);
+    const reservedAmount = selectedVault.reservedBalance ? BigNumber.from(selectedVault.reservedBalance) : BigNumber.from(0);
+    const trueUnreservedBalance = selectedVault.trueUnreservedBalance ? BigNumber.from(selectedVault.trueUnreservedBalance) : BigNumber.from(0);
+
+    const swappedAmount = selectedVault.initialBalance
+        ? BigNumber.from(selectedVault.initialBalance).sub(withdrawnAmount).sub(trueUnreservedBalance).sub(reservedAmount)
+        : BigNumber.from(0);
 
     const calculatePercentage = (amount) => {
         return amount.mul(100).div(totalAmount).toNumber();
@@ -21,7 +27,7 @@ const MiniStatusBar = ({ selectedVault }) => {
     const fillPercentage = withdrawnPercentage + swappedPercentage + reservedPercentage;
 
     const formatAmount = (amount) => {
-        return `${formatUnits(amount, selectedVault.depositAsset.decimals)} ${selectedVault.depositAsset.name}`;
+        return `${formatUnits(amount, selectedVault.depositAsset?.decimals)} ${selectedVault.depositAsset?.name}`;
     };
 
     return (
