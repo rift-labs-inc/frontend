@@ -139,7 +139,7 @@ export const Navbar = ({}) => {
                         w='100%'
                         minH='40px'
                         position='relative'>
-                        <GlowingShimmerText>The Rift early alpha is awaiting audits - swaps are limited to 20 USDT - use at your own risk</GlowingShimmerText>
+                        <GlowingShimmerText>The Rift early alpha is awaiting audits - swaps are limited to 100 USDT - use at your own risk</GlowingShimmerText>
                         <Flex
                             // h='100%'
                             h='38px'
@@ -293,10 +293,7 @@ export const Navbar = ({}) => {
                                 <StatCard label='Total Deposits' value={allDepositVaults.length} />
                                 <StatCard label='My Active Deposits' value={userActiveDepositVaults.length} />
                                 <StatCard label='My Completed Deposits' value={userCompletedDepositVaults.length} />
-                                <StatCard
-                                    label='Total Active Reservations'
-                                    value={allSwapReservations.length - totalUnlockedReservations - totalCompletedReservations - totalExpiredReservations}
-                                />
+                                <StatCard label='Total Active Reservations' value={allSwapReservations.length - totalUnlockedReservations - totalCompletedReservations - totalExpiredReservations} />
                                 <StatCard label='Total Unlocked Reservations' value={totalUnlockedReservations} />
                                 <StatCard label='Total Completed Reservations' value={totalCompletedReservations} />
                                 <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />

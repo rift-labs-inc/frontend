@@ -21,7 +21,7 @@ export const RecieveUsdt = () => {
     const [totalSwapAmountInSats, setTotalSwapAmountInSats] = useState(0);
     const [bitcoinUri, setBitcoinUri] = useState(null);
     const [confirmations, setConfirmations] = useState(null);
-    const [blocksNeeded, setBlocksNeeded] = useState(6); // 6 confirmations needed
+    const [confirmationBlocksNeeded, setConfirmationBlocksNeeded] = useState(2); // 6 confirmations needed
 
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
     const bitcoinSwapTransactionHash = useStore((state) => state.bitcoinSwapTransactionHash);
@@ -54,7 +54,6 @@ export const RecieveUsdt = () => {
 
                 if (!txData.status.confirmed) {
                     setConfirmations(0);
-                    setBlocksNeeded(6);
                 } else {
                     // Fetch latest block height
                     const blockHeightResponse = await fetch('https://mempool.space/api/blocks/tip/height');
@@ -64,7 +63,6 @@ export const RecieveUsdt = () => {
                     const currentConfirmations = latestBlockHeight - transactionBlockHeight + 1;
 
                     setConfirmations(currentConfirmations);
-                    setBlocksNeeded(Math.max(0, 6 - currentConfirmations));
                 }
             } catch (error) {
                 console.error('Error fetching transaction confirmations:', error);
@@ -153,8 +151,8 @@ export const RecieveUsdt = () => {
                         mt='30px'
                         flex='1'
                         letterSpacing={'-1.2px'}>
-                        A hypernode will now automatically generate a proof of your transaction, and your requested USDT will be released upon 6 block confirmations. You can safely
-                        leave this tab or return to see swap status.
+                        A hypernode will now automatically generate a proof of your transaction, and your requested USDT will be released upon 6 block confirmations. You can safely leave this tab or
+                        return to see swap status.
                     </Text>
 
                     {/* BLOCK CONFIRMATIONS  */}
@@ -166,12 +164,12 @@ export const RecieveUsdt = () => {
                                     textAlign={'center'}
                                     fontSize='25px'
                                     fontFamily={FONT_FAMILIES.AUX_MONO}
-                                    color={confirmations >= 6 ? colors.greenOutline : colors.RiftOrange}>
-                                    {confirmations}/6
+                                    color={confirmations >= confirmationBlocksNeeded ? colors.greenOutline : colors.RiftOrange}>
+                                    {confirmations}/{confirmationBlocksNeeded}
                                 </Text>
-                                <Flex w={confirmations < 6 ? '305px' : '310px'} mr='-35px' mt='5px'>
-                                    <Text fontSize='14px' fontFamily={FONT_FAMILIES.AUX_MONO} color={confirmations >= 6 ? colors.greenOutline : colors.RiftOrange}>
-                                        {confirmations < 6 ? `Awaiting Block Confirmations${dots}` : 'Block Confirmations Achieved!'}
+                                <Flex w={confirmations < confirmationBlocksNeeded ? '305px' : '310px'} mr='-35px' mt='5px'>
+                                    <Text fontSize='14px' fontFamily={FONT_FAMILIES.AUX_MONO} color={confirmations >= confirmationBlocksNeeded ? colors.greenOutline : colors.RiftOrange}>
+                                        {confirmations < confirmationBlocksNeeded ? `Awaiting Block Confirmations${dots}` : 'Block Confirmations Achieved!'}
                                     </Text>
                                 </Flex>
                             </Flex>
@@ -223,8 +221,8 @@ export const RecieveUsdt = () => {
                         mt='10px'
                         flex='1'
                         letterSpacing={'-1.2px'}>
-                        A hypernode successfully submitted a proof of your transaction, and your requested USDT will be realeased to you in 10 minutes. You can safely leave this
-                        tab or return to see swap status.
+                        A hypernode successfully submitted a proof of your transaction, and your requested USDT will be realeased to you in 10 minutes. You can safely leave this tab or return to see
+                        swap status.
                     </Text>
                     {/* // TODO ADD PROOF/UNLOCK HASH */}
                     {/* <Flex mt='10px'>

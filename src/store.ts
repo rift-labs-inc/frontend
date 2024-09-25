@@ -83,6 +83,8 @@ type Store = {
     setSwapReservationData: (data: SwapReservation | null) => void;
     areNewDepositsPaused: boolean;
     setAreNewDepositsPaused: (paused: boolean) => void;
+    isGasFeeTooHigh: boolean;
+    setIsGasFeeTooHigh: (isGasFeeTooHigh: boolean) => void;
 
     // modals
     currencyModalTitle: CurrencyModalTitle;
@@ -114,7 +116,7 @@ export const useStore = create<Store>((set) => {
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: 17000,
             contractRpcURL: 'https://holesky.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
-            proverFee: BigNumber.from(2000000),
+            proverFee: BigNumber.from(19000000),
             releaserFee: BigNumber.from(1000000),
             icon_svg: USDT_Icon,
             bg_color: '#125641',
@@ -275,5 +277,7 @@ export const useStore = create<Store>((set) => {
         setSwapReservationData: (swapReservationData) => set({ swapReservationData }),
         areNewDepositsPaused: false,
         setAreNewDepositsPaused: (areNewDepositsPaused) => set({ areNewDepositsPaused }),
+        isGasFeeTooHigh: false,
+        setIsGasFeeTooHigh: (isGasFeeTooHigh) => set({ isGasFeeTooHigh }),
     };
 });

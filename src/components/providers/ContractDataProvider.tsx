@@ -35,6 +35,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
     const setAreNewDepositsPaused = useStore((state) => state.setAreNewDepositsPaused);
+    const setIsGasFeeTooHigh = useStore((state) => state.setIsGasFeeTooHigh);
 
     // set ethers provider
     useEffect(() => {
@@ -70,6 +71,20 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             setAreNewDepositsPaused(areNewDepositsPausedBool);
         };
 
+        const checkIfGasFeesAreTooHigh = async () => {
+            if (!ethersRpcProvider) return;
+            const lastestBlock = await ethersRpcProvider.getBlock('latest');
+            const gasPrice = lastestBlock.baseFeePerGas;
+            const gasPriceInGwei = formatUnits(gasPrice, 'gwei');
+            console.log('godly gasPriceInGwei:', gasPriceInGwei);
+            if (parseFloat(gasPriceInGwei) > 12) {
+                console.log('GODLY GAS FEE TOO HIGH');
+                setIsGasFeeTooHigh(true);
+            } else {
+                setIsGasFeeTooHigh(false);
+            }
+        };
+
         if (address) {
             setUserEthAddress(address);
             if (selectedInputAsset && window.ethereum) {
@@ -82,6 +97,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             fetchPriceData();
             fetchSelectedAssetUserBalance();
             checkIfNewDepositsArePausedFromContract();
+            checkIfGasFeesAreTooHigh();
         }, 5000);
 
         return () => clearInterval(intervalId);
