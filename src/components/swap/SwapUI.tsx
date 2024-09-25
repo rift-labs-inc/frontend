@@ -29,6 +29,7 @@ import {
     protocolFeeDenominator,
     protocolFeePercentage,
     maxSwapLimitInMicroUSDT,
+    maxSwapLimitInUSDT,
 } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
@@ -628,12 +629,12 @@ export const SwapUI = () => {
                                         zIndex={'10'}
                                         color={selectedInputAsset.border_color_light}
                                         cursor='pointer'
-                                        onClick={() => handleUsdtOutputChange(null, '20')}
+                                        onClick={() => handleUsdtOutputChange(null, maxSwapLimitInUSDT.toString())}
                                         _hover={{ textDecoration: 'underline' }}
                                         letterSpacing={'-1.5px'}
                                         fontWeight={'normal'}
                                         fontFamily={'Aux'}>
-                                        {`20 USDT Max`}
+                                        {`${maxSwapLimitInUSDT} USDT Max`}
                                     </Text>
                                 )}
                                 {overpayingBtcInput && (
@@ -818,12 +819,12 @@ export const SwapUI = () => {
                                         zIndex={'10'}
                                         color={selectedInputAsset.border_color_light}
                                         cursor='pointer'
-                                        onClick={() => handleUsdtOutputChange(null, '20')}
+                                        onClick={() => handleUsdtOutputChange(null, maxSwapLimitInUSDT.toString())}
                                         _hover={{ textDecoration: 'underline' }}
                                         letterSpacing={'-1.5px'}
                                         fontWeight={'normal'}
                                         fontFamily={'Aux'}>
-                                        {`20 USDT Max`}
+                                        {`${maxSwapLimitInUSDT} USDT Max`}
                                     </Text>
                                 )}
 

@@ -28,16 +28,7 @@ import { colors } from '../../utils/colors';
 import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi';
-import {
-    ethToWei,
-    weiToEth,
-    btcToSats,
-    findVaultIndexToOverwrite,
-    findVaultIndexWithSameExchangeRate,
-    satsToBtc,
-    bufferTo18Decimals,
-    convertToBitcoinLockingScript,
-} from '../../utils/dappHelper';
+import { ethToWei, weiToEth, btcToSats, findVaultIndexToOverwrite, findVaultIndexWithSameExchangeRate, satsToBtc, bufferTo18Decimals, convertToBitcoinLockingScript } from '../../utils/dappHelper';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../../store';
@@ -55,6 +46,7 @@ import { IoMdCheckmarkCircle } from 'react-icons/io';
 import { AssetTag } from '../other/AssetTag';
 import { FaClock, FaRegArrowAltCircleRight } from 'react-icons/fa';
 import { LockClosed } from 'react-ionicons';
+import * as bitcoin from 'bitcoinjs-lib';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -282,12 +274,30 @@ export const DepositConfirmation = ({}) => {
     };
 
     const validateBitcoinPayoutAddress = (address: string): boolean => {
-        const p2pkhRegex = /^[1][a-km-zA-HJ-NP-Z1-9]{25,34}$/; // P2PKH addresses start with 1
-        const p2shRegex = /^[3][a-km-zA-HJ-NP-Z1-9]{25,34}$/; // P2SH addresses start with 3
-        const bech32Regex = /^bc1q[a-zA-HJ-NP-Z0-9]{14,74}$/; // Bech32 addresses (SegWit) start with bc1q
-        const taprootRegex = /^bc1p[a-zA-HJ-NP-Z0-9]{14,74}$/; // Taproot addresses start with bc1p
+        try {
+            // Attempt to decode the address
+            const decoded = bitcoin.address.fromBech32(address);
 
-        return p2pkhRegex.test(address) || p2shRegex.test(address) || bech32Regex.test(address) || taprootRegex.test(address);
+            // Ensure it's a mainnet address with prefix 'bc'
+            if (decoded.prefix !== 'bc') {
+                return false;
+            }
+
+            // Ensure it's a SegWit version 0 address (P2WPKH or P2WSH)
+            if (decoded.version !== 0) {
+                return false;
+            }
+
+            // Additional check for data length (per BIP 173)
+            if (decoded.data.length !== 20 && decoded.data.length !== 32) {
+                return false;
+            }
+
+            return true; // Address is valid
+        } catch (error) {
+            // Decoding failed, address is invalid
+            return false;
+        }
     };
 
     const handleModalClose = () => {
@@ -312,19 +322,21 @@ export const DepositConfirmation = ({}) => {
         return (
             <Flex align='center' fontFamily={FONT_FAMILIES.NOSTROMO} w='50px' ml='-10px' mr='0px' h='100%' justify='center' direction='column'>
                 {isValid ? (
-                    <>
-                        <IoMdCheckmarkCircle color='green' size={'24px'} />
-                        <Text fontSize={'10px'} mt='3px' color='green'>
+                    <Flex direction={'column'} align={'center'} justify={'center'} mr='-4px'>
+                        <IoMdCheckmarkCircle color={colors.greenOutline} size={'26px'} />
+                        <Text color={colors.greenOutline} fontSize={'10px'} mt='3px'>
                             Valid
                         </Text>
-                    </>
+                    </Flex>
                 ) : (
-                    <>
-                        <HiXCircle color='red' size={'24px'} />
-                        <Text fontSize={'10px'} mt='3px' color='red'>
-                            Invalid
+                    <Flex w='160px' ml='7px' align='cetner'>
+                        <Flex mt='2px'>
+                            <HiXCircle color='red' size={'40px'} />
+                        </Flex>
+                        <Text fontSize={'9px'} w='70px' mt='3px' ml='6px' color='red'>
+                            Invalid Segwit Address
                         </Text>
-                    </>
+                    </Flex>
                 )}
             </Flex>
         );
@@ -388,17 +400,7 @@ export const DepositConfirmation = ({}) => {
     };
 
     return (
-        <Flex
-            w='100%'
-            h='100%'
-            flexDir={'column'}
-            userSelect={'none'}
-            fontSize={'12px'}
-            fontFamily={FONT_FAMILIES.AUX_MONO}
-            color={'#c3c3c3'}
-            fontWeight={'normal'}
-            overflow={'visible'}
-            gap={'0px'}>
+        <Flex w='100%' h='100%' flexDir={'column'} userSelect={'none'} fontSize={'12px'} fontFamily={FONT_FAMILIES.AUX_MONO} color={'#c3c3c3'} fontWeight={'normal'} overflow={'visible'} gap={'0px'}>
             <Flex w='100%' mt='-10px' mb='-35px' ml='0px' overflow={'visible'}>
                 <Button bg={'none'} w='12px' overflow={'visible'} _hover={{ bg: colors.borderGray }} onClick={() => setDepositFlowState('0-not-started')}>
                     <ChevronLeftIcon overflow={'visible'} width={'36px'} height={'40px'} bg='none' color={colors.offWhite} />
@@ -461,10 +463,10 @@ export const DepositConfirmation = ({}) => {
                                     fontFamily={'Aux'}
                                     border='none'
                                     mt='3.5px'
-                                    mr='20px'
+                                    mr='75px'
                                     ml='-4px'
                                     p='0px'
-                                    w='640px'
+                                    w='585px'
                                     letterSpacing={'-6px'}
                                     color={colors.offWhite}
                                     _active={{ border: 'none', boxShadow: 'none' }}
@@ -732,13 +734,7 @@ export const DepositConfirmation = ({}) => {
                         {/* Deposit Button */}
                         <Flex
                             alignSelf={'center'}
-                            bg={
-                                isConnected
-                                    ? usdtDepositAmount && btcOutputAmount && payoutBTCAddress
-                                        ? colors.purpleBackground
-                                        : colors.purpleBackgroundDisabled
-                                    : colors.purpleBackground
-                            }
+                            bg={isConnected ? (usdtDepositAmount && btcOutputAmount && payoutBTCAddress ? colors.purpleBackground : colors.purpleBackgroundDisabled) : colors.purpleBackground}
                             _hover={{ bg: colors.purpleHover }}
                             w='290px'
                             mt='10px'

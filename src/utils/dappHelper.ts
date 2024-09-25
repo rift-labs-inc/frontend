@@ -406,6 +406,7 @@ export const fetchReservationDetails = async (swapReservationURL: string, ethers
             if (isExpired) {
                 swapReservationData.state = ReservationState.Expired;
             }
+
             console.log('swapReservationData from URL:', swapReservationData);
 
             const totalInputAmountInSatsIncludingProxyWalletFee = swapReservationData.totalSatsInputInlcudingProxyFee;

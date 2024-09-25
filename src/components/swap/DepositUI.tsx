@@ -7,7 +7,7 @@ import { colors } from '../../utils/colors';
 import { useStore } from '../../store';
 import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { BigNumber } from 'ethers';
-import { parseEther } from 'ethers/lib/utils';
+import { formatUnits, parseEther } from 'ethers/lib/utils';
 import { btcToSats, ethToWei, formatAmountToString, weiToEth } from '../../utils/dappHelper';
 import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
 import { bitcoinDecimals, maxSwapOutputs, opaqueBackgroundColor } from '../../utils/constants';
@@ -19,6 +19,7 @@ import WebAssetTag from '../other/WebAssetTag';
 import { useContractData } from '../providers/ContractDataProvider';
 import { toastInfo } from '../../hooks/toast';
 import { DepositAmounts } from '../deposit/DepositAmounts';
+import { maxSwapLimitInMicroUSDT, maxSwapLimitInUSDT } from '../../utils/constants';
 
 export const DepositUI = () => {
     const { isMobile } = useWindowSize();
@@ -54,6 +55,11 @@ export const DepositUI = () => {
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const [isAwaitingConnection, setIsAwaitingConnection] = useState(false);
     const { refreshAllDepositData, loading } = useContractData();
+    const [isAboveMaxSwapLimitUsdtDeposit, setIsAboveMaxSwapLimitUsdtDeposit] = useState(false);
+    const [isAboveMaxSwapLimitBtcOutput, setIsAboveMaxSwapLimitBtcOutput] = useState(false);
+    const [isBelowMinUsdtDeposit, setIsBelowMinUsdtDeposit] = useState(false);
+    const [isBelowMinBtcOutput, setIsBelowMinBtcOutput] = useState(false);
+    const [minBtcOutputAmount, setMinBtcOutputAmount] = useState('0.00000001'); // Default to 1 sat
 
     // update token price and available liquidity
     useEffect(() => {
@@ -64,6 +70,14 @@ export const DepositUI = () => {
             setUserUsdtBalance(validAssets[selectedInputAsset.name].connectedUserBalanceFormatted);
         }
     }, [selectedInputAsset, validAssets]);
+
+    // update min btc output amount
+    useEffect(() => {
+        if (usdtExchangeRatePerBTC) {
+            const minBtcAmount = 1 / usdtExchangeRatePerBTC;
+            setMinBtcOutputAmount(minBtcAmount.toFixed(8)); // Adjust precision as needed
+        }
+    }, [usdtExchangeRatePerBTC]);
 
     // function to continuously call refreshAllDepositData
     useEffect(() => {
@@ -82,6 +96,7 @@ export const DepositUI = () => {
 
     // --------------- USDT INPUT ---------------
     const handleUsdtInputChange = (e, amount = null) => {
+        setIsAboveMaxSwapLimitBtcOutput(false);
         const maxDecimals = useStore.getState().validAssets[selectedInputAsset.name].decimals;
         const usdtValue = amount !== null ? amount : e.target.value;
 
@@ -92,10 +107,33 @@ export const DepositUI = () => {
         };
 
         if (validateUsdtInputChange(usdtValue)) {
+            // Reset error states
+            setIsAboveMaxSwapLimitUsdtDeposit(false);
+            setIsBelowMinUsdtDeposit(false);
+
+            // Check if input is above max swap limit
+            if (parseFloat(usdtValue) > parseFloat(formatUnits(maxSwapLimitInMicroUSDT, selectedInputAsset.decimals))) {
+                setIsAboveMaxSwapLimitUsdtDeposit(true);
+                setUsdtDepositAmount(usdtValue);
+                // Reset dependent values
+                setBtcOutputAmount('');
+                setBtcInputSwapAmount('');
+                return;
+            }
+
+            // Check if input is below min required amount
+            if (parseFloat(usdtValue) < 1) {
+                setIsBelowMinUsdtDeposit(true);
+                setUsdtDepositAmount(usdtValue);
+                // Reset dependent values
+                setBtcOutputAmount('');
+                setBtcInputSwapAmount('');
+                return;
+            }
+
             setUsdtDepositAmount(usdtValue);
             setUsdtOutputSwapAmount(usdtValue);
-            const btcOutputValue =
-                usdtValue && parseFloat(usdtValue) > 0 ? parseFloat(usdtValue) / useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
+            const btcOutputValue = usdtValue && parseFloat(usdtValue) > 0 ? parseFloat(usdtValue) / useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
             setBtcOutputAmount(formatAmountToString(selectedInputAsset, btcOutputValue));
             setBtcInputSwapAmount(formatAmountToString(selectedInputAsset, btcOutputValue));
 
@@ -112,17 +150,40 @@ export const DepositUI = () => {
 
     // --------------- BTC OUTPUT ---------------
     const handleBtcOutputChange = (e) => {
+        setIsAboveMaxSwapLimitUsdtDeposit(false);
         const btcValue = validateBtcOutput(e.target.value);
 
-        console.log('BTC Value:', btcValue);
-
         if (btcValue !== null) {
+            // Reset error states
+            setIsAboveMaxSwapLimitBtcOutput(false);
+            setIsBelowMinBtcOutput(false);
+
+            // Calculate equivalent USDT deposit amount
+            const usdtInputValueLocal = btcValue && parseFloat(btcValue) > 0 ? parseFloat(btcValue) * useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
+
+            // Check if BTC output exceeds max swap limit
+            if (usdtInputValueLocal > parseFloat(formatUnits(maxSwapLimitInMicroUSDT, selectedInputAsset.decimals))) {
+                setIsAboveMaxSwapLimitBtcOutput(true);
+                setBtcOutputAmount(btcValue);
+                // Reset dependent values
+                setUsdtDepositAmount('');
+                setUsdtOutputSwapAmount('');
+                return;
+            }
+
+            // Check if usdt input is below min 1
+            if (usdtInputValueLocal && usdtInputValueLocal < 1 && usdtInputValueLocal !== 0) {
+                setIsBelowMinBtcOutput(true);
+                setBtcOutputAmount(btcValue);
+                // Reset dependent values
+                setUsdtDepositAmount('');
+                setUsdtOutputSwapAmount('');
+                return;
+            }
+
             setBtcOutputAmount(btcValue);
             setBtcInputSwapAmount(btcValue);
-            let usdtInputValue =
-                btcValue && parseFloat(btcValue) > 0 ? parseFloat(btcValue) * useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
-            // TODO: subtract premium we calculate from the eth value
-            // btcOutputAmount -= calculatePremium;
+            let usdtInputValue = btcValue && parseFloat(btcValue) > 0 ? parseFloat(btcValue) * useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
             setUsdtDepositAmount(formatAmountToString(selectedInputAsset, usdtInputValue));
             setUsdtOutputSwapAmount(formatAmountToString(selectedInputAsset, usdtInputValue));
             checkLiquidityExceeded(usdtInputValue);
@@ -143,7 +204,12 @@ export const DepositUI = () => {
     useEffect(() => {
         if (isConnected && isAwaitingConnection) {
             setIsAwaitingConnection(false);
-            proceedWithDeposit();
+            // check if USDT input is above the user's balance
+            if (parseFloat(usdtDepositAmount || '0') > parseFloat(userUsdtBalance || '0')) {
+                setUserBalanceExceeded(true);
+            } else {
+                proceedWithDeposit();
+            }
         }
     }, [isConnected, isAwaitingConnection]);
 
@@ -188,17 +254,10 @@ export const DepositUI = () => {
                         <>
                             <Flex w='100%' flexDir='column' position='relative'>
                                 {/* USDT Input */}
-                                <Flex
-                                    px='10px'
-                                    bg={selectedInputAsset.dark_bg_color}
-                                    w='100%'
-                                    h='105px'
-                                    border='2px solid'
-                                    borderColor={selectedInputAsset.bg_color}
-                                    borderRadius={'10px'}>
+                                <Flex px='10px' bg={selectedInputAsset.dark_bg_color} w='100%' h='105px' border='2px solid' borderColor={selectedInputAsset.bg_color} borderRadius={'10px'}>
                                     <Flex direction={'column'} py='10px' px='5px'>
                                         <Text
-                                            color={!usdtDepositAmount ? colors.offWhite : colors.textGray}
+                                            color={isAboveMaxSwapLimitUsdtDeposit || isBelowMinUsdtDeposit || userBalanceExceeded ? colors.red : !usdtDepositAmount ? colors.offWhite : colors.textGray}
                                             fontSize={'13px'}
                                             letterSpacing={'-1px'}
                                             fontWeight={'normal'}
@@ -216,7 +275,7 @@ export const DepositUI = () => {
                                             ml='-5px'
                                             p='0px'
                                             letterSpacing={'-6px'}
-                                            color={userBalanceExceeded ? colors.red : colors.offWhite}
+                                            color={isAboveMaxSwapLimitUsdtDeposit || isBelowMinUsdtDeposit || userBalanceExceeded ? colors.red : colors.offWhite}
                                             _active={{ border: 'none', boxShadow: 'none' }}
                                             _focus={{ border: 'none', boxShadow: 'none' }}
                                             _selected={{ border: 'none', boxShadow: 'none' }}
@@ -226,7 +285,13 @@ export const DepositUI = () => {
                                         />
                                         <Flex>
                                             <Text
-                                                color={userBalanceExceeded ? colors.redHover : !usdtDepositAmount ? colors.offWhite : colors.textGray}
+                                                color={
+                                                    isAboveMaxSwapLimitUsdtDeposit || isBelowMinUsdtDeposit || userBalanceExceeded
+                                                        ? colors.redHover
+                                                        : !usdtDepositAmount
+                                                        ? colors.offWhite
+                                                        : colors.textGray
+                                                }
                                                 fontSize={'13px'}
                                                 mt='2px'
                                                 ml='1px'
@@ -234,8 +299,12 @@ export const DepositUI = () => {
                                                 letterSpacing={'-1px'}
                                                 fontWeight={'normal'}
                                                 fontFamily={'Aux'}>
-                                                {userBalanceExceeded
-                                                    ? `Exceeds your available liquidity - `
+                                                {isAboveMaxSwapLimitUsdtDeposit
+                                                    ? `Exceeds maximum swap limit - `
+                                                    : isBelowMinUsdtDeposit
+                                                    ? `Minimum 1 USDT required - `
+                                                    : userBalanceExceeded
+                                                    ? `Exceeds your available balance - `
                                                     : usdtPriceUSD
                                                     ? usdtDepositAmount
                                                         ? (usdtPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
@@ -243,44 +312,34 @@ export const DepositUI = () => {
                                                               currency: 'USD',
                                                           })
                                                         : '$0.00'
-                                                    : '$0.00'}{' '}
+                                                    : '$0.00'}
                                             </Text>
-                                            {!userBalanceExceeded && isConnected && (
-                                                <>
-                                                    <Spacer />
-                                                    <Text
-                                                        align={'right'}
-                                                        color={userBalanceExceeded ? selectedInputAsset.border_color_light : !usdtDepositAmount ? colors.offWhite : colors.textGray}
-                                                        fontSize={'13px'}
-                                                        onClick={() => handleUsdtInputChange(-1, userUsdtBalance)}
-                                                        _hover={{ textDecoration: 'underline' }}
-                                                        mt='5px'
-                                                        mr='6px'
-                                                        letterSpacing={'-1.5px'}
-                                                        fontWeight={'normal'}
-                                                        fontFamily={'Aux'}>
-                                                        {parseFloat(userUsdtBalance).toFixed(2)} {selectedInputAsset.name}
-                                                    </Text>
-                                                </>
-                                            )}
-                                            {isConnected && (
+                                            {/* Actionable Suggestion */}
+                                            {(isAboveMaxSwapLimitUsdtDeposit || isBelowMinUsdtDeposit || userBalanceExceeded) && (
                                                 <Text
                                                     fontSize={'13px'}
-                                                    mt={userBalanceExceeded ? '3px' : '5px'}
-                                                    mr='-138px'
+                                                    mt='2px'
+                                                    mr='-116px'
                                                     zIndex={'10'}
                                                     color={selectedInputAsset.border_color_light}
                                                     cursor='pointer'
-                                                    onClick={() => handleUsdtInputChange(null, userUsdtBalance)}
+                                                    onClick={() =>
+                                                        handleUsdtInputChange(null, isAboveMaxSwapLimitUsdtDeposit ? maxSwapLimitInUSDT.toString() : isBelowMinUsdtDeposit ? '1.00' : userUsdtBalance)
+                                                    }
                                                     _hover={{ textDecoration: 'underline' }}
                                                     letterSpacing={'-1.5px'}
                                                     fontWeight={'normal'}
                                                     fontFamily={'Aux'}>
-                                                    {userBalanceExceeded ? `${parseFloat(userUsdtBalance).toFixed(2)} ${selectedInputAsset.name} Max` : 'Max'}
+                                                    {isAboveMaxSwapLimitUsdtDeposit
+                                                        ? `${maxSwapLimitInUSDT} USDT Max`
+                                                        : isBelowMinUsdtDeposit
+                                                        ? `1 USDT Min`
+                                                        : `${parseFloat(userUsdtBalance).toFixed(2)} USDT Max`}
                                                 </Text>
                                             )}
                                         </Flex>
                                     </Flex>
+
                                     <Spacer />
                                     <Flex mr='6px'>
                                         <WebAssetTag cursor='pointer' asset='USDT' onDropDown={() => setCurrencyModalTitle('deposit')} />
@@ -316,7 +375,7 @@ export const DepositUI = () => {
                                 <Flex mt={'5px'} px='10px' bg='#2E1C0C' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
                                     <Flex direction={'column'} py='10px' px='5px'>
                                         <Text
-                                            color={!btcOutputAmount ? colors.offWhite : colors.textGray}
+                                            color={isAboveMaxSwapLimitBtcOutput || isBelowMinBtcOutput ? colors.red : !btcOutputAmount ? colors.offWhite : colors.textGray}
                                             fontSize={'13px'}
                                             letterSpacing={'-1px'}
                                             fontWeight={'normal'}
@@ -334,7 +393,7 @@ export const DepositUI = () => {
                                             ml='-5px'
                                             p='0px'
                                             letterSpacing={'-6px'}
-                                            color={colors.offWhite}
+                                            color={isAboveMaxSwapLimitBtcOutput || isBelowMinBtcOutput ? colors.red : colors.offWhite}
                                             _active={{ border: 'none', boxShadow: 'none' }}
                                             _focus={{ border: 'none', boxShadow: 'none' }}
                                             _selected={{ border: 'none', boxShadow: 'none' }}
@@ -342,24 +401,61 @@ export const DepositUI = () => {
                                             placeholder='0.0'
                                             _placeholder={{ color: '#805530' }}
                                         />
-                                        <Text
-                                            color={!btcOutputAmount ? colors.offWhite : colors.textGray}
-                                            fontSize={'13px'}
-                                            mt='2px'
-                                            ml='1px'
-                                            letterSpacing={'-1px'}
-                                            fontWeight={'normal'}
-                                            fontFamily={'Aux'}>
-                                            {bitcoinPriceUSD
-                                                ? btcOutputAmount
-                                                    ? (bitcoinPriceUSD * parseFloat(btcOutputAmount)).toLocaleString('en-US', {
-                                                          style: 'currency',
-                                                          currency: 'USD',
-                                                      })
-                                                    : '$0.00'
-                                                : '$0.00'}
-                                        </Text>
+                                        <Flex>
+                                            <Text
+                                                color={isAboveMaxSwapLimitBtcOutput || isBelowMinBtcOutput ? colors.redHover : !btcOutputAmount ? colors.offWhite : colors.textGray}
+                                                fontSize={'13px'}
+                                                mt='2px'
+                                                ml='1px'
+                                                mr='8px'
+                                                letterSpacing={'-1px'}
+                                                fontWeight={'normal'}
+                                                fontFamily={'Aux'}>
+                                                {isAboveMaxSwapLimitBtcOutput
+                                                    ? `Exceeds maximum swap limit - `
+                                                    : isBelowMinBtcOutput
+                                                    ? `Below minimum required - `
+                                                    : bitcoinPriceUSD
+                                                    ? btcOutputAmount
+                                                        ? (bitcoinPriceUSD * parseFloat(btcOutputAmount)).toLocaleString('en-US', {
+                                                              style: 'currency',
+                                                              currency: 'USD',
+                                                          })
+                                                        : '$0.00'
+                                                    : '$0.00'}
+                                            </Text>
+                                            {/* Actionable Suggestion */}
+                                            {(isAboveMaxSwapLimitBtcOutput || isBelowMinBtcOutput) && (
+                                                <Text
+                                                    fontSize={'13px'}
+                                                    mt='2px'
+                                                    mr='-116px'
+                                                    zIndex={'10'}
+                                                    color={selectedInputAsset.border_color_light}
+                                                    cursor='pointer'
+                                                    onClick={() => {
+                                                        if (isAboveMaxSwapLimitBtcOutput) {
+                                                            handleUsdtInputChange(null, maxSwapLimitInUSDT.toString());
+                                                        } else {
+                                                            handleBtcOutputChange({
+                                                                target: {
+                                                                    value: minBtcOutputAmount,
+                                                                },
+                                                            });
+                                                        }
+                                                    }}
+                                                    _hover={{ textDecoration: 'underline' }}
+                                                    letterSpacing={'-1.5px'}
+                                                    fontWeight={'normal'}
+                                                    fontFamily={'Aux'}>
+                                                    {isAboveMaxSwapLimitBtcOutput
+                                                        ? `${(maxSwapLimitInUSDT / usdtExchangeRatePerBTC).toFixed(8)} BTC Max`
+                                                        : `${parseFloat(minBtcOutputAmount).toFixed(8)} BTC Min`}
+                                                </Text>
+                                            )}
+                                        </Flex>
                                     </Flex>
+
                                     <Spacer />
                                     <Flex mr='6px'>
                                         <WebAssetTag cursor='pointer' asset='BTC' onDropDown={() => setCurrencyModalTitle('recieve')} />
@@ -410,8 +506,8 @@ export const DepositUI = () => {
                             </Flex>
                             {/* Exchange Button */}
                             <Flex
-                                bg={usdtDepositAmount ? colors.purpleBackground : colors.purpleBackgroundDisabled}
-                                _hover={{ bg: colors.purpleHover }}
+                                bg={usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded ? colors.purpleBackground : colors.purpleBackgroundDisabled}
+                                _hover={{ bg: usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded ? colors.purpleHover : undefined }}
                                 w='100%'
                                 mt='15px'
                                 transition={'0.2s'}
@@ -419,18 +515,20 @@ export const DepositUI = () => {
                                 onClick={
                                     isMobile
                                         ? () => toastInfo({ title: 'Hop on your laptop', description: 'This app is too cool for small screens' })
-                                        : usdtDepositAmount
+                                        : usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded
                                         ? () => initiateDeposit()
                                         : null
                                 }
                                 fontSize={'15px'}
                                 align={'center'}
                                 userSelect={'none'}
-                                cursor={'pointer'}
+                                cursor={usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded ? 'pointer' : 'not-allowed'}
                                 borderRadius={'10px'}
                                 justify={'center'}
-                                border={usdtDepositAmount ? '3px solid #445BCB' : '3px solid #3242a8'}>
-                                <Text color={usdtDepositAmount ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
+                                border={usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded ? '3px solid #445BCB' : '3px solid #3242a8'}>
+                                <Text
+                                    color={usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded ? colors.offWhite : colors.darkerGray}
+                                    fontFamily='Nostromo'>
                                     {isConnected ? 'Create Sell Order' : 'Connect Wallet'}
                                 </Text>
                             </Flex>
