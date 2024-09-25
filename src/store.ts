@@ -6,7 +6,7 @@ import { USDT_Icon, ETH_Icon, ETH_Logo } from './components/other/SVGs';
 import { ERC20ABI } from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
-import sepoliaDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/11155111/run-latest.json';
+import holeskyDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/17000/run-latest.json';
 
 type Store = {
     // setup & asset data
@@ -108,12 +108,12 @@ export const useStore = create<Store>((set) => {
         },
         USDT: {
             name: 'USDT',
-            tokenAddress: '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0',
+            tokenAddress: '0x5150C7b0113650F9D17203290CEA88E52644a4a2',
             decimals: 6,
-            riftExchangeContractAddress: sepoliaDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
+            riftExchangeContractAddress: holeskyDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
             riftExchangeAbi: riftExchangeABI.abi,
-            contractChainID: 11155111,
-            contractRpcURL: 'https://sepolia.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
+            contractChainID: 17000,
+            contractRpcURL: 'https://holesky.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
             proverFee: BigNumber.from(2000000),
             releaserFee: BigNumber.from(1000000),
             icon_svg: USDT_Icon,
@@ -135,8 +135,8 @@ export const useStore = create<Store>((set) => {
             decimals: 18,
             riftExchangeContractAddress: '',
             riftExchangeAbi: riftExchangeABI.abi,
-            contractChainID: 11155111,
-            contractRpcURL: 'https://sepolia.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
+            contractChainID: 17000,
+            contractRpcURL: 'https://holesky.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
             icon_svg: ETH_Logo,
             bg_color: '#2E40B7',
             border_color: '#627EEA',

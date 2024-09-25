@@ -1,7 +1,6 @@
 import { BigNumber, BigNumberish, ethers, FixedNumber } from 'ethers';
 import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
-import { sepolia } from 'viem/chains';
 import * as bitcoin from 'bitcoinjs-lib';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { bitcoinDecimals, FRONTEND_RESERVATION_EXPIRY_TIME, maxSwapOutputs, SATS_PER_BTC } from './constants';

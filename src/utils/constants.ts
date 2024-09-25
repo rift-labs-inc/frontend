@@ -1,11 +1,10 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers';
 import { ValidAsset, DepositVault } from '../types';
 import { useStore } from '../store';
-import { sepolia } from 'viem/chains';
 import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
 // export const contractChainID = 1; // Ethereum Mainnet
-export const etherScanBaseUrl = 'https://sepolia.etherscan.io';
+export const etherScanBaseUrl = 'https://holesky.etherscan.io';
 export const mainnetEthRpcUrl = 'https://archive-node.tail0a0b83.ts.net/ethereum/?key=7a29b610f3c03ebe55c4dcc5138884bea1976a7b9804fefc796da213610e0bf5';
 export const bitcoinDecimals = 8;
 export const SATS_PER_BTC = 100000000; // 10^8

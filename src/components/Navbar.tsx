@@ -114,6 +114,8 @@ export const Navbar = ({}) => {
         switch (id) {
             case 11155111:
                 return 'Sepolia';
+            case 17000:
+                return 'Holesky';
             case 1:
                 return 'ETH';
             default:
