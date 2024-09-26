@@ -29,6 +29,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const setUserEthAddress = useStore((state) => state.setUserEthAddress);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
+    const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
     const updateExchangeRateInSmallestTokenUnitPerSat = useStore((state) => state.updateExchangeRateInSmallestTokenUnitPerSat);
     const updateExchangeRateInTokenPerBTC = useStore((state) => state.updateExchangeRateInTokenPerBTC);
     const updatePriceUSD = useStore((state) => state.updatePriceUSD);
@@ -100,18 +101,32 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             checkIfGasFeesAreTooHigh();
         }, 5000);
 
-        return () => clearInterval(intervalId);
+        // setup another interval to fetch price everysecond
+        const priceIntervalId = setInterval(() => {
+            if (bitcoinPriceUSD === 0) {
+                // set loading to true
+                fetchPriceData();
+            } else {
+                // set loading to false
+            }
+        }, 1000);
+
+        return () => {
+            clearInterval(intervalId);
+            clearInterval(priceIntervalId);
+        };
     }, [selectedInputAsset, address, isConnected]);
 
     // fetch deposit vaults
     const { allFetchedDepositVaults, userActiveDepositVaults, userCompletedDepositVaults, allFetchedSwapReservations, loading, error, refreshAllDepositData } = useDepositVaults();
+    const isLoading = loading || bitcoinPriceUSD === 0;
 
     const value = {
         allDepositVaults: allFetchedDepositVaults,
         userActiveDepositVaults: userActiveDepositVaults,
         userCompletedDepositVaults: userCompletedDepositVaults,
         allSwapReservations: allFetchedSwapReservations,
-        loading,
+        loading: isLoading,
         error,
         refreshAllDepositData,
     };
