@@ -1,4 +1,4 @@
-import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input } from '@chakra-ui/react';
+import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input, Spinner } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -54,6 +54,7 @@ export const ReserveLiquidity = ({}) => {
     const [isEthereumPayoutAddressValid, setIsEthereumPayoutAddressValid] = useState<boolean>(false);
     const isPayingFeesInBTC = useStore((state) => state.isPayingFeesInBTC);
     const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
+    const [loadingReservation, setLoadingReservation] = useState(false);
 
     const { refreshAllDepositData } = useContractData();
 
@@ -141,6 +142,7 @@ export const ReserveLiquidity = ({}) => {
 
     const proceedWithReservationPayingFeesUsingBtc = async () => {
         // Reset the reserve state before starting a new reservation
+        setLoadingReservation(true);
         resetReserveState();
 
         console.log('brothers, params', lowestFeeReservationParams);
@@ -208,6 +210,7 @@ export const ReserveLiquidity = ({}) => {
             console.log('Liquidity reservation successful');
         } catch (error) {
             console.error('Error reserving liquidity:', error);
+            setLoadingReservation(false);
         }
     };
 
@@ -370,9 +373,13 @@ export const ReserveLiquidity = ({}) => {
                 borderRadius={'10px'}
                 justify={'center'}
                 border={ethPayoutAddress && isEthereumPayoutAddressValid ? '3px solid #445BCB' : '3px solid #3242a8'}>
-                <Text color={ethPayoutAddress && isEthereumPayoutAddressValid ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
-                    {isPayingFeesInBTC ? 'Reserve Liquidity' : isConnected ? 'Reserve Liquidity' : 'Connect Wallet'}
-                </Text>
+                {loadingReservation ? (
+                    <Spinner size='sm' color={colors.offWhite} />
+                ) : (
+                    <Text color={ethPayoutAddress && isEthereumPayoutAddressValid ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
+                        {isPayingFeesInBTC ? 'Reserve Liquidity' : isConnected ? 'Reserve Liquidity' : 'Connect Wallet'}
+                    </Text>
+                )}
             </Flex>
             <ReservationStatusModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} status={reserveLiquidityStatus} error={reserveLiquidityError} txHash={txHash} />
         </>
