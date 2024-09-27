@@ -6,7 +6,7 @@ import { USDT_Icon, ETH_Icon, ETH_Logo } from './components/other/SVGs';
 import { ERC20ABI } from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
-import holeskyDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/17000/run-latest.json';
+import arbitrumSepoliaDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/421614/run-latest.json';
 
 type Store = {
     // setup & asset data
@@ -112,12 +112,12 @@ export const useStore = create<Store>((set) => {
         },
         USDT: {
             name: 'USDT',
-            tokenAddress: '0x5150C7b0113650F9D17203290CEA88E52644a4a2',
+            tokenAddress: '0xc4af7cfe412805c4a751321b7b0799ca9b8dbe56',
             decimals: 6,
-            riftExchangeContractAddress: holeskyDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
+            riftExchangeContractAddress: arbitrumSepoliaDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: 17000,
-            contractRpcURL: 'https://holesky.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
+            contractRpcURL: 'https://arbitrum-sepolia.gateway.tenderly.co/r5qQTaEWNQHaU4iClbRdt',
             proverFee: BigNumber.from(19000000),
             releaserFee: BigNumber.from(1000000),
             icon_svg: USDT_Icon,

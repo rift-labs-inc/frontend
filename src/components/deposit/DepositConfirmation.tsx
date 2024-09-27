@@ -45,7 +45,7 @@ import { IoCheckmarkDoneCircle } from 'react-icons/io5';
 import { IoMdCheckmarkCircle } from 'react-icons/io';
 import { AssetTag } from '../other/AssetTag';
 import { FaClock, FaRegArrowAltCircleRight } from 'react-icons/fa';
-import { LockClosed } from 'react-ionicons';
+import { LockClosed as OriginalLockClosed } from 'react-ionicons';
 import * as bitcoin from 'bitcoinjs-lib';
 
 type ActiveTab = 'swap' | 'liquidity';
@@ -311,6 +311,8 @@ export const DepositConfirmation = ({}) => {
             setDepositFlowState('0-not-started');
         }
     };
+
+    const LockClosed = ({ width = '20px', color = 'black' }) => <OriginalLockClosed width={width} color={color} />;
 
     const BitcoinAddressValidation: React.FC<{ address: string }> = ({ address }) => {
         const isValid = validateBitcoinPayoutAddress(address);
