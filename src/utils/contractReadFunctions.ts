@@ -214,14 +214,28 @@ function decodeSwapReservations(data: string): SwapReservation[] {
     return swapReservations;
 }
 
-export function listenForLiquidityReservedEvent(provider: ethers.providers.Provider, contractAddress: string, abi: ethers.ContractInterface, reserverAddress: string): Promise<LiquidityReservedEvent> {
-    return new Promise((resolve, reject) => {
-        // Set up a provider and a contract instance
-        const contract = new ethers.Contract(contractAddress, abi, provider);
+export function listenForLiquidityReservedEvent(
+    provider: ethers.providers.Provider,
+    contractAddress: string,
+    abi: ethers.ContractInterface,
+    reserverAddress: string,
+    startBlockHeight: number,
+): Promise<LiquidityReservedEvent> {
+    const contract = new ethers.Contract(contractAddress, abi, provider);
 
-        // Create the event listener
+    return new Promise((resolve, reject) => {
+        let isResolved = false;
+
+        const resolveOnce = (event: LiquidityReservedEvent) => {
+            if (!isResolved) {
+                isResolved = true;
+                contract.off('LiquidityReserved', listener);
+                resolve(event);
+            }
+        };
+
+        // Set up listener for new events
         const listener = (reserver: string, swapReservationIndex: ethers.BigNumber, orderNonce: string, event: ethers.Event) => {
-            // Check if the reserver matches the specified address
             if (reserver.toLowerCase() === reserverAddress.toLowerCase()) {
                 const matchingEvent: LiquidityReservedEvent = {
                     reserver,
@@ -229,15 +243,46 @@ export function listenForLiquidityReservedEvent(provider: ethers.providers.Provi
                     orderNonce,
                     event,
                 };
-
-                console.log('Matching LiquidityReserved event found:', matchingEvent);
-
-                contract.off('LiquidityReserved', listener);
-
-                resolve(matchingEvent);
+                console.log('Matching LiquidityReserved event found in new events:', matchingEvent);
+                resolveOnce(matchingEvent);
             }
         };
 
         contract.on('LiquidityReserved', listener);
+
+        // Check past events
+        const checkPastEvents = async () => {
+            try {
+                const filter = contract.filters.LiquidityReserved(reserverAddress);
+                const currentBlock = await provider.getBlockNumber();
+                const pastEvents = await contract.queryFilter(filter, startBlockHeight, currentBlock);
+
+                for (const event of pastEvents) {
+                    if (isResolved) break; // Stop processing if an event has already been found
+                    const [reserver, swapReservationIndex, orderNonce] = event.args as [string, ethers.BigNumber, string];
+                    if (reserver.toLowerCase() === reserverAddress.toLowerCase()) {
+                        const matchingEvent: LiquidityReservedEvent = {
+                            reserver,
+                            swapReservationIndex: swapReservationIndex.toString(),
+                            orderNonce,
+                            event,
+                        };
+                        console.log('Matching LiquidityReserved event found in past events:', matchingEvent);
+                        resolveOnce(matchingEvent);
+                        return;
+                    }
+                }
+                console.log('No matching past events found');
+            } catch (error) {
+                if (!isResolved) {
+                    console.error('Error checking past events:', error);
+                    contract.off('LiquidityReserved', listener);
+                    reject(error);
+                }
+            }
+        };
+
+        // Start checking past events
+        checkPastEvents();
     });
 }

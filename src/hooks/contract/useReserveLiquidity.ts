@@ -72,6 +72,9 @@ export function useReserveLiquidity() {
             if (!isClient) return;
 
             try {
+                // get current block height
+                const currentBlock = await ethersRpcProvider.getBlockNumber();
+
                 setStatus(ReserveStatus.WaitingForWalletConfirmation);
                 setError(null);
                 setTxHash(null);
@@ -107,12 +110,7 @@ export function useReserveLiquidity() {
 
                 setStatus(ReserveStatus.ReservingLiquidity);
 
-                const reservationDetails = await listenForLiquidityReservedEvent(
-                    ethersRpcProvider,
-                    selectedInputAsset.riftExchangeContractAddress,
-                    riftExchangeABI.abi,
-                    userEthAddress,
-                );
+                const reservationDetails = await listenForLiquidityReservedEvent(ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress, riftExchangeABI.abi, userEthAddress, currentBlock);
 
                 setTxHash(reserveTx.hash);
                 setStatus(ReserveStatus.ReservationPending);

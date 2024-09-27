@@ -149,6 +149,9 @@ export const ReserveLiquidity = ({}) => {
         const totalSatsInputInlcudingProxyFee = lowestFeeReservationParams.totalSatsInputInlcudingProxyFee;
         console.log('brothers, total sats', totalSatsInputInlcudingProxyFee.toString());
 
+        // get the current block height
+        const blockHeight = await ethersRpcProvider.getBlockNumber();
+
         try {
             // [1] sauce this to server:
             const reservationRequest: ReservationByPaymasterRequest = {
@@ -164,7 +167,7 @@ export const ReserveLiquidity = ({}) => {
             console.log('Reservation result:', result);
 
             // [0] start listening for the liquidity reserved event
-            const reservationDetails = await listenForLiquidityReservedEvent(ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress, riftExchangeABI.abi, ethPayoutAddress);
+            const reservationDetails = await listenForLiquidityReservedEvent(ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress, riftExchangeABI.abi, ethPayoutAddress, blockHeight);
             console.log('are we getting past the listenForLiquidityReservedEvent call?');
 
             console.log('Liquidity reserved successfully');
