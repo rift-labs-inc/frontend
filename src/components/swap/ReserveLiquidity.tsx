@@ -18,7 +18,7 @@ import ReservationStatusModal from './ReservationStatusModal';
 import { formatUnits } from 'ethers/lib/utils';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { opaqueBackgroundColor } from '../../utils/constants';
+import { opaqueBackgroundColor, RESERVATION_SERVER_URL } from '../../utils/constants';
 import { IoMdCheckmarkCircle } from 'react-icons/io';
 import { HiXCircle } from 'react-icons/hi';
 import { FaClock } from 'react-icons/fa';
@@ -26,6 +26,10 @@ import { LockClosed } from 'react-ionicons';
 import { AssetTag } from '../other/AssetTag';
 import WebAssetTag from '../other/WebAssetTag';
 import { toastInfo } from '../../hooks/toast';
+import { listenForLiquidityReservedEvent } from '../../utils/contractReadFunctions';
+import { useContractData } from '../../components/providers/ContractDataProvider';
+import { bufferTo18Decimals, createReservationUrl } from '../../utils/dappHelper';
+import { ProxyWalletLiquidityProvider, ReservationByPaymasterRequest, ReservationByPaymasterResponse } from '../../types';
 
 export const ReserveLiquidity = ({}) => {
     const { isMobile } = useWindowSize();
@@ -48,6 +52,15 @@ export const ReserveLiquidity = ({}) => {
     const reservationFeeAmountMicroUsdt = useStore((state) => state.reservationFeeAmountMicroUsdt);
     const [isWaitingForCorrectNetwork, setIsWaitingForCorrectNetwork] = useState(false);
     const [isEthereumPayoutAddressValid, setIsEthereumPayoutAddressValid] = useState<boolean>(false);
+    const isPayingFeesInBTC = useStore((state) => state.isPayingFeesInBTC);
+    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
+
+    const { refreshAllDepositData } = useContractData();
+
+    const handleNavigation = (route: string) => {
+        router.push(route);
+    };
+
     // usdt payout address
     const handleETHPayoutAddressChange = (e) => {
         const newEthPayoutAddress = e.target.value;
@@ -71,35 +84,134 @@ export const ReserveLiquidity = ({}) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
-        if (isConnected && isAwaitingConnection) {
-            setIsAwaitingConnection(false);
-            proceedWithReservation();
-        }
+        if (!isPayingFeesInBTC) {
+            if (isConnected && isAwaitingConnection) {
+                setIsAwaitingConnection(false);
+                proceedWithReservationPayingFeesUsingEth();
+            }
 
-        if (isWaitingForCorrectNetwork && chainId === selectedInputAsset.contractChainID) {
-            setIsWaitingForCorrectNetwork(false);
-            proceedWithReservation();
+            if (isWaitingForCorrectNetwork && chainId === selectedInputAsset.contractChainID) {
+                setIsWaitingForCorrectNetwork(false);
+                proceedWithReservationPayingFeesUsingEth();
+            }
         }
     }, [isConnected, isAwaitingConnection, chainId, isWaitingForCorrectNetwork]);
 
-    const initiateReservation = async () => {
-        if (!isConnected) {
-            setIsAwaitingConnection(true);
-            openConnectModal();
-            return;
-        }
+    const initiateReservationPayingFeesInEth = async () => {
+        if (!isPayingFeesInBTC) {
+            if (!isConnected) {
+                setIsAwaitingConnection(true);
+                openConnectModal();
+                return;
+            }
 
-        if (chainId !== selectedInputAsset.contractChainID) {
-            console.log('Switching network');
-            setIsWaitingForCorrectNetwork(true);
-            switchChain({ chainId: selectedInputAsset.contractChainID });
-            return;
+            if (chainId !== selectedInputAsset.contractChainID) {
+                console.log('Switching network');
+                setIsWaitingForCorrectNetwork(true);
+                switchChain({ chainId: selectedInputAsset.contractChainID });
+                return;
+            }
+            proceedWithReservationPayingFeesUsingEth();
         }
-
-        proceedWithReservation();
     };
 
-    const proceedWithReservation = async () => {
+    async function reserveByPaymaster(request: ReservationByPaymasterRequest, baseUrl: string = RESERVATION_SERVER_URL): Promise<ReservationByPaymasterResponse> {
+        try {
+            const response = await fetch(`${baseUrl}/reserve_by_paymaster`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(request),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return (await response.json()) as ReservationByPaymasterResponse;
+        } catch (error) {
+            console.error('Error in reserveByPaymaster:', error);
+            return {
+                status: false,
+                tx_hash: null,
+            };
+        }
+    }
+
+    const proceedWithReservationPayingFeesUsingBtc = async () => {
+        // Reset the reserve state before starting a new reservation
+        resetReserveState();
+
+        console.log('brothers, params', lowestFeeReservationParams);
+        const totalSatsInputInlcudingProxyFee = lowestFeeReservationParams.totalSatsInputInlcudingProxyFee;
+        console.log('brothers, total sats', totalSatsInputInlcudingProxyFee.toString());
+
+        try {
+            // [1] sauce this to server:
+            const reservationRequest: ReservationByPaymasterRequest = {
+                sender: String(ethPayoutAddress), // address that will receive the ETH payout
+                vault_indexes_to_reserve: lowestFeeReservationParams.vaultIndexesToReserve.map(String), // convert each vault index to a string
+                amounts_to_reserve: lowestFeeReservationParams.amountsInMicroUsdtToReserve.map(String), // convert each amount to a string
+                eth_payout_address: String(ethPayoutAddress), // convert ETH payout address to a string
+                total_sats_input_inlcuding_proxy_fee: String(totalSatsInputInlcudingProxyFee), // convert total sats including proxy fee to a string
+                expired_swap_reservation_indexes: lowestFeeReservationParams.expiredSwapReservationIndexes.map(String), // convert each expired reservation index to a string
+            };
+
+            const result = await reserveByPaymaster(reservationRequest);
+            console.log('Reservation result:', result);
+
+            // [0] start listening for the liquidity reserved event
+            const reservationDetails = await listenForLiquidityReservedEvent(ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress, riftExchangeABI.abi, ethPayoutAddress);
+            console.log('are we getting past the listenForLiquidityReservedEvent call?');
+
+            console.log('Liquidity reserved successfully');
+            console.log('reservationDetails', reservationDetails);
+
+            console.log('reservationDetails.orderNonce:', reservationDetails.orderNonce);
+            console.log('reservationDetails.swapReservationIndex:', reservationDetails.swapReservationIndex);
+
+            const reservationUri = createReservationUrl(reservationDetails.orderNonce, reservationDetails.swapReservationIndex);
+            console.log('reservationUri:', reservationUri);
+
+            const liquidityProviders: Array<ProxyWalletLiquidityProvider> = lowestFeeReservationParams.vaultIndexesToReserve.map((index: number, i: number) => {
+                return {
+                    amount: BigNumber.from(bufferTo18Decimals(lowestFeeReservationParams.amountsInMicroUsdtToReserve[i], selectedInputAsset.decimals)).toString(),
+                    btcExchangeRate: BigNumber.from(lowestFeeReservationParams.btcExchangeRates[i]).toString(),
+                    lockingScriptHex: lowestFeeReservationParams.btcPayoutLockingScripts[i],
+                };
+            });
+
+            console.log('liquidityProviders:', liquidityProviders);
+
+            const reservationNonce = reservationDetails.orderNonce;
+
+            const riftSwapArgs = {
+                orderNonceHex: reservationNonce,
+                liquidityProviders: liquidityProviders,
+            };
+
+            console.log('riftSwapArgs:', riftSwapArgs);
+            try {
+                window.rift.createRiftSwap(riftSwapArgs);
+            } catch (e) {
+                console.error('Error creating Rift swap:', e);
+            }
+            refreshAllDepositData();
+
+            try {
+                handleNavigation(`/swap/${reservationUri}`);
+            } catch (e) {
+                console.error('Navigation error:', e);
+            }
+
+            console.log('Liquidity reservation successful');
+        } catch (error) {
+            console.error('Error reserving liquidity:', error);
+        }
+    };
+
+    const proceedWithReservationPayingFeesUsingEth = async () => {
         if (!window.ethereum || !lowestFeeReservationParams) {
             console.error('Ethereum or reservation parameters not found.');
             return;
@@ -154,8 +266,8 @@ export const ReserveLiquidity = ({}) => {
             <Flex align='center' fontFamily={FONT_FAMILIES.NOSTROMO} w='50px' ml='-45px' mr='0px' h='100%' justify='center' direction='column'>
                 {isValid ? (
                     <>
-                        <IoMdCheckmarkCircle color='green' size={'24px'} />
-                        <Text fontSize={'10px'} mt='3px' color='green'>
+                        <IoMdCheckmarkCircle color={colors.greenOutline} size={'24px'} />
+                        <Text fontSize={'10px'} mt='3px' color={colors.greenOutline}>
                             Valid
                         </Text>
                     </>
@@ -186,78 +298,9 @@ export const ReserveLiquidity = ({}) => {
                 {...opaqueBackgroundColor}
                 borderWidth={3}
                 borderColor={colors.borderGray}>
-                <Text
-                    fontSize='14px'
-                    mb='18px'
-                    maxW={'900px'}
-                    fontWeight={'normal'}
-                    color={colors.textGray}
-                    fontFamily={FONT_FAMILIES.AUX_MONO}
-                    textAlign='center'
-                    mt='25px'
-                    flex='1'>
-                    Initiate the swap by paying a reservation fee to lock the seller’s USDT. After the reservation is confirmed, you will have 6 hours to send BTC to complete the
-                    swap.
+                <Text fontSize='14px' mb='18px' maxW={'900px'} fontWeight={'normal'} color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='25px' flex='1'>
+                    Initiate the swap by paying a reservation fee to lock the seller’s USDT. After the reservation is confirmed, you will have 6 hours to send BTC to complete the swap.
                 </Text>
-                {/* Fees and Swap Time Estimate */}
-                <Flex w='380px' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='10px' mb='20px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
-                    <Flex w='50%' align='center' bg={colors.offBlack}>
-                        <Flex mx='13px' w='20px'>
-                            <LockClosed width={'20px'} color={colors.offWhite} />
-                        </Flex>
-                        <Flex direction={'column'}>
-                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3}>
-                                Reservation Fee
-                            </Text>
-                            {reservationFeeAmountMicroUsdt && (
-                                <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
-                                    {parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name}
-                                </Text>
-                            )}
-                        </Flex>
-                    </Flex>
-                    <Flex w='50%' align='center' bg={colors.borderGray}>
-                        <Flex mx='15px' w='20px'>
-                            <FaClock size={20} color={colors.offWhite} />
-                        </Flex>
-                        <Flex direction={'column'}>
-                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3}>
-                                Estimated Time
-                            </Text>{' '}
-                            <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
-                                70 Minutes
-                            </Text>
-                        </Flex>
-                    </Flex>
-                </Flex>
-
-                <Text ml='8px' mt='15px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
-                    Pay Reservation Fee In
-                </Text>
-                <Flex h='60px' w='100%' mb='20px'>
-                    <Flex
-                        flex={1}
-                        align='center'
-                        justify='center'
-                        bg={colors.currencyCard.usdt.background}
-                        border={`2px solid ${colors.currencyCard.usdt.border}`}
-                        borderRadius={'10px 0px 0px 10px'}>
-                        <WebAssetTag asset='USDT' />
-                    </Flex>
-                    <Flex
-                        onClick={() => toastInfo({ title: 'Reserve using Bitcoin is coming soon' })}
-                        flex={1}
-                        align='center'
-                        justify='center'
-                        bg={colors.currencyCard.disabled.background}
-                        border={`2px solid ${colors.currencyCard.disabled.border}`}
-                        borderLeft='none'
-                        zIndex={1}
-                        cursor={'pointer'}
-                        borderRadius={'0px 10px 10px 0px'}>
-                        <WebAssetTag asset='BTC' cursor='pointer' greyedOut />
-                    </Flex>
-                </Flex>
 
                 {/* USDT Payout Address */}
                 <Text ml='8px' mt='15px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
@@ -293,6 +336,22 @@ export const ReserveLiquidity = ({}) => {
                         )}
                     </Flex>
                 </Flex>
+                {/* Fees and Swap Time Estimate */}
+                <Flex w='216px' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='10px' mb='20px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
+                    <Flex w='100%' align='center' bg={colors.offBlack}>
+                        <Flex mx='15px' w='20px'>
+                            <FaClock size={20} color={colors.offWhite} />
+                        </Flex>
+                        <Flex direction={'column'}>
+                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3}>
+                                Estimated Swap Time
+                            </Text>{' '}
+                            <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
+                                {'18 Minutes'}
+                            </Text>
+                        </Flex>
+                    </Flex>
+                </Flex>
 
                 {/* Reserve Button */}
             </Flex>
@@ -303,7 +362,7 @@ export const ReserveLiquidity = ({}) => {
                 mt='25px'
                 transition={'0.2s'}
                 h='45px'
-                onClick={ethPayoutAddress && isEthereumPayoutAddressValid ? () => initiateReservation() : null}
+                onClick={ethPayoutAddress && isEthereumPayoutAddressValid ? () => (isPayingFeesInBTC ? proceedWithReservationPayingFeesUsingBtc() : initiateReservationPayingFeesInEth()) : null}
                 fontSize={'15px'}
                 align={'center'}
                 userSelect={'none'}
@@ -312,7 +371,7 @@ export const ReserveLiquidity = ({}) => {
                 justify={'center'}
                 border={ethPayoutAddress && isEthereumPayoutAddressValid ? '3px solid #445BCB' : '3px solid #3242a8'}>
                 <Text color={ethPayoutAddress && isEthereumPayoutAddressValid ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
-                    {isConnected ? 'Reserve Liquidity' : 'Connect Wallet'}
+                    {isPayingFeesInBTC ? 'Reserve Liquidity' : isConnected ? 'Reserve Liquidity' : 'Connect Wallet'}
                 </Text>
             </Flex>
             <ReservationStatusModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} status={reserveLiquidityStatus} error={reserveLiquidityError} txHash={txHash} />

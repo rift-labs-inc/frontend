@@ -27,6 +27,8 @@ type Store = {
     updateConnectedUserBalanceFormatted: (assetKey: string, newBalance: string) => void;
     selectedInputAsset: ValidAsset;
     setSelectedInputAsset: (asset: ValidAsset) => void;
+    isPayingFeesInBTC: boolean;
+    setIsPayingFeesInBTC: (isPayingFeesInBTC: boolean) => void;
 
     // contract data (deposit vaults, swap reservations)
     allDepositVaults: any;
@@ -215,6 +217,8 @@ export const useStore = create<Store>((set) => {
             })),
         selectedInputAsset: validAssets.USDT,
         setSelectedInputAsset: (selectedInputAsset) => set({ selectedInputAsset }),
+        isPayingFeesInBTC: true,
+        setIsPayingFeesInBTC: (isPayingFeesInBTC) => set({ isPayingFeesInBTC }),
 
         // contract data (deposit vaults, swap reservations)
         allDepositVaults: {},

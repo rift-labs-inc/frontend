@@ -43,12 +43,13 @@ export const ConnectWalletButton = ({}) => {
                                         color={colors.offWhite}
                                         _active={{ bg: colors.purpleBackground }}
                                         _hover={{ bg: colors.purpleHover }}
-                                        borderRadius={'10px'}
-                                        border={`2.4px solid ${colors.purpleBorder}`}
+                                        borderRadius={'12px'}
+                                        border={`2.5px solid ${colors.purpleBorder}`}
                                         type='button'
                                         fontFamily={FONT_FAMILIES.NOSTROMO}
-                                        fontSize='0.88rem'
-                                        paddingX='20px'
+                                        fontSize='17px'
+                                        paddingX='28px'
+                                        paddingY={'10px'}
                                         bg='#101746'
                                         boxShadow='0px 0px 5px 3px rgba(18,18,18,1)'>
                                         Connect Wallet
@@ -77,8 +78,8 @@ export const ConnectWalletButton = ({}) => {
                             return (
                                 <div style={{ display: 'flex', gap: 8 }}>
                                     <Button
-                                        border={`2.4px solid ${selectedInputAsset.name === 'WETH' ? colors.purpleBorder : selectedInputAsset.border_color}`}
-                                        h='37px'
+                                        border={`2.5px solid ${selectedInputAsset.name === 'WETH' ? colors.purpleBorder : selectedInputAsset.border_color}`}
+                                        h='42px'
                                         color={colors.offWhite}
                                         pt='2px'
                                         bg={selectedInputAsset.name === 'WETH' ? colors.purpleBackground : selectedInputAsset.dark_bg_color}
@@ -86,20 +87,20 @@ export const ConnectWalletButton = ({}) => {
                                         _hover={{ bg: selectedInputAsset.bg_color }}
                                         _active={{ bg: selectedInputAsset.bg_color }}
                                         px='0'
-                                        borderRadius={'10px'}
+                                        borderRadius={'12px'}
                                         onClick={openChainModal}
                                         style={{ display: 'flex', alignItems: 'center' }}
                                         cursor={'pointer'}
                                         type='button'>
                                         <>
-                                            <Flex mt='-2px' mr='-10px' pl='15px'>
+                                            <Flex mt='-2px' mr='-10px' pl='15px' paddingY={'2px'}>
                                                 {(() => {
                                                     switch (selectedInputAsset.name) {
                                                         case 'WETH':
                                                             return <ETH_Icon width={'12'} height={'17'} viewBox='0 0 23 36' />;
                                                         case 'USDT':
                                                             return (
-                                                                <Flex mt='-2px' mr='2px'>
+                                                                <Flex mt='-2px' mr='0px'>
                                                                     <USDT_Icon width='20' height='20' viewBox='0 0 80 80' />
                                                                 </Flex>
                                                             );
@@ -108,7 +109,7 @@ export const ConnectWalletButton = ({}) => {
                                                     }
                                                 })()}
                                             </Flex>
-                                            <Flex px='20px' mt='-2px' mr='-2px' fontSize={'16px'} fontFamily={'aux'}>
+                                            <Flex mt='-2px' mr='-2px' fontSize='17px' paddingX='22px' fontFamily={'aux'}>
                                                 {`${parseFloat(localBalance).toFixed(2).toString()} ${selectedInputAsset.name}`}
                                             </Flex>
                                         </>
@@ -119,14 +120,15 @@ export const ConnectWalletButton = ({}) => {
                                         _hover={{ bg: colors.purpleHover }}
                                         _active={{ bg: colors.purpleBackground }}
                                         bg={colors.purpleBackground}
-                                        borderRadius={'10px'}
+                                        borderRadius={'12px'}
                                         fontFamily={'aux'}
-                                        fontSize={'16px'}
+                                        fontSize={'17px'}
                                         fontWeight={'bold'}
                                         pt='2px'
+                                        px='18px'
                                         color={colors.offWhite}
-                                        h='37px'
-                                        border={`2.4px solid ${colors.purpleBorder}`}>
+                                        h='42px'
+                                        border={`2.5px solid ${colors.purpleBorder}`}>
                                         {account.displayName}
                                     </Button>
                                 </div>

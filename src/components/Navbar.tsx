@@ -81,18 +81,18 @@ export const Navbar = ({}) => {
                 py='2px'
                 position='relative'
                 alignItems='center'>
-                <Text color={router.pathname == route ? colors.offWhite : '#ccc'} fontSize={isTablet ? '0.9rem' : '1.1rem'} fontFamily='Nostromo'>
+                <Text color={router.pathname == route ? colors.offWhite : '#ccc'} fontSize={isTablet ? '0.9rem' : '19px'} fontFamily='Nostromo'>
                     {text}
                 </Text>
                 {router.pathname === route && (
                     <Flex
                         position={'absolute'}
                         // ml='1px'
-                        top='29px'
+                        top='31px'
                         // w={router.pathname === '/manage' ? '87px' : router.pathname === '/activity' ? '93px' : router.pathname === '/whitepaper' ? '134px' : '55px'}
                         w='calc(100% - 20px)'
                         height='2px'
-                        bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
+                        bgGradient={`linear(-90deg, #394AFF, #FF8F28)`}
                     />
                 )}
             </Flex>
@@ -184,7 +184,7 @@ export const Navbar = ({}) => {
                     {navItem('About', '/about')}
                 </Flex>
                 <Spacer />
-                {/* TODO: Remove below: */}
+                {/* TODO: Remove below perhaps in prod: */}
                 <Flex direction='column' fontFamily={FONT_FAMILIES.AUX_MONO} align='center' fontSize='12px' position='absolute' top={0} left={0} right={0}>
                     {isLocalhost && (
                         <Button

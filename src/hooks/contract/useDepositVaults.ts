@@ -44,6 +44,10 @@ export function useDepositVaults(): UseDepositVaultsResult {
         (depositVaults: DepositVault[], swapReservations: SwapReservation[]): DepositVault[] => {
             const currentTimestamp = Math.floor(Date.now() / 1000);
             const additionalBalances = new Map<number, BigNumber>();
+            const expiredAmountsPerVault = new Map<number, BigNumber>();
+            const completedAmountsPerVault = new Map<number, BigNumber>();
+            const unlockedAmountsPerVault = new Map<number, BigNumber>();
+
             let expiredReservationsCount = 0;
             let completedReservationsCount = 0;
             let unlockedReservationsCount = 0;
@@ -57,21 +61,44 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
                 if (isCompleted) {
                     completedReservationsCount++;
-                } else if (isUnlocked) {
-                    unlockedReservationsCount++;
-                } else if (isCreated && isExpired) {
-                    expiredReservationsCount++;
-                    reservation.state = ReservationState.Expired;
+
+                    // Update per-vault completed amounts
                     reservation.vaultIndexes.forEach((vaultIndex, i) => {
                         const vaultIndexNumber = vaultIndex;
                         const amountToAdd = reservation.amountsToReserve[i];
+                        const currentCompleted = completedAmountsPerVault.get(vaultIndexNumber) || BigNumber.from(0);
+                        completedAmountsPerVault.set(vaultIndexNumber, currentCompleted.add(amountToAdd));
+                    });
+                } else if (isUnlocked) {
+                    unlockedReservationsCount++;
+
+                    // Update per-vault unlocked amounts
+                    reservation.vaultIndexes.forEach((vaultIndex, i) => {
+                        const vaultIndexNumber = vaultIndex;
+                        const amountToAdd = reservation.amountsToReserve[i];
+                        const currentUnlocked = unlockedAmountsPerVault.get(vaultIndexNumber) || BigNumber.from(0);
+                        unlockedAmountsPerVault.set(vaultIndexNumber, currentUnlocked.add(amountToAdd));
+                    });
+                } else if (isCreated && isExpired) {
+                    expiredReservationsCount++;
+                    reservation.state = ReservationState.Expired;
+
+                    // Update per-vault expired amounts
+                    reservation.vaultIndexes.forEach((vaultIndex, i) => {
+                        const vaultIndexNumber = vaultIndex;
+                        const amountToAdd = reservation.amountsToReserve[i];
+
+                        // Update additionalBalances (existing logic)
                         const currentAdditional = additionalBalances.get(vaultIndexNumber) || BigNumber.from(0);
                         additionalBalances.set(vaultIndexNumber, currentAdditional.add(amountToAdd));
+
+                        // Update expiredAmountsPerVault
+                        const currentExpired = expiredAmountsPerVault.get(vaultIndexNumber) || BigNumber.from(0);
+                        expiredAmountsPerVault.set(vaultIndexNumber, currentExpired.add(amountToAdd));
                     });
                 }
             });
 
-            // console.log(`Total expired reservations found: ${expiredReservationsCount}`);
             setTotalExpiredReservations(expiredReservationsCount);
             setTotalCompletedReservations(completedReservationsCount);
             setTotalUnlockedReservations(unlockedReservationsCount);
@@ -83,6 +110,13 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 const additionalBalance = additionalBalances.get(vaultIndex) || BigNumber.from(0);
                 const newCalculatedUnreservedBalance = BigNumber.from(vault.unreservedBalanceFromContract).add(additionalBalance);
 
+                // Get expired and completed amounts
+                const expiredAmount = expiredAmountsPerVault.get(vaultIndex) || BigNumber.from(0);
+                const completedAmount = completedAmountsPerVault.get(vaultIndex) || BigNumber.from(0);
+                const unlockedAmount = unlockedAmountsPerVault.get(vaultIndex) || BigNumber.from(0);
+
+                totalAvailableLiquidity = totalAvailableLiquidity.add(newCalculatedUnreservedBalance);
+
                 if (!additionalBalance.isZero()) {
                     console.log(`Updating vault ${vaultIndex}:`, {
                         originalUnreservedBalance: vault.unreservedBalanceFromContract.toString(),
@@ -92,14 +126,15 @@ export function useDepositVaults(): UseDepositVaultsResult {
                     });
                 }
 
-                totalAvailableLiquidity = totalAvailableLiquidity.add(newCalculatedUnreservedBalance);
-
                 return {
                     ...vault,
                     trueUnreservedBalance: newCalculatedUnreservedBalance || vault.unreservedBalanceFromContract,
                     reservedBalance: BigNumber.from(vault.initialBalance).sub(newCalculatedUnreservedBalance).sub(vault.withdrawnAmount),
                     depositAsset: selectedInputAsset,
                     index: vaultIndex,
+                    expiredAmount,
+                    completedAmount,
+                    unlockedAmount,
                 };
             });
 

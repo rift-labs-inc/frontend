@@ -407,13 +407,13 @@ export const DepositConfirmation = ({}) => {
                 </Button>
             </Flex>
             <Text align='center' w='100%' mb='24px' fontSize='21px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
-                CREATE DEPOSIT VAULT
+                CREATE SELL ORDER
             </Text>
 
             {/* INSTRUCTIONAL TEXT  */}
-            <Text my='10px' justifyContent='center' w='100%' fontSize={'13px'} letterSpacing={'-1px'} textAlign={'center'}>
+            <Text mb='10px' justifyContent='center' w='100%' fontSize={'13px'} letterSpacing={'-1px'} textAlign={'center'}>
                 Create a sell order deposit vault, get payed out in
-                <OrangeText> BTC</OrangeText> when your order is filled by a buyer. Withdraw unreserved liquidity anytime.
+                <OrangeText> Bitcoin</OrangeText> when your order is filled by a buyer. Withdraw unreserved liquidity anytime.
             </Text>
 
             {/* Fees and Swap Time Estimate */}
@@ -441,7 +441,7 @@ export const DepositConfirmation = ({}) => {
                                 Estimated Swap Time
                             </Text>{' '}
                             <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
-                                2 HOURS
+                                20 Minutes
                             </Text>
                         </Flex>
                     </Flex>

@@ -13,12 +13,7 @@ export async function getDepositVaultsLength(provider: ethers.providers.Provider
     return length.toNumber();
 }
 
-export async function getDepositVaultByIndex(
-    provider: ethers.providers.Provider,
-    abi: ethers.ContractInterface,
-    rift_exchange_contract: string,
-    index: number,
-): Promise<DepositVault | null> {
+export async function getDepositVaultByIndex(provider: ethers.providers.Provider, abi: ethers.ContractInterface, rift_exchange_contract: string, index: number): Promise<DepositVault | null> {
     const contract = new ethers.Contract(rift_exchange_contract, abi, provider);
 
     try {
@@ -62,12 +57,7 @@ export async function getLiquidityProvider(
     return await contract.getLiquidityProvider(liquidityProviderAddress);
 }
 
-export async function getTokenBalance(
-    provider: ethers.providers.Provider | ethers.Signer,
-    tokenAddress: string,
-    accountAddress: string,
-    abi: ethers.ContractInterface,
-): Promise<BigNumber> {
+export async function getTokenBalance(provider: ethers.providers.Provider | ethers.Signer, tokenAddress: string, accountAddress: string, abi: ethers.ContractInterface): Promise<BigNumber> {
     const contract = new ethers.Contract(tokenAddress, abi, provider);
 
     try {
@@ -93,6 +83,10 @@ export async function getDepositVaults(
     rift_exchange_contract: string,
     indexesArray: number[],
 ): Promise<DepositVault[]> {
+    //console log all inputs
+
+    console.log('getDepositVaults', rift_exchange_contract, indexesArray);
+
     const factory = new ethers.ContractFactory(abi, bytecode);
     const deployTransaction = factory.getDeployTransaction(indexesArray, rift_exchange_contract);
 
@@ -100,7 +94,6 @@ export async function getDepositVaults(
         return fn();
     };
     const result = await retryEthCall(() => provider.call({ data: deployTransaction.data as string }));
-
     const decodedResults = decodeDepositVaults(result);
     return decodedResults;
 }
@@ -173,7 +166,6 @@ function decodeSwapReservations(data: string): SwapReservation[] {
                     bytes32 nonce,
                     uint256 totalSatsInputInlcudingProxyFee,
                     uint256 totalSwapOutputAmount,
-                    int256 prepaidFeeAmount,
                     uint256 proposedBlockHeight,
                     bytes32 proposedBlockHash,
                     uint256[] vaultIndexes,
@@ -193,7 +185,6 @@ function decodeSwapReservations(data: string): SwapReservation[] {
             nonce,
             totalSatsInputInlcudingProxyFee,
             totalSwapOutputAmount,
-            prepaidFeeAmount,
             proposedBlockHeight,
             proposedBlockHash,
             vaultIndexes,
@@ -211,7 +202,6 @@ function decodeSwapReservations(data: string): SwapReservation[] {
             nonce,
             totalSatsInputInlcudingProxyFee: ethers.BigNumber.from(totalSatsInputInlcudingProxyFee),
             totalSwapOutputAmount: ethers.BigNumber.from(totalSwapOutputAmount),
-            prepaidFeeAmount: ethers.BigNumber.from(prepaidFeeAmount),
             proposedBlockHeight: ethers.BigNumber.from(proposedBlockHeight),
             proposedBlockHash,
             vaultIndexes,
@@ -224,12 +214,7 @@ function decodeSwapReservations(data: string): SwapReservation[] {
     return swapReservations;
 }
 
-export function listenForLiquidityReservedEvent(
-    provider: ethers.providers.Provider,
-    contractAddress: string,
-    abi: ethers.ContractInterface,
-    reserverAddress: string,
-): Promise<LiquidityReservedEvent> {
+export function listenForLiquidityReservedEvent(provider: ethers.providers.Provider, contractAddress: string, abi: ethers.ContractInterface, reserverAddress: string): Promise<LiquidityReservedEvent> {
     return new Promise((resolve, reject) => {
         // Set up a provider and a contract instance
         const contract = new ethers.Contract(contractAddress, abi, provider);

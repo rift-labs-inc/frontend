@@ -21,7 +21,6 @@ export type SwapReservation = {
     indexInContract?: number;
     totalSatsInputInlcudingProxyFee: BigNumber;
     totalSwapOutputAmount: BigNumber;
-    prepaidFeeAmount: BigNumber;
     proposedBlockHeight: BigNumber;
     proposedBlockHash: string;
     vaultIndexes: number[];
@@ -46,6 +45,9 @@ export type DepositVault = {
     trueUnreservedBalance?: BigNumberish;
     withdrawnAmount: BigNumberish;
     reservedBalance?: BigNumberish;
+    expiredAmount?: BigNumberish;
+    completedAmount?: BigNumberish;
+    unlockedAmount?: BigNumberish;
     btcExchangeRate: BigNumberish;
     btcPayoutLockingScript: string;
     index?: number;
@@ -108,4 +110,18 @@ export const ROUTES: { [k in RouteButton]: string } = {
     Swap: '/',
     Manage: '/manage',
     About: '/about',
+};
+
+export type ReservationByPaymasterRequest = {
+    sender: string;
+    vault_indexes_to_reserve: Array<string>;
+    amounts_to_reserve: Array<string>;
+    eth_payout_address: string;
+    total_sats_input_inlcuding_proxy_fee: string;
+    expired_swap_reservation_indexes: Array<string>;
+};
+
+export type ReservationByPaymasterResponse = {
+    status: boolean;
+    tx_hash: string | null;
 };

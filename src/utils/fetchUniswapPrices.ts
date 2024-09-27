@@ -85,15 +85,11 @@ export async function getWBTCPrice(): Promise<string> {
     const slot0 = await poolContract.slot0();
     const sqrtPriceX96 = slot0.sqrtPriceX96.toString();
 
-    console.log('unis sqrtPricex96', sqrtPriceX96);
-
     // Convert sqrtPriceX96 to a regular number
     const sqrtPrice = parseFloat(sqrtPriceX96) / 2 ** 96;
 
     // Calculate the price
     const price = sqrtPrice * sqrtPrice * 10 ** 2;
-
-    console.log(`1 WBTC = ${price.toFixed(18)} USDT`);
 
     // If you need to adjust for USDT's price in USD:
     const wbtcPriceInUSD = price * usdtPriceInUSD;

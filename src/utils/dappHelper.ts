@@ -57,10 +57,7 @@ export function calculateBtcOutputAmountFromExchangeRate(depositAmountFromContra
 
 export function formatBtcExchangeRate(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat, depositAssetDecimals) {
     // [0] convert to smallest token amount per btc
-    const exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc = parseUnits(
-        BigNumber.from(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat).toString(),
-        bitcoinDecimals,
-    );
+    const exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc = parseUnits(BigNumber.from(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat).toString(), bitcoinDecimals);
 
     // [1] unbuffer from 18 decimals
     const exchangeRateInSmallestTokenUnitPerBtc = unBufferFrom18Decimals(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc, depositAssetDecimals);
@@ -199,10 +196,7 @@ export const formatAmountToString = (selectedInputAsset, number) => {
 
 export function calculateFillPercentage(vault: DepositVault) {
     // return 20;
-    const fillPercentageBigNumber = BigNumber.from(vault.initialBalance)
-        .sub(BigNumber.from(vault.unreservedBalanceFromContract))
-        .div(BigNumber.from(vault.initialBalance))
-        .mul(100);
+    const fillPercentageBigNumber = BigNumber.from(vault.initialBalance).sub(BigNumber.from(vault.unreservedBalanceFromContract)).div(BigNumber.from(vault.initialBalance)).mul(100);
 
     const fillPercentage = fillPercentageBigNumber.toNumber();
     return Math.min(Math.max(fillPercentage, 0), 100);
@@ -389,13 +383,9 @@ export const fetchReservationDetails = async (swapReservationURL: string, ethers
             // [1] Fetch and decode swap reservation details from contract
             const swapAggregatorBytecode = swapReservationsAggregatorABI.bytecode;
             const swapAggregatorAbi = swapReservationsAggregatorABI.abi;
-            const swapReservations = await getSwapReservations(
-                ethersRpcProvider,
-                swapAggregatorBytecode.object,
-                swapAggregatorAbi,
-                selectedInputAsset.riftExchangeContractAddress,
-                [parseInt(reservationDetails.reservationId)],
-            );
+            const swapReservations = await getSwapReservations(ethersRpcProvider, swapAggregatorBytecode.object, swapAggregatorAbi, selectedInputAsset.riftExchangeContractAddress, [
+                parseInt(reservationDetails.reservationId),
+            ]);
 
             const swapReservationData: SwapReservation = swapReservations[0];
 

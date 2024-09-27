@@ -46,7 +46,7 @@ const Home = () => {
 
     const RiftSVG = () => {
         return (
-            <svg width={isTablet ? '50' : '80'} height={isTablet ? '30' : '40'} viewBox='0 0 2293 547' fill='none' xmlns='http://www.w3.org/2000/svg'>
+            <svg width={isTablet ? '50' : '90'} height={isTablet ? '30' : '40'} viewBox='0 0 2293 547' fill='none' xmlns='http://www.w3.org/2000/svg'>
                 <path
                     fillRule='evenodd'
                     clipRule='evenodd'
@@ -62,7 +62,7 @@ const Home = () => {
             <OpenGraph />
             <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
                 <Navbar />
-                <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === '0-not-started' ? '19vh' : '100px'}>
+                <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === '0-not-started' ? '18vh' : '100px'}>
                     {swapFlowState != '0-not-started' ? (
                         <ReserveLiquidityContainer />
                     ) : (
@@ -81,7 +81,7 @@ const Home = () => {
                                         }}
                                         bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
                                         letterSpacing={isTablet ? '1px' : '2px'}
-                                        fontSize={isMobile ? '44px' : isTablet ? '60px' : '94px'}
+                                        fontSize={isMobile ? '44px' : isTablet ? '60px' : '106px'}
                                         fontFamily={'Klein'}
                                         fontWeight='bold'
                                         mt={isTablet ? '-18px' : '-25px'}>
@@ -97,7 +97,7 @@ const Home = () => {
                                         flexDir={'column'}
                                         textAlign={'center'}
                                         userSelect={'none'}
-                                        fontSize={isTablet ? '12px' : '14px'}
+                                        fontSize={isTablet ? '12px' : '15px'}
                                         mt={'8px'}
                                         fontFamily={FONT_FAMILIES.AUX_MONO}
                                         color={'#c3c3c3'}
