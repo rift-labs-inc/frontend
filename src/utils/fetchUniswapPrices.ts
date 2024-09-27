@@ -21,13 +21,6 @@ const chainLinkUsdtPriceOracleAddressABI = [
     },
 ];
 
-export async function getLatestAnswerFromChainlinkUsdtPriceOracle(): Promise<string> {
-    const mainnetProvider = new ethers.providers.JsonRpcProvider(mainnetEthRpcUrl);
-    const contract = new ethers.Contract(chainLinkUsdtPriceOracleAddress, chainLinkUsdtPriceOracleAddressABI, mainnetProvider);
-    const latestAnswer = await contract.latestAnswer();
-    return latestAnswer.toString();
-}
-
 const wbtcUsdtPool = '0x9Db9e0e53058C89e5B94e29621a205198648425B';
 const univ3ABI = [
     {
@@ -75,10 +68,10 @@ const univ3ABI = [
     },
 ];
 
-export async function getWBTCPrice(): Promise<string> {
+export async function getPrices(): Promise<string[]> {
     const mainnetProvider = new ethers.providers.JsonRpcProvider(mainnetEthRpcUrl);
-
-    const usdtPrice = await getLatestAnswerFromChainlinkUsdtPriceOracle();
+    const contract = new ethers.Contract(chainLinkUsdtPriceOracleAddress, chainLinkUsdtPriceOracleAddressABI, mainnetProvider);
+    const usdtPrice = await contract.latestAnswer();
     const usdtPriceInUSD = parseFloat(ethers.utils.formatUnits(usdtPrice, 8)); // Assuming 8 decimals for USDT oracle
 
     const poolContract = new ethers.Contract(wbtcUsdtPool, univ3ABI, mainnetProvider);
@@ -94,5 +87,5 @@ export async function getWBTCPrice(): Promise<string> {
     // If you need to adjust for USDT's price in USD:
     const wbtcPriceInUSD = price * usdtPriceInUSD;
 
-    return wbtcPriceInUSD.toFixed(18);
+    return [wbtcPriceInUSD.toFixed(18), usdtPrice.toString()];
 }

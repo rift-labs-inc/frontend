@@ -90,7 +90,7 @@ export const DepositUI = () => {
 
         if (isConnected && address) {
             continuouslyRefreshUserDepositData();
-            const intervalId = setInterval(continuouslyRefreshUserDepositData, 1000);
+            const intervalId = setInterval(continuouslyRefreshUserDepositData, 2000);
             return () => clearInterval(intervalId);
         }
     }, [isConnected, address]);

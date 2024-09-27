@@ -84,16 +84,8 @@ export const Navbar = ({}) => {
                 <Text color={router.pathname == route ? colors.offWhite : '#ccc'} fontSize={isTablet ? '0.9rem' : '19px'} fontFamily='Nostromo'>
                     {text}
                 </Text>
-                {router.pathname === route && (
-                    <Flex
-                        position={'absolute'}
-                        // ml='1px'
-                        top='31px'
-                        // w={router.pathname === '/manage' ? '87px' : router.pathname === '/activity' ? '93px' : router.pathname === '/whitepaper' ? '134px' : '55px'}
-                        w='calc(100% - 20px)'
-                        height='2px'
-                        bgGradient={`linear(-90deg, #394AFF, #FF8F28)`}
-                    />
+                {(router.pathname === route || (route === '/' && router.pathname.includes('/swap'))) && (
+                    <Flex position={'absolute'} top='31px' w='calc(100% - 20px)' height='2px' bgGradient={`linear(-90deg, #394AFF, #FF8F28)`} />
                 )}
             </Flex>
         );
