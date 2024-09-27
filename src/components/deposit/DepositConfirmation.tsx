@@ -79,7 +79,6 @@ export const DepositConfirmation = ({}) => {
     const [profitAmountUSD, setProfitAmountUSD] = useState('0.00');
 
     const [bitcoinOutputAmountUSD, setBitcoinOutputAmountUSD] = useState('0.00');
-
     const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
