@@ -7,7 +7,6 @@ import { AlertCircleOutline, OpenOutline } from 'react-ionicons';
 import { HiOutlineExternalLink } from 'react-icons/hi';
 import { PiVaultBold } from 'react-icons/pi';
 import { IoIosCheckmarkCircle, IoMdSettings } from 'react-icons/io';
-import { etherScanBaseUrl } from '../../utils/constants';
 import { useStore } from '../../store';
 import { useRouter } from 'next/router';
 import GooSpinner from '../other/GooSpiner';
@@ -61,7 +60,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
 
     const getEtherscanUrl = () => {
         if (!txHash) return '#';
-        return `${etherScanBaseUrl}/tx/${txHash}`;
+        return `${selectedInputAsset.etherScanBaseUrl}/tx/${txHash}`;
     };
 
     return (

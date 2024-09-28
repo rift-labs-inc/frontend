@@ -5,7 +5,6 @@ import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
 import { AlertCircleOutline } from 'react-ionicons';
 import { HiOutlineExternalLink } from 'react-icons/hi';
-import { etherScanBaseUrl } from '../../utils/constants';
 import { useStore } from '../../store';
 import GooSpinner from '../other/GooSpiner';
 import { IoIosCheckmarkCircle } from 'react-icons/io';
@@ -30,6 +29,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen 
     const isCompleted = status === ReserveStatus.Confirmed;
     const isError = status === ReserveStatus.Error;
     const isLoading = ![ReserveStatus.Idle, ReserveStatus.Confirmed, ReserveStatus.Error].includes(status);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
 
     const getStatusMessage = () => {
@@ -58,7 +58,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen 
 
     const getEtherscanUrl = () => {
         if (!txHash) return '#';
-        return `${etherScanBaseUrl}/tx/${txHash}`;
+        return `${selectedInputAsset.etherScanBaseUrl}/tx/${txHash}`;
     };
 
     return (

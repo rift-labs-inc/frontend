@@ -7,7 +7,6 @@ import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
 import { AlertCircleOutline } from 'react-ionicons';
 import { HiOutlineExternalLink, HiXCircle } from 'react-icons/hi';
-import { etherScanBaseUrl } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { DepositVault } from '../../types';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
@@ -133,7 +132,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
 
     const getEtherscanUrl = () => {
         if (!txHash) return '#';
-        return `${etherScanBaseUrl}/tx/${txHash}`;
+        return `${selectedInputAsset.etherScanBaseUrl}/tx/${txHash}`;
     };
 
     const handleConfirmWithdraw = () => {

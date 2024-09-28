@@ -18,7 +18,7 @@ import ReservationStatusModal from './ReservationStatusModal';
 import { formatUnits } from 'ethers/lib/utils';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { opaqueBackgroundColor, RESERVATION_SERVER_URL } from '../../utils/constants';
+import { opaqueBackgroundColor } from '../../utils/constants';
 import { IoMdCheckmarkCircle } from 'react-icons/io';
 import { HiXCircle } from 'react-icons/hi';
 import { FaClock, FaLock } from 'react-icons/fa';
@@ -116,7 +116,7 @@ export const ReserveLiquidity = ({}) => {
         }
     };
 
-    async function reserveByPaymaster(request: ReservationByPaymasterRequest, baseUrl: string = RESERVATION_SERVER_URL): Promise<ReservationByPaymasterResponse> {
+    async function reserveByPaymaster(request: ReservationByPaymasterRequest, baseUrl: string = selectedInputAsset.reservationServerUrl): Promise<ReservationByPaymasterResponse> {
         try {
             const response = await fetch(`${baseUrl}/reserve_by_paymaster`, {
                 method: 'POST',
