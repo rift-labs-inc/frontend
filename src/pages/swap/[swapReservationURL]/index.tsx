@@ -45,7 +45,7 @@ const ReservationDetails = () => {
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
     const bitcoinSwapTransactionHash = useStore((state) => state.bitcoinSwapTransactionHash);
     const setBitcoinSwapTransactionHash = useStore((state) => state.setBitcoinSwapTransactionHash);
-    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
+    const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
@@ -220,15 +220,7 @@ const ReservationDetails = () => {
                             {loadingState ? (
                                 swapReservationNotFound ? (
                                     <Flex mb='20px' mt='20px' direction={'column'} align='center'>
-                                        <Text
-                                            fontSize='18px'
-                                            textAlign='center'
-                                            w='800px'
-                                            mt='-4px'
-                                            mb='0px'
-                                            fontWeight={'normal'}
-                                            color={colors.offWhite}
-                                            fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                        <Text fontSize='18px' textAlign='center' w='800px' mt='-4px' mb='0px' fontWeight={'normal'} color={colors.offWhite} fontFamily={FONT_FAMILIES.NOSTROMO}>
                                             Invalid Swap Reservation
                                         </Text>
                                         <Flex>
@@ -277,27 +269,12 @@ const ReservationDetails = () => {
                                     {/* CHROME EXTENSION DETECTED */}
                                     {typeof window !== 'undefined' && window.rift ? (
                                         <>
-                                            <Text
-                                                fontSize='16px'
-                                                textAlign='center'
-                                                w='800px'
-                                                mt='-2px'
-                                                mb='20px'
-                                                fontWeight={'normal'}
-                                                color={colors.darkerGray}
-                                                fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                            <Text fontSize='16px' textAlign='center' w='800px' mt='-2px' mb='20px' fontWeight={'normal'} color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
                                                 Your reservation is confirmed and your Rift Proxy Wallet is detected! Please send the Bitcoin amount to the address below:
                                             </Text>
                                             <Flex mt='10px' mx='10px'>
                                                 {bitcoinUri && bitcoinUri !== '' && (
-                                                    <Flex
-                                                        py='10px'
-                                                        px='10px'
-                                                        w={'270px'}
-                                                        borderRadius='10px'
-                                                        bg='white'
-                                                        mr='40px'
-                                                        boxShadow={'0px 15px 15px rgba(0, 16, 118, 0.4)'}>
+                                                    <Flex py='10px' px='10px' w={'270px'} borderRadius='10px' bg='white' mr='40px' boxShadow={'0px 15px 15px rgba(0, 16, 118, 0.4)'}>
                                                         <QRCode value={bitcoinUri} size={250} />
                                                     </Flex>
                                                 )}
@@ -321,12 +298,7 @@ const ReservationDetails = () => {
                                                                     {address.slice(0, Math.floor((2 / 3) * address.length))}
                                                                 </Text>
                                                                 <Flex alignItems='center'>
-                                                                    <Text
-                                                                        letterSpacing={'-1px'}
-                                                                        fontSize='25px'
-                                                                        display='inline-flex'
-                                                                        color={colors.offWhite}
-                                                                        fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                                                    <Text letterSpacing={'-1px'} fontSize='25px' display='inline-flex' color={colors.offWhite} fontFamily={FONT_FAMILIES.AUX_MONO}>
                                                                         {address.slice(Math.floor((2 / 3) * address.length))}
                                                                     </Text>
                                                                     <LuCopy
@@ -371,9 +343,7 @@ const ReservationDetails = () => {
                                                                             cursor: 'pointer',
                                                                             marginLeft: '10px',
                                                                         }}
-                                                                        onClick={() =>
-                                                                            navigator.clipboard.writeText(formatUnits(totalSwapAmountInSats, bitcoinDecimals).toString())
-                                                                        }
+                                                                        onClick={() => navigator.clipboard.writeText(formatUnits(totalSwapAmountInSats, bitcoinDecimals).toString())}
                                                                     />
                                                                     <Flex ml='20px' mt='-1px'>
                                                                         <AssetTag assetName='BTC' width='75px' />
@@ -408,14 +378,7 @@ const ReservationDetails = () => {
                                                 <Flex maxW='600px' mt='20px' direction='column' align='center'>
                                                     <WarningSVG width='60px' />
 
-                                                    <Text
-                                                        fontSize='15px'
-                                                        fontWeight='normal'
-                                                        color={colors.textGray}
-                                                        fontFamily={FONT_FAMILIES.AUX_MONO}
-                                                        textAlign='center'
-                                                        mt='20px'
-                                                        flex='1'>
+                                                    <Text fontSize='15px' fontWeight='normal' color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='20px' flex='1'>
                                                         Your Rift Proxy Wallet is not detected. If this is your first time swapping, please add the Rift Chrome Extension below:
                                                     </Text>
                                                     <Flex

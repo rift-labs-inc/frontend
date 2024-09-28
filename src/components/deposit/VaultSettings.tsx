@@ -70,16 +70,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                     <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
                         Bitcoin Payout Address
                     </Text>
-                    <Flex
-                        h='50px'
-                        mt='6px'
-                        w='100%'
-                        bg={colors.offBlackLighter}
-                        border={'3px solid'}
-                        borderColor={colors.borderGrayLight}
-                        borderRadius={'14px'}
-                        px='15px'
-                        align={'center'}>
+                    <Flex h='50px' mt='6px' w='100%' bg={colors.offBlackLighter} border={'3px solid'} borderColor={colors.borderGrayLight} borderRadius={'14px'} px='15px' align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing='-1px' fontFamily={FONT_FAMILIES.AUX_MONO}>
                             {convertLockingScriptToBitcoinAddress(selectedVaultToManage.btcPayoutLockingScript)}
                         </Text>
@@ -125,11 +116,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                     <Flex h='50px' mt='6px' w='100%' bg='#2E1C0C' border={'3px solid'} borderColor={'#78491F'} borderRadius={'14px'} pl='15px' pr='10px' align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
                             {selectedVaultToManage.btcExchangeRate &&
-                                calculateBtcOutputAmountFromExchangeRate(
-                                    selectedVaultToManage.initialBalance,
-                                    selectedVaultToManage.depositAsset.decimals,
-                                    selectedVaultToManage.btcExchangeRate,
-                                )}
+                                calculateBtcOutputAmountFromExchangeRate(selectedVaultToManage.initialBalance, selectedVaultToManage.depositAsset.decimals, selectedVaultToManage.btcExchangeRate)}
                         </Text>
 
                         <Spacer />
@@ -229,12 +216,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                 </Flex>
 
                 {/* Withdraw Status Modal */}
-                <WithdrawStatusModal
-                    isOpen={isWithdrawModalOpen}
-                    onClose={() => setIsWithdrawModalOpen(false)}
-                    clearError={resetWithdrawState}
-                    selectedVaultToManage={selectedVaultToManage}
-                />
+                <WithdrawStatusModal isOpen={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} clearError={resetWithdrawState} selectedVaultToManage={selectedVaultToManage} />
             </>
         </Flex>
     );

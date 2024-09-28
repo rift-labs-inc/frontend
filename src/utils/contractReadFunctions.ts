@@ -83,10 +83,6 @@ export async function getDepositVaults(
     rift_exchange_contract: string,
     indexesArray: number[],
 ): Promise<DepositVault[]> {
-    //console log all inputs
-
-    console.log('getDepositVaults', rift_exchange_contract, indexesArray);
-
     const factory = new ethers.ContractFactory(abi, bytecode);
     const deployTransaction = factory.getDeployTransaction(indexesArray, rift_exchange_contract);
 
@@ -208,8 +204,6 @@ function decodeSwapReservations(data: string): SwapReservation[] {
             amountsToReserve: amountsToReserve.map((amount: any) => ethers.BigNumber.from(amount)),
         };
     });
-
-    console.log('Decoded swap reservations:', swapReservations);
 
     return swapReservations;
 }

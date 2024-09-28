@@ -13,12 +13,6 @@ import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
 import useWindowSize from '../hooks/useWindowSize';
 import { useStore } from '../store';
 import { colors } from '../utils/colors';
-import { weiToEth, satsToBtc, calculateAmountBitcoinOutput, calculateFillPercentage } from '../utils/dappHelper';
-import { DepositVault } from '../types';
-import { BigNumber } from 'ethers';
-import { ChevronLeftIcon } from '@chakra-ui/icons';
-import { BTCSVG, ETH_Icon, ETH_Logo, ETHSVG } from '../components/other/SVGs';
-import ExchangeRateChart from '../components/charts/ExchangeRateChart';
 
 const Manage = () => {
     const { isMobile } = useWindowSize();

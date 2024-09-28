@@ -92,9 +92,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                             w={
                                 status != DepositStatus.Confirmed &&
                                 status != DepositStatus.Error &&
-                                (status === DepositStatus.WaitingForWalletConfirmation || status === DepositStatus.ApprovalPending || status === DepositStatus.DepositPending
-                                    ? '100%'
-                                    : '60%')
+                                (status === DepositStatus.WaitingForWalletConfirmation || status === DepositStatus.ApprovalPending || status === DepositStatus.DepositPending ? '100%' : '60%')
                             }
                             mt='25px'
                             mb='0px'
@@ -142,7 +140,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                         <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
                                     </Flex>
                                     <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
-                                        Etherscan
+                                        View on Etherscan
                                     </Text>
                                 </Button>
 

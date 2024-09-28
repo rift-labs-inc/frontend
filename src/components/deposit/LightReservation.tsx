@@ -20,7 +20,7 @@ interface LightReservationProps {
 const LightReservation: React.FC<LightReservationProps> = ({ reservation, url, onClick }) => {
     const [btcInputSwapAmount, setBtcInputSwapAmount] = useState<string>('-1');
     const [usdtOutputSwapAmount, setUsdtOutputSwapAmount] = useState<string>('-1');
-    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
+    const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
 
     useEffect(() => {

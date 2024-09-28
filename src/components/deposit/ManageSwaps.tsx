@@ -7,7 +7,7 @@ import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
 import HorizontalButtonSelector from '../HorizontalButtonSelector';
 import VaultSettings from './VaultSettings';
-import LightVault from './LightVault';
+import LightDepositVault from './LightDepositVault';
 import { useAccount } from 'wagmi';
 import { ConnectWalletButton } from '../ConnectWalletButton';
 import LightReservation from './LightReservation';
@@ -17,12 +17,6 @@ import { opaqueBackgroundColor } from '../../utils/constants';
 import { useContractData } from '../providers/ContractDataProvider';
 
 export const ManageSwaps = ({}) => {
-    const {
-        options: optionsButtonVaultsVsReservations,
-        selected: selectedButtonVaultsVsReservations,
-        setSelected: setOptionsButtonVaultsVsReservations,
-    } = useHorizontalSelectorInput(['Vaults', 'Reservations'] as const);
-
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
     const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
@@ -33,31 +27,35 @@ export const ManageSwaps = ({}) => {
     const { address, isConnected } = useAccount();
     const { refreshAllDepositData, loading } = useContractData();
     const allSwapReservations = useStore((state) => state.allSwapReservations);
-    const userSwapReservations = allSwapReservations
-        ? allSwapReservations.filter((reservation: SwapReservation) => reservation.owner.toLowerCase() === address?.toLowerCase())
-        : [];
+    const router = useRouter();
+    const userSwapReservations = allSwapReservations ? allSwapReservations.filter((reservation: SwapReservation) => reservation.owner.toLowerCase() === address?.toLowerCase()) : [];
+    const {
+        options: optionsButtonVaultsVsReservations,
+        selected: selectedButtonVaultsVsReservations,
+        setSelected: setOptionsButtonVaultsVsReservations,
+    } = useHorizontalSelectorInput(['Vaults', 'Reservations'] as const);
 
     const handleGoBack = () => {
         setSelectedVaultToManage(null);
     };
 
-    const router = useRouter();
-
     const handleNavigation = (route: string) => {
         router.push(route);
     };
-    // useeffect to console log user sawp reservations
+
+    // useeffect to console log user swap reservations
     useEffect(() => {
-        console.log('allSwapReservations', allSwapReservations);
-    }, [allSwapReservations]);
+        refreshAllDepositData();
+        console.log('allDepositVaults', userActiveDepositVaults);
+        console.log('userDepositVaults', userActiveDepositVaults);
+    }, []);
 
     // Update selected vault with new data
     useEffect(() => {
         if (selectedVaultToManage) {
             const selectedVaultIndex = selectedVaultToManage.index;
 
-            const updatedVault =
-                userActiveDepositVaults.find((vault) => vault.index === selectedVaultIndex) || userCompletedDepositVaults.find((vault) => vault.index === selectedVaultIndex);
+            const updatedVault = userActiveDepositVaults.find((vault) => vault.index === selectedVaultIndex) || userCompletedDepositVaults.find((vault) => vault.index === selectedVaultIndex);
 
             if (updatedVault) {
                 setSelectedVaultToManage(updatedVault);
@@ -140,9 +138,7 @@ export const ManageSwaps = ({}) => {
                     maxW='1000px'
                     h='650px'
                     px='24px'
-                    justify={
-                        loading ? 'center' : (vaultsToDisplay && vaultsToDisplay.length > 0) || (userSwapReservations && userSwapReservations.length) > 0 ? 'flex-start' : 'center'
-                    }
+                    justify={loading ? 'center' : (vaultsToDisplay && vaultsToDisplay.length > 0) || (userSwapReservations && userSwapReservations.length) > 0 ? 'flex-start' : 'center'}
                     py='12px'
                     align={'center'}
                     {...opaqueBackgroundColor}
@@ -232,7 +228,7 @@ export const ManageSwaps = ({}) => {
                                         {vaultsToDisplay &&
                                             vaultsToDisplay.length > 0 &&
                                             vaultsToDisplay.map((vault: DepositVault, index: number) => (
-                                                <LightVault key={index} vault={vault} onClick={() => setSelectedVaultToManage(vault)} selectedInputAsset={selectedInputAsset} />
+                                                <LightDepositVault key={index} vault={vault} onClick={() => setSelectedVaultToManage(vault)} selectedInputAsset={selectedInputAsset} />
                                             ))}
                                     </>
                                 )}

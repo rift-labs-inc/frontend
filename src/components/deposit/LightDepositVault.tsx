@@ -10,13 +10,13 @@ import { FaRegArrowAltCircleRight } from 'react-icons/fa';
 import { IoMdSettings } from 'react-icons/io';
 import MiniStatusBar from './MiniDepositStatusBar';
 
-interface LightVaultProps {
+interface LightDepositVaultProps {
     vault: DepositVault;
     onClick: () => void;
     selectedInputAsset: ValidAsset;
 }
 
-const LightVault: React.FC<LightVaultProps> = ({ vault, onClick, selectedInputAsset }) => {
+const LightDepositVault: React.FC<LightDepositVaultProps> = ({ vault, onClick, selectedInputAsset }) => {
     const fillPercentage = calculateFillPercentage(vault);
     return (
         <Flex
@@ -92,4 +92,4 @@ const LightVault: React.FC<LightVaultProps> = ({ vault, onClick, selectedInputAs
     );
 };
 
-export default LightVault;
+export default LightDepositVault;

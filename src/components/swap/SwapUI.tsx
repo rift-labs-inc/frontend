@@ -91,13 +91,6 @@ export const SwapUI = () => {
     const [fastestProxyWalletFeeInSats, setFastestProxyWalletFeeInSats] = useState(500);
     const areNewDepositsPaused = useStore((state) => state.areNewDepositsPaused);
 
-    // TODO: populate exchagne rate if btc input and usdt output are already set and you press the back button
-    // useEffect(() => {
-    //     if (btcInputSwapAmount && usdtOutputSwapAmount) {
-    //         setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(lowestFeeReservationParams?.totalSwapExchangeRate, selectedInputAsset.decimals)).toFixed(2)));
-    //     }
-    // }, []);
-
     // update token price and available liquidity
     useEffect(() => {
         if (selectedInputAsset && validAssets[selectedInputAsset.name] && !usdtExchangeRatePerBTC) {

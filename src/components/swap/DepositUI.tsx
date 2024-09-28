@@ -1,7 +1,7 @@
 import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input, Skeleton } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { colors } from '../../utils/colors';
 import { useStore } from '../../store';

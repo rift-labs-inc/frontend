@@ -12,7 +12,6 @@ import { FONT_FAMILIES } from '../utils/font';
 
 export const ConnectWalletButton = ({}) => {
     const [usdtBalance, setUsdtBalance] = useState('0');
-    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
     const { address, isConnected } = useAccount();
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const localBalance = useStore((state) => state.validAssets[selectedInputAsset.name]?.connectedUserBalanceFormatted || '0');

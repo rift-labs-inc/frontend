@@ -21,7 +21,7 @@ import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { opaqueBackgroundColor, RESERVATION_SERVER_URL } from '../../utils/constants';
 import { IoMdCheckmarkCircle } from 'react-icons/io';
 import { HiXCircle } from 'react-icons/hi';
-import { FaClock } from 'react-icons/fa';
+import { FaClock, FaLock } from 'react-icons/fa';
 import { LockClosed } from 'react-ionicons';
 import { AssetTag } from '../other/AssetTag';
 import WebAssetTag from '../other/WebAssetTag';
@@ -53,7 +53,7 @@ export const ReserveLiquidity = ({}) => {
     const [isWaitingForCorrectNetwork, setIsWaitingForCorrectNetwork] = useState(false);
     const [isEthereumPayoutAddressValid, setIsEthereumPayoutAddressValid] = useState<boolean>(false);
     const isPayingFeesInBTC = useStore((state) => state.isPayingFeesInBTC);
-    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
+    const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const [loadingReservation, setLoadingReservation] = useState(false);
 
     const { refreshAllDepositData } = useContractData();
@@ -299,7 +299,7 @@ export const ReserveLiquidity = ({}) => {
                 px='50px'
                 direction={'column'}
                 pb='30px'
-                pt='15px'
+                pt='10px'
                 align={'center'}
                 {...opaqueBackgroundColor}
                 borderWidth={3}
@@ -308,8 +308,42 @@ export const ReserveLiquidity = ({}) => {
                     Initiate the swap by paying a reservation fee to lock the seller’s USDT. After the reservation is confirmed, you will have 6 hours to send BTC to complete the swap.
                 </Text>
 
+                {/* Fees and Swap Time Estimate */}
+                <Flex w='100%' justify={'center'}>
+                    <Flex w='49%' justify={'center'} mt='20px'>
+                        <Flex w='100%' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='0px' mb='0px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
+                            <Flex w='50%' align='center' bg={colors.offBlack}>
+                                <Flex mx='13px' w='20px'>
+                                    <FaLock size={'22px'} color={colors.offWhite} />
+                                </Flex>
+                                <Flex direction={'column'}>
+                                    <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
+                                        Reservation Fee
+                                    </Text>
+                                    <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
+                                        Free
+                                    </Text>
+                                </Flex>
+                            </Flex>
+                            <Flex w='50%' align='center' bg={colors.borderGray}>
+                                <Flex mx='15px'>
+                                    <FaClock size={'24px'} color={colors.offWhite} />
+                                </Flex>
+                                <Flex direction={'column'}>
+                                    <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
+                                        Estimated Swap Time
+                                    </Text>{' '}
+                                    <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
+                                        20 Minutes
+                                    </Text>
+                                </Flex>
+                            </Flex>
+                        </Flex>
+                    </Flex>
+                </Flex>
+
                 {/* USDT Payout Address */}
-                <Text ml='8px' mt='15px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                <Text ml='8px' mt='26px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                     USDT Payout Address
                 </Text>
                 <Flex mt='-2px' mb='15px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
@@ -340,22 +374,6 @@ export const ReserveLiquidity = ({}) => {
                                 <EthereumAddressValidation address={ethPayoutAddress} />
                             </Flex>
                         )}
-                    </Flex>
-                </Flex>
-                {/* Fees and Swap Time Estimate */}
-                <Flex w='216px' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='10px' mb='20px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
-                    <Flex w='100%' align='center' bg={colors.offBlack}>
-                        <Flex mx='15px' w='20px'>
-                            <FaClock size={20} color={colors.offWhite} />
-                        </Flex>
-                        <Flex direction={'column'}>
-                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3}>
-                                Estimated Swap Time
-                            </Text>{' '}
-                            <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
-                                {'18 Minutes'}
-                            </Text>
-                        </Flex>
                     </Flex>
                 </Flex>
 

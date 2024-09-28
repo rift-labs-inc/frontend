@@ -23,7 +23,7 @@ const ContractDataContext = createContext<ContractDataContextType | undefined>(u
 
 export function ContractDataProvider({ children }: { children: ReactNode }) {
     const { address, isConnected } = useAccount();
-    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
+    const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const setEthersRpcProvider = useStore((state) => state.setEthersRpcProvider);
     const setUserEthAddress = useStore((state) => state.setUserEthAddress);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
@@ -34,15 +34,15 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
     const setAreNewDepositsPaused = useStore((state) => state.setAreNewDepositsPaused);
 
-    // Memoize selectedInputAsset to prevent unnecessary re-renders
-    const memoizedSelectedInputAsset = useMemo(() => selectedInputAsset, [selectedInputAsset?.tokenAddress, selectedInputAsset?.contractRpcURL]);
-
     // Set ethers provider when selectedInputAsset changes
     useEffect(() => {
-        if (memoizedSelectedInputAsset?.contractRpcURL && window.ethereum) {
-            setEthersRpcProvider(new ethers.providers.JsonRpcProvider(memoizedSelectedInputAsset.contractRpcURL));
+        if ((selectedInputAsset?.contractRpcURL && window.ethereum) || !ethersRpcProvider) {
+            const provider = new ethers.providers.JsonRpcProvider(selectedInputAsset.contractRpcURL);
+            if (!provider) return;
+            console.log('god new ethers provider set', provider);
+            setEthersRpcProvider(provider);
         }
-    }, [memoizedSelectedInputAsset?.contractRpcURL, address, isConnected]);
+    }, [selectedInputAsset?.contractRpcURL, address, isConnected]);
 
     // Reference to store the interval ID
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -59,25 +59,25 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         };
 
         const fetchSelectedAssetUserBalance = async () => {
-            if (!address || !memoizedSelectedInputAsset || !ethersRpcProvider) return;
+            if (!address || !selectedInputAsset || !ethersRpcProvider) return;
 
-            const balance = await getTokenBalance(ethersRpcProvider, memoizedSelectedInputAsset.tokenAddress, address, ERC20ABI);
-            updateConnectedUserBalanceRaw(memoizedSelectedInputAsset.name, balance);
+            const balance = await getTokenBalance(ethersRpcProvider, selectedInputAsset.tokenAddress, address, ERC20ABI);
+            updateConnectedUserBalanceRaw(selectedInputAsset.name, balance);
 
-            const formattedBalance = formatUnits(balance, useStore.getState().validAssets[memoizedSelectedInputAsset.name].decimals);
-            updateConnectedUserBalanceFormatted(memoizedSelectedInputAsset.name, formattedBalance.toString());
+            const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedInputAsset.name].decimals);
+            updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
         };
 
         const checkIfNewDepositsArePausedFromContract = async () => {
-            if (!ethersRpcProvider || !memoizedSelectedInputAsset) return;
+            if (!ethersRpcProvider || !selectedInputAsset) return;
 
-            const areNewDepositsPausedBool = await checkIfNewDepositsArePaused(ethersRpcProvider, riftExchangeABI.abi, memoizedSelectedInputAsset.riftExchangeContractAddress);
+            const areNewDepositsPausedBool = await checkIfNewDepositsArePaused(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress);
             setAreNewDepositsPaused(areNewDepositsPausedBool);
         };
 
         if (address) {
             setUserEthAddress(address);
-            if (memoizedSelectedInputAsset && window.ethereum) {
+            if (selectedInputAsset && window.ethereum) {
                 fetchSelectedAssetUserBalance();
             }
         }
@@ -105,7 +105,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             }
         };
     }, [
-        memoizedSelectedInputAsset?.tokenAddress,
+        selectedInputAsset?.tokenAddress,
         address,
         isConnected,
         setBitcoinPriceUSD,
@@ -115,7 +115,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         updateConnectedUserBalanceFormatted,
         setAreNewDepositsPaused,
         ethersRpcProvider,
-        memoizedSelectedInputAsset,
+        selectedInputAsset,
     ]);
 
     // Fetch deposit vaults

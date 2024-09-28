@@ -16,7 +16,7 @@ type UseSwapReservationsResult = {
 export function useSwapReservations(): UseSwapReservationsResult {
     const [allSwapReservations, setAllSwapReservations] = useState<SwapReservation[]>([]);
     const { address, isConnected } = useAccount();
-    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
+    const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
     const store = useStore();

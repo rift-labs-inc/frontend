@@ -25,7 +25,6 @@ export function useDepositVaults(): UseDepositVaultsResult {
     const { address, isConnected } = useAccount();
     const {
         allDepositVaults,
-        ethersRpcProvider,
         setUserActiveDepositVaults,
         setUserCompletedDepositVaults,
         updateTotalAvailableLiquidity,
@@ -35,6 +34,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
         setTotalCompletedReservations,
         selectedInputAsset,
     } = useStore();
+    const ethersRpcProvider = useStore.getState().ethersRpcProvider;
 
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
@@ -146,7 +146,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
         [selectedInputAsset.name],
     );
 
-    const fetchDepositVaultsReservationsData = useCallback(async () => {
+    const fetchDepositVaultsReservationsData = async () => {
         if (!ethersRpcProvider || !selectedInputAsset.riftExchangeContractAddress) {
             setUserActiveDepositVaults([]);
             setUserCompletedDepositVaults([]);
@@ -167,7 +167,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 Array.from({ length: depositVaultsLength }).map((_, i) => i),
             );
 
-            // console.log('All Deposit Vaults:', depositVaults);
+            console.log('All Deposit Vaults:', depositVaults);
 
             const updatedDepositVaults = calculateTrueUnreservedLiquidity(depositVaults, allFetchedSwapReservations);
             // console.log('Updated Deposit Vaults:', updatedDepositVaults);
@@ -203,7 +203,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
             console.error('Error fetching deposit vaults data:', err);
             setError(err instanceof Error ? err : new Error('An unknown error occurred'));
         }
-    }, [ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress, allFetchedSwapReservations, isConnected, address]);
+    };
 
     useEffect(() => {
         let isMounted = true;
@@ -230,7 +230,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
         return () => {
             isMounted = false;
         };
-    }, [swapReservationsLoading]);
+    }, [ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress, allFetchedSwapReservations, isConnected, address, swapReservationsLoading]);
 
     useEffect(() => {
         if (swapReservationsError) {
@@ -238,14 +238,15 @@ export function useDepositVaults(): UseDepositVaultsResult {
         }
     }, [swapReservationsError]);
 
-    const refreshAllDepositData = useCallback(async () => {
+    const refreshAllDepositData = async () => {
+        console.log('Refreshing all deposit data...');
         try {
             await fetchDepositVaultsReservationsData();
         } catch (error) {
             console.error('Error refreshing user deposit data:', error);
             throw error;
         }
-    }, []);
+    };
 
     return {
         allFetchedDepositVaults: Array.isArray(allDepositVaults) ? allDepositVaults : [],

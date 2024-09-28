@@ -162,6 +162,7 @@ export const useStore = create<Store>((set) => {
         // setup & asset data
         userEthAddress: '',
         setUserEthAddress: (userEthAddress) => set({ userEthAddress }),
+        //console log the new ethers provider
         ethersRpcProvider: null,
         setEthersRpcProvider: (provider) => set({ ethersRpcProvider: provider }),
         bitcoinPriceUSD: 0,

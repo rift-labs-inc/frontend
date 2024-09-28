@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { ethers, BigNumberish } from 'ethers';
 import { useContractData } from '../../components/providers/ContractDataProvider';
 
@@ -28,13 +28,13 @@ export function useWithdrawLiquidity() {
     const [txHash, setTxHash] = useState<string | null>(null);
     const { refreshAllDepositData } = useContractData();
 
-    const resetWithdrawState = useCallback(() => {
+    const resetWithdrawState = () => {
         setStatus(WithdrawStatus.Idle);
         setError(null);
         setTxHash(null);
-    }, []);
+    };
 
-    const withdrawLiquidity = useCallback(async (params: WithdrawLiquidityParams) => {
+    const withdrawLiquidity = async (params: WithdrawLiquidityParams) => {
         setStatus(WithdrawStatus.WaitingForWalletConfirmation);
         setError(null);
         setTxHash(null);
@@ -52,12 +52,7 @@ export function useWithdrawLiquidity() {
 
             setStatus(WithdrawStatus.WithdrawingLiquidity);
 
-            const withdrawTx = await riftExchangeContractInstance.withdrawLiquidity(
-                params.globalVaultIndex,
-                params.localVaultIndex,
-                params.amountToWithdraw,
-                params.expiredReservationIndexes,
-            );
+            const withdrawTx = await riftExchangeContractInstance.withdrawLiquidity(params.globalVaultIndex, params.localVaultIndex, params.amountToWithdraw, params.expiredReservationIndexes);
 
             setTxHash(withdrawTx.hash);
             setStatus(WithdrawStatus.WithdrawalPending);
@@ -72,7 +67,7 @@ export function useWithdrawLiquidity() {
             setError(err instanceof Error ? err.message : String(err));
             setStatus(WithdrawStatus.Error);
         }
-    }, []);
+    };
 
     return {
         withdrawLiquidity,

@@ -73,7 +73,7 @@ export const DepositConfirmation = ({}) => {
     const { chains, error, switchChain } = useSwitchChain();
     const { data: walletClient } = useWalletClient();
     const { depositLiquidity, status: depositLiquidityStatus, error: depositLiquidityError, txHash, resetDepositState } = useDepositLiquidity();
-    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
+    const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
     const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
     const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
@@ -477,11 +477,11 @@ export const DepositConfirmation = ({}) => {
                                 <FaLock size={'22px'} color={colors.offWhite} />
                             </Flex>
                             <Flex direction={'column'}>
-                                <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3}>
-                                    No Fees
+                                <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
+                                    DEPOSIT FEE
                                 </Text>
                                 <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
-                                    FREE DEPOSITS
+                                    FREE
                                 </Text>
                             </Flex>
                         </Flex>
@@ -490,7 +490,7 @@ export const DepositConfirmation = ({}) => {
                                 <FaClock size={'24px'} color={colors.offWhite} />
                             </Flex>
                             <Flex direction={'column'}>
-                                <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3}>
+                                <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
                                     Estimated Swap Time
                                 </Text>{' '}
                                 <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
