@@ -62,10 +62,10 @@ export type ValidAsset = {
     riftExchangeContractAddress?: string;
     riftExchangeAbi?: any;
     contractChainID?: number;
-    contractDetails?: Chain;
+    chainDetails?: Chain;
     contractRpcURL?: string;
     etherScanBaseUrl?: string;
-    reservationServerUrl?: string;
+    paymasterUrl?: string;
     proverFee?: BigNumber;
     releaserFee?: BigNumber;
     icon_svg: any;

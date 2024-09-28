@@ -116,7 +116,7 @@ export const ReserveLiquidity = ({}) => {
         }
     };
 
-    async function reserveByPaymaster(request: ReservationByPaymasterRequest, baseUrl: string = selectedInputAsset.reservationServerUrl): Promise<ReservationByPaymasterResponse> {
+    async function reserveByPaymaster(request: ReservationByPaymasterRequest, baseUrl: string = selectedInputAsset.paymasterUrl): Promise<ReservationByPaymasterResponse> {
         try {
             const response = await fetch(`${baseUrl}/reserve_by_paymaster`, {
                 method: 'POST',

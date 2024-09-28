@@ -6,7 +6,7 @@ import { USDT_Icon, ETH_Icon, ETH_Logo } from './components/other/SVGs';
 import { ERC20ABI } from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
-import arbitrumSepoliaDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/421614/run-latest.json';
+import arbitrumDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/42161/run-latest.json';
 import { arbitrumSepolia, arbitrum } from 'viem/chains';
 
 type Store = {
@@ -113,15 +113,15 @@ export const useStore = create<Store>((set) => {
         },
         USDT: {
             name: 'USDT',
-            tokenAddress: '0xc4af7cfe412805c4a751321b7b0799ca9b8dbe56',
+            tokenAddress: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
             decimals: 6,
-            riftExchangeContractAddress: arbitrumSepoliaDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
+            riftExchangeContractAddress: arbitrumDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
             riftExchangeAbi: riftExchangeABI.abi,
-            contractChainID: 421614,
-            contractDetails: arbitrumSepolia,
+            contractChainID: 42161,
+            chainDetails: arbitrum,
             contractRpcURL: 'https://arbitrum.gateway.tenderly.co/7BXjxEhRzB8b2jmcaZkNw9',
-            etherScanBaseUrl: 'https://sepolia.arbiscan.io/',
-            reservationServerUrl: 'https://rift-paymaster-arbitrum-sepolia.up.railway.app',
+            etherScanBaseUrl: 'https://arbiscan.io/',
+            paymasterUrl: 'https://rift-paymaster-arbitrum.up.railway.app',
             proverFee: BigNumber.from(19000000),
             releaserFee: BigNumber.from(1000000),
             icon_svg: USDT_Icon,

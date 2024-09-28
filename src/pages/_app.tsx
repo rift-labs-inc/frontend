@@ -20,7 +20,7 @@ import { ContractDataProvider } from '../components/providers/ContractDataProvid
 const config = getDefaultConfig({
     appName: 'My RainbowKit App',
     projectId: 'YOUR_PROJECT_ID',
-    chains: [arbitrumSepolia, arbitrum],
+    chains: [arbitrum],
     ssr: true, // If your dApp uses server side rendering (SSR)
 });
 

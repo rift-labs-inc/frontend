@@ -385,7 +385,7 @@ export const DepositConfirmation = ({}) => {
 
                     try {
                         // Attempt to add the network if it's not found
-                        await addNetwork(selectedInputAsset.contractDetails); // Or pass the appropriate chain object
+                        await addNetwork(selectedInputAsset.chainDetails); // Or pass the appropriate chain object
                         console.log('Network added successfully');
 
                         // After adding, attempt to switch to the new network
