@@ -76,7 +76,6 @@ export const SwapUI = () => {
     const [isBelowMinBtcInput, setIsBelowMinBtcInput] = useState(false);
     const [minBtcInputAmount, setMinBtcInputAmount] = useState('');
     const { refreshAllDepositData, loading } = useContractData();
-    // const loading = true;
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
     const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);
@@ -98,6 +97,15 @@ export const SwapUI = () => {
     //         setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(lowestFeeReservationParams?.totalSwapExchangeRate, selectedInputAsset.decimals)).toFixed(2)));
     //     }
     // }, []);
+
+    // update token price and available liquidity
+    useEffect(() => {
+        if (selectedInputAsset && validAssets[selectedInputAsset.name] && !usdtExchangeRatePerBTC) {
+            const totalAvailableLiquidity = validAssets[selectedInputAsset.name]?.totalAvailableLiquidity;
+            setAvailableLiquidity(totalAvailableLiquidity ?? BigNumber.from(0));
+            setUsdtExchangeRatePerBTC(validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC);
+        }
+    }, [selectedInputAsset, validAssets, btcInputSwapAmount, usdtOutputSwapAmount]);
 
     // if usdtswapoutput exists, recalate it
     useEffect(() => {
@@ -543,7 +551,7 @@ export const SwapUI = () => {
                                 {loading ? `Loading contract data${dots}` : 'You Send'}
                             </Text>
                             {loading ? (
-                                <Skeleton height='54px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#795436'} endColor={'#6C4525'} />
+                                <Skeleton height='62px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#795436'} endColor={'#6C4525'} />
                             ) : (
                                 <Input
                                     value={btcInputSwapAmount}
@@ -711,7 +719,7 @@ export const SwapUI = () => {
                                 {loading ? `Loading contract data${dots}` : 'You Receive'}
                             </Text>
                             {loading ? (
-                                <Skeleton height='54px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#2E5F50'} endColor={'#0F4534'} />
+                                <Skeleton height='62px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#2E5F50'} endColor={'#0F4534'} />
                             ) : (
                                 <Input
                                     value={usdtOutputSwapAmount}

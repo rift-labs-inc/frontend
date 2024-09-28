@@ -12,7 +12,7 @@ import { colors } from '../utils/colors';
 import toast, { ToastBar, Toaster } from 'react-hot-toast';
 import '@rainbow-me/rainbowkit/styles.css';
 import { WagmiProvider } from 'wagmi';
-import { mainnet, holesky } from 'wagmi/chains';
+import { mainnet, holesky, arbitrumSepolia, arbitrum } from 'wagmi/chains';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { getDefaultConfig, RainbowKitProvider, darkTheme, Theme } from '@rainbow-me/rainbowkit';
 import { ContractDataProvider } from '../components/providers/ContractDataProvider';
@@ -20,7 +20,7 @@ import { ContractDataProvider } from '../components/providers/ContractDataProvid
 const config = getDefaultConfig({
     appName: 'My RainbowKit App',
     projectId: 'YOUR_PROJECT_ID',
-    chains: [mainnet, holesky],
+    chains: [arbitrumSepolia, arbitrum],
     ssr: true, // If your dApp uses server side rendering (SSR)
 });
 

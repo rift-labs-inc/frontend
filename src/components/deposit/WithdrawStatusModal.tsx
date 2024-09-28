@@ -70,12 +70,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
 
         try {
             // get the liquidity provider's data
-            const liquidityProviderData = await getLiquidityProvider(
-                provider,
-                riftExchangeABI.abi,
-                selectedVaultToManage.depositAsset.riftExchangeContractAddress,
-                await signer.getAddress(),
-            );
+            const liquidityProviderData = await getLiquidityProvider(provider, riftExchangeABI.abi, selectedVaultToManage.depositAsset.riftExchangeContractAddress, await signer.getAddress());
 
             // convert the depositVaultIndexes to strings for comparison
             console.log('liquidityProviderData:', liquidityProviderData);
@@ -117,7 +112,6 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
     const isLoading = !isCompleted && !isError && status !== WithdrawStatus.Idle;
 
     const getStatusMessage = () => {
-        console.log('status:', status);
         switch (status) {
             case WithdrawStatus.WaitingForWalletConfirmation:
                 return 'Waiting for wallet confirmation...';
@@ -204,15 +198,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                 <ModalBody>
                     {isConfirmStep ? (
                         <Flex direction='column' align='center' justify='center' h='100%'>
-                            <Flex
-                                direction='column'
-                                py='10px'
-                                w='100%'
-                                borderRadius={'14px'}
-                                bg={colors.offBlackLighter}
-                                border='2px solid'
-                                borderColor={colors.borderGrayLight}
-                                px='16px'>
+                            <Flex direction='column' py='10px' w='100%' borderRadius={'14px'} bg={colors.offBlackLighter} border='2px solid' borderColor={colors.borderGrayLight} px='16px'>
                                 <Flex justify='space-between ' w='100%' align='center'>
                                     <Text color={!withdrawAmount ? colors.offWhite : colors.textGray} fontSize='13px' letterSpacing='-1px' fontWeight='normal' fontFamily='Aux'>
                                         Amount

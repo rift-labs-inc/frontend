@@ -1,5 +1,6 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers';
 import { ComponentType, ReactElement } from 'react';
+import { Chain } from 'viem';
 
 export enum ReservationState {
     None,
@@ -61,6 +62,7 @@ export type ValidAsset = {
     riftExchangeContractAddress?: string;
     riftExchangeAbi?: any;
     contractChainID?: number;
+    contractDetails?: Chain;
     contractRpcURL?: string;
     proverFee?: BigNumber;
     releaserFee?: BigNumber;

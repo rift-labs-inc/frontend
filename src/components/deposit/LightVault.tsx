@@ -18,8 +18,6 @@ interface LightVaultProps {
 
 const LightVault: React.FC<LightVaultProps> = ({ vault, onClick, selectedInputAsset }) => {
     const fillPercentage = calculateFillPercentage(vault);
-    console.log('vault index:', vault.index);
-
     return (
         <Flex
             _hover={{

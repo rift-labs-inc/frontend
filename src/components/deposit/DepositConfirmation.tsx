@@ -28,7 +28,17 @@ import { colors } from '../../utils/colors';
 import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi';
-import { ethToWei, weiToEth, btcToSats, findVaultIndexToOverwrite, findVaultIndexWithSameExchangeRate, satsToBtc, bufferTo18Decimals, convertToBitcoinLockingScript } from '../../utils/dappHelper';
+import {
+    ethToWei,
+    weiToEth,
+    btcToSats,
+    findVaultIndexToOverwrite,
+    findVaultIndexWithSameExchangeRate,
+    satsToBtc,
+    bufferTo18Decimals,
+    convertToBitcoinLockingScript,
+    addNetwork,
+} from '../../utils/dappHelper';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../../store';
@@ -44,9 +54,11 @@ import { HiOutlineXCircle, HiXCircle } from 'react-icons/hi';
 import { IoCheckmarkDoneCircle } from 'react-icons/io5';
 import { IoMdCheckmarkCircle } from 'react-icons/io';
 import { AssetTag } from '../other/AssetTag';
-import { FaClock, FaRegArrowAltCircleRight } from 'react-icons/fa';
-import { LockClosed as OriginalLockClosed } from 'react-ionicons';
+import { FaClock, FaRegArrowAltCircleRight, FaLock } from 'react-icons/fa';
 import * as bitcoin from 'bitcoinjs-lib';
+import { addChain } from 'viem/actions';
+import { createWalletClient, custom } from 'viem';
+import { toastError } from '../../hooks/toast';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -126,10 +138,6 @@ export const DepositConfirmation = ({}) => {
                 : '$0.00';
         setUsdtDepositAmountUSD(usdtDepositAmountUSD);
     }, [usdtDepositAmount]);
-
-    useEffect(() => {
-        console.log('IS CONNECTED:', isConnected);
-    }, [isConnected]);
 
     // calculate Bitcoin output amount in USD
     useEffect(() => {
@@ -311,8 +319,6 @@ export const DepositConfirmation = ({}) => {
         }
     };
 
-    const LockClosed = ({ width = '20px', color = 'black' }) => <OriginalLockClosed width={width} color={color} />;
-
     const BitcoinAddressValidation: React.FC<{ address: string }> = ({ address }) => {
         const isValid = validateBitcoinPayoutAddress(address);
 
@@ -352,9 +358,54 @@ export const DepositConfirmation = ({}) => {
         }
 
         if (chainId !== selectedInputAsset.contractChainID) {
-            console.log('Switching network');
+            console.log('Switching or adding network');
+            console.log('current chainId:', chainId);
+            console.log('target chainId:', selectedInputAsset.contractChainID);
             setIsWaitingForCorrectNetwork(true);
-            switchChain({ chainId: selectedInputAsset.contractChainID });
+
+            const client = createWalletClient({
+                transport: custom(window.ethereum),
+            });
+
+            // Convert chainId to the proper hex format
+            const hexChainId = `0x${selectedInputAsset.contractChainID.toString(16)}`;
+
+            // Check if the chain is already available in MetaMask
+            try {
+                // Attempt to switch to the target network
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: hexChainId }],
+                });
+                console.log('Switched to the existing network successfully');
+            } catch (error) {
+                // Error code 4902 indicates the chain is not available
+                if (error.code === 4902) {
+                    console.log('Network not available in MetaMask. Attempting to add network.');
+
+                    try {
+                        // Attempt to add the network if it's not found
+                        await addNetwork(selectedInputAsset.contractDetails); // Or pass the appropriate chain object
+                        console.log('Network added successfully');
+
+                        // After adding, attempt to switch to the new network
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: hexChainId }],
+                        });
+                        console.log('Switched to the newly added network successfully');
+                    } catch (addNetworkError) {
+                        console.log('Failed to add or switch to network:', addNetworkError);
+                        // Handle add network error (e.g., notify the user)
+                        return;
+                    }
+                } else {
+                    console.log('Error switching network:', error);
+                    // Handle other errors (e.g., switch chain permission denied)
+                    return;
+                }
+            }
+
             return;
         }
 
@@ -418,32 +469,34 @@ export const DepositConfirmation = ({}) => {
             </Text>
 
             {/* Fees and Swap Time Estimate */}
-            <Flex w='100%' justify={'center'} mt='20px'>
-                <Flex w='100%' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='0px' mb='0px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
-                    <Flex w='50%' align='center' bg={colors.offBlack}>
-                        <Flex mx='13px' w='20px'>
-                            <LockClosed width={'20px'} color={colors.offWhite} />
+            <Flex w='100%' justify={'center'}>
+                <Flex w='60%' justify={'center'} mt='20px'>
+                    <Flex w='100%' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='0px' mb='0px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
+                        <Flex w='50%' align='center' bg={colors.offBlack}>
+                            <Flex mx='13px' w='20px'>
+                                <FaLock size={'22px'} color={colors.offWhite} />
+                            </Flex>
+                            <Flex direction={'column'}>
+                                <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3}>
+                                    No Fees
+                                </Text>
+                                <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
+                                    FREE DEPOSITS
+                                </Text>
+                            </Flex>
                         </Flex>
-                        <Flex direction={'column'}>
-                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3}>
-                                No Fees
-                            </Text>
-                            <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
-                                for {selectedInputAsset.name} DEPOSITS
-                            </Text>
-                        </Flex>
-                    </Flex>
-                    <Flex w='50%' align='center' bg={colors.borderGray}>
-                        <Flex mx='15px' w='20px'>
-                            <FaClock size={20} color={colors.offWhite} />
-                        </Flex>
-                        <Flex direction={'column'}>
-                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3}>
-                                Estimated Swap Time
-                            </Text>{' '}
-                            <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
-                                20 Minutes
-                            </Text>
+                        <Flex w='50%' align='center' bg={colors.borderGray}>
+                            <Flex mx='15px'>
+                                <FaClock size={'24px'} color={colors.offWhite} />
+                            </Flex>
+                            <Flex direction={'column'}>
+                                <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3}>
+                                    Estimated Swap Time
+                                </Text>{' '}
+                                <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
+                                    20 Minutes
+                                </Text>
+                            </Flex>
                         </Flex>
                     </Flex>
                 </Flex>
@@ -745,9 +798,9 @@ export const DepositConfirmation = ({}) => {
                                 console.log('usdtDepositAmount:', usdtDepositAmount);
                                 console.log('btcOutputAmount:', btcOutputAmount);
                                 console.log('payoutBTCAddress:', payoutBTCAddress);
-                                if (usdtDepositAmount && btcOutputAmount && payoutBTCAddress) {
+                                if (usdtDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress)) {
                                     initiateDeposit();
-                                }
+                                } else toastError('bruh', { title: 'Invalid Bitcoin Address', description: 'Please input a valid Segwit (bc1q...) Bitcoin payout address' });
                             }}
                             fontSize={'15px'}
                             align={'center'}
@@ -755,21 +808,9 @@ export const DepositConfirmation = ({}) => {
                             cursor={'pointer'}
                             borderRadius={'10px'}
                             justify={'center'}
-                            border={
-                                isConnected
-                                    ? usdtDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress)
-                                        ? '3px solid #445BCB'
-                                        : '3px solid #3242a8'
-                                    : '3px solid #445BCB'
-                            }>
+                            border={usdtDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress) ? '3px solid #445BCB' : '3px solid #3242a8'}>
                             <Text
-                                color={
-                                    isConnected
-                                        ? usdtDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress)
-                                            ? colors.offWhite
-                                            : colors.darkerGray
-                                        : colors.offWhite
-                                }
+                                color={usdtDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress) ? colors.offWhite : colors.darkerGray}
                                 fontFamily='Nostromo'>
                                 {isConnected ? 'Deposit Liquidity' : 'Connect Wallet'}
                             </Text>

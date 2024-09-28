@@ -108,6 +108,8 @@ export const Navbar = ({}) => {
                 return 'Sepolia';
             case 17000:
                 return 'Holesky';
+            case 421614:
+                return 'Arbitrum Sepolia';
             case 1:
                 return 'ETH';
             default:
@@ -198,7 +200,7 @@ export const Navbar = ({}) => {
                                 {Object.keys(useStore.getState().validAssets).map((key) => {
                                     const asset = useStore.getState().validAssets[key];
                                     return (
-                                        <Flex key={asset.riftExchangeContractAddress} justify='space-between'>
+                                        <Flex key={key} justify='space-between'>
                                             <Text>{asset.name}:</Text>
                                             <Text>{asset.riftExchangeContractAddress}</Text>
                                             <Text>Chain: {getChainName(asset.contractChainID)}</Text>
@@ -213,7 +215,7 @@ export const Navbar = ({}) => {
 
                                 <Flex justify='center' wrap='wrap' gap={4} alignItems='center'>
                                     {lowestFeeReservationParams?.vaultIndexesToReserve?.map((index, i) => (
-                                        <React.Fragment key={index}>
+                                        <React.Fragment key={`${index}-${i}`}>
                                             <Box
                                                 border='3px solid'
                                                 borderColor={colors.purpleBorder}

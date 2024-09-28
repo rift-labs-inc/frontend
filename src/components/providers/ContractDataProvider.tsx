@@ -82,6 +82,10 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             }
         }
 
+        fetchPriceData();
+        fetchSelectedAssetUserBalance();
+        checkIfNewDepositsArePausedFromContract();
+
         // Clear existing interval to prevent multiple intervals
         if (intervalRef.current) {
             clearInterval(intervalRef.current);

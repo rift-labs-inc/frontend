@@ -7,6 +7,7 @@ import { ERC20ABI } from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
 import arbitrumSepoliaDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/421614/run-latest.json';
+import { arbitrumSepolia, arbitrum } from 'viem/chains';
 
 type Store = {
     // setup & asset data
@@ -116,7 +117,8 @@ export const useStore = create<Store>((set) => {
             decimals: 6,
             riftExchangeContractAddress: arbitrumSepoliaDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
             riftExchangeAbi: riftExchangeABI.abi,
-            contractChainID: 17000,
+            contractChainID: 421614,
+            contractDetails: arbitrumSepolia,
             contractRpcURL: 'https://arbitrum-sepolia.gateway.tenderly.co/r5qQTaEWNQHaU4iClbRdt',
             proverFee: BigNumber.from(19000000),
             releaserFee: BigNumber.from(1000000),
@@ -133,27 +135,27 @@ export const useStore = create<Store>((set) => {
             connectedUserBalanceRaw: BigNumber.from(0),
             connectedUserBalanceFormatted: '0',
         },
-        WETH: {
-            name: 'WETH',
-            tokenAddress: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
-            decimals: 18,
-            riftExchangeContractAddress: '',
-            riftExchangeAbi: riftExchangeABI.abi,
-            contractChainID: 17000,
-            contractRpcURL: 'https://holesky.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
-            icon_svg: ETH_Logo,
-            bg_color: '#2E40B7',
-            border_color: '#627EEA',
-            border_color_light: '#6E85F0',
-            dark_bg_color: '#161A33',
-            light_text_color: '#5b63a5',
-            exchangeRateInTokenPerBTC: null,
-            exchangeRateInSmallestTokenUnitPerSat: null, // always 18 decimals
-            priceUSD: null,
-            totalAvailableLiquidity: BigNumber.from(0),
-            connectedUserBalanceRaw: BigNumber.from(0),
-            connectedUserBalanceFormatted: '0',
-        },
+        // WETH: {
+        //     name: 'WETH',
+        //     tokenAddress: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
+        //     decimals: 18,
+        //     riftExchangeContractAddress: '',
+        //     riftExchangeAbi: riftExchangeABI.abi,
+        //     contractChainID: 421614,
+        //     contractRpcURL: 'https://holesky.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
+        //     icon_svg: ETH_Logo,
+        //     bg_color: '#2E40B7',
+        //     border_color: '#627EEA',
+        //     border_color_light: '#6E85F0',
+        //     dark_bg_color: '#161A33',
+        //     light_text_color: '#5b63a5',
+        //     exchangeRateInTokenPerBTC: null,
+        //     exchangeRateInSmallestTokenUnitPerSat: null, // always 18 decimals
+        //     priceUSD: null,
+        //     totalAvailableLiquidity: BigNumber.from(0),
+        //     connectedUserBalanceRaw: BigNumber.from(0),
+        //     connectedUserBalanceFormatted: '0',
+        // },
     };
 
     return {
