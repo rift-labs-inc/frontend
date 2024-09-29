@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { use, useEffect } from 'react';
 import { Flex, Text, Spacer } from '@chakra-ui/react';
 import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
@@ -73,13 +73,13 @@ export const SwapStatusTimeline: React.FC = () => {
                 <Flex direction='column' mr='70px'>
                     <Text
                         fontFamily={FONT_FAMILIES.AUX_MONO}
-                        color={swapFlowState === '3-receive-eth' ? colors.RiftOrange : swapFlowState === '4-completed' ? colors.greenOutline : colors.textGray}
+                        color={swapFlowState === '3-receive-evm-token' ? colors.RiftOrange : swapFlowState === '4-completed' ? colors.greenOutline : colors.textGray}
                         letterSpacing='-2px'>
                         STEP 3
                     </Text>
                     <Text
                         fontFamily={FONT_FAMILIES.NOSTROMO}
-                        color={swapFlowState === '3-receive-eth' ? colors.RiftOrange : swapFlowState === '4-completed' ? colors.greenOutline : colors.textGray}
+                        color={swapFlowState === '3-receive-evm-token' ? colors.RiftOrange : swapFlowState === '4-completed' ? colors.greenOutline : colors.textGray}
                         fontSize='22px'>
                         RECEIVE USDT
                     </Text>
@@ -97,36 +97,18 @@ export const SwapStatusTimeline: React.FC = () => {
                     mx='-5px'
                     bg={swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity' ? colors.greenBackground : colors.offBlackLighter3}></Flex>
                 <Flex zIndex={2} mt={swapFlowState === '1-reserve-liquidity' || swapFlowState === '0-not-started' || swapFlowState === '2-send-bitcoin' ? '0px' : '-9px'}>
-                    <CircleFlex
-                        state={
-                            swapFlowState === '2-send-bitcoin'
-                                ? 'current'
-                                : swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity'
-                                ? 'completed'
-                                : 'not-started'
-                        }
-                    />
+                    <CircleFlex state={swapFlowState === '2-send-bitcoin' ? 'current' : swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity' ? 'completed' : 'not-started'} />
                 </Flex>
                 <Flex
                     mt='10px'
                     h='10px'
                     w='30.2%'
                     mx='-5px'
-                    bg={
-                        swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity' && swapFlowState !== '2-send-bitcoin'
-                            ? colors.greenBackground
-                            : colors.offBlackLighter3
-                    }></Flex>
+                    bg={swapFlowState !== '0-not-started' && swapFlowState !== '1-reserve-liquidity' && swapFlowState !== '2-send-bitcoin' ? colors.greenBackground : colors.offBlackLighter3}></Flex>
                 <Flex zIndex={2} mt={swapFlowState !== '4-completed' ? '0px' : '-9px'}>
-                    <CircleFlex state={swapFlowState === '3-receive-eth' ? 'current' : swapFlowState === '4-completed' ? 'completed' : 'not-started'} />
+                    <CircleFlex state={swapFlowState === '3-receive-evm-token' ? 'current' : swapFlowState === '4-completed' ? 'completed' : 'not-started'} />
                 </Flex>
-                <Flex
-                    mt='10px'
-                    h='10px'
-                    w='25%'
-                    mx='-5px'
-                    borderRadius={'0px 10px 10px 0px'}
-                    bg={swapFlowState === '4-completed' ? colors.greenBackground : colors.offBlackLighter3}></Flex>
+                <Flex mt='10px' h='10px' w='25%' mx='-5px' borderRadius={'0px 10px 10px 0px'} bg={swapFlowState === '4-completed' ? colors.greenBackground : colors.offBlackLighter3}></Flex>
             </Flex>
         </Flex>
     );

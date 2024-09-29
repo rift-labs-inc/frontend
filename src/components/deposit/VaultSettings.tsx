@@ -111,7 +111,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                         <AssetTag assetName={selectedVaultToManage.depositAsset.name} width='84px' />
                     </Flex>
                 </Flex>
-                <Text mt='46px' pl='12px' fontSize='20px' opacity={0.9} fontWeight={'bold'} color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                <Text mt='46px' pl='16px' fontSize='20px' opacity={0.9} fontWeight={'bold'} color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
                     <FaRegArrowAltCircleRight color={colors.RiftOrange} />
                 </Text>
                 <Spacer />
@@ -204,8 +204,8 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                             mt='1px'
                             py={'16px'}
                             h='114%'
-                            w='280px'>
-                            Edit Exchange Rate
+                            w='305px'>
+                            Update Exchange Rate
                         </Button>
                     </Flex>
                 </Flex>
@@ -229,7 +229,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                         border={`3px solid ${colors.red}`}
                         borderRadius='10px'
                         fontSize='15px'
-                        w='265px'>
+                        w='275px'>
                         Withdraw Liquidity
                     </Button>
                 </Flex>

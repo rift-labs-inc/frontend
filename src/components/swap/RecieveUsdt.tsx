@@ -82,7 +82,7 @@ export const RecieveUsdt = () => {
     useEffect(() => {
         const calculateTimeLeft = () => {
             const currentTime = Math.floor(Date.now() / 1000);
-            const endTime = swapReservationData.unlockTimestamp; // unlock timestamp is actually the time when the swap becomes fully unlocked
+            const endTime = swapReservationData.unlockTimestamp; // unlock timestamp is actually the time when the swap becomes fully Proved
             const remainingTime = endTime - currentTime;
             setTimeLeft(remainingTime > 0 ? remainingTime : 0);
         };
@@ -160,7 +160,7 @@ export const RecieveUsdt = () => {
                     {/* BLOCK CONFIRMATIONS  */}
                     {currentTotalBlockConfirmations !== null ? (
                         <>
-                            <Flex mt='30px' align={'center'} direction={'column'}>
+                            <Flex mt='30px' w='100%' textAlign='center' align={'center'} direction={'column'}>
                                 <Text
                                     ml='8px'
                                     textAlign={'center'}
@@ -169,12 +169,14 @@ export const RecieveUsdt = () => {
                                     color={currentTotalBlockConfirmations >= confirmationBlocksNeeded ? colors.greenOutline : colors.RiftOrange}>
                                     {currentTotalBlockConfirmations}/{confirmationBlocksNeeded}
                                 </Text>
-                                <Flex w={currentTotalBlockConfirmations < confirmationBlocksNeeded ? '305px' : '310px'} direction={'column'} mr='-35px' mt='5px'>
+                                <Flex w={'100%'} direction={'column'} mr='-35px' mt='5px'>
                                     <Text
                                         fontSize='14px'
                                         fontFamily={FONT_FAMILIES.AUX_MONO}
                                         color={currentTotalBlockConfirmations >= confirmationBlocksNeeded ? colors.greenOutline : colors.RiftOrange}>
-                                        {currentTotalBlockConfirmations < confirmationBlocksNeeded ? `Awaiting Block Confirmations${dots}` : `Block Confirmations Achieved!`}
+                                        {currentTotalBlockConfirmations < confirmationBlocksNeeded
+                                            ? `${confirmationBlocksNeeded - currentTotalBlockConfirmations} Block Confirmation Remaining${dots}`
+                                            : `${confirmationBlocksNeeded} Block Confirmations Achieved!`}
                                     </Text>
                                 </Flex>
                             </Flex>
@@ -184,33 +186,35 @@ export const RecieveUsdt = () => {
                     )}
 
                     {/* VIEW TXN BUTTON */}
-                    <Flex
-                        mt='30px'
-                        mb='-5px'
-                        onClick={() => window.open(`https://mempool.space/tx/${bitcoinSwapTransactionHash}`, '_blank')}
-                        bg={colors.purpleButtonBG}
-                        borderRadius='9px'
-                        px='70px'
-                        align={'center'}
-                        h={'38px'}
-                        fontSize={'14px'}
-                        border={'2px solid'}
-                        borderColor={colors.purpleBorder}
-                        _hover={{
-                            bg: colors.purpleHover,
-                        }}
-                        style={{
-                            cursor: 'pointer',
-                        }}>
-                        View Transaction
+                    <Flex w='100%' justify='center'>
+                        <Flex
+                            mt='30px'
+                            mb='-5px'
+                            onClick={() => window.open(`https://mempool.space/tx/${bitcoinSwapTransactionHash}`, '_blank')}
+                            bg={colors.purpleButtonBG}
+                            borderRadius='9px'
+                            px='70px'
+                            align={'center'}
+                            h={'38px'}
+                            fontSize={'14px'}
+                            border={'2px solid'}
+                            borderColor={colors.purpleBorder}
+                            _hover={{
+                                bg: colors.purpleHover,
+                            }}
+                            style={{
+                                cursor: 'pointer',
+                            }}>
+                            View Bitcoin Transaction
+                        </Flex>
                     </Flex>
                 </>
             )}
 
-            {currentReservationState === 'Unlocked' && (
+            {currentReservationState === 'Proved' && (
                 <>
                     <Flex mb='10px' ml='4px'>
-                        <FaClock size={38} color={colors.textGray} />
+                        <FaClock size={34} color={colors.textGray} />
                     </Flex>
                     <Text textAlign={'center'} mt='12px' fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.RiftOrange} mb='20px'>
                         Your transaction has been proved by a hypernode!

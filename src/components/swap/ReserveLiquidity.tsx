@@ -25,7 +25,7 @@ import { FaClock, FaLock } from 'react-icons/fa';
 import { LockClosed } from 'react-ionicons';
 import { AssetTag } from '../other/AssetTag';
 import WebAssetTag from '../other/WebAssetTag';
-import { toastInfo } from '../../hooks/toast';
+import { toastError, toastInfo } from '../../hooks/toast';
 import { listenForLiquidityReservedEvent } from '../../utils/contractReadFunctions';
 import { useContractData } from '../../components/providers/ContractDataProvider';
 import { bufferTo18Decimals, createReservationUrl } from '../../utils/dappHelper';
@@ -55,6 +55,7 @@ export const ReserveLiquidity = ({}) => {
     const isPayingFeesInBTC = useStore((state) => state.isPayingFeesInBTC);
     const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const [loadingReservation, setLoadingReservation] = useState(false);
+    const [reservationError, setReservationError] = useState<string | null>(null);
 
     const { refreshAllDepositData } = useContractData();
 
@@ -137,6 +138,7 @@ export const ReserveLiquidity = ({}) => {
                 status: false,
                 tx_hash: null,
             };
+            toastError('', { title: 'Error reserving liquidity', description: 'There was an error reserving liquidity, please try again.' });
         }
     }
 
@@ -165,6 +167,12 @@ export const ReserveLiquidity = ({}) => {
 
             const result = await reserveByPaymaster(reservationRequest);
             console.log('Reservation result:', result);
+
+            if (!result.status) {
+                console.error('Error reserving liquidity:', result);
+                setLoadingReservation(false);
+                return;
+            }
 
             // [0] start listening for the liquidity reserved event
             const reservationDetails = await listenForLiquidityReservedEvent(ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress, riftExchangeABI.abi, ethPayoutAddress, blockHeight);

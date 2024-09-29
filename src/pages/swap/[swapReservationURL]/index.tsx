@@ -108,9 +108,14 @@ const ReservationDetails = () => {
             window.rift
                 .getRiftSwapStatus({ internalId: swapReservationData.nonce })
                 .then((status) => {
-                    console.log('Swap status:', status);
-                    if (status.status === 1 && swapFlowState === '2-send-bitcoin') {
-                        setSwapFlowState('3-receive-eth');
+                    console.log('Swap status from proxy wallet:', status);
+                    console.log('Swap flow state:', swapFlowState);
+                    console.log('Current reservation state:', currentReservationState);
+
+                    // New condition to check currentReservationState
+                    if (status.status === 1 && currentReservationState !== 'Proved' && currentReservationState !== 'Completed' && currentReservationState !== 'Expired') {
+                        console.log('Setting Swap status to 3-receive-evm-token');
+                        setSwapFlowState('3-receive-evm-token');
                         setBitcoinSwapTransactionHash(status.paymentTxid);
                     }
                     setProxyWalletSwapInternalID(status.internalId);
@@ -143,8 +148,8 @@ const ReservationDetails = () => {
 
                     if (currentReservationStateFromContract === 'Created' && isReservationExpired) {
                         setSwapFlowState('5-expired');
-                    } else if (currentReservationStateFromContract === 'Unlocked') {
-                        setSwapFlowState('3-receive-eth');
+                    } else if (currentReservationStateFromContract === 'Proved') {
+                        setSwapFlowState('3-receive-evm-token');
                     } else if (currentReservationStateFromContract === 'Completed') {
                         setSwapFlowState('4-completed');
                     } else if (currentReservationStateFromContract === 'Expired') {
@@ -183,7 +188,7 @@ const ReservationDetails = () => {
             case ReservationState.Created:
                 return 'Created';
             case ReservationState.Proved:
-                return 'Unlocked';
+                return 'Proved';
             case ReservationState.Completed:
                 return 'Completed';
             case ReservationState.Expired:
@@ -259,10 +264,10 @@ const ReservationDetails = () => {
                                         <Spinner color={colors.textGray} h={'50px'} w={'50px'} thickness='3px' speed='0.65s' />
                                     </Flex>
                                 )
-                            ) : swapFlowState === '3-receive-eth' ||
+                            ) : swapFlowState === '3-receive-evm-token' ||
                               swapFlowState === '4-completed' ||
                               swapFlowState === '5-expired' ||
-                              currentReservationState === 'Unlocked' ||
+                              currentReservationState === 'Proved' ||
                               currentReservationState === 'Expired' ||
                               currentReservationState === 'Completed' ? (
                                 <RecieveUsdt />
@@ -432,7 +437,7 @@ const ReservationDetails = () => {
                                 </>
                             )}
                         </Flex>
-                        {!loadingState && swapFlowState === '2-send-bitcoin' && currentReservationState !== 'Unlocked' && currentReservationState !== 'Completed' && (
+                        {!loadingState && swapFlowState === '2-send-bitcoin' && currentReservationState !== 'Proved' && currentReservationState !== 'Completed' && (
                             <Flex
                                 bg={colors.purpleBackgroundDisabled}
                                 borderColor={colors.purpleBorderDark}
@@ -452,45 +457,26 @@ const ReservationDetails = () => {
                             </Flex>
                         )}
 
-                        {swapFlowState === '3-receive-eth' ? (
-                            currentTotalBlockConfirmations >= confirmationBlocksNeeded ? (
-                                <Flex
-                                    bg={colors.purpleBackgroundDisabled}
-                                    borderColor={colors.purpleBorderDark}
-                                    borderWidth={3}
-                                    borderRadius='15px'
-                                    px='20px'
-                                    w='540px'
-                                    py='4px'
-                                    mt={'20px'}
-                                    h={'60px'}
-                                    align={'center'}
-                                    justify={'center'}>
-                                    <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
-                                        Awaiting Proof Generation
-                                    </Text>
-                                    <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
-                                </Flex>
-                            ) : (
-                                <Flex
-                                    bg={colors.purpleBackgroundDisabled}
-                                    borderColor={colors.purpleBorderDark}
-                                    borderWidth={3}
-                                    borderRadius='15px'
-                                    px='20px'
-                                    w='540px'
-                                    py='4px'
-                                    mt={'20px'}
-                                    h={'60px'}
-                                    align={'center'}
-                                    justify={'center'}>
-                                    <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
-                                        Awaiting {confirmationBlocksNeeded - currentTotalBlockConfirmations} Block Confirmations
-                                    </Text>
-                                    <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
-                                </Flex>
-                            )
-                        ) : null}
+                        {swapFlowState === '3-receive-evm-token' && currentTotalBlockConfirmations < confirmationBlocksNeeded && (
+                            <Flex
+                                bg={colors.purpleBackgroundDisabled}
+                                borderColor={colors.purpleBorderDark}
+                                borderWidth={3}
+                                borderRadius='15px'
+                                px='20px'
+                                w='540px'
+                                py='4px'
+                                mt={'20px'}
+                                h={'60px'}
+                                align={'center'}
+                                justify={'center'}>
+                                <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                    Awaiting {confirmationBlocksNeeded - currentTotalBlockConfirmations} Block Confirmation
+                                    {confirmationBlocksNeeded - currentTotalBlockConfirmations > 1 ? 's' : ''}
+                                </Text>
+                                <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
+                            </Flex>
+                        )}
                     </Flex>
                 </Flex>
                 <CurrencyModal />

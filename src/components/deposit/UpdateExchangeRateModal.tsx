@@ -241,7 +241,7 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                                         _focus={{ border: 'none', boxShadow: 'none' }}
                                         _selected={{ border: 'none', boxShadow: 'none' }}
                                         fontSize='40px'
-                                        placeholder='0.0'
+                                        placeholder={usdtDepositAmount}
                                         _placeholder={{
                                             color: selectedInputAsset.light_text_color,
                                         }}
@@ -251,7 +251,7 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                                     </Text>
                                 </Flex>
                                 <Spacer />
-                                <Flex mt='1px' mr='6px'>
+                                <Flex mt='8px' mr='6px'>
                                     <AssetTag assetName={selectedInputAsset.name} />
                                 </Flex>
                             </Flex>
@@ -342,7 +342,7 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                                     </Text>
                                 </Flex>
                                 <Spacer />
-                                <Flex mt='1px' mr='6px'>
+                                <Flex mt='8px' mr='6px'>
                                     <AssetTag assetName='BTC' />
                                 </Flex>
                             </Flex>

@@ -166,6 +166,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                             <VaultStatusBar mini={true} selectedVault={vault} />
                         </Flex>
                     )}
+
                     {/* reservation state */}
                     {reservation && (
                         <Flex w='100%' justify='flex-starts' gap='12px' align='center'>

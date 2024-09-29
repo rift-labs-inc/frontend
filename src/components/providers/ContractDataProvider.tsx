@@ -65,12 +65,18 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     // Fetch price data, user balance, and check for new deposits paused
     useEffect(() => {
         const fetchPriceData = async () => {
-            const [btcPriceUSD, usdtPriceUSDBufferedTo8Decimals] = await getPrices();
-            const usdtPriceUSD = formatUnits(usdtPriceUSDBufferedTo8Decimals, 8);
-            const btcToUsdtRate = parseFloat(btcPriceUSD) / parseFloat(usdtPriceUSD);
+            try {
+                const [btcPriceUSD, usdtPriceUSDBufferedTo8Decimals] = await getPrices();
 
-            setBitcoinPriceUSD(parseFloat(btcPriceUSD));
-            updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
+                const usdtPriceUSD = formatUnits(usdtPriceUSDBufferedTo8Decimals, 8);
+                const btcToUsdtRate = parseFloat(btcPriceUSD) / parseFloat(usdtPriceUSD);
+
+                setBitcoinPriceUSD(parseFloat(btcPriceUSD));
+                updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
+            } catch (e) {
+                console.error(e);
+                return;
+            }
         };
 
         const checkIfNewDepositsArePausedFromContract = async () => {

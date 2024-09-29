@@ -621,7 +621,7 @@ export const DepositConfirmation = ({}) => {
                                                             </Text>
                                                         </Flex>
                                                         <Spacer />
-                                                        <Flex mt='1px' mr='6px'>
+                                                        <Flex mt='8px' mr='6px'>
                                                             <AssetTag assetName={selectedInputAsset.name} />
                                                         </Flex>
                                                     </Flex>
@@ -738,7 +738,7 @@ export const DepositConfirmation = ({}) => {
                                                             </Text>
                                                         </Flex>
                                                         <Spacer />
-                                                        <Flex mt='1px' mr='6px'>
+                                                        <Flex mt='8px' mr='6px'>
                                                             <AssetTag assetName='BTC' />
                                                         </Flex>
                                                     </Flex>

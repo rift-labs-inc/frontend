@@ -44,9 +44,6 @@ export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, m
     // Calculate total percentage
     const totalPercentage = withdrawnPercentage + reservedPercentage + completedPercentage + provedPercentage + unreservedPercentage;
 
-    // Round the total to 2 decimal places
-    const displayPercentage = Math.round(totalPercentage * 100) / 100;
-
     const BarSection = ({ percentage, color, tooltipBg, label, amount }) => {
         if (percentage <= 0) return null;
 
@@ -85,9 +82,16 @@ export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, m
     };
 
     return (
-        <Flex w={mini ? '140px' : '100%'} direction={mini ? 'row' : 'column'} align={mini ? 'center' : 'stretch'} justify={mini ? 'flex-end' : 'flex-start'} gap={mini ? '12px' : '0'}>
+        <Flex w={mini ? '140px' : '100%'} direction={mini ? 'row' : 'column'} align={mini ? 'center' : 'stretch'} justify={'flex-start'} gap={mini ? '12px' : '0'}>
             {/* Render the percentage text only for mini */}
-            {mini && <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize={'14px'} color={colors.offWhite}>{`${displayPercentage}%`}</Text>}
+            {mini && (
+                <Text
+                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                    fontSize={'14px'}
+                    color={completedPercentage + withdrawnPercentage === 100 && completedPercentage > 0 ? colors.greenOutline : colors.offWhite}>{`${
+                    completedPercentage + withdrawnPercentage
+                }%`}</Text>
+            )}
             <Flex
                 h={mini ? '17px' : '50px'}
                 mt={mini ? '0' : '6px'}
@@ -99,11 +103,17 @@ export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, m
                 {/* Render each section */}
                 <BarSection percentage={withdrawnPercentage} color={colors.redDark} tooltipBg={colors.red} label='Withdrawn' amount={formatAmount(withdrawnAmount)} />
                 <BarSection percentage={reservedPercentage} color={'orange.600'} tooltipBg={'orange.700'} label='Reserved' amount={formatAmount(reservedAmount)} />
-                <BarSection percentage={completedPercentage} color={colors.greenOutline} tooltipBg={colors.greenBackground} label='Completed' amount={formatAmount(completedAmount)} />
+                <BarSection
+                    percentage={completedPercentage}
+                    color={mini ? colors.greenOutline : colors.greenBackground}
+                    tooltipBg={colors.greenBackground}
+                    label='Completed'
+                    amount={formatAmount(completedAmount)}
+                />
                 <BarSection percentage={provedPercentage} color={'purple.600'} tooltipBg={'purple.600'} label='Proved' amount={formatAmount(provedAmount)} />
                 <BarSection
                     percentage={unreservedPercentage}
-                    color={selectedVault.depositAsset.light_text_color}
+                    color={colors.offBlackLighter2}
                     tooltipBg={selectedVault.depositAsset.bg_color}
                     label='Unreserved'
                     amount={formatAmount(trueUnreservedAmount)}
