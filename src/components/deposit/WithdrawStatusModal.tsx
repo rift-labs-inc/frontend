@@ -16,6 +16,7 @@ import riftExchangeABI from '../../abis/RiftExchange.json';
 import GooSpinner from '../other/GooSpiner';
 import { IoIosCheckmarkCircle } from 'react-icons/io';
 import { useChainId, useSwitchChain } from 'wagmi';
+import { useContractData } from '../providers/ContractDataProvider';
 
 interface WithdrawStatusModalProps {
     isOpen: boolean;
@@ -36,6 +37,8 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
     const { status, error, txHash, resetWithdrawState, withdrawLiquidity } = useWithdrawLiquidity();
     const chainId = useChainId();
     const { chains, switchChain } = useSwitchChain();
+    const currentlyExpiredReservationIndexes = useStore((state) => state.currentlyExpiredReservationIndexes);
+    const { refreshAllDepositData, loading } = useContractData();
 
     useEffect(() => {
         if (isOpen) {
@@ -81,8 +84,6 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                 throw new Error("Selected vault not found in user's deposit vaults");
             }
 
-            const expiredReservationIndexes = [];
-
             await withdrawLiquidity({
                 signer,
                 riftExchangeAbi: riftExchangeABI.abi,
@@ -90,15 +91,15 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                 globalVaultIndex,
                 localVaultIndex,
                 amountToWithdraw: withdrawAmountInTokenSmallestUnit,
-                expiredReservationIndexes,
+                expiredReservationIndexes: currentlyExpiredReservationIndexes,
             });
 
-            // TODO: refresh deposit vault data in ContractDataProvider somehow - await refreshAllDepositData();
             const updatedVault = userActiveDepositVaults.find((vault) => vault.index === selectedVaultToManage.index);
             if (updatedVault) {
                 setSelectedVaultToManage(updatedVault);
             }
             setRefreshKey((prevKey) => prevKey + 1);
+            refreshAllDepositData();
         } catch (error) {
             console.error('Failed to process withdrawal:', error);
         }

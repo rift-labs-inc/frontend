@@ -1,7 +1,7 @@
 import { Flex } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useStore } from '../../store';
-import { DepositUI } from './DepositUI';
+import { DepositUI } from '../deposit/DepositUI';
 import { SwapUI } from './SwapUI';
 
 export const SwapContainer = ({}) => {

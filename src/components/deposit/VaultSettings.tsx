@@ -14,6 +14,8 @@ import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { useWithdrawLiquidity } from '../../hooks/contract/useWithdrawLiquidity';
 import { useState } from 'react';
 import { useStore } from '../../store';
+import UpdateExchangeRateModal from './UpdateExchangeRateModal';
+import { toastError } from '../../hooks/toast';
 
 interface VaultSettingsProps {
     selectedVaultToManage: DepositVault;
@@ -25,6 +27,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
     const { status: withdrawLiquidityStatus, error: withdrawLiquidityError, txHash: withdrawTxHash, resetWithdrawState } = useWithdrawLiquidity();
 
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+    const [isUpdateExchangeRateModalOpen, setIsUpdateExchangeRateModalOpen] = useState(false);
     // const [withdrawAmount, setWithdrawAmount] = useState('');
     const withdrawAmount = useStore((state) => state.withdrawAmount);
     const setWithdrawAmount = useStore((state) => state.setWithdrawAmount);
@@ -33,6 +36,10 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
         setIsWithdrawModalOpen(true);
         setWithdrawAmount('');
         resetWithdrawState();
+    };
+
+    const handleOpenUpdateExchangeRateModal = () => {
+        setIsUpdateExchangeRateModalOpen(true);
     };
 
     return (
@@ -179,10 +186,16 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                         </Flex>
 
                         <Spacer />
-                        {/* // TODO: add edit exchange rate functionality */}
-                        {/* <Button
+                        <Button
                             color={colors.offWhite}
                             bg={colors.purpleButtonBG}
+                            onClick={() => {
+                                if (BigNumber.from(selectedVaultToManage.trueUnreservedBalance).gt(BigNumber.from(0))) {
+                                    handleOpenUpdateExchangeRateModal();
+                                } else {
+                                    toastError('', { title: 'No Unreserved Liquidity', description: 'There is no unreserved liquidity on this deposit vault to update' });
+                                }
+                            }}
                             borderRadius='10px'
                             border={`3px solid ${colors.purpleBorder}`}
                             px='14px'
@@ -193,7 +206,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                             h='114%'
                             w='280px'>
                             Edit Exchange Rate
-                        </Button> */}
+                        </Button>
                     </Flex>
                 </Flex>
             </Flex>
@@ -203,7 +216,13 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                 <Flex mt='38px' justify='center'>
                     <Button
                         h='45px'
-                        onClick={handleOpenWithdrawModal}
+                        onClick={() => {
+                            if (BigNumber.from(selectedVaultToManage.trueUnreservedBalance).gt(BigNumber.from(0))) {
+                                handleOpenWithdrawModal();
+                            } else {
+                                toastError('', { title: 'No Unreserved Liquidity', description: 'There is no unreserved liquidity on this deposit vault to withdraw' });
+                            }
+                        }}
                         _hover={{ bg: colors.redHover }}
                         bg={colors.redBackground}
                         color={colors.offWhite}
@@ -217,6 +236,9 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
 
                 {/* Withdraw Status Modal */}
                 <WithdrawStatusModal isOpen={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} clearError={resetWithdrawState} selectedVaultToManage={selectedVaultToManage} />
+
+                {/* Update Exchange Rate Modal  */}
+                <UpdateExchangeRateModal isOpen={isUpdateExchangeRateModalOpen} onClose={() => setIsUpdateExchangeRateModalOpen(false)} selectedVault={selectedVaultToManage} />
             </>
         </Flex>
     );

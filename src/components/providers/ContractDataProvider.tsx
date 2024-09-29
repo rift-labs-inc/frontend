@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useMemo, useEffect, useRef } from 'react';
+import React, { createContext, useContext, ReactNode, useEffect, useRef } from 'react';
 import { ethers } from 'ethers';
 import { useStore } from '../../store';
 import { useDepositVaults } from '../../hooks/contract/useDepositVaults';
@@ -17,6 +17,7 @@ interface ContractDataContextType {
     loading: boolean;
     error: any;
     refreshAllDepositData: () => Promise<void>;
+    refreshConnectedUserBalance: () => Promise<void>;
 }
 
 const ContractDataContext = createContext<ContractDataContextType | undefined>(undefined);
@@ -39,13 +40,27 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         if ((selectedInputAsset?.contractRpcURL && window.ethereum) || !ethersRpcProvider) {
             const provider = new ethers.providers.JsonRpcProvider(selectedInputAsset.contractRpcURL);
             if (!provider) return;
-            console.log('god new ethers provider set', provider);
+            console.log('new ethers provider set', provider);
             setEthersRpcProvider(provider);
         }
     }, [selectedInputAsset?.contractRpcURL, address, isConnected]);
 
     // Reference to store the interval ID
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    const fetchSelectedAssetUserBalance = async () => {
+        if (!address || !selectedInputAsset || !ethersRpcProvider) return;
+
+        const balance = await getTokenBalance(ethersRpcProvider, selectedInputAsset.tokenAddress, address, ERC20ABI);
+        updateConnectedUserBalanceRaw(selectedInputAsset.name, balance);
+
+        const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedInputAsset.name].decimals);
+        updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
+    };
+
+    const refreshConnectedUserBalance = async () => {
+        await fetchSelectedAssetUserBalance();
+    };
 
     // Fetch price data, user balance, and check for new deposits paused
     useEffect(() => {
@@ -56,16 +71,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
 
             setBitcoinPriceUSD(parseFloat(btcPriceUSD));
             updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
-        };
-
-        const fetchSelectedAssetUserBalance = async () => {
-            if (!address || !selectedInputAsset || !ethersRpcProvider) return;
-
-            const balance = await getTokenBalance(ethersRpcProvider, selectedInputAsset.tokenAddress, address, ERC20ABI);
-            updateConnectedUserBalanceRaw(selectedInputAsset.name, balance);
-
-            const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedInputAsset.name].decimals);
-            updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
         };
 
         const checkIfNewDepositsArePausedFromContract = async () => {
@@ -131,6 +136,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         loading: isLoading,
         error,
         refreshAllDepositData,
+        refreshConnectedUserBalance,
     };
 
     return <ContractDataContext.Provider value={value}>{children}</ContractDataContext.Provider>;

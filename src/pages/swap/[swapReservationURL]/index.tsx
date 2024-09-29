@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useStore } from '../../../store';
 import { Text, Flex, Image, Center, Box, Button, color, Spinner } from '@chakra-ui/react';
-import { Navbar } from '../../../components/Navbar';
+import { Navbar } from '../../../components/nav/Navbar';
 import { colors } from '../../../utils/colors';
 import { bufferTo18Decimals, calculateBtcOutputAmountFromExchangeRate, decodeReservationUrl, fetchReservationDetails } from '../../../utils/dappHelper';
 import CurrencyModal from '../../../components/swap/CurrencyModal';
@@ -58,6 +58,8 @@ const ReservationDetails = () => {
     const setCurrentReservationState = useStore((state) => state.setCurrentReservationState);
     const swapReservationNotFound = useStore((state) => state.swapReservationNotFound);
     const setSwapReservationNotFound = useStore((state) => state.setSwapReservationNotFound);
+    const currentTotalBlockConfirmations = useStore((state) => state.currentTotalBlockConfirmations);
+    const confirmationBlocksNeeded = useStore((state) => state.confirmationBlocksNeeded);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -168,7 +170,7 @@ const ReservationDetails = () => {
     enum ReservationState {
         None = 0,
         Created = 1,
-        Unlocked = 2,
+        Proved = 2,
         Completed = 3,
         Expired = 4,
     }
@@ -180,7 +182,7 @@ const ReservationDetails = () => {
                 return 'None';
             case ReservationState.Created:
                 return 'Created';
-            case ReservationState.Unlocked:
+            case ReservationState.Proved:
                 return 'Unlocked';
             case ReservationState.Completed:
                 return 'Completed';
@@ -449,6 +451,46 @@ const ReservationDetails = () => {
                                 <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
                             </Flex>
                         )}
+
+                        {swapFlowState === '3-receive-eth' ? (
+                            currentTotalBlockConfirmations >= confirmationBlocksNeeded ? (
+                                <Flex
+                                    bg={colors.purpleBackgroundDisabled}
+                                    borderColor={colors.purpleBorderDark}
+                                    borderWidth={3}
+                                    borderRadius='15px'
+                                    px='20px'
+                                    w='540px'
+                                    py='4px'
+                                    mt={'20px'}
+                                    h={'60px'}
+                                    align={'center'}
+                                    justify={'center'}>
+                                    <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                        Awaiting Proof Generation
+                                    </Text>
+                                    <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
+                                </Flex>
+                            ) : (
+                                <Flex
+                                    bg={colors.purpleBackgroundDisabled}
+                                    borderColor={colors.purpleBorderDark}
+                                    borderWidth={3}
+                                    borderRadius='15px'
+                                    px='20px'
+                                    w='540px'
+                                    py='4px'
+                                    mt={'20px'}
+                                    h={'60px'}
+                                    align={'center'}
+                                    justify={'center'}>
+                                    <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                        Awaiting {confirmationBlocksNeeded - currentTotalBlockConfirmations} Block Confirmations
+                                    </Text>
+                                    <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
+                                </Flex>
+                            )
+                        ) : null}
                     </Flex>
                 </Flex>
                 <CurrencyModal />

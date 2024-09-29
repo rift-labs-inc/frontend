@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { CurrencyModalTitle, DepositVault, ReserveLiquidityParams, SwapReservation } from './types';
 import { BigNumber, ethers } from 'ethers';
 import { USDT_Icon, ETH_Icon, ETH_Logo } from './components/other/SVGs';
-import { ERC20ABI } from './utils/constants';
+import { ERC20ABI, requiredBlockConfirmations } from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
 import arbitrumDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/42161/run-latest.json';
@@ -48,6 +48,8 @@ type Store = {
     setTotalUnlockedReservations: (totalUnlockedReservations: number) => void;
     totalCompletedReservations: number;
     setTotalCompletedReservations: (totalCompletedReservations: number) => void;
+    currentlyExpiredReservationIndexes: number[];
+    setCurrentlyExpiredReservationIndexes: (indexes: number[]) => void;
 
     // manage deposits
     selectedVaultToManage: DepositVault | null;
@@ -88,6 +90,10 @@ type Store = {
     setAreNewDepositsPaused: (paused: boolean) => void;
     isGasFeeTooHigh: boolean;
     setIsGasFeeTooHigh: (isGasFeeTooHigh: boolean) => void;
+    confirmationBlocksNeeded: number;
+    setConfirmationBlocksNeeded: (blocks: number) => void;
+    currentTotalBlockConfirmations: number;
+    setCurrentTotalBlockConfirmations: (confirmations: number) => void;
 
     // modals
     currencyModalTitle: CurrencyModalTitle;
@@ -242,6 +248,8 @@ export const useStore = create<Store>((set) => {
         setTotalUnlockedReservations: (totalUnlockedReservations) => set({ totalUnlockedReservations }),
         totalCompletedReservations: 0,
         setTotalCompletedReservations: (totalCompletedReservations) => set({ totalCompletedReservations }),
+        currentlyExpiredReservationIndexes: [],
+        setCurrentlyExpiredReservationIndexes: (currentlyExpiredReservationIndexes) => set({ currentlyExpiredReservationIndexes }),
 
         // manage deposits
         selectedVaultToManage: null,
@@ -288,5 +296,9 @@ export const useStore = create<Store>((set) => {
         setAreNewDepositsPaused: (areNewDepositsPaused) => set({ areNewDepositsPaused }),
         isGasFeeTooHigh: false,
         setIsGasFeeTooHigh: (isGasFeeTooHigh) => set({ isGasFeeTooHigh }),
+        confirmationBlocksNeeded: requiredBlockConfirmations,
+        setConfirmationBlocksNeeded: (confirmationBlocksNeeded) => set({ confirmationBlocksNeeded }),
+        currentTotalBlockConfirmations: 0,
+        setCurrentTotalBlockConfirmations: (currentTotalBlockConfirmations) => set({ currentTotalBlockConfirmations }),
     };
 });

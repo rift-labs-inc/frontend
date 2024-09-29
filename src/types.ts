@@ -5,7 +5,7 @@ import { Chain } from 'viem';
 export enum ReservationState {
     None,
     Created,
-    Unlocked,
+    Proved,
     Completed,
     Expired,
 }
@@ -41,14 +41,14 @@ export type ReserveLiquidityParams = {
 };
 
 export type DepositVault = {
+    depositTimestamp: number;
     initialBalance: BigNumberish;
     unreservedBalanceFromContract: BigNumberish;
     trueUnreservedBalance?: BigNumberish;
     withdrawnAmount: BigNumberish;
-    reservedBalance?: BigNumberish;
-    expiredAmount?: BigNumberish;
+    activelyReservedAmount?: BigNumberish;
     completedAmount?: BigNumberish;
-    unlockedAmount?: BigNumberish;
+    provedAmount?: BigNumberish;
     btcExchangeRate: BigNumberish;
     btcPayoutLockingScript: string;
     index?: number;

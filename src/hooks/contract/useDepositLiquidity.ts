@@ -21,11 +21,9 @@ interface DepositLiquidityParams {
     riftExchangeAbi: ethers.ContractInterface;
     riftExchangeContractAddress: string;
     tokenAddress: string;
+    tokenDepositAmountInSmallestTokenUnits: BigNumber;
     btcPayoutLockingScript: string;
     btcExchangeRate: BigNumber;
-    vaultIndexToOverwrite: number;
-    tokenDepositAmountInSmallestTokenUnits: BigNumber;
-    vaultIndexWithSameExchangeRate: number;
 }
 
 function useIsClient() {
@@ -79,13 +77,7 @@ export function useDepositLiquidity() {
 
                 setStatus(DepositStatus.WaitingForWalletConfirmation);
 
-                const depositTx = await riftExchangeContractInstance.depositLiquidity(
-                    params.tokenDepositAmountInSmallestTokenUnits,
-                    params.btcExchangeRate,
-                    params.btcPayoutLockingScript,
-                    params.vaultIndexToOverwrite,
-                    params.vaultIndexWithSameExchangeRate,
-                );
+                const depositTx = await riftExchangeContractInstance.depositLiquidity(params.tokenDepositAmountInSmallestTokenUnits, params.btcExchangeRate, params.btcPayoutLockingScript);
                 setStatus(DepositStatus.DepositPending);
 
                 setTxHash(depositTx.hash);

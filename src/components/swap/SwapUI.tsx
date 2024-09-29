@@ -90,6 +90,7 @@ export const SwapUI = () => {
     const [isAboveMaxSwapLimitUsdtOutput, setIsAboveMaxSwapLimitUsdtOutput] = useState(false);
     const [fastestProxyWalletFeeInSats, setFastestProxyWalletFeeInSats] = useState(500);
     const areNewDepositsPaused = useStore((state) => state.areNewDepositsPaused);
+    const currentlyExpiredReservationIndexes = useStore((state) => state.currentlyExpiredReservationIndexes);
 
     // update token price and available liquidity
     useEffect(() => {
@@ -311,7 +312,7 @@ export const SwapUI = () => {
                 btcExchangeRates: newIdealReservationDetails.btcExchangeRates,
                 ethPayoutAddress: '', // this is set when user inputs their eth payout address
                 totalSatsInputInlcudingProxyFee: amountSatsSwapInput,
-                expiredSwapReservationIndexes: [], // TODO: calculate later
+                expiredSwapReservationIndexes: currentlyExpiredReservationIndexes,
             };
 
             setLowestFeeReservationParams(reserveLiquidityParams);
@@ -405,7 +406,7 @@ export const SwapUI = () => {
                 btcExchangeRates: idealReservationDetails.btcExchangeRates,
                 ethPayoutAddress: '', // this is set when user inputs their eth payout address
                 totalSatsInputInlcudingProxyFee: newAmountSatsSwapInput,
-                expiredSwapReservationIndexes: [], // TODO: calculate later
+                expiredSwapReservationIndexes: currentlyExpiredReservationIndexes,
             };
 
             setLowestFeeReservationParams(reserveLiquidityParams);

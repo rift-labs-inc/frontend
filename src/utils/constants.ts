@@ -19,7 +19,7 @@ export const opaqueBackgroundColor = { bg: 'rgba(15, 15, 15, 0.55)', backdropFil
 export const maxSwapOutputs = 175;
 export const maxSwapLimitInUSDT = 100; // 100 USDT
 export const maxSwapLimitInMicroUSDT = maxSwapLimitInUSDT * 10 ** 6; // 100 USDT
-
+export const requiredBlockConfirmations = 2;
 export const protocolFeePercentage = BigNumber.from(1); // 0.1%
 export const protocolFeeDenominator = BigNumber.from(1000); // 100% / 0.1% = 1000
 

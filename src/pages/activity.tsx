@@ -1,7 +1,7 @@
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { Flex, Spacer, Text, Box, Input, Button, InputGroup, InputRightElement, Tooltip } from '@chakra-ui/react';
-import { Navbar } from '../components/Navbar';
+import { Navbar } from '../components/nav/Navbar';
 import { colors } from '../utils/colors';
 import { IoCheckbox } from 'react-icons/io5';
 import { useState } from 'react';
@@ -14,7 +14,7 @@ import { BTCSVG, ETHArrow, WBTCSVG, BTCArrow, GreenCheck } from '../components/o
 import { OpenGraph } from '../components/background/OpenGraph';
 import SwapTable from '../components/activity/SwapTable';
 import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
-import HorizontalButtonSelector from '../components/HorizontalButtonSelector';
+import HorizontalButtonSelector from '../components/other/HorizontalButtonSelector';
 import ActivityChartContainer from '../components/charts/ActivityChartContainer';
 import ActiveLiquidityRawChart from '../components/charts/ActiveLiquidityRawChart';
 import MonthlyValueRawChart from '../components/charts/MonthlyValueRawChart';

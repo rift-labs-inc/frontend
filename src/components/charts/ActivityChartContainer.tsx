@@ -2,7 +2,7 @@ import { Flex, Text } from '@chakra-ui/react';
 import { PropsWithChildren } from 'react';
 import { FONT_FAMILIES } from '../../utils/font';
 import useHorizontalSelectorInput from '../../hooks/useHorizontalSelectorInput';
-import HorizontalButtonSelector from '../HorizontalButtonSelector';
+import HorizontalButtonSelector from '../other/HorizontalButtonSelector';
 
 interface ActivityChartContainerProps extends PropsWithChildren {
     title: string;
@@ -10,11 +10,7 @@ interface ActivityChartContainerProps extends PropsWithChildren {
 }
 
 const ActivityChartContainer: React.FC<ActivityChartContainerProps> = ({ title, value, children }) => {
-    const {
-        options: optionsButton,
-        selected: selectedButton,
-        setSelected: setSelectedButton,
-    } = useHorizontalSelectorInput(['Day', 'Month'] as const);
+    const { options: optionsButton, selected: selectedButton, setSelected: setSelectedButton } = useHorizontalSelectorInput(['Day', 'Month'] as const);
 
     return (
         <Flex flex={1} bg='#151515' border='3px solid #262626' borderRadius='24px' flexDir='column' p='12px'>
@@ -28,14 +24,7 @@ const ActivityChartContainer: React.FC<ActivityChartContainerProps> = ({ title, 
                     </Text>
                 </Flex>
                 <Flex>
-                    <HorizontalButtonSelector
-                        options={optionsButton}
-                        selectedItem={selectedButton}
-                        onSelectItem={setSelectedButton}
-                        h='36px'
-                        w='180px'
-                        fontSize='0.7rem'
-                    />
+                    <HorizontalButtonSelector options={optionsButton} selectedItem={selectedButton} onSelectItem={setSelectedButton} h='36px' w='180px' fontSize='0.7rem' />
                 </Flex>
             </Flex>
             {children}

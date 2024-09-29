@@ -26,11 +26,12 @@ export async function getDepositVaultByIndex(provider: ethers.providers.Provider
         }
 
         return {
-            initialBalance: BigNumber.from(depositVault[0]),
-            unreservedBalanceFromContract: BigNumber.from(depositVault[1]),
-            withdrawnAmount: BigNumber.from(depositVault[2]),
-            btcExchangeRate: BigNumber.from(depositVault[3]),
-            btcPayoutLockingScript: depositVault[4],
+            depositTimestamp: depositVault[0],
+            initialBalance: BigNumber.from(depositVault[1]),
+            unreservedBalanceFromContract: BigNumber.from(depositVault[2]),
+            withdrawnAmount: BigNumber.from(depositVault[3]),
+            btcExchangeRate: BigNumber.from(depositVault[4]),
+            btcPayoutLockingScript: depositVault[5],
             depositAsset: useStore.getState().validAssets['USDT'], // TODO: get this from the contract you are reading from
             index: index,
         };
@@ -102,13 +103,14 @@ export function decodeDepositVaults(data: string): DepositVault[] {
 
     // decode each element in the array
     const depositVaults: DepositVault[] = decodedArray.map((item: string) => {
-        const [owner, initialBalance, unreservedBalanceFromContract, withdrawnAmount, btcExchangeRate, btcPayoutLockingScript] = abiCoder.decode(
-            ['address', 'uint256', 'uint256', 'uint256', 'uint64', 'bytes22'],
+        const [owner, depositTimestamp, initialBalance, unreservedBalanceFromContract, withdrawnAmount, btcExchangeRate, btcPayoutLockingScript] = abiCoder.decode(
+            ['address', 'uint64', 'uint256', 'uint256', 'uint256', 'uint64', 'bytes22'],
             item,
         );
 
         return {
             vaultOwnerAddress: owner,
+            depositTimestamp: depositTimestamp,
             initialBalance: initialBalance,
             unreservedBalanceFromContract: unreservedBalanceFromContract,
             withdrawnAmount: withdrawnAmount,
@@ -154,8 +156,8 @@ function decodeSwapReservations(data: string): SwapReservation[] {
                 `tuple(
                     address owner,
                     uint32 confirmationBlockHeight,
-                    uint32 reservationTimestamp,
-                    uint32 unlockTimestamp,
+                    uint64 reservationTimestamp,
+                    uint64 unlockTimestamp,
                     uint8 state,
                     address ethPayoutAddress,
                     bytes32 lpReservationHash,

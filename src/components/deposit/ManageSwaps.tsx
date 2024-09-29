@@ -5,16 +5,15 @@ import { useStore } from '../../store';
 import { DepositVault, SwapReservation } from '../../types';
 import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
-import HorizontalButtonSelector from '../HorizontalButtonSelector';
+import HorizontalButtonSelector from '../other/HorizontalButtonSelector';
 import VaultSettings from './VaultSettings';
-import LightDepositVault from './LightDepositVault';
 import { useAccount } from 'wagmi';
-import { ConnectWalletButton } from '../ConnectWalletButton';
-import LightReservation from './LightReservation';
+import { ConnectWalletButton } from '../other/ConnectWalletButton';
 import { createReservationUrl } from '../../utils/dappHelper';
 import { useRouter } from 'next/router';
 import { opaqueBackgroundColor } from '../../utils/constants';
 import { useContractData } from '../providers/ContractDataProvider';
+import SwapPreviewCard from './SwapPreviewCard';
 
 export const ManageSwaps = ({}) => {
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
@@ -135,7 +134,7 @@ export const ManageSwaps = ({}) => {
             ) : (
                 <Flex
                     w='100%'
-                    maxW='1000px'
+                    maxW='1100px'
                     h='650px'
                     px='24px'
                     justify={loading ? 'center' : (vaultsToDisplay && vaultsToDisplay.length > 0) || (userSwapReservations && userSwapReservations.length) > 0 ? 'flex-start' : 'center'}
@@ -168,13 +167,13 @@ export const ManageSwaps = ({}) => {
                                     fontWeight='bold'
                                     color={colors.offWhite}
                                     gap='12px'>
-                                    <Text width='48px'>ID</Text>
+                                    <Text width='130px'>TIMESTAMP</Text>
                                     <Flex flex={1} gap='12px'>
                                         <Text flex={1}>SWAP INPUT</Text>
                                         <Flex w='20px' />
                                         <Text flex={1}>SWAP OUTPUT</Text>
                                     </Flex>
-                                    <Text width='120px' ml='20px' mr='52px'>
+                                    <Text width='140px' ml='20px' mr='52px'>
                                         STATUS
                                     </Text>
                                 </Flex>
@@ -212,24 +211,43 @@ export const ManageSwaps = ({}) => {
                                     </Flex>
                                 ) : (
                                     <>
-                                        {userSwapReservations &&
-                                            userSwapReservations.length > 0 &&
-                                            userSwapReservations.map((reservation: SwapReservation, index: number) => (
-                                                <LightReservation
-                                                    key={index}
-                                                    reservation={reservation}
-                                                    url={createReservationUrl(reservation.nonce, reservation.indexInContract.toString())}
-                                                    onClick={() => {
-                                                        const reservationUrl = createReservationUrl(reservation.nonce, reservation.indexInContract.toString());
-                                                        handleNavigation(`/swap/${reservationUrl}`);
-                                                    }}
-                                                />
-                                            ))}
-                                        {vaultsToDisplay &&
-                                            vaultsToDisplay.length > 0 &&
-                                            vaultsToDisplay.map((vault: DepositVault, index: number) => (
-                                                <LightDepositVault key={index} vault={vault} onClick={() => setSelectedVaultToManage(vault)} selectedInputAsset={selectedInputAsset} />
-                                            ))}
+                                        {(() => {
+                                            // Combine reservations and vaults into a single array
+                                            const combinedReservationsAndVaults = [
+                                                ...userSwapReservations.map((reservation) => ({ type: 'reservation', data: reservation })),
+                                                ...vaultsToDisplay.map((vault) => ({ type: 'vault', data: vault })),
+                                            ];
+
+                                            // Sort the combined array by timestamp in descending order
+                                            combinedReservationsAndVaults.sort((a, b) => {
+                                                // Directly check properties to access the correct timestamp
+                                                const timestampA = 'reservationTimestamp' in a.data ? a.data.reservationTimestamp : a.data.depositTimestamp;
+                                                const timestampB = 'reservationTimestamp' in b.data ? b.data.reservationTimestamp : b.data.depositTimestamp;
+                                                return timestampB - timestampA;
+                                            });
+
+                                            // Map the sorted array back to the unified LightDepositVault component
+                                            return combinedReservationsAndVaults.map((item, index) => {
+                                                if (item.type === 'reservation') {
+                                                    const reservation = item.data as SwapReservation;
+                                                    const reservationUrl = createReservationUrl(reservation.nonce, reservation.indexInContract.toString());
+                                                    return (
+                                                        <SwapPreviewCard
+                                                            key={`reservation-${index}`}
+                                                            reservation={reservation}
+                                                            url={reservationUrl}
+                                                            onClick={() => handleNavigation(`/swap/${reservationUrl}`)}
+                                                            selectedInputAsset={selectedInputAsset}
+                                                        />
+                                                    );
+                                                } else {
+                                                    const vault = item.data as DepositVault;
+                                                    return (
+                                                        <SwapPreviewCard key={`vault-${index}`} vault={vault} onClick={() => setSelectedVaultToManage(vault)} selectedInputAsset={selectedInputAsset} />
+                                                    );
+                                                }
+                                            });
+                                        })()}
                                     </>
                                 )}
                             </Flex>

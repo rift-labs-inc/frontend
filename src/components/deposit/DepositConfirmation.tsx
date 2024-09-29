@@ -442,11 +442,9 @@ export const DepositConfirmation = ({}) => {
                 riftExchangeAbi: selectedInputAsset.riftExchangeAbi,
                 riftExchangeContractAddress: selectedInputAsset.riftExchangeContractAddress,
                 tokenAddress: selectedInputAsset.tokenAddress,
+                tokenDepositAmountInSmallestTokenUnits: tokenDepositAmountInSmallestTokenUnits,
                 btcPayoutLockingScript: bitcoinPayoutLockingScript,
                 btcExchangeRate: clippedExchangeRate,
-                vaultIndexToOverwrite,
-                tokenDepositAmountInSmallestTokenUnits: tokenDepositAmountInSmallestTokenUnits,
-                vaultIndexWithSameExchangeRate,
             });
         }
     };
@@ -552,6 +550,7 @@ export const DepositConfirmation = ({}) => {
                                     <Flex
                                         w='100%'
                                         h='100%'
+                                        mt='-15px'
                                         px='30px'
                                         py='8px'
                                         flexDir={'column'}
@@ -770,10 +769,10 @@ export const DepositConfirmation = ({}) => {
                             bg='none'
                             w='150px'
                             h='28px'
-                            mb='5px'
+                            mb='8px'
                             align={'center'}
                             justify={'center'}
-                            mt='15px'
+                            mt='12px'
                             gap={'5px'}
                             cursor={'pointer'}
                             _hover={{ textDecoration: 'underline' }}
@@ -800,7 +799,7 @@ export const DepositConfirmation = ({}) => {
                                 console.log('payoutBTCAddress:', payoutBTCAddress);
                                 if (usdtDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress)) {
                                     initiateDeposit();
-                                } else toastError('bruh', { title: 'Invalid Bitcoin Address', description: 'Please input a valid Segwit (bc1q...) Bitcoin payout address' });
+                                } else toastError('', { title: 'Invalid Bitcoin Address', description: 'Please input a valid Segwit (bc1q...) Bitcoin payout address' });
                             }}
                             fontSize={'15px'}
                             align={'center'}

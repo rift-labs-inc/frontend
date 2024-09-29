@@ -1,14 +1,14 @@
 import { Flex, Box, Button, Text, Avatar } from '@chakra-ui/react';
-import { useStore } from '../store';
-import useWindowSize from '../hooks/useWindowSize';
-import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon, USDT_Icon } from './other/SVGs'; // Assuming you also have a BTC logo
+import { useStore } from '../../store';
+import useWindowSize from '../../hooks/useWindowSize';
+import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon, USDT_Icon } from './SVGs'; // Assuming you also have a BTC logo
 import { ConnectButton, AvatarComponent } from '@rainbow-me/rainbowkit';
-import { colors } from '../utils/colors';
+import { colors } from '../../utils/colors';
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { BigNumber, ethers } from 'ethers';
-import { getLiquidityProvider } from '../utils/contractReadFunctions';
-import { FONT_FAMILIES } from '../utils/font';
+import { getLiquidityProvider } from '../../utils/contractReadFunctions';
+import { FONT_FAMILIES } from '../../utils/font';
 
 export const ConnectWalletButton = ({}) => {
     const [usdtBalance, setUsdtBalance] = useState('0');

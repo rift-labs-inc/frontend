@@ -10,6 +10,7 @@ import { IoIosCheckmarkCircle, IoMdSettings } from 'react-icons/io';
 import { useStore } from '../../store';
 import { useRouter } from 'next/router';
 import GooSpinner from '../other/GooSpiner';
+import { useContractData } from '../providers/ContractDataProvider';
 
 interface DepositStatusModalProps {
     isOpen: boolean;
@@ -29,6 +30,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const router = useRouter();
     const [isLoadingRedirect, setIsLoadingRedirect] = React.useState(false);
+    const { refreshAllDepositData, loading } = useContractData();
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -78,7 +80,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                 borderRadius='10px'
                 fontFamily={FONT_FAMILIES.AUX_MONO}
                 color={colors.offWhite}>
-                <ModalHeader fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
+                <ModalHeader mt='10px' fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
                     Deposit Status
                 </ModalHeader>
                 {(isCompleted || isError) && <ModalCloseButton />}
@@ -150,6 +152,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     borderColor={colors.purpleBorder}
                                     fontWeight={'normal'}
                                     onClick={() => {
+                                        refreshAllDepositData();
                                         handleNavigation('/manage');
                                         setIsLoadingRedirect(true);
                                         // onClose();

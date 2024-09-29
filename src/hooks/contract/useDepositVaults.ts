@@ -1,14 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { ethers, BigNumber } from 'ethers';
 import { useAccount } from 'wagmi';
 import depositVaultAggregatorABI from '../../abis/DepositVaultsAggregator.json';
 import riftExchangeABI from '../../abis/RiftExchange.json';
-import { getDepositVaults, getDepositVaultsLength, getLiquidityProvider, getDepositVaultByIndex } from '../../utils/contractReadFunctions';
+import { getDepositVaults, getDepositVaultsLength, getLiquidityProvider } from '../../utils/contractReadFunctions';
 import { useStore } from '../../store';
 import { useSwapReservations } from './useSwapReservations';
 import { DepositVault, SwapReservation, ReservationState } from '../../types';
 import { calculateFillPercentage } from '../../utils/dappHelper';
-import { formatUnits } from 'ethers/lib/utils';
 import { FRONTEND_RESERVATION_EXPIRY_TIME } from '../../utils/constants';
 
 type UseDepositVaultsResult = {
@@ -31,6 +30,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
         setAllDepositVaults,
         setTotalExpiredReservations,
         setTotalUnlockedReservations,
+        setCurrentlyExpiredReservationIndexes,
         setTotalCompletedReservations,
         selectedInputAsset,
     } = useStore();
@@ -41,110 +41,110 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
     const { allSwapReservations: allFetchedSwapReservations, loading: swapReservationsLoading, error: swapReservationsError } = useSwapReservations();
 
-    const calculateTrueUnreservedLiquidity = useCallback(
-        (depositVaults: DepositVault[], swapReservations: SwapReservation[]): DepositVault[] => {
-            const currentTimestamp = Math.floor(Date.now() / 1000);
-            const additionalBalances = new Map<number, BigNumber>();
-            const expiredAmountsPerVault = new Map<number, BigNumber>();
-            const completedAmountsPerVault = new Map<number, BigNumber>();
-            const unlockedAmountsPerVault = new Map<number, BigNumber>();
+    const calculateTrueUnreservedLiquidity = (depositVaults: DepositVault[], swapReservations: SwapReservation[]): DepositVault[] => {
+        const currentTimestamp = Math.floor(Date.now() / 1000);
+        const additionalBalances = new Map<string, BigNumber>();
+        const completedAmountsPerVault = new Map<string, BigNumber>();
+        const provedAmountsPerVault = new Map<string, BigNumber>();
+        const activelyReservedAmountsPerVault = new Map<string, BigNumber>(); // New map to track active reservations
+        const expiredReservationIndexes: number[] = [];
 
-            let expiredReservationsCount = 0;
-            let completedReservationsCount = 0;
-            let unlockedReservationsCount = 0;
+        let activeReservationsCount = 0;
+        let expiredReservationsCount = 0;
+        let completedReservationsCount = 0;
+        let provedReservationsCount = 0;
 
-            // Process all reservations first
-            swapReservations.forEach((reservation, reservationIndex) => {
-                const isCompleted = reservation.state === ReservationState.Completed;
-                const isCreated = reservation.state === ReservationState.Created;
-                const isExpired = currentTimestamp - reservation.reservationTimestamp > FRONTEND_RESERVATION_EXPIRY_TIME;
-                const isUnlocked = reservation.unlockTimestamp && currentTimestamp > reservation.unlockTimestamp;
+        // Process all reservations first (completed, expired, unlocked, active)
+        swapReservations.forEach((reservation, reservationIndex) => {
+            const isCreated = reservation.state === ReservationState.Created;
+            const isProved = reservation.state === ReservationState.Proved;
+            const isCompleted = reservation.state === ReservationState.Completed;
+            console.log('expired details:', {
+                reservationState: reservation.state,
+                timestampDelta: currentTimestamp - reservation.reservationTimestamp,
+                frontendExpiryTime: FRONTEND_RESERVATION_EXPIRY_TIME,
+            });
+            const isExpired = reservation.state === ReservationState.Expired || (ReservationState.Created && currentTimestamp - reservation.reservationTimestamp > FRONTEND_RESERVATION_EXPIRY_TIME);
+
+            console.log('Processing reservation:', {
+                reservationIndex,
+                isCreated,
+                isCompleted,
+                isExpired,
+                isProved,
+                reservation,
+            });
+
+            reservation.vaultIndexes.forEach((vaultIndex, i) => {
+                const vaultIndexKey = vaultIndex.toString();
+                const amountToAdd = reservation.amountsToReserve[i];
 
                 if (isCompleted) {
                     completedReservationsCount++;
-
-                    // Update per-vault completed amounts
-                    reservation.vaultIndexes.forEach((vaultIndex, i) => {
-                        const vaultIndexNumber = vaultIndex;
-                        const amountToAdd = reservation.amountsToReserve[i];
-                        const currentCompleted = completedAmountsPerVault.get(vaultIndexNumber) || BigNumber.from(0);
-                        completedAmountsPerVault.set(vaultIndexNumber, currentCompleted.add(amountToAdd));
-                    });
-                } else if (isUnlocked) {
-                    unlockedReservationsCount++;
-
-                    // Update per-vault unlocked amounts
-                    reservation.vaultIndexes.forEach((vaultIndex, i) => {
-                        const vaultIndexNumber = vaultIndex;
-                        const amountToAdd = reservation.amountsToReserve[i];
-                        const currentUnlocked = unlockedAmountsPerVault.get(vaultIndexNumber) || BigNumber.from(0);
-                        unlockedAmountsPerVault.set(vaultIndexNumber, currentUnlocked.add(amountToAdd));
-                    });
-                } else if (isCreated && isExpired) {
+                    const currentCompleted = completedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
+                    completedAmountsPerVault.set(vaultIndexKey, currentCompleted.add(amountToAdd));
+                } else if (isProved) {
+                    provedReservationsCount++;
+                    const currentUnlocked = provedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
+                    provedAmountsPerVault.set(vaultIndexKey, currentUnlocked.add(amountToAdd));
+                } else if (isExpired) {
                     expiredReservationsCount++;
                     reservation.state = ReservationState.Expired;
-
-                    // Update per-vault expired amounts
-                    reservation.vaultIndexes.forEach((vaultIndex, i) => {
-                        const vaultIndexNumber = vaultIndex;
-                        const amountToAdd = reservation.amountsToReserve[i];
-
-                        // Update additionalBalances (existing logic)
-                        const currentAdditional = additionalBalances.get(vaultIndexNumber) || BigNumber.from(0);
-                        additionalBalances.set(vaultIndexNumber, currentAdditional.add(amountToAdd));
-
-                        // Update expiredAmountsPerVault
-                        const currentExpired = expiredAmountsPerVault.get(vaultIndexNumber) || BigNumber.from(0);
-                        expiredAmountsPerVault.set(vaultIndexNumber, currentExpired.add(amountToAdd));
-                    });
+                    expiredReservationIndexes.push(reservationIndex);
+                    const currentAdditional = additionalBalances.get(vaultIndexKey) || BigNumber.from(0);
+                    additionalBalances.set(vaultIndexKey, currentAdditional.add(amountToAdd));
+                } else {
+                    // active reservations (created and not expired, completed, or unlocked)
+                    activeReservationsCount++;
+                    console.log('Active reservation:', reservation);
+                    const currentActive = activelyReservedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
+                    activelyReservedAmountsPerVault.set(vaultIndexKey, currentActive.add(amountToAdd));
                 }
             });
+        });
 
-            setTotalExpiredReservations(expiredReservationsCount);
-            setTotalCompletedReservations(completedReservationsCount);
-            setTotalUnlockedReservations(unlockedReservationsCount);
+        setCurrentlyExpiredReservationIndexes(expiredReservationIndexes);
+        setTotalExpiredReservations(expiredReservationsCount);
+        setTotalCompletedReservations(completedReservationsCount);
+        setTotalUnlockedReservations(provedReservationsCount);
 
-            let totalAvailableLiquidity = BigNumber.from(0);
+        let totalAvailableLiquidity = BigNumber.from(0);
 
-            // Now update the deposit vaults with the additional balances
-            const updatedVaults = depositVaults.map((vault, vaultIndex) => {
-                const additionalBalance = additionalBalances.get(vaultIndex) || BigNumber.from(0);
-                const newCalculatedUnreservedBalance = BigNumber.from(vault.unreservedBalanceFromContract).add(additionalBalance);
+        // Now update the deposit vaults with the additional balances and active reservations
+        const updatedVaults = depositVaults.map((vault, vaultIndex) => {
+            const vaultIndexKey = vaultIndex.toString();
+            const additionalBalance = additionalBalances.get(vaultIndexKey) ? additionalBalances.get(vaultIndexKey).sub(vault.withdrawnAmount) : BigNumber.from(0);
+            const unreservedBalance = vault.unreservedBalanceFromContract ? BigNumber.from(vault.unreservedBalanceFromContract).add(additionalBalance) : BigNumber.from(0);
+            const completedAmount = completedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
+            const provedAmount = provedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
+            const activelyReservedAmount = activelyReservedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
 
-                // Get expired and completed amounts
-                const expiredAmount = expiredAmountsPerVault.get(vaultIndex) || BigNumber.from(0);
-                const completedAmount = completedAmountsPerVault.get(vaultIndex) || BigNumber.from(0);
-                const unlockedAmount = unlockedAmountsPerVault.get(vaultIndex) || BigNumber.from(0);
+            totalAvailableLiquidity = totalAvailableLiquidity.add(unreservedBalance);
 
-                totalAvailableLiquidity = totalAvailableLiquidity.add(newCalculatedUnreservedBalance);
-
-                if (!additionalBalance.isZero()) {
-                    console.log(`Updating vault ${vaultIndex}:`, {
-                        originalUnreservedBalance: vault.unreservedBalanceFromContract.toString(),
-                        additionalBalance: additionalBalance.toString(),
-                        newCalculatedUnreservedBalance: newCalculatedUnreservedBalance.toString(),
-                        btcExchangeRate: vault.btcExchangeRate.toString(),
-                    });
-                }
-
-                return {
-                    ...vault,
-                    trueUnreservedBalance: newCalculatedUnreservedBalance || vault.unreservedBalanceFromContract,
-                    reservedBalance: BigNumber.from(vault.initialBalance).sub(newCalculatedUnreservedBalance).sub(vault.withdrawnAmount),
-                    depositAsset: selectedInputAsset,
-                    index: vaultIndex,
-                    expiredAmount,
-                    completedAmount,
-                    unlockedAmount,
-                };
+            console.log('Updated vault:', {
+                vaultIndex,
+                withdrawnAmount: vault.withdrawnAmount.toString(),
+                unreservedBalance: unreservedBalance.toString(),
+                activelyReservedAmount: activelyReservedAmount.toString(),
+                completedAmount: completedAmount.toString(),
+                provedAmount: provedAmount.toString(),
             });
 
-            updateTotalAvailableLiquidity(selectedInputAsset.name, totalAvailableLiquidity);
+            return {
+                ...vault,
+                trueUnreservedBalance: unreservedBalance,
+                activelyReservedAmount: activelyReservedAmount,
+                depositAsset: selectedInputAsset,
+                index: vaultIndex,
+                completedAmount,
+                provedAmount,
+            };
+        });
 
-            return updatedVaults;
-        },
-        [selectedInputAsset.name],
-    );
+        updateTotalAvailableLiquidity(selectedInputAsset.name, totalAvailableLiquidity);
+
+        return updatedVaults;
+    };
 
     const fetchDepositVaultsReservationsData = async () => {
         if (!ethersRpcProvider || !selectedInputAsset.riftExchangeContractAddress) {
@@ -170,7 +170,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
             console.log('All Deposit Vaults:', depositVaults);
 
             const updatedDepositVaults = calculateTrueUnreservedLiquidity(depositVaults, allFetchedSwapReservations);
-            // console.log('Updated Deposit Vaults:', updatedDepositVaults);
+            console.log('Updated Deposit Vaults:', updatedDepositVaults);
             setAllDepositVaults(updatedDepositVaults);
 
             // [1] fetch user-specific vaults (if connected)

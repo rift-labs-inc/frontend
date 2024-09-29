@@ -1,34 +1,34 @@
 import React from 'react';
-import { Flex, Box, Tooltip } from '@chakra-ui/react';
-import { colors } from '../../utils/colors';
-import { DepositVault } from '../../types';
+import { Flex, Box, Tooltip, Text } from '@chakra-ui/react';
 import { BigNumber } from 'ethers';
 import { formatUnits } from 'ethers/lib/utils';
 import { FONT_FAMILIES } from '../../utils/font';
+import { colors } from '../../utils/colors';
+import { DepositVault } from '../../types';
 
 interface VaultStatusBarProps {
     selectedVault: DepositVault;
     minPercentageForText?: number;
+    mini?: boolean;
 }
 
-export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, minPercentageForText = 10 }) => {
+export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, minPercentageForText = 10, mini = false }) => {
+    if (!selectedVault) return null;
+
+    // Extract and calculate amounts
     const totalAmount = BigNumber.from(selectedVault.initialBalance);
     const withdrawnAmount = BigNumber.from(selectedVault.withdrawnAmount);
-    const unreservedAmount = BigNumber.from(selectedVault.trueUnreservedBalance);
-    const reservedAmount = BigNumber.from(selectedVault.reservedBalance);
-    const swappedAmount = totalAmount.sub(withdrawnAmount).sub(unreservedAmount).sub(reservedAmount);
-
-    // New amounts
-    const expiredAmount = BigNumber.from(selectedVault.expiredAmount || 0);
+    const provedAmount = BigNumber.from(selectedVault.provedAmount || 0);
     const completedAmount = BigNumber.from(selectedVault.completedAmount || 0);
-    const unlockedAmount = BigNumber.from(selectedVault.unlockedAmount || 0);
+    const reservedAmount = BigNumber.from(selectedVault.activelyReservedAmount || 0);
+    const trueUnreservedAmount = BigNumber.from(selectedVault.trueUnreservedBalance || 0);
 
-    // Adjust reservedAmount to exclude expired, completed, and unlocked amounts
-    const adjustedReservedAmount = reservedAmount.sub(expiredAmount).sub(completedAmount).sub(unlockedAmount);
-
-    // Calculate percentages
+    // Calculate percentages with higher precision
     const calculatePercentage = (amount: BigNumber) => {
-        return amount.mul(100).div(totalAmount).toNumber();
+        // Multiply by 10000 to get 4 decimal places of precision
+        const percentage = amount.mul(1000000).div(totalAmount).toNumber() / 10000;
+        // Round to 2 decimal places
+        return Math.round(percentage * 100) / 100;
     };
 
     const formatAmount = (amount: BigNumber) => {
@@ -36,23 +36,40 @@ export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, m
     };
 
     const withdrawnPercentage = calculatePercentage(withdrawnAmount);
-    const swappedPercentage = calculatePercentage(swappedAmount);
-    const reservedPercentage = calculatePercentage(adjustedReservedAmount);
-    const expiredPercentage = calculatePercentage(expiredAmount);
+    const reservedPercentage = calculatePercentage(reservedAmount);
     const completedPercentage = calculatePercentage(completedAmount);
-    const unlockedPercentage = calculatePercentage(unlockedAmount);
+    const provedPercentage = calculatePercentage(provedAmount);
+    const unreservedPercentage = calculatePercentage(trueUnreservedAmount);
 
-    // Dynamically adjust the last section (unreserved) to fill any remaining space
-    const unreservedPercentage = 100 - (withdrawnPercentage + swappedPercentage + reservedPercentage + expiredPercentage + completedPercentage + unlockedPercentage);
+    // Calculate total percentage
+    const totalPercentage = withdrawnPercentage + reservedPercentage + completedPercentage + provedPercentage + unreservedPercentage;
+
+    // Round the total to 2 decimal places
+    const displayPercentage = Math.round(totalPercentage * 100) / 100;
 
     const BarSection = ({ percentage, color, tooltipBg, label, amount }) => {
+        if (percentage <= 0) return null;
+
         const showInternalText = percentage >= minPercentageForText;
 
+        // for mini version, skip tooltip and internal text
+        if (mini) {
+            return <Flex w={`${percentage}%`} bg={color} h='100%' />;
+        }
+
         return (
-            <Tooltip px='14px' py='6px' fontFamily={FONT_FAMILIES.AUX_MONO} label={`${label} - ${amount}`} borderRadius='14px' bg={tooltipBg} color={colors.offerWhite} hasArrow>
+            <Tooltip
+                px='14px'
+                py='6px'
+                fontFamily={FONT_FAMILIES.AUX_MONO}
+                label={`${label} - ${amount} (${percentage.toFixed(2)}%)`}
+                borderRadius='14px'
+                bg={tooltipBg}
+                color={colors.offerWhite}
+                hasArrow>
                 <Flex w={`${percentage}%`} bg={color} h='100%' alignItems='center' justifyContent='center' position='relative' minWidth={showInternalText ? '60px' : '0'}>
                     {showInternalText && (
-                        <Box position='absolute' left='4px' right='4px' whiteSpace='nowrap' overflow='hidden' textOverflow='ellipsis' color={colors.offerWhite} mt='1px' fontSize='13px'>
+                        <Box position='relative' color={colors.offerWhite} mt='1px' fontSize='13px' textAlign='center'>
                             <Box as='span' fontFamily='Nostromo'>
                                 {label.toUpperCase()}
                             </Box>
@@ -68,22 +85,32 @@ export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, m
     };
 
     return (
-        <Flex w='100%' direction='column'>
-            <Flex h='50px' mt='6px' border='3px solid' textAlign={'center'} borderColor={colors.borderGrayLight} borderRadius='14px' overflow='hidden'>
-                <BarSection percentage={withdrawnPercentage} color={colors.redHover} tooltipBg={colors.red} label='Withdrawn' amount={formatAmount(withdrawnAmount)} />
-                <BarSection percentage={swappedPercentage} color={colors.greenOutline} tooltipBg={colors.greenBackground} label='Swapped' amount={formatAmount(swappedAmount)} />
-                <BarSection percentage={reservedPercentage} color={'orange.600'} tooltipBg={'orange.700'} label='Reserved' amount={formatAmount(adjustedReservedAmount)} />
-                <BarSection percentage={expiredPercentage} color={'gray.500'} tooltipBg={'gray.600'} label='Expired' amount={formatAmount(expiredAmount)} />
-                <BarSection percentage={completedPercentage} color={'blue.500'} tooltipBg={'blue.600'} label='Completed' amount={formatAmount(completedAmount)} />
-                <BarSection percentage={unlockedPercentage} color={'purple.500'} tooltipBg={'purple.600'} label='Unlocked' amount={formatAmount(unlockedAmount)} />
+        <Flex w={mini ? '140px' : '100%'} direction={mini ? 'row' : 'column'} align={mini ? 'center' : 'stretch'} justify={mini ? 'flex-end' : 'flex-start'} gap={mini ? '12px' : '0'}>
+            {/* Render the percentage text only for mini */}
+            {mini && <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize={'14px'} color={colors.offWhite}>{`${displayPercentage}%`}</Text>}
+            <Flex
+                h={mini ? '17px' : '50px'}
+                mt={mini ? '0' : '6px'}
+                border={mini ? `1.5px solid ${colors.borderGrayLight}` : '3px solid'}
+                borderColor={colors.borderGrayLight}
+                borderRadius='14px'
+                overflow='hidden'
+                width={mini ? '80px' : '100%'}>
+                {/* Render each section */}
+                <BarSection percentage={withdrawnPercentage} color={colors.redDark} tooltipBg={colors.red} label='Withdrawn' amount={formatAmount(withdrawnAmount)} />
+                <BarSection percentage={reservedPercentage} color={'orange.600'} tooltipBg={'orange.700'} label='Reserved' amount={formatAmount(reservedAmount)} />
+                <BarSection percentage={completedPercentage} color={colors.greenOutline} tooltipBg={colors.greenBackground} label='Completed' amount={formatAmount(completedAmount)} />
+                <BarSection percentage={provedPercentage} color={'purple.600'} tooltipBg={'purple.600'} label='Proved' amount={formatAmount(provedAmount)} />
                 <BarSection
                     percentage={unreservedPercentage}
-                    color={selectedVault.depositAsset.dark_bg_color}
+                    color={selectedVault.depositAsset.light_text_color}
                     tooltipBg={selectedVault.depositAsset.bg_color}
                     label='Unreserved'
-                    amount={formatAmount(unreservedAmount)}
+                    amount={formatAmount(trueUnreservedAmount)}
                 />
             </Flex>
         </Flex>
     );
 };
+
+export default VaultStatusBar;

@@ -16,7 +16,8 @@ export const colors = {
     greenOutline: '#48C94D',
     green: '#125641',
 
-    red: '#E63B3B',
+    red: '#B23232',
+    redDark: '#9D2727',
     redHover: '#C32D2D',
     redBackground: '#402122',
 
@@ -33,7 +34,7 @@ export const colors = {
     borderGrayLight: '#444',
     toast: {
         success: '#125641',
-        error: '#E63B3B',
+        error: '#B23232',
         info: '#303F9F',
         warning: '#FF8F28',
     },

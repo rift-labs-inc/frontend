@@ -9,16 +9,15 @@ import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { BigNumber } from 'ethers';
 import { formatUnits, parseEther } from 'ethers/lib/utils';
 import { btcToSats, ethToWei, formatAmountToString, weiToEth } from '../../utils/dappHelper';
-import { ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
 import { bitcoinDecimals, maxSwapOutputs, opaqueBackgroundColor } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
 import { connectorsForWallets, useConnectModal } from '@rainbow-me/rainbowkit';
-import { DepositConfirmation } from '../deposit/DepositConfirmation';
+import { DepositConfirmation } from './DepositConfirmation';
 import WebAssetTag from '../other/WebAssetTag';
 import { useContractData } from '../providers/ContractDataProvider';
 import { toastInfo } from '../../hooks/toast';
-import { DepositAmounts } from '../deposit/DepositAmounts';
+import { DepositAmounts } from './DepositAmounts';
 import { maxSwapLimitInMicroUSDT, maxSwapLimitInUSDT } from '../../utils/constants';
 
 export const DepositUI = () => {
@@ -54,7 +53,7 @@ export const DepositUI = () => {
     const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const [isAwaitingConnection, setIsAwaitingConnection] = useState(false);
-    const { refreshAllDepositData, loading } = useContractData();
+    const { refreshAllDepositData, refreshConnectedUserBalance, loading } = useContractData();
     const [isAboveMaxSwapLimitUsdtDeposit, setIsAboveMaxSwapLimitUsdtDeposit] = useState(false);
     const [isAboveMaxSwapLimitBtcOutput, setIsAboveMaxSwapLimitBtcOutput] = useState(false);
     const [isBelowMinUsdtDeposit, setIsBelowMinUsdtDeposit] = useState(false);
@@ -207,16 +206,30 @@ export const DepositUI = () => {
     };
 
     useEffect(() => {
-        if (isConnected && isAwaitingConnection) {
-            setIsAwaitingConnection(false);
-            // check if USDT input is above the user's balance
-            if (parseFloat(usdtDepositAmount || '0') > parseFloat(userUsdtBalance || '0')) {
-                setUserBalanceExceeded(true);
-            } else {
-                proceedWithDeposit();
+        const handleConnection = async () => {
+            if (isConnected && isAwaitingConnection) {
+                setIsAwaitingConnection(false);
+
+                console.log('validAssets[selectedInputAsset.name].connectedUserBalanceFormatted:', validAssets[selectedInputAsset.name].connectedUserBalanceFormatted);
+
+                await refreshConnectedUserBalance();
+
+                // Fetch the latest balance after refreshing
+                const latestUserUsdtBalance = validAssets[selectedInputAsset.name].connectedUserBalanceFormatted;
+
+                console.log('usdtDepositAmount:', usdtDepositAmount);
+                console.log('userUsdtBalance:', latestUserUsdtBalance);
+
+                if (parseFloat(usdtDepositAmount || '0') > parseFloat(latestUserUsdtBalance || '0')) {
+                    setUserBalanceExceeded(true);
+                } else {
+                    proceedWithDeposit();
+                }
             }
-        }
-    }, [isConnected, isAwaitingConnection]);
+        };
+
+        handleConnection();
+    }, [isConnected, isAwaitingConnection, refreshConnectedUserBalance, validAssets, selectedInputAsset, usdtDepositAmount]);
 
     useEffect(() => {
         if (loading) {
