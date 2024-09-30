@@ -95,6 +95,10 @@ type Store = {
     setEthPayoutAddress: (address: string) => void;
     bitcoinSwapTransactionHash: string;
     setBitcoinSwapTransactionHash: (hash: string) => void;
+
+    // global
+    isOnline: boolean;
+    setIsOnline: (b: boolean) => void;
 };
 
 export const useStore = create<Store>((set) => {
@@ -283,5 +287,9 @@ export const useStore = create<Store>((set) => {
         setAreNewDepositsPaused: (areNewDepositsPaused) => set({ areNewDepositsPaused }),
         isGasFeeTooHigh: false,
         setIsGasFeeTooHigh: (isGasFeeTooHigh) => set({ isGasFeeTooHigh }),
+
+        // global
+        isOnline: true, // typeof window != 'undefined' ? navigator.onLine : true
+        setIsOnline: (b) => set({ isOnline: b }),
     };
 });

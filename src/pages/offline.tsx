@@ -14,7 +14,8 @@ import { DepositUI } from '../components/swap/DepositUI';
 import { DepositConfirmation } from '../components/deposit/DepositConfirmation';
 import { ReserveLiquidityContainer } from '../components/swap/ReserveLiquidityContainer';
 import CurrencyModal from '../components/swap/CurrencyModal';
-import OfflinePage from '../components/background/OfflinePage';
+import { opaqueBackgroundColor } from '../utils/constants';
+import OfflineLoader from '../components/other/OfflineLoader';
 
 const Home = () => {
     const { isTablet, isMobile } = useWindowSize();
@@ -35,6 +36,9 @@ const Home = () => {
     const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
     const depositMode = useStore((state) => state.depositMode);
+
+    const actualBorderColor = '#323232';
+    const borderColor = `2px solid ${actualBorderColor}`;
 
     useEffect(() => {
         setSwapFlowState('0-not-started');
@@ -60,77 +64,84 @@ const Home = () => {
 
     return (
         <>
-            <OpenGraph />
-            {/* <OfflinePage> */}
             <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
                 <Navbar />
                 <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === '0-not-started' ? '18vh' : '100px'}>
-                    {swapFlowState != '0-not-started' ? (
-                        <ReserveLiquidityContainer />
-                    ) : (
-                        // {/* LOGOS & TEXT */}
-                        <>
-                            {depositFlowState === '0-not-started' && (
-                                <>
-                                    <RiftSVG />
-                                    <Flex
-                                        userSelect={'none'}
-                                        cursor={'default'}
-                                        sx={{
-                                            WebkitTextFillColor: 'transparent',
-                                            backgroundClip: 'text',
-                                            WebkitBackgroundClip: 'text',
-                                        }}
-                                        bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
-                                        letterSpacing={isTablet ? '1px' : '2px'}
-                                        fontSize={isMobile ? '44px' : isTablet ? '60px' : '106px'}
-                                        fontFamily={'Klein'}
-                                        fontWeight='bold'
-                                        mt={isTablet ? '-18px' : '-25px'}>
-                                        <Text px='12px' as='h1'>
-                                            HyperBrid
-                                        </Text>
-                                        <Text ml={isTablet ? '-18px' : '-20px'} as='h1'>
-                                            ge
-                                        </Text>
-                                    </Flex>
+                    <RiftSVG />
+                    <Flex
+                        userSelect={'none'}
+                        cursor={'default'}
+                        sx={{
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text',
+                            WebkitBackgroundClip: 'text',
+                        }}
+                        bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
+                        letterSpacing={isTablet ? '1px' : '2px'}
+                        fontSize={isMobile ? '44px' : isTablet ? '60px' : '106px'}
+                        fontFamily={'Klein'}
+                        fontWeight='bold'
+                        mt={isTablet ? '-18px' : '-25px'}>
+                        <Text px='12px' as='h1'>
+                            HyperBrid
+                        </Text>
+                        <Text ml={isTablet ? '-18px' : '-20px'} as='h1'>
+                            ge
+                        </Text>
+                    </Flex>
 
-                                    <Flex
-                                        flexDir={'column'}
-                                        textAlign={'center'}
-                                        userSelect={'none'}
-                                        fontSize={isTablet ? '12px' : '15px'}
-                                        mt={'8px'}
-                                        fontFamily={FONT_FAMILIES.AUX_MONO}
-                                        color={'#c3c3c3'}
-                                        cursor={'default'}
-                                        fontWeight={'normal'}
-                                        gap={'0px'}>
-                                        <Text>Trustless cross-chain swaps between</Text>
-                                        <Text>
-                                            <OrangeText>Bitcoin</OrangeText> and <BlueText>Ethereum</BlueText>. See{' '}
-                                            <Box
-                                                as='span'
-                                                // go to https://rift.exchange
-                                                onClick={() => (window.location.href = 'https://rift.exchange')}
-                                                style={{
-                                                    textDecoration: 'underline',
-                                                    cursor: 'pointer !important',
-                                                }}
-                                                fontWeight={'bold'}>
-                                                how it works
-                                            </Box>
-                                        </Text>
-                                    </Flex>
-                                </>
-                            )}
-                            <SwapContainer />
-                        </>
-                    )}
+                    <Flex
+                        flexDir={'column'}
+                        textAlign={'center'}
+                        userSelect={'none'}
+                        fontSize={isTablet ? '12px' : '15px'}
+                        mt={'8px'}
+                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                        color={'#c3c3c3'}
+                        cursor={'default'}
+                        fontWeight={'normal'}
+                        gap={'0px'}>
+                        <Text>Trustless cross-chain swaps between</Text>
+                        <Text>
+                            <OrangeText>Bitcoin</OrangeText> and <BlueText>Ethereum</BlueText>. See{' '}
+                            <Box
+                                as='span'
+                                // go to https://rift.exchange
+                                onClick={() => (window.location.href = 'https://rift.exchange')}
+                                style={{
+                                    textDecoration: 'underline',
+                                    cursor: 'pointer !important',
+                                }}
+                                fontWeight={'bold'}>
+                                how it works
+                            </Box>
+                        </Text>
+                    </Flex>
+                    <Flex align={'center'} justify={'center'} w='100%' mt='30px' px='20px' direction={'column'} overflow={'visible'}>
+                        <Flex
+                            direction='column'
+                            align='center'
+                            py='27px'
+                            w={'630px'}
+                            borderRadius='20px'
+                            {...opaqueBackgroundColor}
+                            borderBottom={borderColor}
+                            borderLeft={borderColor}
+                            borderTop={borderColor}
+                            borderRight={borderColor}>
+                            <Flex w='90%' direction={'column'} align='center'>
+                                <OfflineLoader mt='20px' mb='60px' />
+                                <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize={28} textAlign='center'>
+                                    You got lost in the rift
+                                </Text>
+                                <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontWeight='300' textAlign='center'>
+                                    Check your internet connection to get back to using Rift
+                                </Text>
+                            </Flex>
+                        </Flex>
+                    </Flex>
                 </Flex>
-                <CurrencyModal />
             </Flex>
-            {/* </OfflinePage> */}
         </>
     );
 };

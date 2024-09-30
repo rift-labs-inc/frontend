@@ -83,6 +83,26 @@ const myCustomTheme = {
 function MyApp({ Component, pageProps }: AppProps) {
     const queryClient = new QueryClient();
 
+    // TODO: The offline error is here
+    // const setIsOnline = useStore((state) => state.setIsOnline);
+
+    // useEffect(() => {
+    //     const handleOnlineStatusChange = () => {
+    //         setIsOnline(navigator.onLine);
+    //         // if (!navigator.onLine) {
+    //         //     toastClear();
+    //         // }
+    //     };
+
+    //     window.addEventListener('online', handleOnlineStatusChange);
+    //     window.addEventListener('offline', handleOnlineStatusChange);
+
+    //     return () => {
+    //         window.removeEventListener('online', handleOnlineStatusChange);
+    //         window.removeEventListener('offline', handleOnlineStatusChange);
+    //     };
+    // }, []);
+
     return (
         <WagmiProvider config={config}>
             <QueryClientProvider client={queryClient}>
