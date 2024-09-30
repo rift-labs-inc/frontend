@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Flex, Button, FlexProps } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
-import { colors } from '../utils/colors';
-import { FONT_FAMILIES } from '../utils/font';
+import { colors } from '../../utils/colors';
+import { FONT_FAMILIES } from '../../utils/font';
 
 const MotionFlex = motion(Flex);
 
@@ -34,14 +34,7 @@ const HorizontalButtonSelector = <T extends ReadonlyArray<string> = string[]>({
     }, [selectedItem]);
 
     return (
-        <Flex
-            position='relative'
-            bg={colors.offBlack}
-            borderRadius='10px'
-            border='2px solid'
-            borderColor={colors.borderGray}
-            height='50px'
-            {...props}>
+        <Flex position='relative' bg={colors.offBlack} borderRadius='10px' border='2px solid' borderColor={colors.borderGray} height='50px' {...props}>
             <MotionFlex
                 position='absolute'
                 bg={colors.purpleButtonBG}
@@ -54,10 +47,7 @@ const HorizontalButtonSelector = <T extends ReadonlyArray<string> = string[]>({
                 initial={false}
                 animate={{
                     // x: `${selectedIndex * animationWidth - 1}%`,
-                    x:
-                        selectedIndex == 0
-                            ? '-1%'
-                            : `${selectedIndex * 100 + (selectedIndex == numOptions - 1 ? 1 : 0)}%`,
+                    x: selectedIndex == 0 ? '-1%' : `${selectedIndex * 100 + (selectedIndex == numOptions - 1 ? 1 : 0)}%`,
                 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />

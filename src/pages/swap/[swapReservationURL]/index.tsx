@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useStore } from '../../../store';
 import { Text, Flex, Image, Center, Box, Button, color, Spinner } from '@chakra-ui/react';
-import { Navbar } from '../../../components/Navbar';
+import { Navbar } from '../../../components/nav/Navbar';
 import { colors } from '../../../utils/colors';
 import { bufferTo18Decimals, calculateBtcOutputAmountFromExchangeRate, decodeReservationUrl, fetchReservationDetails } from '../../../utils/dappHelper';
 import CurrencyModal from '../../../components/swap/CurrencyModal';
@@ -45,7 +45,7 @@ const ReservationDetails = () => {
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
     const bitcoinSwapTransactionHash = useStore((state) => state.bitcoinSwapTransactionHash);
     const setBitcoinSwapTransactionHash = useStore((state) => state.setBitcoinSwapTransactionHash);
-    const ethersRpcProvider = useStore((state) => state.ethersRpcProvider);
+    const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
@@ -58,6 +58,8 @@ const ReservationDetails = () => {
     const setCurrentReservationState = useStore((state) => state.setCurrentReservationState);
     const swapReservationNotFound = useStore((state) => state.swapReservationNotFound);
     const setSwapReservationNotFound = useStore((state) => state.setSwapReservationNotFound);
+    const currentTotalBlockConfirmations = useStore((state) => state.currentTotalBlockConfirmations);
+    const confirmationBlocksNeeded = useStore((state) => state.confirmationBlocksNeeded);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -106,9 +108,14 @@ const ReservationDetails = () => {
             window.rift
                 .getRiftSwapStatus({ internalId: swapReservationData.nonce })
                 .then((status) => {
-                    console.log('Swap status:', status);
-                    if (status.status === 1 && swapFlowState === '2-send-bitcoin') {
-                        setSwapFlowState('3-receive-eth');
+                    console.log('Swap status from proxy wallet:', status);
+                    console.log('Swap flow state:', swapFlowState);
+                    console.log('Current reservation state:', currentReservationState);
+
+                    // New condition to check currentReservationState
+                    if (status.status === 1 && currentReservationState !== 'Proved' && currentReservationState !== 'Completed' && currentReservationState !== 'Expired') {
+                        console.log('Setting Swap status to 3-receive-evm-token');
+                        setSwapFlowState('3-receive-evm-token');
                         setBitcoinSwapTransactionHash(status.paymentTxid);
                     }
                     setProxyWalletSwapInternalID(status.internalId);
@@ -135,14 +142,15 @@ const ReservationDetails = () => {
                     setSwapReservationNotFound(false);
 
                     const currentReservationStateFromContract = getReservationStateString(reservationDetails.swapReservationData.state);
+                    console.log('proc Current reservation state:', currentReservationStateFromContract);
                     setCurrentReservationState(currentReservationStateFromContract);
                     // set swap flow state to expired if its been 8 hours since the reservation was created
                     const isReservationExpired = Date.now() - reservationDetails.swapReservationData.reservationTimestamp * 1000 > 8 * 60 * 60 * 1000;
 
                     if (currentReservationStateFromContract === 'Created' && isReservationExpired) {
                         setSwapFlowState('5-expired');
-                    } else if (currentReservationStateFromContract === 'Unlocked') {
-                        setSwapFlowState('3-receive-eth');
+                    } else if (currentReservationStateFromContract === 'Proved') {
+                        setSwapFlowState('3-receive-evm-token');
                     } else if (currentReservationStateFromContract === 'Completed') {
                         setSwapFlowState('4-completed');
                     } else if (currentReservationStateFromContract === 'Expired') {
@@ -168,7 +176,7 @@ const ReservationDetails = () => {
     enum ReservationState {
         None = 0,
         Created = 1,
-        Unlocked = 2,
+        Proved = 2,
         Completed = 3,
         Expired = 4,
     }
@@ -180,8 +188,8 @@ const ReservationDetails = () => {
                 return 'None';
             case ReservationState.Created:
                 return 'Created';
-            case ReservationState.Unlocked:
-                return 'Unlocked';
+            case ReservationState.Proved:
+                return 'Proved';
             case ReservationState.Completed:
                 return 'Completed';
             case ReservationState.Expired:
@@ -220,15 +228,7 @@ const ReservationDetails = () => {
                             {loadingState ? (
                                 swapReservationNotFound ? (
                                     <Flex mb='20px' mt='20px' direction={'column'} align='center'>
-                                        <Text
-                                            fontSize='18px'
-                                            textAlign='center'
-                                            w='800px'
-                                            mt='-4px'
-                                            mb='0px'
-                                            fontWeight={'normal'}
-                                            color={colors.offWhite}
-                                            fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                        <Text fontSize='18px' textAlign='center' w='800px' mt='-4px' mb='0px' fontWeight={'normal'} color={colors.offWhite} fontFamily={FONT_FAMILIES.NOSTROMO}>
                                             Invalid Swap Reservation
                                         </Text>
                                         <Flex>
@@ -265,10 +265,10 @@ const ReservationDetails = () => {
                                         <Spinner color={colors.textGray} h={'50px'} w={'50px'} thickness='3px' speed='0.65s' />
                                     </Flex>
                                 )
-                            ) : swapFlowState === '3-receive-eth' ||
+                            ) : swapFlowState === '3-receive-evm-token' ||
                               swapFlowState === '4-completed' ||
                               swapFlowState === '5-expired' ||
-                              currentReservationState === 'Unlocked' ||
+                              currentReservationState === 'Proved' ||
                               currentReservationState === 'Expired' ||
                               currentReservationState === 'Completed' ? (
                                 <RecieveUsdt />
@@ -277,27 +277,12 @@ const ReservationDetails = () => {
                                     {/* CHROME EXTENSION DETECTED */}
                                     {typeof window !== 'undefined' && window.rift ? (
                                         <>
-                                            <Text
-                                                fontSize='16px'
-                                                textAlign='center'
-                                                w='800px'
-                                                mt='-2px'
-                                                mb='20px'
-                                                fontWeight={'normal'}
-                                                color={colors.darkerGray}
-                                                fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                            <Text fontSize='16px' textAlign='center' w='800px' mt='-2px' mb='20px' fontWeight={'normal'} color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
                                                 Your reservation is confirmed and your Rift Proxy Wallet is detected! Please send the Bitcoin amount to the address below:
                                             </Text>
                                             <Flex mt='10px' mx='10px'>
                                                 {bitcoinUri && bitcoinUri !== '' && (
-                                                    <Flex
-                                                        py='10px'
-                                                        px='10px'
-                                                        w={'270px'}
-                                                        borderRadius='10px'
-                                                        bg='white'
-                                                        mr='40px'
-                                                        boxShadow={'0px 15px 15px rgba(0, 16, 118, 0.4)'}>
+                                                    <Flex py='10px' px='10px' w={'270px'} borderRadius='10px' bg='white' mr='40px' boxShadow={'0px 15px 15px rgba(0, 16, 118, 0.4)'}>
                                                         <QRCode value={bitcoinUri} size={250} />
                                                     </Flex>
                                                 )}
@@ -321,12 +306,7 @@ const ReservationDetails = () => {
                                                                     {address.slice(0, Math.floor((2 / 3) * address.length))}
                                                                 </Text>
                                                                 <Flex alignItems='center'>
-                                                                    <Text
-                                                                        letterSpacing={'-1px'}
-                                                                        fontSize='25px'
-                                                                        display='inline-flex'
-                                                                        color={colors.offWhite}
-                                                                        fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                                                    <Text letterSpacing={'-1px'} fontSize='25px' display='inline-flex' color={colors.offWhite} fontFamily={FONT_FAMILIES.AUX_MONO}>
                                                                         {address.slice(Math.floor((2 / 3) * address.length))}
                                                                     </Text>
                                                                     <LuCopy
@@ -371,9 +351,7 @@ const ReservationDetails = () => {
                                                                             cursor: 'pointer',
                                                                             marginLeft: '10px',
                                                                         }}
-                                                                        onClick={() =>
-                                                                            navigator.clipboard.writeText(formatUnits(totalSwapAmountInSats, bitcoinDecimals).toString())
-                                                                        }
+                                                                        onClick={() => navigator.clipboard.writeText(formatUnits(totalSwapAmountInSats, bitcoinDecimals).toString())}
                                                                     />
                                                                     <Flex ml='20px' mt='-1px'>
                                                                         <AssetTag assetName='BTC' width='75px' />
@@ -408,14 +386,7 @@ const ReservationDetails = () => {
                                                 <Flex maxW='600px' mt='20px' direction='column' align='center'>
                                                     <WarningSVG width='60px' />
 
-                                                    <Text
-                                                        fontSize='15px'
-                                                        fontWeight='normal'
-                                                        color={colors.textGray}
-                                                        fontFamily={FONT_FAMILIES.AUX_MONO}
-                                                        textAlign='center'
-                                                        mt='20px'
-                                                        flex='1'>
+                                                    <Text fontSize='15px' fontWeight='normal' color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='20px' flex='1'>
                                                         Your Rift Proxy Wallet is not detected. If this is your first time swapping, please add the Rift Chrome Extension below:
                                                     </Text>
                                                     <Flex
@@ -467,7 +438,7 @@ const ReservationDetails = () => {
                                 </>
                             )}
                         </Flex>
-                        {!loadingState && swapFlowState === '2-send-bitcoin' && currentReservationState !== 'Unlocked' && currentReservationState !== 'Completed' && (
+                        {!loadingState && swapFlowState === '2-send-bitcoin' && currentReservationState !== 'Proved' && currentReservationState !== 'Completed' && (
                             <Flex
                                 bg={colors.purpleBackgroundDisabled}
                                 borderColor={colors.purpleBorderDark}
@@ -482,6 +453,27 @@ const ReservationDetails = () => {
                                 justify={'center'}>
                                 <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
                                     AWAITING BITCOIN PAYMENT
+                                </Text>
+                                <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
+                            </Flex>
+                        )}
+
+                        {swapFlowState === '3-receive-evm-token' && currentTotalBlockConfirmations < confirmationBlocksNeeded && (
+                            <Flex
+                                bg={colors.purpleBackgroundDisabled}
+                                borderColor={colors.purpleBorderDark}
+                                borderWidth={3}
+                                borderRadius='15px'
+                                px='20px'
+                                w='540px'
+                                py='4px'
+                                mt={'20px'}
+                                h={'60px'}
+                                align={'center'}
+                                justify={'center'}>
+                                <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                    Awaiting {confirmationBlocksNeeded - currentTotalBlockConfirmations} Block Confirmation
+                                    {confirmationBlocksNeeded - currentTotalBlockConfirmations > 1 ? 's' : ''}
                                 </Text>
                                 <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
                             </Flex>

@@ -4,21 +4,15 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 import { OpenGraph } from '../components/background/OpenGraph';
-import HorizontalButtonSelector from '../components/HorizontalButtonSelector';
+import HorizontalButtonSelector from '../components/other/HorizontalButtonSelector';
 import OrangeText from '../components/other/OrangeText';
 import WhiteText from '../components/other/WhiteText';
-import { Navbar } from '../components/Navbar';
+import { Navbar } from '../components/nav/Navbar';
 import { ManageSwaps } from '../components/deposit/ManageSwaps';
 import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
 import useWindowSize from '../hooks/useWindowSize';
 import { useStore } from '../store';
 import { colors } from '../utils/colors';
-import { weiToEth, satsToBtc, calculateAmountBitcoinOutput, calculateFillPercentage } from '../utils/dappHelper';
-import { DepositVault } from '../types';
-import { BigNumber } from 'ethers';
-import { ChevronLeftIcon } from '@chakra-ui/icons';
-import { BTCSVG, ETH_Icon, ETH_Logo, ETHSVG } from '../components/other/SVGs';
-import ExchangeRateChart from '../components/charts/ExchangeRateChart';
 
 const Manage = () => {
     const { isMobile } = useWindowSize();

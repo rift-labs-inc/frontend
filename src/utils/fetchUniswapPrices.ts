@@ -69,23 +69,27 @@ const univ3ABI = [
 ];
 
 export async function getPrices(): Promise<string[]> {
-    const mainnetProvider = new ethers.providers.JsonRpcProvider(mainnetEthRpcUrl);
-    const contract = new ethers.Contract(chainLinkUsdtPriceOracleAddress, chainLinkUsdtPriceOracleAddressABI, mainnetProvider);
-    const usdtPrice = await contract.latestAnswer();
-    const usdtPriceInUSD = parseFloat(ethers.utils.formatUnits(usdtPrice, 8)); // Assuming 8 decimals for USDT oracle
+    try {
+        const mainnetProvider = new ethers.providers.JsonRpcProvider(mainnetEthRpcUrl);
+        const contract = new ethers.Contract(chainLinkUsdtPriceOracleAddress, chainLinkUsdtPriceOracleAddressABI, mainnetProvider);
+        const usdtPrice = await contract.latestAnswer();
+        const usdtPriceInUSD = parseFloat(ethers.utils.formatUnits(usdtPrice, 8)); // Assuming 8 decimals for USDT oracle
 
-    const poolContract = new ethers.Contract(wbtcUsdtPool, univ3ABI, mainnetProvider);
-    const slot0 = await poolContract.slot0();
-    const sqrtPriceX96 = slot0.sqrtPriceX96.toString();
+        const poolContract = new ethers.Contract(wbtcUsdtPool, univ3ABI, mainnetProvider);
+        const slot0 = await poolContract.slot0();
+        const sqrtPriceX96 = slot0.sqrtPriceX96.toString();
 
-    // Convert sqrtPriceX96 to a regular number
-    const sqrtPrice = parseFloat(sqrtPriceX96) / 2 ** 96;
+        // Convert sqrtPriceX96 to a regular number
+        const sqrtPrice = parseFloat(sqrtPriceX96) / 2 ** 96;
 
-    // Calculate the price
-    const price = sqrtPrice * sqrtPrice * 10 ** 2;
+        // Calculate the price
+        const price = sqrtPrice * sqrtPrice * 10 ** 2;
 
-    // If you need to adjust for USDT's price in USD:
-    const wbtcPriceInUSD = price * usdtPriceInUSD;
+        // If you need to adjust for USDT's price in USD:
+        const wbtcPriceInUSD = price * usdtPriceInUSD;
 
-    return [wbtcPriceInUSD.toFixed(18), usdtPrice.toString()];
+        return [wbtcPriceInUSD.toFixed(18), usdtPrice.toString()];
+    } catch (e) {
+        console.error(e);
+    }
 }

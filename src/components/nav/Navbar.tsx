@@ -1,19 +1,19 @@
-import { Box, Button, Flex, FlexProps, Spacer, Text, useClipboard, VStack, Image } from '@chakra-ui/react';
-import { colors } from '../utils/colors';
-import useWindowSize from '../hooks/useWindowSize';
+import { Box, Button, Flex, FlexProps, Spacer, Text, Image, useClipboard, VStack } from '@chakra-ui/react';
+import { colors } from '../../utils/colors';
+import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { IoMenu } from 'react-icons/io5';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { ConnectWalletButton } from './ConnectWalletButton';
-import { FONT_FAMILIES } from '../utils/font';
-import { useStore } from '../store';
-import { weiToEth } from '../utils/dappHelper';
+import { ConnectWalletButton } from '../other/ConnectWalletButton';
+import { FONT_FAMILIES } from '../../utils/font';
+import { useStore } from '../../store';
+import { weiToEth } from '../../utils/dappHelper';
 import { BigNumber, ethers } from 'ethers';
 import React, { useEffect, useState } from 'react';
-import { ValidAsset } from '../types';
+import { ValidAsset } from '../../types';
 import { formatUnits } from 'ethers/lib/utils';
-import { isDismissWarning, onDismiss } from '../utils/warningHelper';
-import GlowingShimmerText from './other/GlowingText';
+import { isDismissWarning, onDismiss } from '../../utils/warningHelper';
+import GlowingShimmerText from '../other/GlowingText';
 
 export const Navbar = ({}) => {
     const { isMobile, isTablet, isSmallLaptop, windowSize } = useWindowSize();
@@ -108,6 +108,8 @@ export const Navbar = ({}) => {
                 return 'Sepolia';
             case 17000:
                 return 'Holesky';
+            case 421614:
+                return 'Arbitrum Sepolia';
             case 1:
                 return 'ETH';
             default:
@@ -206,7 +208,7 @@ export const Navbar = ({}) => {
                                 {Object.keys(useStore.getState().validAssets).map((key) => {
                                     const asset = useStore.getState().validAssets[key];
                                     return (
-                                        <Flex key={asset.riftExchangeContractAddress} justify='space-between'>
+                                        <Flex key={key} justify='space-between'>
                                             <Text>{asset.name}:</Text>
                                             <Text>{asset.riftExchangeContractAddress}</Text>
                                             <Text>Chain: {getChainName(asset.contractChainID)}</Text>
@@ -221,7 +223,7 @@ export const Navbar = ({}) => {
 
                                 <Flex justify='center' wrap='wrap' gap={4} alignItems='center'>
                                     {lowestFeeReservationParams?.vaultIndexesToReserve?.map((index, i) => (
-                                        <React.Fragment key={index}>
+                                        <React.Fragment key={`${index}-${i}`}>
                                             <Box
                                                 border='3px solid'
                                                 borderColor={colors.purpleBorder}
@@ -289,11 +291,11 @@ export const Navbar = ({}) => {
 
                             <Flex position='absolute' top={windowSize.height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
                                 <StatCard label='Total Available Liquidity' value={`${formatUnits(availableLiquidity, selectedInputAsset.decimals)} ${selectedInputAsset.name}`} />
-
                                 <StatCard label='Total Deposits' value={allDepositVaults.length} />
                                 <StatCard label='My Active Deposits' value={userActiveDepositVaults.length} />
                                 <StatCard label='My Completed Deposits' value={userCompletedDepositVaults.length} />
                                 <StatCard label='Total Active Reservations' value={allSwapReservations.length - totalUnlockedReservations - totalCompletedReservations - totalExpiredReservations} />
+                                <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />
                                 <StatCard label='Total Unlocked Reservations' value={totalUnlockedReservations} />
                                 <StatCard label='Total Completed Reservations' value={totalCompletedReservations} />
                                 <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />

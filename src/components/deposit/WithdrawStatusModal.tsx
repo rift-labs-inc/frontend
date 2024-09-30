@@ -7,7 +7,6 @@ import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
 import { AlertCircleOutline } from 'react-ionicons';
 import { HiOutlineExternalLink, HiXCircle } from 'react-icons/hi';
-import { etherScanBaseUrl } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { DepositVault } from '../../types';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
@@ -17,6 +16,7 @@ import riftExchangeABI from '../../abis/RiftExchange.json';
 import GooSpinner from '../other/GooSpiner';
 import { IoIosCheckmarkCircle } from 'react-icons/io';
 import { useChainId, useSwitchChain } from 'wagmi';
+import { useContractData } from '../providers/ContractDataProvider';
 
 interface WithdrawStatusModalProps {
     isOpen: boolean;
@@ -37,6 +37,8 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
     const { status, error, txHash, resetWithdrawState, withdrawLiquidity } = useWithdrawLiquidity();
     const chainId = useChainId();
     const { chains, switchChain } = useSwitchChain();
+    const currentlyExpiredReservationIndexes = useStore((state) => state.currentlyExpiredReservationIndexes);
+    const { refreshAllDepositData, loading } = useContractData();
 
     useEffect(() => {
         if (isOpen) {
@@ -70,17 +72,10 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
 
         try {
             // get the liquidity provider's data
-            const liquidityProviderData = await getLiquidityProvider(
-                provider,
-                riftExchangeABI.abi,
-                selectedVaultToManage.depositAsset.riftExchangeContractAddress,
-                await signer.getAddress(),
-            );
+            const liquidityProviderData = await getLiquidityProvider(provider, riftExchangeABI.abi, selectedVaultToManage.depositAsset.riftExchangeContractAddress, await signer.getAddress());
 
             // convert the depositVaultIndexes to strings for comparison
-            console.log('liquidityProviderData:', liquidityProviderData);
             const stringIndexes = liquidityProviderData.depositVaultIndexes.map((index) => BigNumber.from(index).toNumber());
-            console.log('stringIndexes:', stringIndexes);
 
             // find the local index of the globalVaultIndex in the depositVaultIndexes array
             const localVaultIndex = stringIndexes.findIndex((index) => BigNumber.from(index).toNumber() === globalVaultIndex);
@@ -89,8 +84,6 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                 throw new Error("Selected vault not found in user's deposit vaults");
             }
 
-            const expiredReservationIndexes = [];
-
             await withdrawLiquidity({
                 signer,
                 riftExchangeAbi: riftExchangeABI.abi,
@@ -98,15 +91,15 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                 globalVaultIndex,
                 localVaultIndex,
                 amountToWithdraw: withdrawAmountInTokenSmallestUnit,
-                expiredReservationIndexes,
+                expiredReservationIndexes: currentlyExpiredReservationIndexes,
             });
 
-            // TODO: refresh deposit vault data in ContractDataProvider somehow - await refreshAllDepositData();
             const updatedVault = userActiveDepositVaults.find((vault) => vault.index === selectedVaultToManage.index);
             if (updatedVault) {
                 setSelectedVaultToManage(updatedVault);
             }
             setRefreshKey((prevKey) => prevKey + 1);
+            refreshAllDepositData();
         } catch (error) {
             console.error('Failed to process withdrawal:', error);
         }
@@ -117,7 +110,6 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
     const isLoading = !isCompleted && !isError && status !== WithdrawStatus.Idle;
 
     const getStatusMessage = () => {
-        console.log('status:', status);
         switch (status) {
             case WithdrawStatus.WaitingForWalletConfirmation:
                 return 'Waiting for wallet confirmation...';
@@ -141,7 +133,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
 
     const getEtherscanUrl = () => {
         if (!txHash) return '#';
-        return `${etherScanBaseUrl}/tx/${txHash}`;
+        return `${selectedInputAsset.etherScanBaseUrl}/tx/${txHash}`;
     };
 
     const handleConfirmWithdraw = () => {
@@ -204,15 +196,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                 <ModalBody>
                     {isConfirmStep ? (
                         <Flex direction='column' align='center' justify='center' h='100%'>
-                            <Flex
-                                direction='column'
-                                py='10px'
-                                w='100%'
-                                borderRadius={'14px'}
-                                bg={colors.offBlackLighter}
-                                border='2px solid'
-                                borderColor={colors.borderGrayLight}
-                                px='16px'>
+                            <Flex direction='column' py='10px' w='100%' borderRadius={'14px'} bg={colors.offBlackLighter} border='2px solid' borderColor={colors.borderGrayLight} px='16px'>
                                 <Flex justify='space-between ' w='100%' align='center'>
                                     <Text color={!withdrawAmount ? colors.offWhite : colors.textGray} fontSize='13px' letterSpacing='-1px' fontWeight='normal' fontFamily='Aux'>
                                         Amount
@@ -303,7 +287,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                                     </Flex>
                                 )}
                                 {isError && (
-                                    <Flex mt='-20px' ml='4px'>
+                                    <Flex mt='-20px' mb='8px' ml='4px'>
                                         <AlertCircleOutline width='38px' height={'38px'} color={colors.red} />
                                     </Flex>
                                 )}
@@ -318,9 +302,9 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                                 </Text>
                             </Flex>
                             {isCompleted && (
-                                <Flex direction='column' mt={'40px'} w='100%'>
+                                <Flex direction='column' mt={'5px'} w='100%'>
                                     <Button
-                                        mt={'40px'}
+                                        mt={'30px'}
                                         bg={colors.purpleButtonBG}
                                         borderWidth={'2px'}
                                         borderColor={colors.purpleBorder}
@@ -331,13 +315,13 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                                         <Flex mt='-4px ' mr='8px'>
                                             <HiOutlineExternalLink size={'17px'} color={colors.offWhite} />
                                         </Flex>
-                                        <Text fontSize='14px' color={colors.offWhite} cursor={'pointer'} fontWeight={'normal'}>
+                                        <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
                                             View on Etherscan
                                         </Text>
                                     </Button>
                                     <Button
                                         mt={'10px'}
-                                        bg={colors.borderGray}
+                                        bg={colors.offBlackLighter}
                                         borderWidth={'2px'}
                                         borderColor={colors.borderGrayLight}
                                         fontWeight={'normal'}
@@ -349,7 +333,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                                         <Flex mt='-2px ' mr='8px'>
                                             <HiXCircle size={'17px'} color={colors.offWhite} />
                                         </Flex>
-                                        <Text fontSize='14px' color={colors.offWhite}>
+                                        <Text fontSize='14px' color={colors.offWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
                                             Dismiss
                                         </Text>
                                     </Button>

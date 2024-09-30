@@ -14,6 +14,8 @@ import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { useWithdrawLiquidity } from '../../hooks/contract/useWithdrawLiquidity';
 import { useState } from 'react';
 import { useStore } from '../../store';
+import UpdateExchangeRateModal from './UpdateExchangeRateModal';
+import { toastError } from '../../hooks/toast';
 
 interface VaultSettingsProps {
     selectedVaultToManage: DepositVault;
@@ -25,6 +27,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
     const { status: withdrawLiquidityStatus, error: withdrawLiquidityError, txHash: withdrawTxHash, resetWithdrawState } = useWithdrawLiquidity();
 
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+    const [isUpdateExchangeRateModalOpen, setIsUpdateExchangeRateModalOpen] = useState(false);
     // const [withdrawAmount, setWithdrawAmount] = useState('');
     const withdrawAmount = useStore((state) => state.withdrawAmount);
     const setWithdrawAmount = useStore((state) => state.setWithdrawAmount);
@@ -33,6 +36,10 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
         setIsWithdrawModalOpen(true);
         setWithdrawAmount('');
         resetWithdrawState();
+    };
+
+    const handleOpenUpdateExchangeRateModal = () => {
+        setIsUpdateExchangeRateModalOpen(true);
     };
 
     return (
@@ -70,16 +77,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                     <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
                         Bitcoin Payout Address
                     </Text>
-                    <Flex
-                        h='50px'
-                        mt='6px'
-                        w='100%'
-                        bg={colors.offBlackLighter}
-                        border={'3px solid'}
-                        borderColor={colors.borderGrayLight}
-                        borderRadius={'14px'}
-                        px='15px'
-                        align={'center'}>
+                    <Flex h='50px' mt='6px' w='100%' bg={colors.offBlackLighter} border={'3px solid'} borderColor={colors.borderGrayLight} borderRadius={'14px'} px='15px' align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing='-1px' fontFamily={FONT_FAMILIES.AUX_MONO}>
                             {convertLockingScriptToBitcoinAddress(selectedVaultToManage.btcPayoutLockingScript)}
                         </Text>
@@ -113,7 +111,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                         <AssetTag assetName={selectedVaultToManage.depositAsset.name} width='84px' />
                     </Flex>
                 </Flex>
-                <Text mt='46px' pl='12px' fontSize='20px' opacity={0.9} fontWeight={'bold'} color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                <Text mt='46px' pl='16px' fontSize='20px' opacity={0.9} fontWeight={'bold'} color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
                     <FaRegArrowAltCircleRight color={colors.RiftOrange} />
                 </Text>
                 <Spacer />
@@ -125,11 +123,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                     <Flex h='50px' mt='6px' w='100%' bg='#2E1C0C' border={'3px solid'} borderColor={'#78491F'} borderRadius={'14px'} pl='15px' pr='10px' align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
                             {selectedVaultToManage.btcExchangeRate &&
-                                calculateBtcOutputAmountFromExchangeRate(
-                                    selectedVaultToManage.initialBalance,
-                                    selectedVaultToManage.depositAsset.decimals,
-                                    selectedVaultToManage.btcExchangeRate,
-                                )}
+                                calculateBtcOutputAmountFromExchangeRate(selectedVaultToManage.initialBalance, selectedVaultToManage.depositAsset.decimals, selectedVaultToManage.btcExchangeRate)}
                         </Text>
 
                         <Spacer />
@@ -192,10 +186,16 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                         </Flex>
 
                         <Spacer />
-                        {/* // TODO: add edit exchange rate functionality */}
-                        {/* <Button
+                        <Button
                             color={colors.offWhite}
                             bg={colors.purpleButtonBG}
+                            onClick={() => {
+                                if (BigNumber.from(selectedVaultToManage.trueUnreservedBalance).gt(BigNumber.from(0))) {
+                                    handleOpenUpdateExchangeRateModal();
+                                } else {
+                                    toastError('', { title: 'No Unreserved Liquidity', description: 'There is no unreserved liquidity on this deposit vault to update' });
+                                }
+                            }}
                             borderRadius='10px'
                             border={`3px solid ${colors.purpleBorder}`}
                             px='14px'
@@ -204,9 +204,9 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                             mt='1px'
                             py={'16px'}
                             h='114%'
-                            w='280px'>
-                            Edit Exchange Rate
-                        </Button> */}
+                            w='305px'>
+                            Update Exchange Rate
+                        </Button>
                     </Flex>
                 </Flex>
             </Flex>
@@ -216,25 +216,29 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                 <Flex mt='38px' justify='center'>
                     <Button
                         h='45px'
-                        onClick={handleOpenWithdrawModal}
+                        onClick={() => {
+                            if (BigNumber.from(selectedVaultToManage.trueUnreservedBalance).gt(BigNumber.from(0))) {
+                                handleOpenWithdrawModal();
+                            } else {
+                                toastError('', { title: 'No Unreserved Liquidity', description: 'There is no unreserved liquidity on this deposit vault to withdraw' });
+                            }
+                        }}
                         _hover={{ bg: colors.redHover }}
                         bg={colors.redBackground}
                         color={colors.offWhite}
                         border={`3px solid ${colors.red}`}
                         borderRadius='10px'
                         fontSize='15px'
-                        w='265px'>
+                        w='275px'>
                         Withdraw Liquidity
                     </Button>
                 </Flex>
 
                 {/* Withdraw Status Modal */}
-                <WithdrawStatusModal
-                    isOpen={isWithdrawModalOpen}
-                    onClose={() => setIsWithdrawModalOpen(false)}
-                    clearError={resetWithdrawState}
-                    selectedVaultToManage={selectedVaultToManage}
-                />
+                <WithdrawStatusModal isOpen={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} clearError={resetWithdrawState} selectedVaultToManage={selectedVaultToManage} />
+
+                {/* Update Exchange Rate Modal  */}
+                <UpdateExchangeRateModal isOpen={isUpdateExchangeRateModalOpen} onClose={() => setIsUpdateExchangeRateModalOpen(false)} selectedVault={selectedVaultToManage} />
             </>
         </Flex>
     );

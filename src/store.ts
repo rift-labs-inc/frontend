@@ -3,10 +3,26 @@ import { useEffect } from 'react';
 import { CurrencyModalTitle, DepositVault, ReserveLiquidityParams, SwapReservation } from './types';
 import { BigNumber, ethers } from 'ethers';
 import { USDT_Icon, ETH_Icon, ETH_Logo } from './components/other/SVGs';
-import { ERC20ABI } from './utils/constants';
+import {
+    ERC20ABI,
+    isMainnet,
+    MAINNET_ARBITRUM_CHAIN_ID,
+    MAINNET_ARBITRUM_ETHERSCAN_URL,
+    MAINNET_ARBITRUM_PAYMASTER_URL,
+    MAINNET_ARBITRUM_RPC_URL,
+    MAINNET_ARBITRUM_USDT_TOKEN_ADDRESS,
+    requiredBlockConfirmations,
+    TESTNET_ARBITRUM_CHAIN_ID,
+    TESTNET_ARBITRUM_ETHERSCAN_URL,
+    TESTNET_ARBITRUM_PAYMASTER_URL,
+    TESTNET_ARBITRUM_RPC_URL,
+    TESTNET_ARBITRUM_USDT_TOKEN_ADDRESS,
+} from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
-import holeskyDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/17000/run-latest.json';
+import arbitrumMainnetDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/42161/run-latest.json';
+import arbitrumSepoliaDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/421614/run-latest.json';
+import { arbitrumSepolia, arbitrum } from 'viem/chains';
 
 type Store = {
     // setup & asset data
@@ -47,6 +63,8 @@ type Store = {
     setTotalUnlockedReservations: (totalUnlockedReservations: number) => void;
     totalCompletedReservations: number;
     setTotalCompletedReservations: (totalCompletedReservations: number) => void;
+    currentlyExpiredReservationIndexes: number[];
+    setCurrentlyExpiredReservationIndexes: (indexes: number[]) => void;
 
     // manage deposits
     selectedVaultToManage: DepositVault | null;
@@ -55,8 +73,8 @@ type Store = {
     setShowManageDepositVaultsScreen: (show: boolean) => void;
 
     // swap flow
-    swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed' | '5-expired';
-    setSwapFlowState: (state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-eth' | '4-completed' | '5-expired') => void;
+    swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-evm-token' | '4-completed' | '5-expired';
+    setSwapFlowState: (state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-evm-token' | '4-completed' | '5-expired') => void;
     depositFlowState: '0-not-started' | '1-confirm-deposit';
     setDepositFlowState: (state: '0-not-started' | '1-confirm-deposit') => void;
     btcInputSwapAmount: string;
@@ -87,6 +105,10 @@ type Store = {
     setAreNewDepositsPaused: (paused: boolean) => void;
     isGasFeeTooHigh: boolean;
     setIsGasFeeTooHigh: (isGasFeeTooHigh: boolean) => void;
+    confirmationBlocksNeeded: number;
+    setConfirmationBlocksNeeded: (blocks: number) => void;
+    currentTotalBlockConfirmations: number;
+    setCurrentTotalBlockConfirmations: (confirmations: number) => void;
 
     // modals
     currencyModalTitle: CurrencyModalTitle;
@@ -116,14 +138,17 @@ export const useStore = create<Store>((set) => {
         },
         USDT: {
             name: 'USDT',
-            tokenAddress: '0x5150C7b0113650F9D17203290CEA88E52644a4a2',
+            tokenAddress: isMainnet ? MAINNET_ARBITRUM_USDT_TOKEN_ADDRESS : TESTNET_ARBITRUM_USDT_TOKEN_ADDRESS,
             decimals: 6,
-            riftExchangeContractAddress: holeskyDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
+            riftExchangeContractAddress: (isMainnet ? arbitrumMainnetDeployment : arbitrumSepoliaDeployment)?.transactions?.find((tx) => tx.contractName === 'RiftExchange')?.contractAddress ?? '',
             riftExchangeAbi: riftExchangeABI.abi,
-            contractChainID: 17000,
-            contractRpcURL: 'https://holesky.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
-            proverFee: BigNumber.from(19000000),
-            releaserFee: BigNumber.from(1000000),
+            contractChainID: isMainnet ? MAINNET_ARBITRUM_CHAIN_ID : TESTNET_ARBITRUM_CHAIN_ID,
+            chainDetails: isMainnet ? arbitrum : arbitrumSepolia,
+            contractRpcURL: isMainnet ? MAINNET_ARBITRUM_RPC_URL : TESTNET_ARBITRUM_RPC_URL,
+            etherScanBaseUrl: isMainnet ? MAINNET_ARBITRUM_ETHERSCAN_URL : TESTNET_ARBITRUM_ETHERSCAN_URL,
+            paymasterUrl: isMainnet ? MAINNET_ARBITRUM_PAYMASTER_URL : TESTNET_ARBITRUM_PAYMASTER_URL,
+            proverFee: BigNumber.from(0),
+            releaserFee: BigNumber.from(0),
             icon_svg: USDT_Icon,
             bg_color: '#125641',
             border_color: '#26A17B',
@@ -137,33 +162,62 @@ export const useStore = create<Store>((set) => {
             connectedUserBalanceRaw: BigNumber.from(0),
             connectedUserBalanceFormatted: '0',
         },
-        WETH: {
-            name: 'WETH',
-            tokenAddress: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
-            decimals: 18,
-            riftExchangeContractAddress: '',
-            riftExchangeAbi: riftExchangeABI.abi,
-            contractChainID: 17000,
-            contractRpcURL: 'https://holesky.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
-            icon_svg: ETH_Logo,
-            bg_color: '#2E40B7',
-            border_color: '#627EEA',
-            border_color_light: '#6E85F0',
-            dark_bg_color: '#161A33',
-            light_text_color: '#5b63a5',
-            exchangeRateInTokenPerBTC: null,
-            exchangeRateInSmallestTokenUnitPerSat: null, // always 18 decimals
-            priceUSD: null,
-            totalAvailableLiquidity: BigNumber.from(0),
-            connectedUserBalanceRaw: BigNumber.from(0),
-            connectedUserBalanceFormatted: '0',
-        },
+        // USDT_ARBITRUM_TESTNET: {
+        //     name: 'USDT',
+        //     tokenAddress: '0xC4af7CFe412805C4A751321B7b0799ca9b8dbE56',
+        //     decimals: 6,
+        //     riftExchangeContractAddress: arbitrumSepoliaDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
+        //     riftExchangeAbi: riftExchangeABI.abi,
+        //     contractChainID: 421614,
+        //     chainDetails: arbitrumSepolia,
+        //     contractRpcURL: 'https://arbitrum-sepolia.gateway.tenderly.co/r5qQTaEWNQHaU4iClbRdt',
+        //     etherScanBaseUrl: 'https://sepolia.arbiscan.io/',
+        //     paymasterUrl: 'https://rift-paymaster-arbitrum.up.railway.app',
+        //     proverFee: BigNumber.from(19000000),
+        //     releaserFee: BigNumber.from(1000000),
+        //     icon_svg: USDT_Icon,
+        //     bg_color: '#125641',
+        //     border_color: '#26A17B',
+        //     border_color_light: '#2DC495',
+        //     dark_bg_color: '#08221A',
+        //     light_text_color: '#327661',
+        //     exchangeRateInTokenPerBTC: null,
+        //     exchangeRateInSmallestTokenUnitPerSat: null, // always 18 decimals
+        //     priceUSD: 1,
+        //     totalAvailableLiquidity: BigNumber.from(0),
+        //     connectedUserBalanceRaw: BigNumber.from(0),
+        //     connectedUserBalanceFormatted: '0',
+        // },
+        // WETH: {
+        //     name: 'WETH',
+        //     tokenAddress: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
+        //     decimals: 18,
+        //     riftExchangeContractAddress: '',
+        //     riftExchangeAbi: riftExchangeABI.abi,
+        //     contractChainID: 421614,
+        //     contractRpcURL: 'https://holesky.gateway.tenderly.co/2inf5WqfawBiK0LyN8veXn',
+        //     icon_svg: ETH_Logo,
+        //     bg_color: '#2E40B7',
+        //     border_color: '#627EEA',
+        //     border_color_light: '#6E85F0',
+        //     dark_bg_color: '#161A33',
+        //     light_text_color: '#5b63a5',
+        //     exchangeRateInTokenPerBTC: null,
+        //     exchangeRateInSmallestTokenUnitPerSat: null, // always 18 decimals
+        //     priceUSD: null,
+        //     totalAvailableLiquidity: BigNumber.from(0),
+        //     connectedUserBalanceRaw: BigNumber.from(0),
+        //     connectedUserBalanceFormatted: '0',
+        // },
     };
 
     return {
         // setup & asset data
+        selectedInputAsset: validAssets.USDT,
+        setSelectedInputAsset: (selectedInputAsset) => set({ selectedInputAsset }),
         userEthAddress: '',
         setUserEthAddress: (userEthAddress) => set({ userEthAddress }),
+        //console log the new ethers provider
         ethersRpcProvider: null,
         setEthersRpcProvider: (provider) => set({ ethersRpcProvider: provider }),
         bitcoinPriceUSD: 0,
@@ -219,8 +273,6 @@ export const useStore = create<Store>((set) => {
                     [assetKey]: { ...state.validAssets[assetKey], connectedUserBalanceFormatted: newBalance },
                 },
             })),
-        selectedInputAsset: validAssets.USDT,
-        setSelectedInputAsset: (selectedInputAsset) => set({ selectedInputAsset }),
         isPayingFeesInBTC: true,
         setIsPayingFeesInBTC: (isPayingFeesInBTC) => set({ isPayingFeesInBTC }),
 
@@ -241,6 +293,8 @@ export const useStore = create<Store>((set) => {
         setTotalUnlockedReservations: (totalUnlockedReservations) => set({ totalUnlockedReservations }),
         totalCompletedReservations: 0,
         setTotalCompletedReservations: (totalCompletedReservations) => set({ totalCompletedReservations }),
+        currentlyExpiredReservationIndexes: [],
+        setCurrentlyExpiredReservationIndexes: (currentlyExpiredReservationIndexes) => set({ currentlyExpiredReservationIndexes }),
 
         // manage deposits
         selectedVaultToManage: null,
@@ -287,6 +341,10 @@ export const useStore = create<Store>((set) => {
         setAreNewDepositsPaused: (areNewDepositsPaused) => set({ areNewDepositsPaused }),
         isGasFeeTooHigh: false,
         setIsGasFeeTooHigh: (isGasFeeTooHigh) => set({ isGasFeeTooHigh }),
+        confirmationBlocksNeeded: requiredBlockConfirmations,
+        setConfirmationBlocksNeeded: (confirmationBlocksNeeded) => set({ confirmationBlocksNeeded }),
+        currentTotalBlockConfirmations: 0,
+        setCurrentTotalBlockConfirmations: (currentTotalBlockConfirmations) => set({ currentTotalBlockConfirmations }),
 
         // global
         isOnline: true, // typeof window != 'undefined' ? navigator.onLine : true

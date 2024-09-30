@@ -1,21 +1,14 @@
-import useWindowSize from '../hooks/useWindowSize';
+import { Box, Flex, Text } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
-import { Flex, Spacer, Text, Box } from '@chakra-ui/react';
-import { Navbar } from '../components/Navbar';
-import { colors } from '../utils/colors';
-import { OpenGraph } from '../components/background/OpenGraph';
-import { FONT_FAMILIES } from '../utils/font';
+import { useEffect } from 'react';
+import { Navbar } from '../components/nav/Navbar';
 import BlueText from '../components/other/BlueText';
-import OrangeText from '../components/other/OrangeText';
-import React, { useEffect } from 'react';
-import { useStore } from '../store';
-import { SwapContainer } from '../components/swap/SwapContainer';
-import { DepositUI } from '../components/swap/DepositUI';
-import { DepositConfirmation } from '../components/deposit/DepositConfirmation';
-import { ReserveLiquidityContainer } from '../components/swap/ReserveLiquidityContainer';
-import CurrencyModal from '../components/swap/CurrencyModal';
-import { opaqueBackgroundColor } from '../utils/constants';
 import OfflineLoader from '../components/other/OfflineLoader';
+import OrangeText from '../components/other/OrangeText';
+import useWindowSize from '../hooks/useWindowSize';
+import { useStore } from '../store';
+import { opaqueBackgroundColor } from '../utils/constants';
+import { FONT_FAMILIES } from '../utils/font';
 
 const Home = () => {
     const { isTablet, isMobile } = useWindowSize();

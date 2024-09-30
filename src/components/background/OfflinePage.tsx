@@ -1,7 +1,7 @@
 import { Box, Flex, Text } from '@chakra-ui/react';
 import { opaqueBackgroundColor } from '../../utils/constants';
 import { FONT_FAMILIES } from '../../utils/font';
-import { Navbar } from '../Navbar';
+import { Navbar } from '../nav/Navbar';
 import BlueText from '../other/BlueText';
 import OfflineLoader from '../other/OfflineLoader';
 import OrangeText from '../other/OrangeText';

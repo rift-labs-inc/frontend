@@ -21,11 +21,9 @@ interface DepositLiquidityParams {
     riftExchangeAbi: ethers.ContractInterface;
     riftExchangeContractAddress: string;
     tokenAddress: string;
+    tokenDepositAmountInSmallestTokenUnits: BigNumber;
     btcPayoutLockingScript: string;
     btcExchangeRate: BigNumber;
-    vaultIndexToOverwrite: number;
-    tokenDepositAmountInSmallestTokenUnits: BigNumber;
-    vaultIndexWithSameExchangeRate: number;
 }
 
 function useIsClient() {
@@ -36,7 +34,6 @@ function useIsClient() {
 
 export function useDepositLiquidity() {
     const isClient = useIsClient();
-
     const [status, setStatus] = useState<DepositStatus>(DepositStatus.Idle);
     const [error, setError] = useState<string | null>(null);
     const [txHash, setTxHash] = useState<string | null>(null);
@@ -44,6 +41,7 @@ export function useDepositLiquidity() {
     const userEthAddress = useStore((state) => state.userEthAddress);
     const { refreshAllDepositData } = useContractData();
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
+    const validAssets = useStore((state) => state.validAssets);
 
     const resetDepositState = useCallback(() => {
         if (isClient) {
@@ -71,7 +69,7 @@ export function useDepositLiquidity() {
                 console.log('tokenDepositAmountInSmallestTokenUnits:', params.tokenDepositAmountInSmallestTokenUnits.toString());
                 if (BigNumber.from(allowance).lt(BigNumber.from(params.tokenDepositAmountInSmallestTokenUnits))) {
                     setStatus(DepositStatus.WaitingForDepositTokenApproval);
-                    const approveTx = await tokenContract.approve(params.riftExchangeContractAddress, params.tokenDepositAmountInSmallestTokenUnits);
+                    const approveTx = await tokenContract.approve(params.riftExchangeContractAddress, validAssets[selectedInputAsset.name].connectedUserBalanceRaw);
 
                     setStatus(DepositStatus.ApprovalPending);
                     await approveTx.wait();
@@ -79,13 +77,7 @@ export function useDepositLiquidity() {
 
                 setStatus(DepositStatus.WaitingForWalletConfirmation);
 
-                const depositTx = await riftExchangeContractInstance.depositLiquidity(
-                    params.tokenDepositAmountInSmallestTokenUnits,
-                    params.btcExchangeRate,
-                    params.btcPayoutLockingScript,
-                    params.vaultIndexToOverwrite,
-                    params.vaultIndexWithSameExchangeRate,
-                );
+                const depositTx = await riftExchangeContractInstance.depositLiquidity(params.tokenDepositAmountInSmallestTokenUnits, params.btcExchangeRate, params.btcPayoutLockingScript);
                 setStatus(DepositStatus.DepositPending);
 
                 setTxHash(depositTx.hash);
@@ -95,7 +87,7 @@ export function useDepositLiquidity() {
                 console.log('Deposit confirmed');
             } catch (err) {
                 console.error('Error in depositLiquidity:', err);
-                setError(err instanceof Error ? err.message : String(err));
+                setError(err instanceof Error ? err.message : JSON.stringify(err, null, 2));
                 setStatus(DepositStatus.Error);
             }
         },

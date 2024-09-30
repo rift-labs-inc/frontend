@@ -4,7 +4,7 @@
     "dev": "next",
     "build": "next build",
     "start": "next start",
-    "sync": "git submodule update --remote --recursive && chmod +x ./populate_artifacts.sh && ./populate_artifacts.sh"
+    "sync": "git submodule update --remote && chmod +x ./populate_artifacts.sh && ./populate_artifacts.sh"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.0.2",
@@ -27,6 +27,7 @@
     "bignumber.js": "^9.1.2",
     "bip39": "^3.1.0",
     "bitcoinjs-lib": "^6.1.6",
+    "depcheck": "^1.4.7",
     "ethers": "^5.7.0",
     "framer-motion": "^6.3.0",
     "hamburger-react": "^2.5.1",

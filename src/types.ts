@@ -1,10 +1,11 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers';
 import { ComponentType, ReactElement } from 'react';
+import { Chain } from 'viem';
 
 export enum ReservationState {
     None,
     Created,
-    Unlocked,
+    Proved,
     Completed,
     Expired,
 }
@@ -39,15 +40,21 @@ export type ReserveLiquidityParams = {
     totalSatsInputInlcudingProxyFee: BigNumber;
 };
 
+export type UpdateExchangeRateParams = {
+    globalVaultIndex: number;
+    newExchangeRate: BigNumberish;
+    expiredSwapReservationIndexes: number[];
+};
+
 export type DepositVault = {
+    depositTimestamp: number;
     initialBalance: BigNumberish;
     unreservedBalanceFromContract: BigNumberish;
     trueUnreservedBalance?: BigNumberish;
     withdrawnAmount: BigNumberish;
-    reservedBalance?: BigNumberish;
-    expiredAmount?: BigNumberish;
+    activelyReservedAmount?: BigNumberish;
     completedAmount?: BigNumberish;
-    unlockedAmount?: BigNumberish;
+    provedAmount?: BigNumberish;
     btcExchangeRate: BigNumberish;
     btcPayoutLockingScript: string;
     index?: number;
@@ -61,7 +68,10 @@ export type ValidAsset = {
     riftExchangeContractAddress?: string;
     riftExchangeAbi?: any;
     contractChainID?: number;
+    chainDetails?: Chain;
     contractRpcURL?: string;
+    etherScanBaseUrl?: string;
+    paymasterUrl?: string;
     proverFee?: BigNumber;
     releaserFee?: BigNumber;
     icon_svg: any;

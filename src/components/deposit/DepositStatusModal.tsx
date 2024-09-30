@@ -7,10 +7,10 @@ import { AlertCircleOutline, OpenOutline } from 'react-ionicons';
 import { HiOutlineExternalLink } from 'react-icons/hi';
 import { PiVaultBold } from 'react-icons/pi';
 import { IoIosCheckmarkCircle, IoMdSettings } from 'react-icons/io';
-import { etherScanBaseUrl } from '../../utils/constants';
 import { useStore } from '../../store';
 import { useRouter } from 'next/router';
 import GooSpinner from '../other/GooSpiner';
+import { useContractData } from '../providers/ContractDataProvider';
 
 interface DepositStatusModalProps {
     isOpen: boolean;
@@ -30,6 +30,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const router = useRouter();
     const [isLoadingRedirect, setIsLoadingRedirect] = React.useState(false);
+    const { refreshAllDepositData, loading } = useContractData();
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -61,7 +62,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
 
     const getEtherscanUrl = () => {
         if (!txHash) return '#';
-        return `${etherScanBaseUrl}/tx/${txHash}`;
+        return `${selectedInputAsset.etherScanBaseUrl}/tx/${txHash}`;
     };
 
     return (
@@ -79,7 +80,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                 borderRadius='10px'
                 fontFamily={FONT_FAMILIES.AUX_MONO}
                 color={colors.offWhite}>
-                <ModalHeader fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
+                <ModalHeader mt='10px' fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
                     Deposit Status
                 </ModalHeader>
                 {(isCompleted || isError) && <ModalCloseButton />}
@@ -92,9 +93,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                             w={
                                 status != DepositStatus.Confirmed &&
                                 status != DepositStatus.Error &&
-                                (status === DepositStatus.WaitingForWalletConfirmation || status === DepositStatus.ApprovalPending || status === DepositStatus.DepositPending
-                                    ? '100%'
-                                    : '60%')
+                                (status === DepositStatus.WaitingForWalletConfirmation || status === DepositStatus.ApprovalPending || status === DepositStatus.DepositPending ? '100%' : '60%')
                             }
                             mt='25px'
                             mb='0px'
@@ -142,7 +141,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                         <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
                                     </Flex>
                                     <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
-                                        Etherscan
+                                        View on Etherscan
                                     </Text>
                                 </Button>
 
@@ -153,6 +152,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     borderColor={colors.purpleBorder}
                                     fontWeight={'normal'}
                                     onClick={() => {
+                                        refreshAllDepositData();
                                         handleNavigation('/manage');
                                         setIsLoadingRedirect(true);
                                         // onClose();

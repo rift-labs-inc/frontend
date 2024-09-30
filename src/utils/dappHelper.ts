@@ -3,11 +3,12 @@ import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
 import * as bitcoin from 'bitcoinjs-lib';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { bitcoinDecimals, FRONTEND_RESERVATION_EXPIRY_TIME, maxSwapOutputs, SATS_PER_BTC } from './constants';
+import { bitcoinDecimals, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, maxSwapOutputs, SATS_PER_BTC } from './constants';
 import { format } from 'path';
 import swapReservationsAggregatorABI from '../abis/SwapReservationsAggregator.json';
 import { getDepositVaults, getSwapReservations } from '../utils/contractReadFunctions';
 import depositVaultAggregatorABI from '../abis/DepositVaultsAggregator.json';
+import { arbitrumSepolia, arbitrum, Chain } from 'viem/chains';
 
 // HELPER FUCTIONS
 export function weiToEth(wei: BigNumber): BigNumberish {
@@ -391,8 +392,8 @@ export const fetchReservationDetails = async (swapReservationURL: string, ethers
 
             // check if expired and update state
             const currentTimestamp = Math.floor(Date.now() / 1000);
-            const isExpired = currentTimestamp - swapReservationData.reservationTimestamp > FRONTEND_RESERVATION_EXPIRY_TIME;
-            if (isExpired) {
+            const isExpired = currentTimestamp - swapReservationData.reservationTimestamp > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS;
+            if (isExpired && swapReservationData.state === ReservationState.Created) {
                 swapReservationData.state = ReservationState.Expired;
             }
 
@@ -440,4 +441,37 @@ export const fetchReservationDetails = async (swapReservationURL: string, ethers
         }
     }
     throw new Error('swapReservationURL is required');
+};
+
+// Helper function to format chain data for MetaMask
+const formatChainForMetaMask = (chain: Chain) => {
+    return {
+        chainId: `0x${chain.id.toString(16)}`, // Convert the chain ID to hexadecimal
+        chainName: chain.name,
+        nativeCurrency: {
+            name: chain.nativeCurrency.name,
+            symbol: chain.nativeCurrency.symbol,
+            decimals: chain.nativeCurrency.decimals,
+        },
+        rpcUrls: chain.rpcUrls.default.http,
+        blockExplorerUrls: [chain.blockExplorers.default.url],
+    };
+};
+
+// Function to add a new network using a chain object from viem/chains
+export const addNetwork = async (chain: Chain) => {
+    try {
+        // Format the chain data
+        const networkParams = formatChainForMetaMask(chain);
+
+        // Prompt MetaMask to add the new network
+        await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [networkParams],
+        });
+
+        console.log('Network added successfully');
+    } catch (error) {
+        console.error('Failed to add network:', error);
+    }
 };
