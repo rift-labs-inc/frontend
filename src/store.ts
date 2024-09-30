@@ -3,10 +3,25 @@ import { useEffect } from 'react';
 import { CurrencyModalTitle, DepositVault, ReserveLiquidityParams, SwapReservation } from './types';
 import { BigNumber, ethers } from 'ethers';
 import { USDT_Icon, ETH_Icon, ETH_Logo } from './components/other/SVGs';
-import { ERC20ABI, requiredBlockConfirmations } from './utils/constants';
+import {
+    ERC20ABI,
+    isMainnet,
+    MAINNET_ARBITRUM_CHAIN_ID,
+    MAINNET_ARBITRUM_ETHERSCAN_URL,
+    MAINNET_ARBITRUM_PAYMASTER_URL,
+    MAINNET_ARBITRUM_RPC_URL,
+    MAINNET_ARBITRUM_USDT_TOKEN_ADDRESS,
+    requiredBlockConfirmations,
+    TESTNET_ARBITRUM_CHAIN_ID,
+    TESTNET_ARBITRUM_ETHERSCAN_URL,
+    TESTNET_ARBITRUM_PAYMASTER_URL,
+    TESTNET_ARBITRUM_RPC_URL,
+    TESTNET_ARBITRUM_USDT_TOKEN_ADDRESS,
+} from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
-import arbitrumDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/42161/run-latest.json';
+import arbitrumMainnetDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/42161/run-latest.json';
+import arbitrumSepoliaDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/421614/run-latest.json';
 import { arbitrumSepolia, arbitrum } from 'viem/chains';
 
 type Store = {
@@ -119,17 +134,17 @@ export const useStore = create<Store>((set) => {
         },
         USDT: {
             name: 'USDT',
-            tokenAddress: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
+            tokenAddress: isMainnet ? MAINNET_ARBITRUM_USDT_TOKEN_ADDRESS : TESTNET_ARBITRUM_USDT_TOKEN_ADDRESS,
             decimals: 6,
-            riftExchangeContractAddress: arbitrumDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
+            riftExchangeContractAddress: (isMainnet ? arbitrumMainnetDeployment : arbitrumSepoliaDeployment)?.transactions?.find((tx) => tx.contractName === 'RiftExchange')?.contractAddress ?? '',
             riftExchangeAbi: riftExchangeABI.abi,
-            contractChainID: 42161,
-            chainDetails: arbitrum,
-            contractRpcURL: 'https://arbitrum.gateway.tenderly.co/7BXjxEhRzB8b2jmcaZkNw9',
-            etherScanBaseUrl: 'https://arbiscan.io/',
-            paymasterUrl: 'https://rift-paymaster-arbitrum.up.railway.app',
-            proverFee: BigNumber.from(19000000),
-            releaserFee: BigNumber.from(1000000),
+            contractChainID: isMainnet ? MAINNET_ARBITRUM_CHAIN_ID : TESTNET_ARBITRUM_CHAIN_ID,
+            chainDetails: isMainnet ? arbitrum : arbitrumSepolia,
+            contractRpcURL: isMainnet ? MAINNET_ARBITRUM_RPC_URL : TESTNET_ARBITRUM_RPC_URL,
+            etherScanBaseUrl: isMainnet ? MAINNET_ARBITRUM_ETHERSCAN_URL : TESTNET_ARBITRUM_ETHERSCAN_URL,
+            paymasterUrl: isMainnet ? MAINNET_ARBITRUM_PAYMASTER_URL : TESTNET_ARBITRUM_PAYMASTER_URL,
+            proverFee: BigNumber.from(0),
+            releaserFee: BigNumber.from(0),
             icon_svg: USDT_Icon,
             bg_color: '#125641',
             border_color: '#26A17B',
@@ -143,6 +158,32 @@ export const useStore = create<Store>((set) => {
             connectedUserBalanceRaw: BigNumber.from(0),
             connectedUserBalanceFormatted: '0',
         },
+        // USDT_ARBITRUM_TESTNET: {
+        //     name: 'USDT',
+        //     tokenAddress: '0xC4af7CFe412805C4A751321B7b0799ca9b8dbE56',
+        //     decimals: 6,
+        //     riftExchangeContractAddress: arbitrumSepoliaDeployment.transactions.find((tx) => tx.contractName === 'RiftExchange').contractAddress,
+        //     riftExchangeAbi: riftExchangeABI.abi,
+        //     contractChainID: 421614,
+        //     chainDetails: arbitrumSepolia,
+        //     contractRpcURL: 'https://arbitrum-sepolia.gateway.tenderly.co/r5qQTaEWNQHaU4iClbRdt',
+        //     etherScanBaseUrl: 'https://sepolia.arbiscan.io/',
+        //     paymasterUrl: 'https://rift-paymaster-arbitrum.up.railway.app',
+        //     proverFee: BigNumber.from(19000000),
+        //     releaserFee: BigNumber.from(1000000),
+        //     icon_svg: USDT_Icon,
+        //     bg_color: '#125641',
+        //     border_color: '#26A17B',
+        //     border_color_light: '#2DC495',
+        //     dark_bg_color: '#08221A',
+        //     light_text_color: '#327661',
+        //     exchangeRateInTokenPerBTC: null,
+        //     exchangeRateInSmallestTokenUnitPerSat: null, // always 18 decimals
+        //     priceUSD: 1,
+        //     totalAvailableLiquidity: BigNumber.from(0),
+        //     connectedUserBalanceRaw: BigNumber.from(0),
+        //     connectedUserBalanceFormatted: '0',
+        // },
         // WETH: {
         //     name: 'WETH',
         //     tokenAddress: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
@@ -168,6 +209,8 @@ export const useStore = create<Store>((set) => {
 
     return {
         // setup & asset data
+        selectedInputAsset: validAssets.USDT,
+        setSelectedInputAsset: (selectedInputAsset) => set({ selectedInputAsset }),
         userEthAddress: '',
         setUserEthAddress: (userEthAddress) => set({ userEthAddress }),
         //console log the new ethers provider
@@ -226,8 +269,6 @@ export const useStore = create<Store>((set) => {
                     [assetKey]: { ...state.validAssets[assetKey], connectedUserBalanceFormatted: newBalance },
                 },
             })),
-        selectedInputAsset: validAssets.USDT,
-        setSelectedInputAsset: (selectedInputAsset) => set({ selectedInputAsset }),
         isPayingFeesInBTC: true,
         setIsPayingFeesInBTC: (isPayingFeesInBTC) => set({ isPayingFeesInBTC }),
 

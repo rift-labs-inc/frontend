@@ -40,6 +40,12 @@ export type ReserveLiquidityParams = {
     totalSatsInputInlcudingProxyFee: BigNumber;
 };
 
+export type UpdateExchangeRateParams = {
+    globalVaultIndex: number;
+    newExchangeRate: BigNumberish;
+    expiredSwapReservationIndexes: number[];
+};
+
 export type DepositVault = {
     depositTimestamp: number;
     initialBalance: BigNumberish;

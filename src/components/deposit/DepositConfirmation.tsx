@@ -75,10 +75,7 @@ export const DepositConfirmation = ({}) => {
     const { depositLiquidity, status: depositLiquidityStatus, error: depositLiquidityError, txHash, resetDepositState } = useDepositLiquidity();
     const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
-    const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
-    const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-    const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
 
     const usdtDepositAmount = useStore((state) => state.usdtDepositAmount);
     const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);

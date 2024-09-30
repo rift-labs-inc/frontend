@@ -88,7 +88,7 @@ export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, m
                 <Text
                     fontFamily={FONT_FAMILIES.AUX_MONO}
                     fontSize={'14px'}
-                    color={completedPercentage + withdrawnPercentage === 100 && completedPercentage > 0 ? colors.greenOutline : colors.offWhite}>{`${
+                    color={completedPercentage + withdrawnPercentage === 100 && completedPercentage > 0 ? colors.greenOutline : withdrawnPercentage === 100 ? colors.redHover : colors.offWhite}>{`${
                     completedPercentage + withdrawnPercentage
                 }%`}</Text>
             )}
@@ -113,7 +113,7 @@ export const VaultStatusBar: React.FC<VaultStatusBarProps> = ({ selectedVault, m
                 <BarSection percentage={provedPercentage} color={'purple.600'} tooltipBg={'purple.600'} label='Proved' amount={formatAmount(provedAmount)} />
                 <BarSection
                     percentage={unreservedPercentage}
-                    color={colors.offBlackLighter2}
+                    color={colors.offBlackLighter}
                     tooltipBg={selectedVault.depositAsset.bg_color}
                     label='Unreserved'
                     amount={formatAmount(trueUnreservedAmount)}

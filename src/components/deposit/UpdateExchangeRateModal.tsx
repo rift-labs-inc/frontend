@@ -10,15 +10,16 @@ import { bitcoinDecimals } from '../../utils/constants';
 import { bufferTo18Decimals } from '../../utils/dappHelper';
 import WhiteText from '../other/WhiteText';
 import OrangeText from '../other/OrangeText';
+import { UpdateExchangeRateParams } from '../../types';
 
 const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
-    const [usdtDepositAmount, setUsdtDepositAmount] = useState('');
+    const [usdtUnreservedAmount, setUsdtUnreservedAmount] = useState('');
     const [profitPercentage, setProfitPercentage] = useState('');
     const [btcOutputAmount, setBtcOutputAmount] = useState('');
-    const [usdtDepositAmountUSD, setUsdtDepositAmountUSD] = useState('$0.00');
+    const [usdtDepositUnreservedUSD, setUsdtUnreservedAmountUSD] = useState('$0.00');
     const [profitAmountUSD, setProfitAmountUSD] = useState('$0.00');
     const [bitcoinOutputAmountUSD, setBitcoinOutputAmountUSD] = useState('$0.00');
-
+    const currentlyExpiredReservationIndexes = useStore((state) => state.currentlyExpiredReservationIndexes);
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const usdtPriceUSD = useStore.getState().validAssets[selectedInputAsset.name].priceUSD;
@@ -26,31 +27,40 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
     useEffect(() => {
         console.log('selectedVault:', selectedVault);
         if (isOpen && selectedVault) {
-            setUsdtDepositAmount(selectedVault.trueUnreservedLiquidity ? formatUnits(selectedVault.trueUnreservedLiquidity, selectedVault.depositAsset.decimals) : '0');
-            // setBtcOutputAmount(formatUnits(selectedVault.bitcoinAmount, bitcoinDecimals));
-            // calculateProfitPercent(formatUnits(selectedVault.bitcoinAmount, bitcoinDecimals));
+            setUsdtUnreservedAmount(formatUnits(selectedVault.trueUnreservedBalance, selectedInputAsset.decimals).toString() ?? '0');
         }
     }, [isOpen, selectedVault]);
 
     useEffect(() => {
         calculateUsdValues();
-    }, [usdtDepositAmount, btcOutputAmount, profitPercentage]);
+    }, [usdtUnreservedAmount, btcOutputAmount, profitPercentage]);
 
-    const calculateUsdValues = () => {
-        // Calculate deposit amount in USD
-        const depositAmountUSD =
-            usdtPriceUSD && usdtDepositAmount
-                ? (usdtPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
+    useEffect(() => {
+        const usdtDepositUnreservedUSD =
+            usdtPriceUSD && usdtUnreservedAmount
+                ? (usdtPriceUSD * parseFloat(usdtUnreservedAmount)).toLocaleString('en-US', {
                       style: 'currency',
                       currency: 'USD',
                   })
                 : '$0.00';
-        setUsdtDepositAmountUSD(depositAmountUSD);
+        setUsdtUnreservedAmountUSD(usdtDepositUnreservedUSD);
+    }, [usdtUnreservedAmount]);
+
+    const calculateUsdValues = () => {
+        // Calculate deposit amount in USD
+        const depositAmountUSD =
+            usdtPriceUSD && usdtUnreservedAmount
+                ? (usdtPriceUSD * parseFloat(usdtUnreservedAmount)).toLocaleString('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                  })
+                : '$0.00';
+        setUsdtUnreservedAmountUSD(depositAmountUSD);
 
         // Calculate profit amount in USD
         const profitAmountUSD =
-            usdtPriceUSD && usdtDepositAmount && profitPercentage
-                ? (((parseFloat(usdtDepositAmount) * parseFloat(profitPercentage)) / 100) * usdtPriceUSD).toLocaleString('en-US', {
+            usdtPriceUSD && usdtUnreservedAmount && profitPercentage
+                ? (((parseFloat(usdtUnreservedAmount) * parseFloat(profitPercentage)) / 100) * usdtPriceUSD).toLocaleString('en-US', {
                       style: 'currency',
                       currency: 'USD',
                   })
@@ -79,7 +89,7 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
         };
 
         if (validateTokenDepositChange(tokenValue)) {
-            setUsdtDepositAmount(tokenValue);
+            setUsdtUnreservedAmount(tokenValue);
             calculateBitcoinOutputAmount(tokenValue, undefined);
         }
     };
@@ -115,7 +125,7 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
     };
 
     const calculateProfitPercent = (bitcoinAmount) => {
-        const startValue = parseFloat(usdtDepositAmount);
+        const startValue = parseFloat(usdtUnreservedAmount);
         const endValue = parseFloat(bitcoinAmount) * useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC;
 
         const newProfitPercentage = (((endValue - startValue) / startValue) * 100).toFixed(2);
@@ -146,8 +156,8 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
 
     const calculateBitcoinOutputAmount = (newUsdtDepositAmount, newProfitPercentage) => {
         if (usdtPriceUSD && bitcoinPriceUSD) {
-            const profitAmountInToken = parseFloat(newUsdtDepositAmount ?? usdtDepositAmount) * (parseFloat(newProfitPercentage ?? profitPercentage) / 100);
-            const totalTokenUSD = parseFloat(newUsdtDepositAmount ?? usdtDepositAmount) * usdtPriceUSD + profitAmountInToken * usdtPriceUSD;
+            const profitAmountInToken = parseFloat(newUsdtDepositAmount ?? usdtUnreservedAmount) * (parseFloat(newProfitPercentage ?? profitPercentage) / 100);
+            const totalTokenUSD = parseFloat(newUsdtDepositAmount ?? usdtUnreservedAmount) * usdtPriceUSD + profitAmountInToken * usdtPriceUSD;
             const newBitcoinOutputAmount = totalTokenUSD / bitcoinPriceUSD > 0 ? totalTokenUSD / bitcoinPriceUSD : 0;
             const formattedBitcoinOutputAmount = newBitcoinOutputAmount == 0 ? '0.0' : newBitcoinOutputAmount.toFixed(7);
 
@@ -172,7 +182,7 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
 
-        const tokenDepositAmountInSmallestTokenUnits = parseUnits(usdtDepositAmount, selectedVault.depositAsset.decimals);
+        const tokenDepositAmountInSmallestTokenUnits = parseUnits(usdtUnreservedAmount, selectedVault.depositAsset.decimals);
         const tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(tokenDepositAmountInSmallestTokenUnits, selectedVault.depositAsset.decimals);
         const bitcoinOutputAmountInSats = parseUnits(btcOutputAmount, bitcoinDecimals);
         const exchangeRate = tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(bitcoinOutputAmountInSats);
@@ -181,9 +191,15 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
         const precisionBN = BigNumber.from(10).pow(clipToDecimals);
         const clippedExchangeRate = exchangeRate.div(precisionBN).mul(precisionBN);
 
+        const updateExchangeRateParams: UpdateExchangeRateParams = {
+            globalVaultIndex: selectedVault.index,
+            newExchangeRate: clippedExchangeRate,
+            expiredSwapReservationIndexes: currentlyExpiredReservationIndexes,
+        };
+
         try {
             const contract = new ethers.Contract(selectedVault.depositAsset.riftExchangeContractAddress, selectedVault.depositAsset.riftExchangeAbi, signer);
-            const tx = await contract.updateExchangeRate(selectedVault.index, clippedExchangeRate);
+            const tx = await contract.updateExchangeRate(updateExchangeRateParams.globalVaultIndex, updateExchangeRateParams.newExchangeRate, updateExchangeRateParams.expiredSwapReservationIndexes);
             await tx.wait();
             console.log('Exchange rate updated successfully');
             onClose();
@@ -222,11 +238,11 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                             {/* Deposit Input */}
                             <Flex mt='0px' px='10px' bg={selectedInputAsset.dark_bg_color} w='100%' h='105px' border='2px solid' borderColor={selectedInputAsset.bg_color} borderRadius='10px'>
                                 <Flex direction='column' py='10px' px='5px'>
-                                    <Text color={!usdtDepositAmount ? colors.offWhite : colors.textGray} fontSize='13px' letterSpacing='-1px' fontWeight='normal' fontFamily='Aux'>
+                                    <Text color={!usdtUnreservedAmount ? colors.offWhite : colors.textGray} fontSize='13px' letterSpacing='-1px' fontWeight='normal' fontFamily='Aux'>
                                         Current Unreserved Liquidity
                                     </Text>
                                     <Input
-                                        value={usdtDepositAmount}
+                                        value={usdtUnreservedAmount}
                                         disabled={true}
                                         onChange={handleTokenDepositChange}
                                         fontFamily='Aux'
@@ -241,13 +257,12 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                                         _focus={{ border: 'none', boxShadow: 'none' }}
                                         _selected={{ border: 'none', boxShadow: 'none' }}
                                         fontSize='40px'
-                                        placeholder={usdtDepositAmount}
                                         _placeholder={{
                                             color: selectedInputAsset.light_text_color,
                                         }}
                                     />
-                                    <Text color={!usdtDepositAmount ? colors.offWhite : colors.textGray} fontSize='13px' mt='2px' ml='1px' letterSpacing='-1px' fontWeight='normal' fontFamily='Aux'>
-                                        {usdtDepositAmountUSD}
+                                    <Text color={!usdtUnreservedAmount ? colors.offWhite : colors.textGray} fontSize='13px' mt='2px' ml='1px' letterSpacing='-1px' fontWeight='normal' fontFamily='Aux'>
+                                        {usdtDepositUnreservedUSD}
                                     </Text>
                                 </Flex>
                                 <Spacer />
@@ -263,7 +278,9 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                                     </Text>
                                     <Input
                                         value={profitPercentage}
-                                        onChange={handleProfitPercentageChange}
+                                        onChange={(e) => {
+                                            handleProfitPercentageChange(e);
+                                        }}
                                         onBlur={handleProfitPercentageBlur}
                                         onFocus={() => handleProfitPercentageFocus(profitPercentage)}
                                         fontFamily='Aux'
@@ -303,8 +320,8 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                                     <Text color={colors.offWhite}>Your Exchange Rate</Text>
                                     <Text>
                                         1 BTC ={' '}
-                                        {usdtDepositAmount && btcOutputAmount
-                                            ? ((parseFloat(usdtDepositAmount) / parseFloat(btcOutputAmount)) * usdtPriceUSD).toLocaleString('en-US', {
+                                        {usdtUnreservedAmount && btcOutputAmount
+                                            ? ((parseFloat(usdtUnreservedAmount) / parseFloat(btcOutputAmount)) * usdtPriceUSD).toLocaleString('en-US', {
                                                   style: 'currency',
                                                   currency: 'USD',
                                               })

@@ -3,7 +3,7 @@ import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
 import * as bitcoin from 'bitcoinjs-lib';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { bitcoinDecimals, FRONTEND_RESERVATION_EXPIRY_TIME, maxSwapOutputs, SATS_PER_BTC } from './constants';
+import { bitcoinDecimals, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, maxSwapOutputs, SATS_PER_BTC } from './constants';
 import { format } from 'path';
 import swapReservationsAggregatorABI from '../abis/SwapReservationsAggregator.json';
 import { getDepositVaults, getSwapReservations } from '../utils/contractReadFunctions';
@@ -392,8 +392,8 @@ export const fetchReservationDetails = async (swapReservationURL: string, ethers
 
             // check if expired and update state
             const currentTimestamp = Math.floor(Date.now() / 1000);
-            const isExpired = currentTimestamp - swapReservationData.reservationTimestamp > FRONTEND_RESERVATION_EXPIRY_TIME;
-            if (isExpired) {
+            const isExpired = currentTimestamp - swapReservationData.reservationTimestamp > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS;
+            if (isExpired && swapReservationData.state === ReservationState.Created) {
                 swapReservationData.state = ReservationState.Expired;
             }
 

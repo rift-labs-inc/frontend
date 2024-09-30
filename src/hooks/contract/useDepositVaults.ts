@@ -8,7 +8,7 @@ import { useStore } from '../../store';
 import { useSwapReservations } from './useSwapReservations';
 import { DepositVault, SwapReservation, ReservationState } from '../../types';
 import { calculateFillPercentage } from '../../utils/dappHelper';
-import { FRONTEND_RESERVATION_EXPIRY_TIME } from '../../utils/constants';
+import { FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS } from '../../utils/constants';
 
 type UseDepositVaultsResult = {
     allFetchedDepositVaults: DepositVault[];
@@ -46,7 +46,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
         const additionalBalances = new Map<string, BigNumber>();
         const completedAmountsPerVault = new Map<string, BigNumber>();
         const provedAmountsPerVault = new Map<string, BigNumber>();
-        const activelyReservedAmountsPerVault = new Map<string, BigNumber>(); // New map to track active reservations
+        const activelyReservedAmountsPerVault = new Map<string, BigNumber>();
         const expiredReservationIndexes: number[] = [];
 
         let activeReservationsCount = 0;
@@ -59,12 +59,9 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const isCreated = reservation.state === ReservationState.Created;
             const isProved = reservation.state === ReservationState.Proved;
             const isCompleted = reservation.state === ReservationState.Completed;
-            console.log('expired details:', {
-                reservationState: reservation.state,
-                timestampDelta: currentTimestamp - reservation.reservationTimestamp,
-                frontendExpiryTime: FRONTEND_RESERVATION_EXPIRY_TIME,
-            });
-            const isExpired = reservation.state === ReservationState.Expired || (ReservationState.Created && currentTimestamp - reservation.reservationTimestamp > FRONTEND_RESERVATION_EXPIRY_TIME);
+            const isExpired =
+                reservation.state === ReservationState.Expired ||
+                (reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS);
 
             console.log('Processing reservation:', {
                 reservationIndex,
@@ -75,28 +72,34 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 reservation,
             });
 
+            if (isCompleted) {
+                completedReservationsCount++;
+            } else if (isProved) {
+                provedReservationsCount++;
+            } else if (isExpired) {
+                expiredReservationsCount++;
+                reservation.state = ReservationState.Expired;
+                expiredReservationIndexes.push(reservationIndex);
+            } else {
+                // active reservations (created and not expired, completed, or unlocked)
+                activeReservationsCount++;
+                console.log('Active reservation:', reservation);
+            }
+
             reservation.vaultIndexes.forEach((vaultIndex, i) => {
                 const vaultIndexKey = vaultIndex.toString();
                 const amountToAdd = reservation.amountsToReserve[i];
 
                 if (isCompleted) {
-                    completedReservationsCount++;
                     const currentCompleted = completedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
                     completedAmountsPerVault.set(vaultIndexKey, currentCompleted.add(amountToAdd));
                 } else if (isProved) {
-                    provedReservationsCount++;
                     const currentUnlocked = provedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
                     provedAmountsPerVault.set(vaultIndexKey, currentUnlocked.add(amountToAdd));
                 } else if (isExpired) {
-                    expiredReservationsCount++;
-                    reservation.state = ReservationState.Expired;
-                    expiredReservationIndexes.push(reservationIndex);
                     const currentAdditional = additionalBalances.get(vaultIndexKey) || BigNumber.from(0);
                     additionalBalances.set(vaultIndexKey, currentAdditional.add(amountToAdd));
                 } else {
-                    // active reservations (created and not expired, completed, or unlocked)
-                    activeReservationsCount++;
-                    console.log('Active reservation:', reservation);
                     const currentActive = activelyReservedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
                     activelyReservedAmountsPerVault.set(vaultIndexKey, currentActive.add(amountToAdd));
                 }
@@ -121,14 +124,14 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
             totalAvailableLiquidity = totalAvailableLiquidity.add(unreservedBalance);
 
-            console.log('Updated vault:', {
-                vaultIndex,
-                withdrawnAmount: vault.withdrawnAmount.toString(),
-                unreservedBalance: unreservedBalance.toString(),
-                activelyReservedAmount: activelyReservedAmount.toString(),
-                completedAmount: completedAmount.toString(),
-                provedAmount: provedAmount.toString(),
-            });
+            // console.log('Updated vault:', {
+            //     vaultIndex,
+            //     withdrawnAmount: vault.withdrawnAmount.toString(),
+            //     unreservedBalance: unreservedBalance.toString(),
+            //     activelyReservedAmount: activelyReservedAmount.toString(),
+            //     completedAmount: completedAmount.toString(),
+            //     provedAmount: provedAmount.toString(),
+            // });
 
             return {
                 ...vault,
@@ -166,8 +169,6 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 selectedInputAsset.riftExchangeContractAddress,
                 Array.from({ length: depositVaultsLength }).map((_, i) => i),
             );
-
-            console.log('All Deposit Vaults:', depositVaults);
 
             const updatedDepositVaults = calculateTrueUnreservedLiquidity(depositVaults, allFetchedSwapReservations);
             console.log('Updated Deposit Vaults:', updatedDepositVaults);

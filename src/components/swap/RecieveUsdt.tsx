@@ -7,6 +7,7 @@ import { FONT_FAMILIES } from '../../utils/font';
 import { useStore } from '../../store';
 import { FaClock } from 'react-icons/fa';
 import { useRouter } from 'next/router';
+import { FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS } from '../../utils/constants';
 
 declare global {
     interface Window {
@@ -363,7 +364,8 @@ export const RecieveUsdt = () => {
                         mt='0px'
                         flex='1'
                         letterSpacing={'-1.2px'}>
-                        No bitcoin transaction was detected and proved within the 8 hour reservation window. Please use the button below to start a new swap.
+                        No bitcoin transaction was detected and proved within the {FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS / 60 / 60} hour reservation window. Please use the button below to
+                        start a new swap.
                     </Text>
                     <Button
                         mt='38px'

@@ -142,6 +142,7 @@ const ReservationDetails = () => {
                     setSwapReservationNotFound(false);
 
                     const currentReservationStateFromContract = getReservationStateString(reservationDetails.swapReservationData.state);
+                    console.log('proc Current reservation state:', currentReservationStateFromContract);
                     setCurrentReservationState(currentReservationStateFromContract);
                     // set swap flow state to expired if its been 8 hours since the reservation was created
                     const isReservationExpired = Date.now() - reservationDetails.swapReservationData.reservationTimestamp * 1000 > 8 * 60 * 60 * 1000;

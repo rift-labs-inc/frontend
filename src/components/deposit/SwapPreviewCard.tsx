@@ -41,6 +41,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                 setIsLoading(true);
                 try {
                     const reservationDetails = await fetchReservationDetails(url, ethersRpcProvider, selectedInputAsset);
+                    console.log('reservationDetails:', reservationDetails);
                     setBtcInputSwapAmount(reservationDetails.btcInputSwapAmount);
                     setUsdtOutputSwapAmount(reservationDetails.totalReservedAmountInUsdt);
                 } catch (error) {
@@ -101,7 +102,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                 color={colors.textGray}
                 borderColor={colors.borderGray}
                 gap='12px'>
-                <Text width='110px' pr='20px' fontSize={'14px'}>
+                <Text width='110px' pr='10px' fontSize={'14px'}>
                     {timeAgo}
                 </Text>
                 <Flex flex={1} align='center' gap='12px'>
@@ -178,7 +179,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                             <Flex
                                 h='10px'
                                 w='10px'
-                                borderRadius='50%'
+                                borderRadius='10px'
                                 bg={
                                     ReservationState[reservation.state] === 'Created'
                                         ? colors.RiftOrange

@@ -206,8 +206,27 @@ export const ManageSwaps = ({}) => {
                                 direction='column'
                                 w='100%'>
                                 {(userSwapReservations == null || userSwapReservations.length === 0) && (vaultsToDisplay == null || vaultsToDisplay.length === 0) ? (
-                                    <Flex justify={'center'} fontSize={'16px'} alignItems={'center'}>
-                                        <Text>No active swaps found with your address</Text>
+                                    <Flex justify={'center'} direction='column' fontSize={'16px'} alignItems={'center'}>
+                                        <Text mb='10px'>No active swaps found with your address...</Text>
+                                        <Flex
+                                            bg={colors.purpleBackground}
+                                            _hover={{ bg: colors.purpleHover }}
+                                            w='320px'
+                                            mt='15px'
+                                            transition={'0.2s'}
+                                            h='48px'
+                                            onClick={() => handleNavigation('/')}
+                                            fontSize={'16px'}
+                                            align={'center'}
+                                            userSelect={'none'}
+                                            cursor={'pointer'}
+                                            borderRadius={'10px'}
+                                            justify={'center'}
+                                            border={'3px solid #445BCB'}>
+                                            <Text color={colors.offWhite} fontFamily='Nostromo'>
+                                                Create a swap
+                                            </Text>
+                                        </Flex>
                                     </Flex>
                                 ) : (
                                     <>

@@ -31,8 +31,7 @@ export const DepositUI = () => {
     const userEthAddress = useStore((state) => state.userEthAddress);
     const [userBalanceExceeded, setUserBalanceExceeded] = useState(false);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-    const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
-    const usdtPriceUSD = useStore.getState().validAssets[selectedInputAsset.name].priceUSD;
+    const usdtPriceUSD = useStore.getState().validAssets[selectedInputAsset.name]?.priceUSD;
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
     const [usdtExchangeRatePerBTC, setUsdtExchangeRatePerBTC] = useState(0);
     const depositMode = useStore((state) => state.depositMode);
@@ -90,17 +89,25 @@ export const DepositUI = () => {
 
         if (isConnected && address) {
             continuouslyRefreshUserDepositData();
+            handleUsdtInputChange(null, usdtDepositAmount);
             const intervalId = setInterval(continuouslyRefreshUserDepositData, 2000);
             return () => clearInterval(intervalId);
+        } else {
+            setUserBalanceExceeded(false);
         }
     }, [isConnected, address]);
+
+    useEffect(() => {
+        setUserBalanceExceeded(false);
+    }, []);
 
     // --------------- USDT INPUT ---------------
     const handleUsdtInputChange = (e, amount = null) => {
         setIsAboveMaxSwapLimitBtcOutput(false);
         setIsBelowMinBtcOutput(false);
+        setUserBalanceExceeded(false);
 
-        const maxDecimals = useStore.getState().validAssets[selectedInputAsset.name].decimals;
+        const maxDecimals = useStore.getState().validAssets[selectedInputAsset.name]?.decimals;
         const usdtValue = amount !== null ? amount : e.target.value;
 
         const validateUsdtInputChange = (value: string) => {
@@ -212,13 +219,14 @@ export const DepositUI = () => {
 
                 console.log('validAssets[selectedInputAsset.name].connectedUserBalanceFormatted:', validAssets[selectedInputAsset.name].connectedUserBalanceFormatted);
 
-                await refreshConnectedUserBalance();
+                const userBalance = await refreshConnectedUserBalance();
+                console.log('bruh userBalance:', userBalance);
 
                 // Fetch the latest balance after refreshing
                 const latestUserUsdtBalance = validAssets[selectedInputAsset.name].connectedUserBalanceFormatted;
 
-                console.log('usdtDepositAmount:', usdtDepositAmount);
-                console.log('userUsdtBalance:', latestUserUsdtBalance);
+                console.log('bruh usdtDepositAmount:', usdtDepositAmount);
+                console.log('bruh userUsdtBalance:', latestUserUsdtBalance);
 
                 if (parseFloat(usdtDepositAmount || '0') > parseFloat(latestUserUsdtBalance || '0')) {
                     setUserBalanceExceeded(true);
@@ -368,7 +376,7 @@ export const DepositUI = () => {
                                                         ? `${maxSwapLimitInUSDT} USDT Max`
                                                         : isBelowMinUsdtDeposit
                                                         ? `1 USDT Min`
-                                                        : `${parseFloat(userUsdtBalance).toFixed(2)} USDT Max`}
+                                                        : `${parseFloat(userUsdtBalance).toFixed(4)} USDT Max`}
                                                 </Text>
                                             )}
                                         </Flex>
