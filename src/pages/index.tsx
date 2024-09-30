@@ -14,6 +14,7 @@ import { DepositUI } from '../components/deposit/DepositUI';
 import { DepositConfirmation } from '../components/deposit/DepositConfirmation';
 import { ReserveLiquidityContainer } from '../components/swap/ReserveLiquidityContainer';
 import CurrencyModal from '../components/swap/CurrencyModal';
+import OfflinePage from '../components/background/OfflinePage';
 
 const Home = () => {
     const { isTablet, isMobile } = useWindowSize();
@@ -60,6 +61,7 @@ const Home = () => {
     return (
         <>
             <OpenGraph />
+            {/* <OfflinePage> */}
             <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
                 <Navbar />
                 <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === '0-not-started' ? '18vh' : '100px'}>
@@ -128,6 +130,7 @@ const Home = () => {
                 </Flex>
                 <CurrencyModal />
             </Flex>
+            {/* </OfflinePage> */}
         </>
     );
 };

@@ -1,4 +1,4 @@
-import { Box, Button, Flex, FlexProps, Spacer, Text, useClipboard, VStack } from '@chakra-ui/react';
+import { Box, Button, Flex, FlexProps, Spacer, Text, Image, useClipboard, VStack } from '@chakra-ui/react';
 import { colors } from '../../utils/colors';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
@@ -168,7 +168,7 @@ export const Navbar = ({}) => {
                 </>
             )}
 
-            <Flex direction='row' w='100%' px={'30px'} pt='25px'>
+            <Flex direction='row' w='100%' px={'30px'} pt='25px' zIndex={400}>
                 <Flex gap='12px'>
                     {navItem('Swap', '/')}
                     {/* {navItem('Lending', '/lending')} */}
@@ -176,6 +176,14 @@ export const Navbar = ({}) => {
                     {navItem('Manage', '/manage')}
                     {/* {navItem('Activity', '/activity')} */}
                     {navItem('About', '/about')}
+                </Flex>
+                <Flex ml='32px' gap='32px' align='center'>
+                    <a href='https://x.com/riftdex' target='_blank' rel='noopener noreferrer'>
+                        <Image src='/images/social/x.svg' w='20px' aspectRatio={1} />
+                    </a>
+                    <a href='https://t.me/riftdex' target='_blank' rel='noopener noreferrer'>
+                        <Image src='/images/social/telegram.svg' w='30px' aspectRatio={1} />
+                    </a>
                 </Flex>
                 <Spacer />
                 {/* TODO: Remove below perhaps in prod: */}

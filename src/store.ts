@@ -117,6 +117,10 @@ type Store = {
     setEthPayoutAddress: (address: string) => void;
     bitcoinSwapTransactionHash: string;
     setBitcoinSwapTransactionHash: (hash: string) => void;
+
+    // global
+    isOnline: boolean;
+    setIsOnline: (b: boolean) => void;
 };
 
 export const useStore = create<Store>((set) => {
@@ -341,5 +345,9 @@ export const useStore = create<Store>((set) => {
         setConfirmationBlocksNeeded: (confirmationBlocksNeeded) => set({ confirmationBlocksNeeded }),
         currentTotalBlockConfirmations: 0,
         setCurrentTotalBlockConfirmations: (currentTotalBlockConfirmations) => set({ currentTotalBlockConfirmations }),
+
+        // global
+        isOnline: true, // typeof window != 'undefined' ? navigator.onLine : true
+        setIsOnline: (b) => set({ isOnline: b }),
     };
 });
