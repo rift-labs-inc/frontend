@@ -68,14 +68,39 @@ const univ3ABI = [
     },
 ];
 
+let dataProviderCache = undefined;
+
+export async function getPricesDataProvider() {
+    if (dataProviderCache) {
+        return dataProviderCache;
+    }
+
+    console.log('bruh GIVE ME LATEST ANSWER 2');
+
+    const mainnetChainId = 1;
+    const staticMainnetProvider = new ethers.providers.StaticJsonRpcProvider(mainnetEthRpcUrl, { chainId: mainnetChainId, name: 'mainnet' });
+
+    const contract = new ethers.Contract(chainLinkUsdtPriceOracleAddress, chainLinkUsdtPriceOracleAddressABI, staticMainnetProvider);
+
+    const poolContract = new ethers.Contract(wbtcUsdtPool, univ3ABI, staticMainnetProvider);
+
+    dataProviderCache = {
+        mainnetProvider: staticMainnetProvider,
+        contract,
+        poolContract,
+        chainId: mainnetChainId,
+    };
+
+    return dataProviderCache;
+}
+
 export async function getPrices(): Promise<string[]> {
+    console.log('bruh GIVE ME LATEST ANSWER');
+    let { contract, poolContract } = await getPricesDataProvider();
     try {
-        const mainnetProvider = new ethers.providers.JsonRpcProvider(mainnetEthRpcUrl);
-        const contract = new ethers.Contract(chainLinkUsdtPriceOracleAddress, chainLinkUsdtPriceOracleAddressABI, mainnetProvider);
         const usdtPrice = await contract.latestAnswer();
         const usdtPriceInUSD = parseFloat(ethers.utils.formatUnits(usdtPrice, 8)); // Assuming 8 decimals for USDT oracle
 
-        const poolContract = new ethers.Contract(wbtcUsdtPool, univ3ABI, mainnetProvider);
         const slot0 = await poolContract.slot0();
         const sqrtPriceX96 = slot0.sqrtPriceX96.toString();
 

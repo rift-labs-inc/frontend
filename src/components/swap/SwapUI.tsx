@@ -138,7 +138,7 @@ export const SwapUI = () => {
 
         if (isConnected && address) {
             continuouslyRefreshUserDepositData();
-            const intervalId = setInterval(continuouslyRefreshUserDepositData, 2000);
+            const intervalId = setInterval(continuouslyRefreshUserDepositData, 12000);
             return () => clearInterval(intervalId);
         }
     }, [isConnected, address]);

@@ -38,7 +38,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     // Set ethers provider when selectedInputAsset changes
     useEffect(() => {
         if ((selectedInputAsset?.contractRpcURL && window.ethereum) || !ethersRpcProvider) {
-            const provider = new ethers.providers.JsonRpcProvider(selectedInputAsset.contractRpcURL);
+            const provider = new ethers.providers.StaticJsonRpcProvider(selectedInputAsset.contractRpcURL, { chainId: selectedInputAsset.chainDetails.id, name: selectedInputAsset.chainDetails.name });
             if (!provider) return;
             console.log('new ethers provider set', provider);
             setEthersRpcProvider(provider);
@@ -97,24 +97,16 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         fetchSelectedAssetUserBalance();
         checkIfNewDepositsArePausedFromContract();
 
-        // Clear existing interval to prevent multiple intervals
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-        }
-
         // Set up an interval to fetch data every 5 seconds
-        intervalRef.current = setInterval(() => {
-            fetchPriceData();
-            fetchSelectedAssetUserBalance();
-            checkIfNewDepositsArePausedFromContract();
-        }, 5000);
-
-        // Cleanup interval on unmount or dependency change
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
-        };
+        if (!intervalRef.current) {
+            console.log('bruh setting interval');
+            intervalRef.current = setInterval(() => {
+                console.log('bruh interval!!!!!!');
+                fetchPriceData();
+                fetchSelectedAssetUserBalance();
+                checkIfNewDepositsArePausedFromContract();
+            }, 5000);
+        }
     }, [
         selectedInputAsset?.tokenAddress,
         address,
