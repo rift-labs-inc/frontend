@@ -188,19 +188,19 @@ export const Navbar = ({}) => {
                 <Spacer />
                 {/* TODO: Remove below perhaps in prod: */}
                 <Flex direction='column' fontFamily={FONT_FAMILIES.AUX_MONO} align='center' fontSize='12px' position='absolute' top={0} left={0} right={0}>
-                    {isLocalhost && (
-                        <Button
-                            position={'absolute'}
-                            top={0}
-                            w='20px'
-                            mt='54px'
-                            _hover={{ background: 'rgba(150, 150, 150, 0.2)' }}
-                            color={colors.textGray}
-                            bg={'none'}
-                            onClick={() => {
-                                setShowDeveloperMode(!showDeveloperMode);
-                            }}></Button>
-                    )}
+                    {/* {isLocalhost && ( */}
+                    <Button
+                        position={'absolute'}
+                        top={0}
+                        w='20px'
+                        mt='54px'
+                        _hover={{ background: 'rgba(150, 150, 150, 0.2)' }}
+                        color={colors.textGray}
+                        bg={'none'}
+                        onClick={() => {
+                            setShowDeveloperMode(!showDeveloperMode);
+                        }}></Button>
+                    {/* )} */}
                     {showDeveloperMode && (
                         <>
                             <Text my='10px'>Current Rift Contracts:</Text>

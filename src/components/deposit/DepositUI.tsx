@@ -220,13 +220,9 @@ export const DepositUI = () => {
                 console.log('validAssets[selectedInputAsset.name].connectedUserBalanceFormatted:', validAssets[selectedInputAsset.name].connectedUserBalanceFormatted);
 
                 const userBalance = await refreshConnectedUserBalance();
-                console.log('bruh userBalance:', userBalance);
 
                 // Fetch the latest balance after refreshing
                 const latestUserUsdtBalance = validAssets[selectedInputAsset.name].connectedUserBalanceFormatted;
-
-                console.log('bruh usdtDepositAmount:', usdtDepositAmount);
-                console.log('bruh userUsdtBalance:', latestUserUsdtBalance);
 
                 if (parseFloat(usdtDepositAmount || '0') > parseFloat(latestUserUsdtBalance || '0')) {
                     setUserBalanceExceeded(true);
