@@ -177,14 +177,14 @@ export const Navbar = ({}) => {
                     {/* {navItem('Activity', '/activity')} */}
                     {navItem('About', '/about')}
                 </Flex>
-                <Flex ml='32px' gap='32px' align='center'>
+                {/* <Flex ml='32px' gap='32px' align='center'>
                     <a href='https://x.com/riftdex' target='_blank' rel='noopener noreferrer'>
                         <Image src='/images/social/x.svg' w='20px' aspectRatio={1} />
                     </a>
                     <a href='https://t.me/riftdex' target='_blank' rel='noopener noreferrer'>
                         <Image src='/images/social/telegram.svg' w='30px' aspectRatio={1} />
                     </a>
-                </Flex>
+                </Flex> */}
                 <Spacer />
                 {/* TODO: Remove below perhaps in prod: */}
                 <Flex direction='column' fontFamily={FONT_FAMILIES.AUX_MONO} align='center' fontSize='12px' position='absolute' top={0} left={0} right={0}>
