@@ -183,16 +183,17 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                 bg={colors.offBlack}
                 borderWidth={2}
                 minH={isCompleted ? '280px' : '290px'}
-                w={isError ? '600px' : isCompleted ? '400px' : '500px'}
+                w={isError ? '600px' : isCompleted ? '420px' : '510px'}
                 maxWidth='100%'
                 borderColor={colors.borderGray}
-                borderRadius='10px'
+                borderRadius='20px'
                 fontFamily={FONT_FAMILIES.AUX_MONO}
                 color={colors.offWhite}>
                 <ModalHeader fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
                     {isConfirmStep ? 'Withdraw Liquidity' : 'Withdrawal Status'}
                 </ModalHeader>
-                {isError && !isConfirmStep && <ModalCloseButton />}
+                {(status === WithdrawStatus.Confirmed || status === WithdrawStatus.Error) && <ModalCloseButton />}
+
                 <ModalBody>
                     {isConfirmStep ? (
                         <Flex direction='column' align='center' justify='center' h='100%'>
@@ -293,10 +294,11 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                                 )}
                                 <Text
                                     overflowWrap={'anywhere'}
+                                    fontFamily={FONT_FAMILIES.NOSTROMO}
                                     color={isCompleted ? colors.greenOutline : colors.offWhite}
-                                    fontSize={getStatusMessage().length > 40 ? '12px' : '20px'}
+                                    fontSize={getStatusMessage().length > 40 ? '12px' : '18px'}
                                     mt={isLoading ? '20px' : isCompleted ? '5px' : '20px'}
-                                    fontWeight='normal'
+                                    fontWeight='bold'
                                     textAlign='center'>
                                     {getStatusMessage()}
                                 </Text>
@@ -310,6 +312,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                                         borderColor={colors.purpleBorder}
                                         _hover={{ bg: colors.purpleHover }}
                                         borderRadius='md'
+                                        h='45px'
                                         onClick={() => window.open(getEtherscanUrl(), '_blank')}
                                         isDisabled={!txHash}>
                                         <Flex mt='-4px ' mr='8px'>
@@ -321,6 +324,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                                     </Button>
                                     <Button
                                         mt={'10px'}
+                                        h='45px'
                                         bg={colors.offBlackLighter}
                                         borderWidth={'2px'}
                                         borderColor={colors.borderGrayLight}

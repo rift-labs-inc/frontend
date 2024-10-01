@@ -42,12 +42,10 @@ export const ManageSwaps = ({}) => {
         router.push(route);
     };
 
-    // useeffect to console log user swap reservations
     useEffect(() => {
         refreshAllDepositData();
-        console.log('allDepositVaults', userActiveDepositVaults);
-        console.log('userDepositVaults', userActiveDepositVaults);
-    }, []);
+        console.log('vaults to show:', vaultsToDisplay);
+    }, [userActiveDepositVaults, userCompletedDepositVaults]);
 
     // Update selected vault with new data
     useEffect(() => {

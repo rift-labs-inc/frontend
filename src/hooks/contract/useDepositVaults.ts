@@ -178,9 +178,15 @@ export function useDepositVaults(): UseDepositVaultsResult {
             if (isConnected && address) {
                 const result = await getLiquidityProvider(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress, address);
 
+                console.log('bruh User liquidity provider result:', result);
+                console.log('bruh User liquidity provider deposit vault indexes:', result.depositVaultIndexes);
                 const vaultIndexes = result.depositVaultIndexes.map((index) => BigNumber.from(index).toNumber());
 
+                console.log('bruh User vault indexes:', vaultIndexes);
+
                 const userVaults = updatedDepositVaults.filter((_, index) => vaultIndexes.includes(BigNumber.from(index).toNumber()));
+
+                console.log('bruh User vaults:', userVaults);
 
                 const active: DepositVault[] = [];
                 const completed: DepositVault[] = [];

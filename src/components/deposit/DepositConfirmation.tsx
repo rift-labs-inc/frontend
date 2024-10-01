@@ -749,12 +749,20 @@ export const DepositConfirmation = ({}) => {
                                         bg={colors.purpleButtonBG}
                                         color={colors.offWhite}
                                         mb='10px'
-                                        _hover={{ bg: colors.purpleHover }}
+                                        _hover={{ bg: usdtDepositAmount && profitPercentage && btcOutputAmount ? colors.purpleHover : colors.purpleButtonBG }}
                                         mt='-5px'
                                         w='350px'
-                                        border={'2px solid #445BCB'}
+                                        borderRadius='10px'
+                                        h='50px'
+                                        border='2px solid #445BCB'
                                         mr={3}
-                                        onClick={onClose}>
+                                        onClick={() => {
+                                            usdtDepositAmount && profitPercentage && btcOutputAmount
+                                                ? onClose()
+                                                : toastError('', { title: 'Empty Fields Required', description: 'Please fill in the profit percentage or bitcoin output amount' });
+                                        }}
+                                        opacity={usdtDepositAmount && profitPercentage && btcOutputAmount ? 1 : 0.5}
+                                        cursor={'pointer'}>
                                         UPDATE EXCHANGE RATE
                                     </Button>
                                 </ModalFooter>

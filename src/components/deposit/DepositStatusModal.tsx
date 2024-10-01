@@ -73,11 +73,11 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                 bottom={'20px'}
                 bg={colors.offBlack}
                 borderWidth={2}
-                minH={isCompleted ? '280px' : '320px'}
+                minH={isCompleted ? '280px' : '300px'}
                 w={isError ? '600px' : isCompleted ? '400px' : '500px'}
                 maxWidth='100%'
                 borderColor={colors.borderGray}
-                borderRadius='10px'
+                borderRadius='20px'
                 fontFamily={FONT_FAMILIES.AUX_MONO}
                 color={colors.offWhite}>
                 <ModalHeader mt='10px' fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
@@ -120,9 +120,10 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                             <Text
                                 overflowWrap={'anywhere'}
                                 color={isCompleted ? colors.greenOutline : colors.offWhite}
-                                fontSize={getStatusMessage().length > 40 ? '12px' : '20px'}
+                                fontSize={getStatusMessage().length > 40 ? '12px' : '18px'}
                                 mt={isLoading ? '25px' : isCompleted ? '5px' : '20px'}
-                                fontWeight='normal'
+                                fontWeight='bold'
+                                fontFamily={FONT_FAMILIES.NOSTROMO}
                                 textAlign='center'>
                                 {getStatusMessage()}
                             </Text>
@@ -135,6 +136,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     borderColor={colors.borderGrayLight}
                                     _hover={{ bg: colors.borderGray }}
                                     borderRadius='md'
+                                    h='45px'
                                     onClick={() => window.open(getEtherscanUrl(), '_blank')}
                                     isDisabled={!txHash}>
                                     <Flex mt='-4px ' mr='8px'>
@@ -149,6 +151,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     mt={'10px'}
                                     bg={colors.purpleBackground}
                                     borderWidth={'2px'}
+                                    h='45px'
                                     borderColor={colors.purpleBorder}
                                     fontWeight={'normal'}
                                     onClick={() => {

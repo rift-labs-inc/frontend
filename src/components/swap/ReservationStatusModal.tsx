@@ -21,10 +21,6 @@ const CustomAlertCircleOutline = ({ width = '38px', height = '38px', color = col
     return <AlertCircleOutline width={width} height={height} color={color} />;
 };
 
-const CustomGooSpinner = ({ size = 100, color = 'purple', loading = true }) => {
-    return <GooSpinner size={size} color={color} />;
-};
-
 const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen = false, onClose, status = ReserveStatus.Idle, error = null, txHash = null }) => {
     const isCompleted = status === ReserveStatus.Confirmed;
     const isError = status === ReserveStatus.Error;
@@ -82,7 +78,7 @@ const ReservationStatusModal: React.FC<ReservationStatusModalProps> = ({ isOpen 
                 {(isCompleted || isError) && <ModalCloseButton />}
                 <ModalBody>
                     <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
-                        {isLoading && <CustomGooSpinner size={100} color={colors.purpleBorder} loading={true} />}
+                        {isLoading && <GooSpinner size={100} color={colors.purpleBorder} />}
                         <Spacer />
                         <Text fontSize='12px' w={'100%'} mt='25px' mb='0px' color={colors.textGray} fontWeight={'normal'} textAlign='center'>
                             {status != ReserveStatus.Confirmed &&
