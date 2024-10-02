@@ -4,7 +4,8 @@ import { useStore } from '../store';
 import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
 export const isMainnet = false;
-export const maxSwapLimitInUSDT = 1_000_000_000; // 100b USDT
+export const MAX_SWAP_AMOUNT_USDT = 100; // USDT
+export const MIN_SWAP_AMOUNT_USDT = 1; // USDT
 
 // MAINNET ARBITRUM
 export const MAINNET_ARBITRUM_CHAIN_ID = 42161;
@@ -21,21 +22,24 @@ export const TESTNET_ARBITRUM_RPC_URL = 'https://arbitrum-sepolia.gateway.tender
 export const TESTNET_ARBITRUM_USDT_TOKEN_ADDRESS = '0xC4af7CFe412805C4A751321B7b0799ca9b8dbE56';
 
 // ----------------------------------------------------------------//
-export const mainnetEthRpcUrl = 'https://archive-node.tail0a0b83.ts.net/ethereum/?key=7a29b610f3c03ebe55c4dcc5138884bea1976a7b9804fefc796da213610e0bf5';
-export const maxSwapOutputs = 175;
-export const requiredBlockConfirmations = 2;
-export const protocolFeePercentage = BigNumber.from(1); // 0.1%
-export const protocolFeeDenominator = BigNumber.from(1000); // 100% / 0.1% = 1000
+export const MEMPOOL_HOST = 'https://mempool.space';
+export const MAINNET_ETH_RPC_URL = 'https://archive-node.tail0a0b83.ts.net/ethereum/?key=7a29b610f3c03ebe55c4dcc5138884bea1976a7b9804fefc796da213610e0bf5';
+export const MAX_SWAP_AMOUNT_MICRO_USDT = MAX_SWAP_AMOUNT_USDT * 10 ** 6;
+export const MIN_SWAP_AMOUNT_MICRO_USDT = MIN_SWAP_AMOUNT_USDT * 10 ** 6;
+export const MAX_SWAP_LP_OUTPUTS = 175;
+export const REQUIRED_BLOCK_CONFIRMATIONS = 2;
+export const PROTOCOL_FEE = BigNumber.from(1); // 0.1%
+export const PROTOCOL_FEE_DENOMINATOR = BigNumber.from(1000); // 100% / 0.1% = 1000
 export const CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS = 4 * 60 * 60; // 4 hours
 export const FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS = 1 * 60 * 60; // 1 hour
-export const bitcoinDecimals = 8;
+export const BITCOIN_DECIMALS = 8;
 export const SATS_PER_BTC = 100000000; // 10^8
+
+export const opaqueBackgroundColor = { bg: 'rgba(15, 15, 15, 0.55)', backdropFilter: 'blur(10px)' };
 export const bitcoin_bg_color = '#c26920';
 export const bitcoin_border_color = '#FFA04C';
 export const bitcoin_dark_bg_color = '#372412';
 export const bitcoin_light_text_color = '#7d572e';
-export const opaqueBackgroundColor = { bg: 'rgba(15, 15, 15, 0.55)', backdropFilter: 'blur(10px)' };
-export const maxSwapLimitInMicroUSDT = maxSwapLimitInUSDT * 10 ** 6;
 
 export const ERC20ABI = [
     {

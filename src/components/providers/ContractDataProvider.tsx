@@ -99,13 +99,11 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
 
         // Set up an interval to fetch data every 5 seconds
         if (!intervalRef.current) {
-            console.log('bruh setting interval');
             intervalRef.current = setInterval(() => {
-                console.log('bruh interval!!!!!!');
                 fetchPriceData();
                 fetchSelectedAssetUserBalance();
                 checkIfNewDepositsArePausedFromContract();
-            }, 5000);
+            }, 12000);
         }
     }, [
         selectedInputAsset?.tokenAddress,
@@ -123,6 +121,22 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
 
     // Fetch deposit vaults
     const { allFetchedDepositVaults, userActiveDepositVaults, userCompletedDepositVaults, allFetchedSwapReservations, loading, error, refreshAllDepositData } = useDepositVaults();
+
+    // New useEffect for continuous refresh
+    useEffect(() => {
+        const continuouslyRefreshDepositData = async () => {
+            if (isConnected && address) {
+                await refreshAllDepositData();
+                await refreshConnectedUserBalance();
+            }
+        };
+
+        if (isConnected && address) {
+            continuouslyRefreshDepositData();
+            const intervalId = setInterval(continuouslyRefreshDepositData, 3000); // 3 seconds
+            return () => clearInterval(intervalId);
+        }
+    }, [isConnected, address]);
 
     const isLoading = loading || bitcoinPriceUSD === 0;
 

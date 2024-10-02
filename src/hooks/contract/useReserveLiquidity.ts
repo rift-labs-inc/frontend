@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ethers, BigNumber, BigNumberish } from 'ethers';
-import { ERC20ABI, protocolFeeDenominator, protocolFeePercentage } from '../../utils/constants';
+import { ERC20ABI, PROTOCOL_FEE_DENOMINATOR, PROTOCOL_FEE } from '../../utils/constants';
 import { useStore } from '../../store';
 import { ProxyWalletLiquidityProvider } from '../../types';
 import { listenForLiquidityReservedEvent } from '../../utils/contractReadFunctions';
@@ -83,7 +83,7 @@ export function useReserveLiquidity() {
             const totalAmountToReserve = params.amountsToReserve.reduce((acc, amount) => BigNumber.from(acc).add(amount), BigNumber.from(0));
 
             const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContract);
-            const protocolFee = BigNumber.from(totalAmountToReserve).mul(protocolFeePercentage).div(protocolFeeDenominator);
+            const protocolFee = BigNumber.from(totalAmountToReserve).mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
             const reservationFee = selectedInputAsset.releaserFee.add(selectedInputAsset.proverFee).add(protocolFee);
 
             if (BigNumber.from(allowance).lt(reservationFee)) {

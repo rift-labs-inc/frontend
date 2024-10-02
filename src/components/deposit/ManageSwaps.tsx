@@ -44,8 +44,7 @@ export const ManageSwaps = ({}) => {
 
     useEffect(() => {
         refreshAllDepositData();
-        console.log('vaults to show:', vaultsToDisplay);
-    }, [userActiveDepositVaults, userCompletedDepositVaults]);
+    }, []);
 
     // Update selected vault with new data
     useEffect(() => {

@@ -1,7 +1,7 @@
 import { ChakraProvider, Flex, Text } from '@chakra-ui/react';
 import theme from '../theme';
 import Head from 'next/head';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useStore } from '../store';
 import { AppProps } from 'next/app';
 import '../styles/custom-fonts.css';
@@ -16,6 +16,7 @@ import { mainnet, holesky, arbitrumSepolia, arbitrum } from 'wagmi/chains';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { getDefaultConfig, RainbowKitProvider, darkTheme, Theme } from '@rainbow-me/rainbowkit';
 import { ContractDataProvider } from '../components/providers/ContractDataProvider';
+import { RiftApi } from '../proxy-wallet/rift';
 
 const config = getDefaultConfig({
     appName: 'My RainbowKit App',
@@ -82,6 +83,16 @@ const myCustomTheme = {
 
 function MyApp({ Component, pageProps }: AppProps) {
     const queryClient = new QueryClient();
+    const proxyWalletInjected = useRef(false);
+
+    useEffect(() => {
+        if (!proxyWalletInjected.current) {
+            (window.rift as any) = RiftApi; // TODO: setup
+            //@ts-ignore
+            window.rift.spawn();
+            proxyWalletInjected.current = true;
+        }
+    }, []);
 
     // TODO: The offline error is here
     // const setIsOnline = useStore((state) => state.setIsOnline);

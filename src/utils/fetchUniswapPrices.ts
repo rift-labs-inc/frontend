@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { useStore } from '../store';
-import { mainnetEthRpcUrl } from './constants';
+import { MAINNET_ETH_RPC_URL } from './constants';
 
 const wbtcAddress = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599';
 const chainLinkUsdtPriceOracleAddress = '0x3e7d1eab13ad0104d2750b8863b489d65364e32d';
@@ -75,10 +75,8 @@ export async function getPricesDataProvider() {
         return dataProviderCache;
     }
 
-    console.log('bruh GIVE ME LATEST ANSWER 2');
-
     const mainnetChainId = 1;
-    const staticMainnetProvider = new ethers.providers.StaticJsonRpcProvider(mainnetEthRpcUrl, { chainId: mainnetChainId, name: 'mainnet' });
+    const staticMainnetProvider = new ethers.providers.StaticJsonRpcProvider(MAINNET_ETH_RPC_URL, { chainId: mainnetChainId, name: 'mainnet' });
 
     const contract = new ethers.Contract(chainLinkUsdtPriceOracleAddress, chainLinkUsdtPriceOracleAddressABI, staticMainnetProvider);
 
@@ -95,7 +93,6 @@ export async function getPricesDataProvider() {
 }
 
 export async function getPrices(): Promise<string[]> {
-    console.log('bruh GIVE ME LATEST ANSWER');
     let { contract, poolContract } = await getPricesDataProvider();
     try {
         const usdtPrice = await contract.latestAnswer();

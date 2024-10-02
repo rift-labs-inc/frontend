@@ -9,7 +9,7 @@ import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { BigNumber } from 'ethers';
 import { formatUnits, parseEther } from 'ethers/lib/utils';
 import { btcToSats, ethToWei, formatAmountToString, weiToEth } from '../../utils/dappHelper';
-import { bitcoinDecimals, maxSwapOutputs, opaqueBackgroundColor } from '../../utils/constants';
+import { BITCOIN_DECIMALS, MAX_SWAP_LP_OUTPUTS, MIN_SWAP_AMOUNT_USDT, opaqueBackgroundColor } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
 import { connectorsForWallets, useConnectModal } from '@rainbow-me/rainbowkit';
@@ -18,7 +18,7 @@ import WebAssetTag from '../other/WebAssetTag';
 import { useContractData } from '../providers/ContractDataProvider';
 import { toastInfo } from '../../hooks/toast';
 import { DepositAmounts } from './DepositAmounts';
-import { maxSwapLimitInMicroUSDT, maxSwapLimitInUSDT } from '../../utils/constants';
+import { MAX_SWAP_AMOUNT_MICRO_USDT, MAX_SWAP_AMOUNT_USDT } from '../../utils/constants';
 
 export const DepositUI = () => {
     const { isMobile } = useWindowSize();
@@ -79,24 +79,6 @@ export const DepositUI = () => {
         }
     }, [usdtExchangeRatePerBTC]);
 
-    // function to continuously call refreshAllDepositData
-    useEffect(() => {
-        const continuouslyRefreshUserDepositData = () => {
-            if (isConnected && address) {
-                refreshAllDepositData();
-            }
-        };
-
-        if (isConnected && address) {
-            continuouslyRefreshUserDepositData();
-            handleUsdtInputChange(null, usdtDepositAmount);
-            const intervalId = setInterval(continuouslyRefreshUserDepositData, 2000);
-            return () => clearInterval(intervalId);
-        } else {
-            setUserBalanceExceeded(false);
-        }
-    }, [isConnected, address]);
-
     useEffect(() => {
         setUserBalanceExceeded(false);
     }, []);
@@ -122,7 +104,7 @@ export const DepositUI = () => {
             setIsBelowMinUsdtDeposit(false);
 
             // Check if input is above max swap limit
-            if (parseFloat(usdtValue) > parseFloat(formatUnits(maxSwapLimitInMicroUSDT, selectedInputAsset.decimals))) {
+            if (parseFloat(usdtValue) > parseFloat(formatUnits(MAX_SWAP_AMOUNT_MICRO_USDT, selectedInputAsset.decimals))) {
                 setIsAboveMaxSwapLimitUsdtDeposit(true);
                 setUsdtDepositAmount(usdtValue);
                 // Reset dependent values
@@ -173,7 +155,7 @@ export const DepositUI = () => {
             const usdtInputValueLocal = btcValue && parseFloat(btcValue) > 0 ? parseFloat(btcValue) * useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
 
             // Check if BTC output exceeds max swap limit
-            if (usdtInputValueLocal > parseFloat(formatUnits(maxSwapLimitInMicroUSDT, selectedInputAsset.decimals))) {
+            if (usdtInputValueLocal > parseFloat(formatUnits(MAX_SWAP_AMOUNT_MICRO_USDT, selectedInputAsset.decimals))) {
                 setIsAboveMaxSwapLimitBtcOutput(true);
                 setBtcOutputAmount(btcValue);
                 // Reset dependent values
@@ -206,8 +188,8 @@ export const DepositUI = () => {
         const regex = /^\d*\.?\d*$/;
         if (!regex.test(value)) return null;
         const parts = value.split('.');
-        if (parts.length > 1 && parts[1].length > bitcoinDecimals) {
-            return parts[0] + '.' + parts[1].slice(0, bitcoinDecimals);
+        if (parts.length > 1 && parts[1].length > BITCOIN_DECIMALS) {
+            return parts[0] + '.' + parts[1].slice(0, BITCOIN_DECIMALS);
         }
         return value;
     };
@@ -339,7 +321,7 @@ export const DepositUI = () => {
                                                     {isAboveMaxSwapLimitUsdtDeposit
                                                         ? `Exceeds maximum swap limit - `
                                                         : isBelowMinUsdtDeposit
-                                                        ? `Minimum 1 USDT required - `
+                                                        ? `Minimum ${MIN_SWAP_AMOUNT_USDT} USDT required - `
                                                         : userBalanceExceeded
                                                         ? `Exceeds your available balance - `
                                                         : usdtPriceUSD
@@ -355,23 +337,26 @@ export const DepositUI = () => {
                                             {/* Actionable Suggestion */}
                                             {(isAboveMaxSwapLimitUsdtDeposit || isBelowMinUsdtDeposit || userBalanceExceeded) && (
                                                 <Text
-                                                    fontSize={'13px'}
+                                                    fontSize={'14px'}
                                                     mt='7px'
                                                     mr='-116px'
                                                     zIndex={'10'}
                                                     color={selectedInputAsset.border_color_light}
                                                     cursor='pointer'
                                                     onClick={() =>
-                                                        handleUsdtInputChange(null, isAboveMaxSwapLimitUsdtDeposit ? maxSwapLimitInUSDT.toString() : isBelowMinUsdtDeposit ? '1.00' : userUsdtBalance)
+                                                        handleUsdtInputChange(
+                                                            null,
+                                                            isAboveMaxSwapLimitUsdtDeposit ? MAX_SWAP_AMOUNT_USDT.toString() : isBelowMinUsdtDeposit ? `${MIN_SWAP_AMOUNT_USDT}` : userUsdtBalance,
+                                                        )
                                                     }
                                                     _hover={{ textDecoration: 'underline' }}
                                                     letterSpacing={'-1.5px'}
                                                     fontWeight={'normal'}
                                                     fontFamily={'Aux'}>
                                                     {isAboveMaxSwapLimitUsdtDeposit
-                                                        ? `${maxSwapLimitInUSDT} USDT Max`
+                                                        ? `${MAX_SWAP_AMOUNT_USDT} USDT Max`
                                                         : isBelowMinUsdtDeposit
-                                                        ? `1 USDT Min`
+                                                        ? `${MIN_SWAP_AMOUNT_USDT} USDT Min`
                                                         : `${parseFloat(userUsdtBalance).toFixed(4)} USDT Max`}
                                                 </Text>
                                             )}
@@ -481,7 +466,7 @@ export const DepositUI = () => {
                                                     cursor='pointer'
                                                     onClick={() => {
                                                         if (isAboveMaxSwapLimitBtcOutput) {
-                                                            handleUsdtInputChange(null, maxSwapLimitInUSDT.toString());
+                                                            handleUsdtInputChange(null, MAX_SWAP_AMOUNT_USDT.toString());
                                                         } else {
                                                             handleBtcOutputChange({
                                                                 target: {
@@ -495,7 +480,7 @@ export const DepositUI = () => {
                                                     fontWeight={'normal'}
                                                     fontFamily={'Aux'}>
                                                     {isAboveMaxSwapLimitBtcOutput
-                                                        ? `${(maxSwapLimitInUSDT / usdtExchangeRatePerBTC).toFixed(8)} BTC Max`
+                                                        ? `${(MAX_SWAP_AMOUNT_USDT / usdtExchangeRatePerBTC).toFixed(8)} BTC Max`
                                                         : `${parseFloat(minBtcOutputAmount).toFixed(8)} BTC Min`}
                                                 </Text>
                                             )}

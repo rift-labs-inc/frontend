@@ -9,12 +9,6 @@ import { FaClock } from 'react-icons/fa';
 import { useRouter } from 'next/router';
 import { FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS } from '../../utils/constants';
 
-declare global {
-    interface Window {
-        rift?: any; // You can replace 'any' with a more specific type if you know the structure of the rift object
-    }
-}
-
 export const RecieveUsdt = () => {
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(true);

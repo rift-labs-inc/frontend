@@ -17,7 +17,6 @@ interface WithdrawLiquidityParams {
     riftExchangeAbi: ethers.ContractInterface;
     riftExchangeContract: string;
     globalVaultIndex: number;
-    localVaultIndex: number;
     amountToWithdraw: BigNumberish;
     expiredReservationIndexes: number[];
 }
@@ -42,7 +41,6 @@ export function useWithdrawLiquidity() {
         try {
             console.log('Withdrawing liquidity...');
             console.log('globalVaultIndex:', params.globalVaultIndex);
-            console.log('localVaultIndex:', params.localVaultIndex);
             console.log('amountToWithdraw:', params.amountToWithdraw.toString());
             console.log('expiredReservationIndexes:', params.expiredReservationIndexes);
 
@@ -52,7 +50,7 @@ export function useWithdrawLiquidity() {
 
             setStatus(WithdrawStatus.WithdrawingLiquidity);
 
-            const withdrawTx = await riftExchangeContractInstance.withdrawLiquidity(params.globalVaultIndex, params.localVaultIndex, params.amountToWithdraw, params.expiredReservationIndexes);
+            const withdrawTx = await riftExchangeContractInstance.withdrawLiquidity(params.globalVaultIndex, params.amountToWithdraw, params.expiredReservationIndexes);
 
             setTxHash(withdrawTx.hash);
             setStatus(WithdrawStatus.WithdrawalPending);

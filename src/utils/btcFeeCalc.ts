@@ -3,6 +3,7 @@ import BigNumber from 'bignumber.js';
 import * as bip39 from 'bip39';
 import * as bitcoin from 'bitcoinjs-lib';
 import { ec as EC } from 'elliptic';
+import { MEMPOOL_HOST } from './constants';
 
 export interface Fees {
     fastestFee: number;
@@ -24,8 +25,6 @@ export interface LiquidityProvider {
     btcExchangeRate: string;
     lockingScriptHex: string;
 }
-
-const MEMPOOL_HOST = 'https://mempool.space';
 
 export async function getRiftSwapFees(numLpOutputs) {
     // dummy wallet for estimating swap fees with multiple lp outputs

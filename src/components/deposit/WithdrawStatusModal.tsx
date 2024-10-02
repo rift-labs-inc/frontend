@@ -89,7 +89,6 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                 riftExchangeAbi: riftExchangeABI.abi,
                 riftExchangeContract: selectedVaultToManage.depositAsset.riftExchangeContractAddress,
                 globalVaultIndex,
-                localVaultIndex,
                 amountToWithdraw: withdrawAmountInTokenSmallestUnit,
                 expiredReservationIndexes: currentlyExpiredReservationIndexes,
             });

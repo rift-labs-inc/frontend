@@ -48,7 +48,7 @@ import DepositStatusModal from './DepositStatusModal';
 import WhiteText from '../other/WhiteText';
 import OrangeText from '../other/OrangeText';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { bitcoinDecimals } from '../../utils/constants';
+import { BITCOIN_DECIMALS } from '../../utils/constants';
 import { CheckCircleIcon, CheckIcon, ChevronLeftIcon, SettingsIcon } from '@chakra-ui/icons';
 import { HiOutlineXCircle, HiXCircle } from 'react-icons/hi';
 import { IoCheckmarkDoneCircle } from 'react-icons/io5';
@@ -420,11 +420,11 @@ export const DepositConfirmation = ({}) => {
             const tokenDecmials = useStore.getState().validAssets[selectedInputAsset.name].decimals;
             const tokenDepositAmountInSmallestTokenUnits = parseUnits(usdtDepositAmount, tokenDecmials);
             const tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(tokenDepositAmountInSmallestTokenUnits, tokenDecmials);
-            const bitcoinOutputAmountInSats = parseUnits(btcOutputAmount, bitcoinDecimals);
+            const bitcoinOutputAmountInSats = parseUnits(btcOutputAmount, BITCOIN_DECIMALS);
             console.log('bitcoinOutputAmountInSats:', bitcoinOutputAmountInSats.toString());
             const exchangeRate = tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(bitcoinOutputAmountInSats);
 
-            const clipToDecimals = bitcoinDecimals; // Calculate how many decimals to clip to
+            const clipToDecimals = BITCOIN_DECIMALS; // Calculate how many decimals to clip to
             const precisionBN = BigNumber.from(10).pow(clipToDecimals); // Calculate precision
 
             const clippedExchangeRate = exchangeRate.div(precisionBN).mul(precisionBN);

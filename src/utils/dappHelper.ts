@@ -3,7 +3,7 @@ import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
 import * as bitcoin from 'bitcoinjs-lib';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { bitcoinDecimals, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, maxSwapOutputs, SATS_PER_BTC } from './constants';
+import { BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, MAX_SWAP_LP_OUTPUTS, SATS_PER_BTC } from './constants';
 import { format } from 'path';
 import swapReservationsAggregatorABI from '../abis/SwapReservationsAggregator.json';
 import { getDepositVaults, getSwapReservations } from '../utils/contractReadFunctions';
@@ -51,14 +51,14 @@ export function calculateBtcOutputAmountFromExchangeRate(depositAmountFromContra
     const outputAmountInSats = depositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(exchangeRateFromContract);
 
     // [2] convert output amount from sats to btc
-    const outputAmountInBtc = formatUnits(outputAmountInSats, bitcoinDecimals);
+    const outputAmountInBtc = formatUnits(outputAmountInSats, BITCOIN_DECIMALS);
 
     return String(outputAmountInBtc);
 }
 
 export function formatBtcExchangeRate(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat, depositAssetDecimals) {
     // [0] convert to smallest token amount per btc
-    const exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc = parseUnits(BigNumber.from(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat).toString(), bitcoinDecimals);
+    const exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc = parseUnits(BigNumber.from(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat).toString(), BITCOIN_DECIMALS);
 
     // [1] unbuffer from 18 decimals
     const exchangeRateInSmallestTokenUnitPerBtc = unBufferFrom18Decimals(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc, depositAssetDecimals);
@@ -203,7 +203,7 @@ export function calculateFillPercentage(vault: DepositVault) {
     return Math.min(Math.max(fillPercentage, 0), 100);
 }
 
-export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, maxLpOutputs = maxSwapOutputs) {
+export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, maxLpOutputs = MAX_SWAP_LP_OUTPUTS) {
     console.log('satsToSpend:', satsToSpend.toString());
 
     // [0] validate inputs
@@ -212,7 +212,12 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
     }
 
     // [2] sort vaults based on exchange rate (high -> low)
-    const sortedVaults = depositVaults?.sort((a, b) => b.btcExchangeRate.sub(a.btcExchangeRate).toNumber());
+    const sortedVaults = depositVaults?.sort((a, b) => {
+        const diff = b.btcExchangeRate.sub(a.btcExchangeRate);
+        if (diff.isZero()) return 0;
+        if (diff.isNegative()) return -1;
+        return 1;
+    });
 
     // [3] setup variables to track results
     let totalSatsUsed = BigNumber.from(0);
@@ -285,14 +290,19 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
     };
 }
 
-export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputAmount, maxLpOutputs = maxSwapOutputs) {
+export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputAmount, maxLpOutputs = MAX_SWAP_LP_OUTPUTS) {
     // [0] validate inputs
     if (!Array.isArray(depositVaults) || depositVaults.length === 0 || microUsdtOutputAmount.lte(0)) {
         return null;
     }
 
     // [2] sort vaults based on exchange rate (high -> low)
-    const sortedVaults = depositVaults?.sort((a, b) => b.btcExchangeRate.sub(a.btcExchangeRate).toNumber());
+    const sortedVaults = depositVaults?.sort((a, b) => {
+        const diff = b.btcExchangeRate.sub(a.btcExchangeRate);
+        if (diff.isZero()) return 0;
+        if (diff.isNegative()) return -1;
+        return 1;
+    });
 
     // [3] setup variables to track results
     let totalSatsUsed = BigNumber.from(0);
@@ -423,7 +433,7 @@ export const fetchReservationDetails = async (swapReservationURL: string, ethers
             // Convert to USDT
             const totalReservedAmountInUsdt = formatUnits(totalReservedAmountInMicroUsdt, selectedInputAsset.decimals);
 
-            const btcInputSwapAmount = formatUnits(totalInputAmountInSatsIncludingProxyWalletFee.toString(), bitcoinDecimals).toString();
+            const btcInputSwapAmount = formatUnits(totalInputAmountInSatsIncludingProxyWalletFee.toString(), BITCOIN_DECIMALS).toString();
 
             const totalSwapAmountInSats = totalInputAmountInSatsIncludingProxyWalletFee.toNumber();
 

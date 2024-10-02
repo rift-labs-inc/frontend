@@ -6,7 +6,7 @@ import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
 import { AssetTag } from '../other/AssetTag';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { bitcoinDecimals } from '../../utils/constants';
+import { BITCOIN_DECIMALS } from '../../utils/constants';
 import { bufferTo18Decimals } from '../../utils/dappHelper';
 import WhiteText from '../other/WhiteText';
 import OrangeText from '../other/OrangeText';
@@ -206,10 +206,10 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
 
         const tokenDepositAmountInSmallestTokenUnits = parseUnits(usdtUnreservedAmount, selectedVault.depositAsset.decimals);
         const tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(tokenDepositAmountInSmallestTokenUnits, selectedVault.depositAsset.decimals);
-        const bitcoinOutputAmountInSats = parseUnits(btcOutputAmount, bitcoinDecimals);
+        const bitcoinOutputAmountInSats = parseUnits(btcOutputAmount, BITCOIN_DECIMALS);
         const exchangeRate = tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(bitcoinOutputAmountInSats);
 
-        const clipToDecimals = bitcoinDecimals;
+        const clipToDecimals = BITCOIN_DECIMALS;
         const precisionBN = BigNumber.from(10).pow(clipToDecimals);
         const clippedExchangeRate = exchangeRate.div(precisionBN).mul(precisionBN);
 

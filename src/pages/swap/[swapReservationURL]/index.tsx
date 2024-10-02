@@ -13,7 +13,7 @@ import { SwapAmounts } from '../../../components/swap/SwapAmounts';
 import { OpenGraph } from '../../../components/background/OpenGraph';
 import { ChromeLogoSVG, WarningSVG } from '../../../components/other/SVGs';
 import { FONT_FAMILIES } from '../../../utils/font';
-import { bitcoinDecimals, opaqueBackgroundColor } from '../../../utils/constants';
+import { BITCOIN_DECIMALS, opaqueBackgroundColor } from '../../../utils/constants';
 import { formatUnits } from 'ethers/lib/utils';
 import QRCode from 'qrcode.react';
 import swapReservationsAggregatorABI from '../../../abis/SwapReservationsAggregator.json';
@@ -25,12 +25,6 @@ import { bitcoin } from 'bitcoinjs-lib/src/networks';
 import { SwapReservation } from '../../../types';
 import { LuCopy } from 'react-icons/lu';
 import { AssetTag } from '../../../components/other/AssetTag';
-
-declare global {
-    interface Window {
-        rift?: any;
-    }
-}
 
 const ReservationDetails = () => {
     const router = useRouter();
@@ -60,14 +54,41 @@ const ReservationDetails = () => {
     const setSwapReservationNotFound = useStore((state) => state.setSwapReservationNotFound);
     const currentTotalBlockConfirmations = useStore((state) => state.currentTotalBlockConfirmations);
     const confirmationBlocksNeeded = useStore((state) => state.confirmationBlocksNeeded);
+    const [timeLeft, setTimeLeft] = useState('');
+
+    const [minutesLeft, setMinutesLeft] = useState(0);
+
+    useEffect(() => {
+        const calculateTimeLeft = () => {
+            const reservationTime = new Date(swapReservationData?.reservationTimestamp * 1000);
+            const endTime = new Date(reservationTime.getTime() + 60 * 60 * 1000); // Add 1 hour
+            const now = new Date();
+            const difference = endTime.getTime() - now.getTime();
+            if (difference > 0) {
+                const minutes = Math.floor(difference / (1000 * 60));
+                const seconds = Math.floor((difference / 1000) % 60);
+
+                setMinutesLeft(minutes);
+                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            setMinutesLeft(0);
+            return 'Expired';
+        };
+
+        const timer = setInterval(() => {
+            setTimeLeft(calculateTimeLeft());
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [swapReservationData?.reservationTimestamp]);
 
     const handleNavigation = (route: string) => {
         router.push(route);
     };
-
     useEffect(() => {
         if (typeof window !== 'undefined' && address && totalSwapAmountInSats) {
-            const uri = `bitcoin:${address}?amount=${formatUnits(totalSwapAmountInSats, bitcoinDecimals)}&label=Rift%20Exchange%20Swap`;
+            const uri = `bitcoin:${address}?amount=${formatUnits(totalSwapAmountInSats, BITCOIN_DECIMALS)}&label=Rift%20Exchange%20Swap`;
             setBitcoinUri(uri);
         }
     }, [address, lowestFeeReservationParams, totalSwapAmountInSats]);
@@ -274,167 +295,106 @@ const ReservationDetails = () => {
                                 <RecieveUsdt />
                             ) : (
                                 <>
-                                    {/* CHROME EXTENSION DETECTED */}
-                                    {typeof window !== 'undefined' && window.rift ? (
-                                        <>
-                                            <Text fontSize='16px' textAlign='center' w='800px' mt='-2px' mb='20px' fontWeight={'normal'} color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                                Your reservation is confirmed and your Rift Proxy Wallet is detected! Please send the Bitcoin amount to the address below:
+                                    <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight={'bold'} fontSize={'22px'} mt='-10px' mb='14px'>
+                                        Reservation Locked for{' '}
+                                        <span
+                                            style={{
+                                                color: minutesLeft >= 50 ? 'green' : minutesLeft >= 10 ? 'yellow' : 'red',
+                                            }}>
+                                            {timeLeft}
+                                        </span>
+                                    </Text>
+                                    <Text fontSize='16px' textAlign='center' w='800px' mt='-2px' mb='20px' fontWeight={'normal'} color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                        Your reservation is confirmed please send the following amount of Bitcoin to the address below within 1 hour to initiate the swap:
+                                    </Text>
+                                    <Flex mt='10px' mx='10px'>
+                                        {bitcoinUri && bitcoinUri !== '' && (
+                                            <Flex py='10px' px='10px' w={'270px'} borderRadius='10px' bg='white' mr='40px' boxShadow={'0px 15px 15px rgba(0, 16, 118, 0.4)'}>
+                                                <QRCode value={bitcoinUri} size={250} />
+                                            </Flex>
+                                        )}
+                                        <Flex direction={'column'}>
+                                            <Text mt='8px' fontSize='16px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                                Bitcoin Address:
                                             </Text>
-                                            <Flex mt='10px' mx='10px'>
-                                                {bitcoinUri && bitcoinUri !== '' && (
-                                                    <Flex py='10px' px='10px' w={'270px'} borderRadius='10px' bg='white' mr='40px' boxShadow={'0px 15px 15px rgba(0, 16, 118, 0.4)'}>
-                                                        <QRCode value={bitcoinUri} size={250} />
-                                                    </Flex>
-                                                )}
-                                                <Flex direction={'column'}>
-                                                    <Text mt='8px' fontSize='16px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
-                                                        Bitcoin Address:
-                                                    </Text>
-                                                    <Flex direction='column' alignItems='flex-start' maxW='200px'>
-                                                        {address ? (
-                                                            <>
-                                                                <Text
-                                                                    mt='6px'
-                                                                    fontSize='25px'
-                                                                    display='inline-flex'
-                                                                    letterSpacing={'-1px'}
-                                                                    color={colors.offWhite}
-                                                                    fontFamily={FONT_FAMILIES.AUX_MONO}
-                                                                    whiteSpace='nowrap'
-                                                                    overflow='hidden'
-                                                                    textOverflow='ellipsis'>
-                                                                    {address.slice(0, Math.floor((2 / 3) * address.length))}
-                                                                </Text>
-                                                                <Flex alignItems='center'>
-                                                                    <Text letterSpacing={'-1px'} fontSize='25px' display='inline-flex' color={colors.offWhite} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                                                        {address.slice(Math.floor((2 / 3) * address.length))}
-                                                                    </Text>
-                                                                    <LuCopy
-                                                                        color='gray'
-                                                                        size={20}
-                                                                        style={{
-                                                                            cursor: 'pointer',
-                                                                            marginLeft: '10px',
-                                                                        }}
-                                                                        onClick={() => navigator.clipboard.writeText(address)}
-                                                                    />
-                                                                </Flex>
-                                                            </>
-                                                        ) : (
-                                                            <Text mt='2px' fontSize='25px' color={colors.offWhite} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                                                Loading...
-                                                            </Text>
-                                                        )}
-                                                    </Flex>
-
-                                                    <Text mt='25px' fontSize='16px' mb='-18px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
-                                                        Deposit Amount:{' '}
-                                                    </Text>
-                                                    <Flex alignItems='center'>
+                                            <Flex direction='column' alignItems='flex-start' maxW='200px'>
+                                                {address ? (
+                                                    <>
                                                         <Text
-                                                            letterSpacing={'-1px'}
-                                                            mt='2px'
+                                                            mt='6px'
                                                             fontSize='25px'
-                                                            width={'500px'}
+                                                            display='inline-flex'
+                                                            letterSpacing={'-1px'}
                                                             color={colors.offWhite}
                                                             fontFamily={FONT_FAMILIES.AUX_MONO}
-                                                            display='inline-flex'
-                                                            flexDirection='row'
-                                                            alignItems='center'>
-                                                            {totalSwapAmountInSats ? (
-                                                                <>
-                                                                    {formatUnits(totalSwapAmountInSats, bitcoinDecimals)}
-                                                                    <LuCopy
-                                                                        color='gray'
-                                                                        size={20}
-                                                                        style={{
-                                                                            cursor: 'pointer',
-                                                                            marginLeft: '10px',
-                                                                        }}
-                                                                        onClick={() => navigator.clipboard.writeText(formatUnits(totalSwapAmountInSats, bitcoinDecimals).toString())}
-                                                                    />
-                                                                    <Flex ml='20px' mt='-1px'>
-                                                                        <AssetTag assetName='BTC' width='75px' />
-                                                                    </Flex>
-                                                                </>
-                                                            ) : (
-                                                                'Loading...'
-                                                            )}
+                                                            whiteSpace='nowrap'
+                                                            overflow='hidden'
+                                                            textOverflow='ellipsis'>
+                                                            {address.slice(0, Math.floor((2 / 3) * address.length))}
                                                         </Text>
-                                                    </Flex>
-                                                </Flex>
-                                            </Flex>
-
-                                            <Text fontWeight={'normal'} fontSize='13px' mt='32px' color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                                {proxyWalletSwapInternalID ? 'Internal ID - ' + proxyWalletSwapInternalID : 'Loading internal id...'}
-                                            </Text>
-                                        </>
-                                    ) : (
-                                        // INSTALL CHROME EXTENSION
-                                        <>
-                                            <Flex
-                                                bg={colors.offBlack}
-                                                w='100%'
-                                                mt='20px'
-                                                borderRadius='30px'
-                                                px='20px'
-                                                direction='column'
-                                                py='35px'
-                                                align='center'
-                                                borderWidth={3}
-                                                borderColor={colors.borderGray}>
-                                                <Flex maxW='600px' mt='20px' direction='column' align='center'>
-                                                    <WarningSVG width='60px' />
-
-                                                    <Text fontSize='15px' fontWeight='normal' color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='20px' flex='1'>
-                                                        Your Rift Proxy Wallet is not detected. If this is your first time swapping, please add the Rift Chrome Extension below:
+                                                        <Flex alignItems='center'>
+                                                            <Text letterSpacing={'-1px'} fontSize='25px' display='inline-flex' color={colors.offWhite} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                                                {address.slice(Math.floor((2 / 3) * address.length))}
+                                                            </Text>
+                                                            <LuCopy
+                                                                color='gray'
+                                                                size={20}
+                                                                style={{
+                                                                    cursor: 'pointer',
+                                                                    marginLeft: '10px',
+                                                                }}
+                                                                onClick={() => navigator.clipboard.writeText(address)}
+                                                            />
+                                                        </Flex>
+                                                    </>
+                                                ) : (
+                                                    <Text mt='2px' fontSize='25px' color={colors.offWhite} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                                        Loading...
                                                     </Text>
-                                                    <Flex
-                                                        width='100%'
-                                                        mt='60px'
-                                                        height='110px'
-                                                        mb='50px'
-                                                        onClick={() => {
-                                                            window.open('https://chromewebstore.google.com/', '_blank');
-                                                        }}
-                                                        cursor='pointer'
-                                                        flexShrink={0}
-                                                        bg={colors.purpleBackground}
-                                                        align='center'
-                                                        justify='center'
-                                                        borderWidth={3}
-                                                        borderColor={colors.purpleBorder}
-                                                        borderRadius='full'
-                                                        filter='drop-shadow(0px 0px 34.9px rgba(46, 64, 183, 0.33))'>
-                                                        <ChromeLogoSVG width='70px' />
-                                                        <Text fontSize='25px' ml='12px' fontFamily={FONT_FAMILIES.NOSTROMO}>
-                                                            INSTALL CHROME EXTENSION
-                                                        </Text>
-                                                    </Flex>
-                                                </Flex>
+                                                )}
                                             </Flex>
-                                            <Flex
-                                                bg={colors.offBlack}
-                                                _hover={{ bg: colors.offBlackLighter }}
-                                                w='400px'
-                                                mt='25px'
-                                                transition='0.2s'
-                                                h='45px'
-                                                fontSize='15px'
-                                                align='center'
-                                                userSelect='none'
-                                                cursor='pointer'
-                                                borderRadius='10px'
-                                                justify='center'
-                                                borderWidth='2px'
-                                                borderColor={colors.offBlackLighter2}>
-                                                <WarningSVG fill={colors.textGray} width='18px' />
-                                                <Text ml='10px' color={colors.textGray} fontFamily='Nostromo'>
-                                                    Rift Wallet Not Detected
+
+                                            <Text mt='25px' fontSize='16px' mb='-18px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                                Deposit Amount:{' '}
+                                            </Text>
+                                            <Flex alignItems='center'>
+                                                <Text
+                                                    letterSpacing={'-1px'}
+                                                    mt='2px'
+                                                    fontSize='25px'
+                                                    width={'500px'}
+                                                    color={colors.offWhite}
+                                                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                                                    display='inline-flex'
+                                                    flexDirection='row'
+                                                    alignItems='center'>
+                                                    {totalSwapAmountInSats ? (
+                                                        <>
+                                                            {formatUnits(totalSwapAmountInSats, BITCOIN_DECIMALS)}
+                                                            <LuCopy
+                                                                color='gray'
+                                                                size={20}
+                                                                style={{
+                                                                    cursor: 'pointer',
+                                                                    marginLeft: '10px',
+                                                                }}
+                                                                onClick={() => navigator.clipboard.writeText(formatUnits(totalSwapAmountInSats, BITCOIN_DECIMALS).toString())}
+                                                            />
+                                                            <Flex ml='20px' mt='-1px'>
+                                                                <AssetTag assetName='BTC' width='75px' />
+                                                            </Flex>
+                                                        </>
+                                                    ) : (
+                                                        'Loading...'
+                                                    )}
                                                 </Text>
                                             </Flex>
-                                        </>
-                                    )}
+                                        </Flex>
+                                    </Flex>
+
+                                    <Text fontWeight={'normal'} fontSize='13px' mt='32px' color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                        {proxyWalletSwapInternalID ? 'Internal ID - ' + proxyWalletSwapInternalID : 'Loading internal id...'}
+                                    </Text>
                                 </>
                             )}
                         </Flex>

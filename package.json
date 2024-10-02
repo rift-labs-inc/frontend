@@ -52,7 +52,14 @@
     "viem": "2.x",
     "wagmi": "^2.11.1",
     "zksync-web3": "0.7.9",
-    "zustand": "^4.1.4"
+    "zustand": "^4.1.4",
+        "@scure/bip32": "^1.4.0",
+    "bignumber.js": "^9.1.2",
+    "bip32": "^4.0.0",
+    "bip39": "^3.1.0",
+    "bitcoinjs-lib": "^6.1.6",
+    "ecpair": "^2.1.0",
+    "elliptic": "^6.5.6"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
