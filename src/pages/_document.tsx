@@ -6,7 +6,7 @@ export default function Document() {
         <Html lang='en'>
             <Head>
                 {/* Google Analytics */}
-                {/* <Script src='https://www.googletagmanager.com/gtag/js?id=G-BLG0ELKF6K' strategy='afterInteractive' async />
+                <Script src='https://www.googletagmanager.com/gtag/js?id=G-BLG0ELKF6K' strategy='afterInteractive' async />
                 <Script id='google-analytics' strategy='afterInteractive'>
                     {`
                         window.dataLayer = window.dataLayer || [];
@@ -15,9 +15,9 @@ export default function Document() {
 
                         gtag('config', 'G-BLG0ELKF6K');
                     `}
-                </Script> */}
+                </Script>
                 {/* Twitter Pixel */}
-                {/* <Script src='/twitter-pixel.js' strategy='lazyOnload' /> */}
+                <Script src='/twitter-pixel.js' strategy='lazyOnload' />
                 <link rel='icon' href='/images/assets/favicon.png' />
                 <link rel='preload' href='/fonts/KleinHeadline-BoldOblique.ttf' as='font' type='font/ttf' crossOrigin='anonymous' />
                 <link rel='preload' href='/fonts/AuxMono.otf' as='font' type='font/otf' crossOrigin='anonymous' />

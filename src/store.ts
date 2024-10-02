@@ -93,8 +93,8 @@ type Store = {
     setDepositMode: (mode: boolean) => void;
     withdrawAmount: string;
     setWithdrawAmount: (amount: string) => void;
-    reservationFeeAmountMicroUsdt: string;
-    setReservationFeeAmountMicroUsdt: (amount: string) => void;
+    protocolFeeAmountMicroUsdt: string;
+    setProtocolFeeAmountMicroUsdt: (amount: string) => void;
     swapReservationNotFound: boolean;
     setSwapReservationNotFound: (notFound: boolean) => void;
     currentReservationState: string;
@@ -329,8 +329,8 @@ export const useStore = create<Store>((set) => {
         setEthPayoutAddress: (ethPayoutAddress) => set({ ethPayoutAddress }),
         bitcoinSwapTransactionHash: '',
         setBitcoinSwapTransactionHash: (bitcoinSwapTransactionHash) => set({ bitcoinSwapTransactionHash }),
-        reservationFeeAmountMicroUsdt: '',
-        setReservationFeeAmountMicroUsdt: (reservationFeeAmountMicroUsdt) => set({ reservationFeeAmountMicroUsdt }),
+        protocolFeeAmountMicroUsdt: '',
+        setProtocolFeeAmountMicroUsdt: (protocolFeeAmountMicroUsdt) => set({ protocolFeeAmountMicroUsdt }),
         swapReservationNotFound: false,
         setSwapReservationNotFound: (swapReservationNotFound) => set({ swapReservationNotFound }),
         currentReservationState: '',

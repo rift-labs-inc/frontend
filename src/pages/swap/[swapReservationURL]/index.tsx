@@ -13,7 +13,7 @@ import { SwapAmounts } from '../../../components/swap/SwapAmounts';
 import { OpenGraph } from '../../../components/background/OpenGraph';
 import { ChromeLogoSVG, WarningSVG } from '../../../components/other/SVGs';
 import { FONT_FAMILIES } from '../../../utils/font';
-import { BITCOIN_DECIMALS, opaqueBackgroundColor } from '../../../utils/constants';
+import { BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, opaqueBackgroundColor } from '../../../utils/constants';
 import { formatUnits } from 'ethers/lib/utils';
 import QRCode from 'qrcode.react';
 import swapReservationsAggregatorABI from '../../../abis/SwapReservationsAggregator.json';
@@ -61,7 +61,7 @@ const ReservationDetails = () => {
     useEffect(() => {
         const calculateTimeLeft = () => {
             const reservationTime = new Date(swapReservationData?.reservationTimestamp * 1000);
-            const endTime = new Date(reservationTime.getTime() + 60 * 60 * 1000); // Add 1 hour
+            const endTime = new Date(reservationTime.getTime() + FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS * 1000); // Add 1 hour
             const now = new Date();
             const difference = endTime.getTime() - now.getTime();
             if (difference > 0) {
@@ -295,13 +295,13 @@ const ReservationDetails = () => {
                                 <RecieveUsdt />
                             ) : (
                                 <>
-                                    <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight={'bold'} fontSize={'22px'} mt='-10px' mb='14px'>
+                                    <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight={'bold'} fontSize={'24px'} mt='-5px' mb='20px'>
                                         Reservation Locked for{' '}
                                         <span
                                             style={{
-                                                color: minutesLeft >= 50 ? 'green' : minutesLeft >= 10 ? 'yellow' : 'red',
+                                                color: minutesLeft >= 50 ? colors.greenOutline : minutesLeft >= 10 ? 'yellow' : 'red',
                                             }}>
-                                            {timeLeft}
+                                            {timeLeft ? timeLeft : <Spinner color={colors.textGray} h={'18px'} w={'18px'} thickness='3px' speed='0.65s' />}
                                         </span>
                                     </Text>
                                     <Text fontSize='16px' textAlign='center' w='800px' mt='-2px' mb='20px' fontWeight={'normal'} color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>

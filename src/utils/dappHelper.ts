@@ -3,7 +3,7 @@ import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
 import * as bitcoin from 'bitcoinjs-lib';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, MAX_SWAP_LP_OUTPUTS, SATS_PER_BTC } from './constants';
+import { BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, MAX_SWAP_LP_OUTPUTS, PROTOCOL_FEE, PROTOCOL_FEE_DENOMINATOR, SATS_PER_BTC } from './constants';
 import { format } from 'path';
 import swapReservationsAggregatorABI from '../abis/SwapReservationsAggregator.json';
 import { getDepositVaults, getSwapReservations } from '../utils/contractReadFunctions';
@@ -267,13 +267,23 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
         }
     }
 
+    // calculate the protocol fee in micro USDT
+    const protocolFeeInMicroUsdt = totalMicroUsdtSwapOutput.mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
+
     // [6] calculate the total swap exchange rate in microusdtbuffered to 18 decimals per sat
     let totalSwapExchangeRate;
+    let totalExchangeRateWithProtocolFees;
     if (totalSatsUsed.gt(0)) {
+        totalExchangeRateWithProtocolFees = bufferTo18Decimals(totalMicroUsdtSwapOutput.sub(protocolFeeInMicroUsdt), depositVaults[0].depositAsset.decimals).div(totalSatsUsed);
         totalSwapExchangeRate = bufferTo18Decimals(totalMicroUsdtSwapOutput, depositVaults[0].depositAsset.decimals).div(totalSatsUsed);
     } else {
+        totalExchangeRateWithProtocolFees = BigNumber.from(0);
         totalSwapExchangeRate = BigNumber.from(0);
     }
+
+    console.log('bruh amount of USDT out before taking protocol fee:', formatUnits(totalMicroUsdtSwapOutput, depositVaults[0].depositAsset.decimals));
+    console.log('bruh PROTOCOL FEE in micro USDT:', protocolFeeInMicroUsdt.toString());
+    console.log('bruh amount of USDT out after taking protocol fee:', formatUnits(totalMicroUsdtSwapOutput.sub(protocolFeeInMicroUsdt), depositVaults[0].depositAsset.decimals));
 
     //TODO: handle over maxLpOutputs case?
 
@@ -287,11 +297,17 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
         btcPayoutLockingScripts,
         btcExchangeRates,
         totalSwapExchangeRate,
+        protocolFeeInMicroUsdt,
+        totalExchangeRateWithProtocolFees,
     };
 }
 
 export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputAmount, maxLpOutputs = MAX_SWAP_LP_OUTPUTS) {
-    // [0] validate inputs
+    // [0] calculate the protocol fee in micro USDT and inlcude in the output amount
+    const protocolFeeInMicroUsdt = microUsdtOutputAmount.mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
+    microUsdtOutputAmount = microUsdtOutputAmount.add(protocolFeeInMicroUsdt);
+
+    // [1] validate inputs
     if (!Array.isArray(depositVaults) || depositVaults.length === 0 || microUsdtOutputAmount.lte(0)) {
         return null;
     }
@@ -350,9 +366,12 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
 
     // [6] calculate the total swap exchange rate in microusdtbuffered to 18 decimals per sat
     let totalSwapExchangeRate;
+    let totalExchangeRateWithoutProtocolFees;
     if (totalSatsUsed.gt(0)) {
+        totalExchangeRateWithoutProtocolFees = bufferTo18Decimals(microUsdtOutputAmount.sub(protocolFeeInMicroUsdt), depositVaults[0].depositAsset.decimals).div(totalSatsUsed);
         totalSwapExchangeRate = bufferTo18Decimals(BigNumber.from(microUsdtOutputAmount), depositVaults[0].depositAsset.decimals).div(totalSatsUsed);
     } else {
+        totalExchangeRateWithoutProtocolFees = BigNumber.from(0);
         totalSwapExchangeRate = BigNumber.from(0);
     }
 
@@ -368,6 +387,8 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
         btcPayoutLockingScripts,
         btcExchangeRates,
         totalSwapExchangeRate,
+        protocolFeeInMicroUsdt,
+        totalExchangeRateWithoutProtocolFees,
     };
 }
 

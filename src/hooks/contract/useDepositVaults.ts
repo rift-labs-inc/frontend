@@ -63,15 +63,6 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 reservation.state === ReservationState.Expired ||
                 (reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS);
 
-            console.log('Processing reservation:', {
-                reservationIndex,
-                isCreated,
-                isCompleted,
-                isExpired,
-                isProved,
-                reservation,
-            });
-
             if (isCompleted) {
                 completedReservationsCount++;
             } else if (isProved) {

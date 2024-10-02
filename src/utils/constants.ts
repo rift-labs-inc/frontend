@@ -4,7 +4,7 @@ import { useStore } from '../store';
 import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
 export const isMainnet = false;
-export const MAX_SWAP_AMOUNT_USDT = 100; // USDT
+export const MAX_SWAP_AMOUNT_USDT = 100000000; // USDT
 export const MIN_SWAP_AMOUNT_USDT = 1; // USDT
 
 // MAINNET ARBITRUM

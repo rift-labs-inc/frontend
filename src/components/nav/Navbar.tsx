@@ -34,7 +34,7 @@ export const Navbar = ({}) => {
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
     const [formattedTotalAmount, setFormattedTotalAmount] = useState<string>('0');
-    const reservationFeeAmountMicroUsdt = useStore((state) => state.reservationFeeAmountMicroUsdt);
+    const protocolFeeAmountMicroUsdt = useStore((state) => state.protocolFeeAmountMicroUsdt);
 
     const [displayWarning, setDisplayWarning] = useState<boolean | undefined>(undefined);
 
@@ -282,9 +282,9 @@ export const Navbar = ({}) => {
                                     </Box>
                                 </Flex>
 
-                                {reservationFeeAmountMicroUsdt && (
+                                {protocolFeeAmountMicroUsdt && (
                                     <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mt={4} color={colors.textGray}>
-                                        {parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name} Reservation Fee
+                                        {parseFloat(formatUnits(protocolFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name} PROTOCOL FEE
                                     </Text>
                                 )}
                             </Flex>

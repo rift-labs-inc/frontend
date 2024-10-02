@@ -83,8 +83,8 @@ export const SwapUI = () => {
     const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
     const validAssets = useStore((state) => state.validAssets);
     const [proxyWalletSwapFastFee, setProxyWalletSwapFastFee] = useState(0);
-    const reservationFeeAmountMicroUsdt = useStore((state) => state.reservationFeeAmountMicroUsdt);
-    const setReservationFeeAmountMicroUsdt = useStore((state) => state.setReservationFeeAmountMicroUsdt);
+    const protocolFeeAmountMicroUsdt = useStore((state) => state.protocolFeeAmountMicroUsdt);
+    const setProtocolFeeAmountMicroUsdt = useStore((state) => state.setProtocolFeeAmountMicroUsdt);
     const [dots, setDots] = useState('');
     const [isNoLiquidityAvailable, setIsNoLiquidityAvailable] = useState(false);
     const [isNoLiquidityAvailableBtcInput, setIsNoLiquidityAvailableBtcInput] = useState(false);
@@ -185,7 +185,7 @@ export const SwapUI = () => {
 
     // calculate ideal reservation for bitcoin input
     const calculateIdealReservationBitcoinInput = async (amountBtcSwapInput) => {
-        // ensure there is liquidity available
+        // [0] ensure there is liquidity available
         setOverpayingBtcInput(false);
         setIsBelowMinBtcInput(false);
 
@@ -279,8 +279,8 @@ export const SwapUI = () => {
             setIsAboveMaxSwapLimitBtcInput(false);
         }
 
-        // check if output is less than 1 usdt
-        if (parseFloat(formatUnits(newIdealReservationDetails.totalMicroUsdtSwapOutput, selectedInputAsset.decimals)) < MIN_SWAP_AMOUNT_USDT) {
+        // check if output - protocol fee is less than 1 usdt
+        if (parseFloat(formatUnits(newIdealReservationDetails.totalMicroUsdtSwapOutput.sub(newIdealReservationDetails.protocolFeeInMicroUsdt), selectedInputAsset.decimals)) < MIN_SWAP_AMOUNT_USDT) {
             console.log(`BELOW MIN ${MIN_SWAP_AMOUNT_USDT} USDT OUTPUT`, newIdealReservationDetails?.totalMicroUsdtSwapOutput);
             setIsBelowMinBtcInput(true);
             setUsdtOutputSwapAmount('');
@@ -294,17 +294,21 @@ export const SwapUI = () => {
 
         // set new exchange rate & usdt output based on new ideal reservation
         if (newIdealReservationDetails) {
-            // account for the prover, releaser, and protocol fees
-            const protocolFee = BigNumber.from(idealReservationDetails.totalMicroUsdtSwapOutput).mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
-            console.log('PROTOCOL FEE:', protocolFee.toString());
-            const reservationFee = selectedInputAsset.releaserFee.add(selectedInputAsset.proverFee).add(protocolFee);
-            console.log('TOTAL reservation fee:', reservationFee.toString());
-            setReservationFeeAmountMicroUsdt(reservationFee.toString());
+            setProtocolFeeAmountMicroUsdt(newIdealReservationDetails.protocolFeeInMicroUsdt.toString());
+            setUsdtOutputSwapAmount(
+                formatAmountToString(
+                    selectedInputAsset,
+                    formatUnits(newIdealReservationDetails?.totalMicroUsdtSwapOutput.sub(newIdealReservationDetails.protocolFeeInMicroUsdt) ?? BigNumber.from(0), selectedInputAsset.decimals),
+                ),
+            );
+            setUsdtDepositAmount(
+                formatAmountToString(
+                    selectedInputAsset,
+                    formatUnits(newIdealReservationDetails?.totalMicroUsdtSwapOutput.sub(newIdealReservationDetails.protocolFeeInMicroUsdt) ?? BigNumber.from(0), selectedInputAsset.decimals),
+                ),
+            );
 
-            setUsdtOutputSwapAmount(formatAmountToString(selectedInputAsset, formatUnits(newIdealReservationDetails?.totalMicroUsdtSwapOutput ?? BigNumber.from(0), selectedInputAsset.decimals)));
-            setUsdtDepositAmount(formatAmountToString(selectedInputAsset, formatUnits(newIdealReservationDetails?.totalMicroUsdtSwapOutput ?? BigNumber.from(0), selectedInputAsset.decimals)));
-
-            setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(newIdealReservationDetails?.totalSwapExchangeRate, selectedInputAsset.decimals)).toFixed(2)));
+            setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(newIdealReservationDetails?.totalExchangeRateWithProtocolFees, selectedInputAsset.decimals)).toFixed(2)));
             const reserveLiquidityParams: ReserveLiquidityParams = {
                 swapAmountInSats: BigNumber.from(newIdealReservationDetails?.totalSatsUsed).toNumber(),
                 vaultIndexesToReserve: newIdealReservationDetails.vaultIndexes,
@@ -373,16 +377,9 @@ export const SwapUI = () => {
 
         // set new exchange rate & usdt output based on new ideal reservation
         if (idealReservationDetails) {
-            // account for the prover, releaser, and protocol fees
-            const protocolFee = BigNumber.from(idealReservationDetails.totalMicroUsdtOutput).mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
-            console.log('PROTOCOL FEE:', protocolFee.toString());
-            const reservationFee = selectedInputAsset.releaserFee.add(selectedInputAsset.proverFee).add(protocolFee);
-            console.log('TOTAL reservation fee:', reservationFee.toString());
-            setReservationFeeAmountMicroUsdt(reservationFee.toString());
-
             setBtcInputSwapAmount(formatUnits(newAmountSatsSwapInput, BITCOIN_DECIMALS).toString());
             setBtcOutputAmount(formatUnits(newAmountSatsSwapInput, BITCOIN_DECIMALS).toString());
-            setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(idealReservationDetails?.totalSwapExchangeRate, selectedInputAsset.decimals)).toFixed(2)));
+            setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(idealReservationDetails?.totalExchangeRateWithoutProtocolFees, selectedInputAsset.decimals)).toFixed(2)));
             const reserveLiquidityParams: ReserveLiquidityParams = {
                 swapAmountInSats: BigNumber.from(idealReservationDetails?.totalSatsUsed).toNumber(),
                 vaultIndexesToReserve: idealReservationDetails.vaultIndexes,
@@ -630,7 +627,7 @@ export const SwapUI = () => {
                                 {/* {parseFloat(btcInputSwapAmount) != 0 &&
                                     btcInputSwapAmount &&
                                     !isAboveMaxSwapLimitBtcInput &&
-                                    reservationFeeAmountMicroUsdt &&
+                                    protocolFeeAmountMicroUsdt &&
                                     !overpayingBtcInput &&
                                     !isBelowMinBtcInput && (
                                         <Text
@@ -643,7 +640,7 @@ export const SwapUI = () => {
                                             letterSpacing={'-1.5px'}
                                             fontWeight={'normal'}
                                             fontFamily={'Aux'}>
-                                            {`+ $${parseFloat(formatUnits(reservationFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} USDT`}
+                                            {`+ $${parseFloat(formatUnits(protocolFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} USDT`}
                                         </Text>
                                     )} */}
                                 {isNoLiquidityAvailableBtcInput && (

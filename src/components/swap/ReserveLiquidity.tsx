@@ -49,7 +49,6 @@ export const ReserveLiquidity = ({}) => {
     const [isAwaitingConnection, setIsAwaitingConnection] = useState(false);
     const { openConnectModal } = useConnectModal();
     const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
-    const reservationFeeAmountMicroUsdt = useStore((state) => state.reservationFeeAmountMicroUsdt);
     const [isWaitingForCorrectNetwork, setIsWaitingForCorrectNetwork] = useState(false);
     const [isEthereumPayoutAddressValid, setIsEthereumPayoutAddressValid] = useState<boolean>(false);
     const isPayingFeesInBTC = useStore((state) => state.isPayingFeesInBTC);
