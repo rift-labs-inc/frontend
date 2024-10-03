@@ -162,7 +162,8 @@ useEffect(() => {
     useEffect(() => {
         const continuouslyCalculateProxyWalletFee = () => {
             getRiftSwapFees(1).then((fees) => {
-                setFastestProxyWalletFeeInSats(fees.fastFeeAmount);
+                console.log('going fees', fees);
+                setFastestProxyWalletFeeInSats(fees.fastFeeAmount !== undefined ? fees.fastFeeAmount : 550);
             });
         };
 

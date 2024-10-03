@@ -319,16 +319,17 @@ export function calculateProtocolFeeInMicroUsdt(microUsdtOutputAmount) {
 }
 
 export function calculateOriginalAmountBeforeFee(totalAmountWithFee: BigNumber): BigNumber {
-    // Original amount = (Total amount * FEE_DENOMINATOR) / (FEE_DENOMINATOR + PROTOCOL_FEE)
-    let originalAmount = totalAmountWithFee.mul(PROTOCOL_FEE_DENOMINATOR).div(PROTOCOL_FEE_DENOMINATOR.add(PROTOCOL_FEE));
-    
-    // Handle the case where the fee would be zero
-    if (originalAmount.eq(totalAmountWithFee)) {
-        originalAmount = totalAmountWithFee.sub(10000);
+
+                    let roundedOutputAmount = BigNumber.from(totalAmountWithFee)
+                        .mul(PROTOCOL_FEE_DENOMINATOR)
+                        .div(PROTOCOL_FEE.add(PROTOCOL_FEE_DENOMINATOR))
+                        // .add(1)  
+                    if (roundedOutputAmount.isZero()) {
+                        roundedOutputAmount = BigNumber.from(10000);
     }
-    
-    return originalAmount;
+    return roundedOutputAmount;
 }
+
 
 
 

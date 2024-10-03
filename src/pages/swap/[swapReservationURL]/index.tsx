@@ -309,6 +309,10 @@ const ReservationDetails = () => {
                             ) : (
                                 <>
                                     <Flex alignItems="center" fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight={'bold'} fontSize={'24px'} mt='-5px' mb='18px'>
+                                        <Flex  mr='10px' mt='-1px'>
+
+                                                    <FaClock size={'22px'} color={colors.darkerGray}  />
+                                                    </Flex>
                                         <Text marginRight="4px">Reservation Locked for:</Text>
                                         <span
                                             style={{
@@ -320,7 +324,6 @@ const ReservationDetails = () => {
                                                 <>
                                                     <Flex  mr='7px' mt='-1px'>
 
-                                                    <FaClock size={'22px'} color={minutesLeft >= 20 ? colors.greenOutline : minutesLeft >= 10 ? 'yellow' : 'red'} style={{ marginLeft: '8px' }} />
                                                     </Flex>
                                                     {timeLeft}
                                                 </>
@@ -332,8 +335,8 @@ const ReservationDetails = () => {
                                             )}
                                         </span>
                                     </Flex>
-                                    <Text fontSize='16px' textAlign='center' w='800px' mt='-2px' mb='20px' fontWeight={'normal'} color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                        Your reservation is confirmed please send the following amount of Bitcoin to the address below within 1 hour to initiate the swap:
+                                    <Text fontSize='16px' textAlign='center' w='800px' mt='0px' mb='20px' fontWeight={'normal'} color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                        Your reservation is confirmed - please send the following amount of Bitcoin to the address below within 1 hour to initiate the swap:
                                     </Text>
                                     <Flex mt='10px' mx='10px'>
                                         {bitcoinUri && bitcoinUri !== '' && (
