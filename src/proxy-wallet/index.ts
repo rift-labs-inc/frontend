@@ -22,15 +22,5 @@ export async function dispatchRequest(data: { data: { method: string; params: an
 }
 
 
-chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
-  if (sender.tab && sender.tab.url && RIFT_URL_PATTERN.test(sender.tab.url)) {
-    // Return true to indicate that we will be sending a response asynchronously
-    dispatchRequest(data, sendResponse);
-    return true;
-  } else {
-    console.log("Ignoring message from non-Rift tab:", sender.tab?.url);
-    return false;
-  }
-});
 
 console.log("Background script loaded");
