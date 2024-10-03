@@ -21,7 +21,6 @@ export type SwapReservation = {
     nonce: string;
     indexInContract?: number;
     totalSatsInputInlcudingProxyFee: BigNumber;
-    protocolFee: BigNumber;
     totalSwapOutputAmount: BigNumber;
     proposedBlockHeight: BigNumber;
     proposedBlockHash: string;

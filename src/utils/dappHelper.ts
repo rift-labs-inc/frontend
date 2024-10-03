@@ -279,23 +279,18 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
     });
 
     // calculate the protocol fee in micro USDT
-    console.log('proc totalMicroUsdtSwapOutput HERE:', totalMicroUsdtSwapOutput.toString()); 
-    const protocolFeeInMicroUsdt = totalMicroUsdtSwapOutput.mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
+    const protocolFeeInMicroUsdt = calculateProtocolFeeInMicroUsdt(totalMicroUsdtSwapOutput);
 
     // [6] calculate the total swap exchange rate in microusdtbuffered to 18 decimals per sat
     let totalSwapExchangeRate;
-    let totalExchangeRateWithProtocolFees;
+    let effectiveExchangeRateForUser;
     if (totalSatsUsed.gt(0)) {
-        totalExchangeRateWithProtocolFees = bufferTo18Decimals(totalMicroUsdtSwapOutput.sub(protocolFeeInMicroUsdt), depositVaults[0].depositAsset.decimals).div(totalSatsUsed);
         totalSwapExchangeRate = bufferTo18Decimals(totalMicroUsdtSwapOutput, depositVaults[0].depositAsset.decimals).div(totalSatsUsed);
+        effectiveExchangeRateForUser = bufferTo18Decimals(totalMicroUsdtSwapOutput.sub(protocolFeeInMicroUsdt), depositVaults[0].depositAsset.decimals).div(totalSatsUsed);
     } else {
-        totalExchangeRateWithProtocolFees = BigNumber.from(0);
         totalSwapExchangeRate = BigNumber.from(0);
+        effectiveExchangeRateForUser = BigNumber.from(0);
     }
-
-    console.log('bruh amount of USDT out before taking protocol fee:', formatUnits(totalMicroUsdtSwapOutput, depositVaults[0].depositAsset.decimals));
-    console.log('bruh PROTOCOL FEE in micro USDT:', protocolFeeInMicroUsdt.toString());
-    console.log('bruh amount of USDT out after taking protocol fee:', formatUnits(totalMicroUsdtSwapOutput.sub(protocolFeeInMicroUsdt), depositVaults[0].depositAsset.decimals));
 
     //TODO: handle over maxLpOutputs case?
 
@@ -310,14 +305,38 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
         btcExchangeRates,
         totalSwapExchangeRate,
         protocolFeeInMicroUsdt,
-        totalExchangeRateWithProtocolFees,
+        effectiveExchangeRateForUser,
     };
 }
 
+export function calculateProtocolFeeInMicroUsdt(microUsdtOutputAmount) {
+    let protocolFeeInMicroUsdt = microUsdtOutputAmount.mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
+    protocolFeeInMicroUsdt = protocolFeeInMicroUsdt;
+    if (protocolFeeInMicroUsdt.isZero()) {
+        protocolFeeInMicroUsdt = BigNumber.from(10000);
+    }
+    return protocolFeeInMicroUsdt;
+}
+
+export function calculateOriginalAmountBeforeFee(totalAmountWithFee: BigNumber): BigNumber {
+    // Original amount = (Total amount * FEE_DENOMINATOR) / (FEE_DENOMINATOR + PROTOCOL_FEE)
+    let originalAmount = totalAmountWithFee.mul(PROTOCOL_FEE_DENOMINATOR).div(PROTOCOL_FEE_DENOMINATOR.add(PROTOCOL_FEE));
+    
+    // Handle the case where the fee would be zero
+    if (originalAmount.eq(totalAmountWithFee)) {
+        originalAmount = totalAmountWithFee.sub(10000);
+    }
+    
+    return originalAmount;
+}
+
+
+
 export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputAmount, maxLpOutputs = MAX_SWAP_LP_OUTPUTS) {
     // [0] calculate the protocol fee in micro USDT and inlcude in the output amount
-    const protocolFeeInMicroUsdt = microUsdtOutputAmount.mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
-    console.log('procbruh protocolFeeInMicroUsdt:', protocolFeeInMicroUsdt.toString());
+    console.log('really microUsdtOutputAmount:', microUsdtOutputAmount.toString());
+    const protocolFeeInMicroUsdt = calculateProtocolFeeInMicroUsdt(microUsdtOutputAmount);
+    console.log('really protocolFeeInMicroUsdt:', protocolFeeInMicroUsdt.toString());
     microUsdtOutputAmount = microUsdtOutputAmount.add(protocolFeeInMicroUsdt);
 
     // [1] validate inputs
@@ -384,9 +403,6 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
         effectiveExchangeRateForUser = BigNumber.from(0);
         totalSwapExchangeRate = BigNumber.from(0);
     }
-
-    console.log('procbruh totalSwapExchangeRate:', totalSwapExchangeRate.toString());
-    console.log('procbruh effectiveExchangeRateForUser:', effectiveExchangeRateForUser.toString());
 
     //TODO: handle over maxLpOutputs case?
 

@@ -77,7 +77,7 @@ export const RecieveUsdt = () => {
     useEffect(() => {
         const calculateTimeLeft = () => {
             const currentTime = Math.floor(Date.now() / 1000);
-            const endTime = swapReservationData.unlockTimestamp; // unlock timestamp is actually the time when the swap becomes fully Proved
+            const endTime = swapReservationData.liquidityUnlockedTimestamp; // unlock timestamp is actually the time when the swap becomes fully Proved
             const remainingTime = endTime - currentTime;
             setTimeLeft(remainingTime > 0 ? remainingTime : 0);
         };

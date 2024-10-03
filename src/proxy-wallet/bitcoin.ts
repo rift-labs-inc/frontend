@@ -197,7 +197,9 @@ async function executeRiftSwapOnAvailableUTXO(swapData: CreateRiftSwapArgs, rece
     for (let i = 0; i < MAX_RESERVATION_DURATION / UTXO_POLLING_INTERVAL; i++) {
         // show minutes remaining
         console.log(`Polling for UTXO, ${MAX_RESERVATION_DURATION / 60 - (i * UTXO_POLLING_INTERVAL) / 60} minutes remaining`);
-        const utxos = await fetchAddressUTXOs(wallet.address, mempoolApiHostname);
+        try {   
+            const utxos = await fetchAddressUTXOs(wallet.address, mempoolApiHostname);
+        
         const utilizedUtxo = utxos.find((utxo) => utxo.value >= swappedBtc);
         if (utilizedUtxo) {
             console.log('Found available UTXO', utilizedUtxo);
@@ -212,6 +214,8 @@ async function executeRiftSwapOnAvailableUTXO(swapData: CreateRiftSwapArgs, rece
             await storage.updateSwapStatus(internalSwapId, SwapStatus.PAYMENT_TRANSACTION_SENT, txDetails.txid);
             console.log('Transaction broadcasted successfully');
             return;
+        }} catch (e) {
+            console.error(e);
         }
         await new Promise((resolve) => setTimeout(resolve, UTXO_POLLING_INTERVAL * 1000));
     }

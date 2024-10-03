@@ -216,7 +216,7 @@ export const Navbar = ({}) => {
                                     );
                                 })}
                             </VStack>
-                            <Flex direction='column' mt='240px' align='center' width='100%'>
+                            <Flex direction='column' mt='200px' align='center' width='100%'>
                                 <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
                                     Vault Selection Algo VISUALIZER
                                 </Text>
@@ -285,11 +285,18 @@ export const Navbar = ({}) => {
                                 </Flex>
 
                                 {protocolFeeAmountMicroUsdt && (
-                                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mt={4} color={colors.textGray}>
-                                        {parseFloat(formatUnits(protocolFeeAmountMicroUsdt, selectedInputAsset.decimals)).toFixed(2)} {selectedInputAsset.name} PROTOCOL FEE
-                                    </Text>
+                                    <>
+                                        <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mt={4} color={colors.textGray}>
+                                            {protocolFeeAmountMicroUsdt.toString()} MICRO {selectedInputAsset.name} PROTOCOL FEE
+                                        </Text>
+                                        <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mt={4} color={colors.textGray}>
+                                            {parseFloat(formatUnits(protocolFeeAmountMicroUsdt, selectedInputAsset.decimals))} {selectedInputAsset.name} PROTOCOL FEE
+                                        </Text>
+                                    </>
                                 )}
                             </Flex>
+
+
 
                             <Flex position='absolute' top={windowSize.height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
                                 <StatCard label='Total Available Liquidity' value={`${formatUnits(availableLiquidity, selectedInputAsset.decimals)} ${selectedInputAsset.name}`} />

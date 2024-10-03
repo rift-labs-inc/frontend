@@ -4,7 +4,7 @@ import { useStore } from '../../../store';
 import { Text, Flex, Image, Center, Box, Button, color, Spinner } from '@chakra-ui/react';
 import { Navbar } from '../../../components/nav/Navbar';
 import { colors } from '../../../utils/colors';
-import { bufferTo18Decimals, calculateBtcOutputAmountFromExchangeRate, decodeReservationUrl, fetchReservationDetails } from '../../../utils/dappHelper';
+import { bufferTo18Decimals, calculateBtcOutputAmountFromExchangeRate, calculateOriginalAmountBeforeFee, decodeReservationUrl, fetchReservationDetails } from '../../../utils/dappHelper';
 import CurrencyModal from '../../../components/swap/CurrencyModal';
 import { RecieveUsdt } from '../../../components/swap/RecieveUsdt';
 import { SwapStatusTimeline } from '../../../components/swap/SwapStatusTimeline';
@@ -130,9 +130,9 @@ const ReservationDetails = () => {
             window.rift
                 .getRiftSwapStatus({ internalId: swapReservationData.nonce })
                 .then((status) => {
-                    console.log('Swap status from proxy wallet:', status);
-                    console.log('Swap flow state:', swapFlowState);
-                    console.log('Current reservation state:', currentReservationState);
+                    // console.log('Swap status from proxy wallet:', status);
+                    // console.log('Swap flow state:', swapFlowState);
+                    // console.log('Current reservation state:', currentReservationState);
 
                     // New condition to check currentReservationState
                     if (status.status === 1 && currentReservationState !== 'Proved' && currentReservationState !== 'Completed' && currentReservationState !== 'Expired') {
@@ -182,14 +182,17 @@ const ReservationDetails = () => {
 
 
                     
-                    // set swap amounts
-                    const outputAmountInMicroUsdtWithoutProtocolFee = BigNumber.from(reservationDetails.totalReservedAmountInMicroUsdt)
-                        .mul(PROTOCOL_FEE_DENOMINATOR)
-                        .div(PROTOCOL_FEE.add(PROTOCOL_FEE_DENOMINATOR));
-                    console.log('proc totalReservedAmountInMicroUsdt:', reservationDetails.totalReservedAmountInMicroUsdt.toString());
-                    console.log('proc outputAmountInMicroUsdtWithoutProtocolFee:', outputAmountInMicroUsdtWithoutProtocolFee.toString());
+                   const microUsdtOutputAmountWithoutFee = calculateOriginalAmountBeforeFee(reservationDetails.totalReservedAmountInMicroUsdt);
+                    console.log('proc reservationDetails.totalReservedAmountInMicroUsdt:', reservationDetails.totalReservedAmountInMicroUsdt.toString());
+                    console.log('proc calculateOriginalAmountBeforeFee', microUsdtOutputAmountWithoutFee.toString());
+                    const trueProtocolFee =  reservationDetails.totalReservedAmountInMicroUsdt.sub(microUsdtOutputAmountWithoutFee).toString();
+                    console.log('proc trueProtocolFee:', trueProtocolFee);
+                    const trueMircoUsdtSwapOutputAmount = reservationDetails.totalReservedAmountInMicroUsdt.sub(trueProtocolFee).toString();
+                    console.log('proc trueMircoUsdtSwapOutputAmount:', trueMircoUsdtSwapOutputAmount);
 
-                    setUsdtOutputSwapAmount(formatUnits(outputAmountInMicroUsdtWithoutProtocolFee, selectedInputAsset.decimals));
+                    setUsdtOutputSwapAmount(
+                        formatUnits(
+                            trueMircoUsdtSwapOutputAmount.toString(), selectedInputAsset.decimals));
                     setBtcInputSwapAmount(reservationDetails.btcInputSwapAmount);
                     setTotalSwapAmountInSats(reservationDetails.totalSwapAmountInSats);
                 } catch (error) {

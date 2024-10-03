@@ -13,6 +13,7 @@ import {
     bufferTo18Decimals,
     calculateBestVaultsForBitcoinInput,
     calculateBestVaultsForUsdtOutput,
+    calculateProtocolFeeInMicroUsdt,
     ethToWei,
     formatAmountToString,
     formatBtcExchangeRate,
@@ -122,13 +123,15 @@ export const SwapUI = () => {
     }, [loading]);
 
     // set available liquidity
-    useEffect(() => {
-        if (selectedInputAsset && validAssets[selectedInputAsset.name]) {
-            const totalAvailableLiquidity = validAssets[selectedInputAsset.name]?.totalAvailableLiquidity;
-            setAvailableLiquidity(totalAvailableLiquidity ?? BigNumber.from(0));
-            setAvailableLiquidityInUSDT(Number(formatUnits(totalAvailableLiquidity, selectedInputAsset.decimals)).toFixed(2).toString());
-        }
-    }, [selectedInputAsset, validAssets]);
+useEffect(() => {
+    if (selectedInputAsset && validAssets[selectedInputAsset.name]) {
+        const totalAvailableLiquidity = validAssets[selectedInputAsset.name]?.totalAvailableLiquidity;
+        const protocolFeeAmount = calculateProtocolFeeInMicroUsdt(totalAvailableLiquidity);
+        const liquidityMinusFee = totalAvailableLiquidity.sub(protocolFeeAmount);
+        setAvailableLiquidity(liquidityMinusFee);
+        setAvailableLiquidityInUSDT(Number(formatUnits(liquidityMinusFee, selectedInputAsset.decimals)).toFixed(2).toString());
+    }
+}, [selectedInputAsset, validAssets]);
 
     // function to continuously call refreshAllDepositData
     useEffect(() => {
@@ -144,21 +147,6 @@ export const SwapUI = () => {
             return () => clearInterval(intervalId);
         }
     }, [isConnected, address]);
-
-    // function to continuously calculate the minimum BTC input
-    useEffect(() => {
-        const continuouslyCalculateMinReservation = () => {
-            if (allDepositVaults) {
-                calcuateMinimumReservationSatsInputAmount();
-            }
-        };
-
-        if (allDepositVaults) {
-            continuouslyCalculateMinReservation();
-            const intervalId = setInterval(continuouslyCalculateMinReservation, 5000);
-            return () => clearInterval(intervalId);
-        }
-    }, [allDepositVaults]);
 
     const checkAmountBelowMinUsdtOutput = useCallback(
         (amount: string | null): boolean => {
@@ -207,7 +195,7 @@ export const SwapUI = () => {
 
         // [1] calculate INITIAL best vault combo given input value
         let idealReservationDetails = calculateBestVaultsForBitcoinInput(allDepositVaults, amountSatsSwapInput);
-        console.log('INITIAL idealReservationDetails:', idealReservationDetails);
+        console.log('going INITIAL idealReservationDetails:', idealReservationDetails);
 
         // [2] ensure there is a valid initial reservation output
         if (!idealReservationDetails?.totalMicroUsdtSwapOutput) {
@@ -221,16 +209,17 @@ export const SwapUI = () => {
         const proxyWalletSwapFeeInSats = fastestProxyWalletFeeInSats;
         const newAmountSatsSwapInput = amountSatsSwapInput.sub(BigNumber.from(proxyWalletSwapFeeInSats));
 
-        console.log('typed sats input amount', amountSatsSwapInput.toString());
-        console.log('-proxy wallet fee in sats', proxyWalletSwapFeeInSats);
-        console.log('new amountSatsSwapInput:', newAmountSatsSwapInput.toString());
+        console.log('going FIRST ROUND totalMicroUsdtSwapOutput', idealReservationDetails.totalMicroUsdtSwapOutput.toString());
+        console.log('going typed sats input amount', amountSatsSwapInput.toString());
+        console.log('going -proxy wallet fee in sats', proxyWalletSwapFeeInSats);
+        console.log('going new amountSatsSwapInput:', newAmountSatsSwapInput.toString());
 
         // if new amount sats swap input is less than the typed amount + fees, set overpaying flag
         if (amountSatsSwapInput.sub(BigNumber.from(proxyWalletSwapFeeInSats)).gt(idealReservationDetails.totalSatsUsed)) {
             //  check if output is above max swap limit
-            console.log('ABOVE MAX SWAP LIMIT', idealReservationDetails?.totalMicroUsdtSwapOutput);
+            console.log('going ABOVE MAX SWAP LIMIT', idealReservationDetails?.totalMicroUsdtSwapOutput);
             if (idealReservationDetails.totalMicroUsdtSwapOutput.gt(BigNumber.from(MAX_SWAP_AMOUNT_MICRO_USDT))) {
-                console.log('ABOVE MAX SWAP LIMIT', idealReservationDetails?.totalMicroUsdtSwapOutput);
+                console.log('going ABOVE MAX SWAP LIMIT', idealReservationDetails?.totalMicroUsdtSwapOutput);
                 setIsAboveMaxSwapLimitBtcInput(true);
                 setUsdtOutputSwapAmount('');
                 setUsdtDepositAmount('');
@@ -251,7 +240,7 @@ export const SwapUI = () => {
 
         // check if sats to spend is less than 0 (meaning fees are too high)
         console.log('newAmountSatsSwapInput:', newAmountSatsSwapInput.toString());
-        if (newAmountSatsSwapInput.lt(BigNumber.from(1))) {
+        if (newAmountSatsSwapInput.lte(BigNumber.from(0))) {
             console.log('NEGATIVE SATS below min btc input');
             setIsBelowMinBtcInput(true);
             setUsdtOutputSwapAmount('');
@@ -263,10 +252,12 @@ export const SwapUI = () => {
 
         // [4] re-run vault combo calculation with new input amount
         const newIdealReservationDetails = calculateBestVaultsForBitcoinInput(allDepositVaults, newAmountSatsSwapInput);
-        console.log('NEW idealReservationDetails:', newIdealReservationDetails);
-
+        console.log('going NEW idealReservationDetails:', newIdealReservationDetails);
+        console.log('going SECOND ROUND idealReservationDetails.totalMicroUsdtSwapOutput', newIdealReservationDetails.totalMicroUsdtSwapOutput.toString());
+        console.log('going SECOND ROUND idealReservationDetails.protocolFeeInMicroUsdt', newIdealReservationDetails.protocolFeeInMicroUsdt.toString());
+        console.log('going SECOND ROUND new totalMicroUsdtSwapOutput', newIdealReservationDetails.totalMicroUsdtSwapOutput.sub(newIdealReservationDetails.protocolFeeInMicroUsdt).toString());
+        
         // check if output is above max swap limit
-        console.log('newIdealReservationDetails?.totalMicroUsdtSwapOutput:', newIdealReservationDetails?.totalMicroUsdtSwapOutput);
         if (newIdealReservationDetails.totalMicroUsdtSwapOutput.gt(BigNumber.from(MAX_SWAP_AMOUNT_MICRO_USDT))) {
             console.log('ABOVE MAX SWAP LIMIT', newIdealReservationDetails?.totalMicroUsdtSwapOutput);
             setIsAboveMaxSwapLimitBtcInput(true);
@@ -292,7 +283,6 @@ export const SwapUI = () => {
             setIsBelowMinBtcInput(false);
         }
 
-        // 5895 out fee
         // set new exchange rate & usdt output based on new ideal reservation
         if (newIdealReservationDetails) {
             console.log('proc newIdealReservationDetails.protocolFeeInMicroUsdt:', newIdealReservationDetails.protocolFeeInMicroUsdt.toString());
@@ -314,7 +304,7 @@ export const SwapUI = () => {
                 ),
             );
 
-            setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(newIdealReservationDetails?.totalExchangeRateWithProtocolFees, selectedInputAsset.decimals)).toFixed(2)));
+            setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(newIdealReservationDetails?.effectiveExchangeRateForUser, selectedInputAsset.decimals)).toFixed(2)));
             const reserveLiquidityParams: ReserveLiquidityParams = {
                 swapAmountInSats: BigNumber.from(newIdealReservationDetails?.totalSatsUsed).toNumber(),
                 vaultIndexesToReserve: newIdealReservationDetails.vaultIndexes,
@@ -336,18 +326,17 @@ export const SwapUI = () => {
         }
     };
 
-    // calculate minimum sats input amount for 1 usdt output
-    const calcuateMinimumReservationSatsInputAmount = async () => {
-        const minReservation = calculateBestVaultsForUsdtOutput(allDepositVaults, parseUnits('1', selectedInputAsset.decimals)); // min 1 usdt output
-        if (!minReservation) return;
-        const minProxyFee = fastestProxyWalletFeeInSats;
-        if (!minProxyFee) return;
-        const updatedMinReservationSatsInputAmount = minReservation.totalSatsUsed.add(BigNumber.from(minProxyFee));
-        const minReservationBtcInputAmount = formatUnits(updatedMinReservationSatsInputAmount.add(BigNumber.from(1)), BITCOIN_DECIMALS).toString();
-        setMinBtcInputAmount(minReservationBtcInputAmount);
-        return minReservationBtcInputAmount;
-    };
-
+    // calculate minimum sats input amount for minimum usdt output
+const calcuateMinimumReservationSatsInputAmount = () => {
+    const minReservation = calculateBestVaultsForUsdtOutput(allDepositVaults, parseUnits(MIN_SWAP_AMOUNT_USDT.toString(), selectedInputAsset.decimals));
+    if (!minReservation) return;
+    const minProxyFee = fastestProxyWalletFeeInSats;
+    if (!minProxyFee) return;
+    const updatedMinReservationSatsInputAmount = minReservation.totalSatsUsed.add(BigNumber.from(minProxyFee));
+    const minReservationBtcInputAmount = formatUnits(updatedMinReservationSatsInputAmount.add(BigNumber.from(1)), BITCOIN_DECIMALS).toString();
+    setMinBtcInputAmount(minReservationBtcInputAmount);
+    return minReservationBtcInputAmount;
+};
     // calculate ideal reservation for usdt output
     const calculateIdealReservationUsdtOutput = async (amountUsdtSwapOutput) => {
         // [0] ensure deposit vaults exist and swap input is valid (convert to sats)
@@ -362,9 +351,9 @@ export const SwapUI = () => {
         }
         const amountMicroUsdtSwapOutput = parseUnits(amountUsdtSwapOutput, selectedInputAsset.decimals);
 
-        // [1] calculate INITIAL best vault combo given input value
+        // [1] calculate best vault combo given input value
         let idealReservationDetails = calculateBestVaultsForUsdtOutput(allDepositVaults, amountMicroUsdtSwapOutput);
-        console.log('INITIAL idealReservationDetails:', idealReservationDetails);
+        console.log('reallyidealReservationDetails:', idealReservationDetails);
 
         // // [2] ensure there is a valid initial reservation output
         if (!idealReservationDetails?.totalSatsUsed) {
@@ -383,6 +372,8 @@ export const SwapUI = () => {
 
         // set new exchange rate & usdt output based on new ideal reservation
         if (idealReservationDetails) {
+            console.log('proc idealReservationDetails.protocolFeeInMicroUsdt:', idealReservationDetails.protocolFeeInMicroUsdt.toString());
+            setProtocolFeeAmountMicroUsdt(idealReservationDetails.protocolFeeInMicroUsdt.toString());
             setBtcInputSwapAmount(formatUnits(newAmountSatsSwapInput, BITCOIN_DECIMALS).toString());
             setBtcOutputAmount(formatUnits(newAmountSatsSwapInput, BITCOIN_DECIMALS).toString());
             setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(idealReservationDetails?.effectiveExchangeRateForUser, selectedInputAsset.decimals)).toFixed(2)));
@@ -398,6 +389,9 @@ export const SwapUI = () => {
                 expiredSwapReservationIndexes: currentlyExpiredReservationIndexes,
             };
 
+            console.log('reserveLiquidityParams:', reserveLiquidityParams);
+            console.log(' reserveLiquidityParamseffective exchange rate for user:', idealReservationDetails.effectiveExchangeRateForUser.toString());
+
             setLowestFeeReservationParams(reserveLiquidityParams);
             return reserveLiquidityParams;
         } else {
@@ -409,34 +403,35 @@ export const SwapUI = () => {
 
     // ----------------- BITCOIN INPUT ----------------- //
 
-    const handleBtcInputChange = (e, amount = null) => {
-        const btcValue = amount !== null ? amount : e.target.value;
-        setIsBelowMinUsdtOutput(false);
-        setIsLiquidityExceeded(false);
-        setIsAboveMaxSwapLimitUsdtOutput(false);
-        setIsNoLiquidityAvailable(false);
+const handleBtcInputChange = (e, amount = null) => {
+    const btcValue = amount !== null ? amount : e.target.value;
+    setIsBelowMinUsdtOutput(false);
+    setIsLiquidityExceeded(false);
+    setIsAboveMaxSwapLimitUsdtOutput(false);
+    setIsNoLiquidityAvailable(false);
 
-        if (allDepositVaults.length === 0 || availableLiquidity.lt(BigNumber.from(MIN_SWAP_AMOUNT_MICRO_USDT))) {
-            setIsNoLiquidityAvailableBtcInput(true);
-            setUsdtOutputSwapAmount('');
-            setUsdtDepositAmount('');
-            setBtcInputSwapAmount(btcValue);
-            setBtcOutputAmount(btcValue);
-            setLowestFeeReservationParams(null);
-            return;
-        } else {
-            setIsNoLiquidityAvailableBtcInput(false);
-        }
+    if (allDepositVaults.length === 0 || availableLiquidity.lt(BigNumber.from(MIN_SWAP_AMOUNT_MICRO_USDT))) {
+        setIsNoLiquidityAvailableBtcInput(true);
+        setUsdtOutputSwapAmount('');
+        setUsdtDepositAmount('');
+        setBtcInputSwapAmount(btcValue);
+        setBtcOutputAmount(btcValue);
+        setLowestFeeReservationParams(null);
+        return;
+    } else {
+        setIsNoLiquidityAvailableBtcInput(false);
+    }
 
-        if (parseFloat(btcValue) === 0 || !btcValue) {
-            setUsdtExchangeRatePerBTC(null);
-        }
-        if (validateBtcInput(btcValue)) {
-            setBtcInputSwapAmount(btcValue);
-            setBtcOutputAmount(btcValue);
-            calculateIdealReservationBitcoinInput(btcValue);
-        }
-    };
+    if (parseFloat(btcValue) === 0 || !btcValue) {
+        setUsdtExchangeRatePerBTC(null);
+    }
+    if (validateBtcInput(btcValue)) {
+        setBtcInputSwapAmount(btcValue);
+        setBtcOutputAmount(btcValue);
+        calculateIdealReservationBitcoinInput(btcValue);
+        calcuateMinimumReservationSatsInputAmount();
+    }
+};
 
     const validateBtcInput = (value) => {
         if (value === '') return true; // Allow empty input for backspacing
@@ -538,11 +533,10 @@ export const SwapUI = () => {
     };
 
     const validateUsdtOutputChange = (value: string) => {
-        const maxDecimals = useStore.getState().validAssets[selectedInputAsset.name].decimals;
-
+        const maxDecimals = selectedInputAsset.decimals;
         if (value === '.') return false;
 
-        const regex = new RegExp(`^\\d*\\.?\\d{0,${maxDecimals}}$`);
+        const regex = new RegExp(`^\\d*\\.?\\d{0,${maxDecimals}}$`); // max 2 decimals
         return regex.test(value);
     };
 

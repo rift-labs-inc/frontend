@@ -76,6 +76,17 @@ export async function estimateRiftPaymentTransactionFees(liquidityProviderCount:
 
     let amount = liquidityProviders.reduce((sum, lp) => sum + weiToSatoshi(lp.amount, lp.btcExchangeRate), 0);
 
+    if (!feeRateQuote || feeRateQuote.fastestFee === undefined || feeRateQuote.economyFee === undefined) {
+        return {
+            virtualSize,
+            feeRateQuote: null,
+            fastFeeAmount: null,
+            standardFeeAmount: null,
+            fastTotalAmount: null,
+            standardTotalAmount: null,
+        };
+    }
+
     return {
         virtualSize,
         feeRateQuote,
@@ -194,6 +205,7 @@ export async function getBtcFeeRates(hostname: string): Promise<Fees> {
 
     const endpoint = `${hostname}/api/v1/fees/recommended`;
     try {
+        
         const response = await fetch(endpoint);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -207,6 +219,5 @@ export async function getBtcFeeRates(hostname: string): Promise<Fees> {
         return data;
     } catch (error) {
         console.error('Error fetching Fees:', error);
-        throw error;
     }
 }
