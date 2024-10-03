@@ -1,4 +1,5 @@
 import { BigNumber, BigNumberish, ethers, FixedNumber } from 'ethers';
+import BigNumberJs from 'bignumber.js';
 import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
 import * as bitcoin from 'bitcoinjs-lib';
@@ -279,7 +280,13 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
     });
 
     // calculate the protocol fee in micro USDT
-    const protocolFeeInMicroUsdt = calculateProtocolFeeInMicroUsdt(totalMicroUsdtSwapOutput);
+
+    const userOutputMicroUsdt = calculateOriginalAmountBeforeFee(totalMicroUsdtSwapOutput);
+    const protocolFeeInMicroUsdt = calculateProtocolFeeInMicroUsdt(userOutputMicroUsdt);
+
+    console.log("bigdog (milker) totalMicroUsdtSwapOutput", totalMicroUsdtSwapOutput.toString());
+    console.log("bigdog protocolFeeInMicroUsdt", protocolFeeInMicroUsdt.toString());
+    console.log("bigdog userOutputMicroUsdt", userOutputMicroUsdt.toString());
 
     // [6] calculate the total swap exchange rate in microusdtbuffered to 18 decimals per sat
     let totalSwapExchangeRate;
@@ -309,7 +316,7 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
     };
 }
 
-export function calculateProtocolFeeInMicroUsdt(microUsdtOutputAmount) {
+export function calculateProtocolFeeInMicroUsdt(microUsdtOutputAmount: BigNumber) {
     let protocolFeeInMicroUsdt = microUsdtOutputAmount.mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
     protocolFeeInMicroUsdt = protocolFeeInMicroUsdt;
     if (protocolFeeInMicroUsdt.isZero()) {
@@ -319,15 +326,18 @@ export function calculateProtocolFeeInMicroUsdt(microUsdtOutputAmount) {
 }
 
 export function calculateOriginalAmountBeforeFee(totalAmountWithFee: BigNumber): BigNumber {
+    // set bignumberjs to round up
+    console.log("bigdog totalAmountWithFee", totalAmountWithFee.toString());
+    let roundedOutputAmount = BigNumberJs(totalAmountWithFee.toString())
+        .times(BigNumberJs(PROTOCOL_FEE_DENOMINATOR.toString()))
+        .div(BigNumberJs(PROTOCOL_FEE.add(PROTOCOL_FEE_DENOMINATOR).toString()))
+        .integerValue(BigNumberJs.ROUND_UP);
 
-                    let roundedOutputAmount = BigNumber.from(totalAmountWithFee)
-                        .mul(PROTOCOL_FEE_DENOMINATOR)
-                        .div(PROTOCOL_FEE.add(PROTOCOL_FEE_DENOMINATOR))
-                        // .add(1)  
-                    if (roundedOutputAmount.isZero()) {
-                        roundedOutputAmount = BigNumber.from(10000);
+    if (roundedOutputAmount.isZero()) {
+        roundedOutputAmount = BigNumberJs(10000);
     }
-    return roundedOutputAmount;
+    console.log("bigdog roundedOutputAmount", roundedOutputAmount.toString());
+    return BigNumber.from(roundedOutputAmount.toString());
 }
 
 
@@ -339,6 +349,7 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
     const protocolFeeInMicroUsdt = calculateProtocolFeeInMicroUsdt(microUsdtOutputAmount);
     console.log('really protocolFeeInMicroUsdt:', protocolFeeInMicroUsdt.toString());
     microUsdtOutputAmount = microUsdtOutputAmount.add(protocolFeeInMicroUsdt);
+    console.log('really microUsdtOutputAmount with fee:', microUsdtOutputAmount.toString());
 
     // [1] validate inputs
     if (!Array.isArray(depositVaults) || depositVaults.length === 0 || microUsdtOutputAmount.lte(0)) {
