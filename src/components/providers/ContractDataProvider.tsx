@@ -40,7 +40,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         if ((selectedInputAsset?.contractRpcURL && window.ethereum) || !ethersRpcProvider) {
             const provider = new ethers.providers.StaticJsonRpcProvider(selectedInputAsset.contractRpcURL, { chainId: selectedInputAsset.chainDetails.id, name: selectedInputAsset.chainDetails.name });
             if (!provider) return;
-            console.log('new ethers provider set', provider);
             setEthersRpcProvider(provider);
         }
     }, [selectedInputAsset?.contractRpcURL, address, isConnected]);

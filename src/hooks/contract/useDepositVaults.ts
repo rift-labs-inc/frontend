@@ -59,11 +59,8 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const isCreated = reservation.state === ReservationState.Created;
             const isProved = reservation.state === ReservationState.Proved;
             const isCompleted = reservation.state === ReservationState.Completed;
-            const isExpired =
-                reservation.state === ReservationState.Expired ||
-                (reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp > CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS);
-
-
+            const isExpiredOnChain = reservation.state === ReservationState.Expired
+            const isExpired = (reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp > CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS);
 
             if (isCompleted) {
                 completedReservationsCount++;
@@ -72,7 +69,10 @@ export function useDepositVaults(): UseDepositVaultsResult {
             } else if (isExpired) {
                 expiredReservationsCount++;
                 reservation.state = ReservationState.Expired;
-                expiredReservationIndexes.push(reservationIndex);
+                if(isExpiredOnChain) {
+                    console.log('expired on chain reservation', reservationIndex);
+                    expiredReservationIndexes.push(reservationIndex);
+                }
             } else {
                 // active reservations (created and not expired, completed, or unlocked)
                 activeReservationsCount++;
@@ -122,14 +122,18 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
             totalAvailableLiquidity = totalAvailableLiquidity.add(unreservedBalance);
 
-            // console.log('Updated vault:', {
-            //     vaultIndex,
-            //     withdrawnAmount: vault.withdrawnAmount.toString(),
-            //     unreservedBalance: unreservedBalance.toString(),
-            //     activelyReservedAmount: activelyReservedAmount.toString(),
-            //     completedAmount: completedAmount.toString(),
-            //     provedAmount: provedAmount.toString(),
-            // });
+            if(vaultIndex === 1) {
+                console.log('Updated calculateTrueUnreservedLiquidity vault:', {
+                    vaultIndex,
+                    withdrawnAmount: vault.withdrawnAmount.toString(),
+                unreservedBalance: unreservedBalance.toString(),
+                activelyReservedAmount: activelyReservedAmount.toString(),
+                completedAmount: completedAmount.toString(),
+                provedAmount: provedAmount.toString(),
+                additionalBalance: additionalBalance.toString(),
+            });
+            }
+            console.log('actively reserved amount', activelyReservedAmount.toString());
 
             return {
                 ...vault,
@@ -141,6 +145,8 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 provedAmount,
             };
         });
+
+        console.log('totalAvailableLiquidity', totalAvailableLiquidity.toString());
 
         updateTotalAvailableLiquidity(selectedInputAsset.name, totalAvailableLiquidity);
 

@@ -368,9 +368,9 @@ export const SwapUI = () => {
         // [3] calculate the proxy wallet fee using number of LP outputs, then subtract fee from the "input"
         const proxyWalletSwapFeeInSats = fastestProxyWalletFeeInSats;
         const newAmountSatsSwapInput = idealReservationDetails.totalSatsUsed.add(BigNumber.from(proxyWalletSwapFeeInSats));
-        console.log('og calculated sats input amount', idealReservationDetails.totalSatsUsed.toString());
-        console.log('procbruh + proxy wallet fee in sats', proxyWalletSwapFeeInSats);
-        console.log(' new amountSatsSwapInput:', newAmountSatsSwapInput.toString());
+        console.log('og input amount in sats', idealReservationDetails.totalSatsUsed.toString());
+        console.log('+ proxy wallet fee in sats', proxyWalletSwapFeeInSats);
+        console.log('= new amountSatsSwapInput:', newAmountSatsSwapInput.toString());
 
         // set new exchange rate & usdt output based on new ideal reservation
         if (idealReservationDetails) {

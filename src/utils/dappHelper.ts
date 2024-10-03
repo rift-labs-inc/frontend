@@ -268,25 +268,14 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
         }
     }
 
-    //console.log everything
-    console.log('bruh all data from calculateBestVaultsForBitcoinInput:', {
-        totalSatsUsed,
-        totalMicroUsdtSwapOutput,
-        vaultIndexes,
-        amountsInMicroUsdtToReserve,
-        amountsInSatsToBePaid,
-        btcPayoutLockingScripts,
-        btcExchangeRates,
-    });
 
     // calculate the protocol fee in micro USDT
-
     const userOutputMicroUsdt = calculateOriginalAmountBeforeFee(totalMicroUsdtSwapOutput);
     const protocolFeeInMicroUsdt = calculateProtocolFeeInMicroUsdt(userOutputMicroUsdt);
 
-    console.log("bigdog (milker) totalMicroUsdtSwapOutput", totalMicroUsdtSwapOutput.toString());
-    console.log("bigdog protocolFeeInMicroUsdt", protocolFeeInMicroUsdt.toString());
-    console.log("bigdog userOutputMicroUsdt", userOutputMicroUsdt.toString());
+    console.log("real totalMicroUsdtSwapOutput", totalMicroUsdtSwapOutput.toString());
+    console.log("- protocolFeeInMicroUsdt", protocolFeeInMicroUsdt.toString());
+    console.log("= userOutputMicroUsdt", userOutputMicroUsdt.toString());
 
     // [6] calculate the total swap exchange rate in microusdtbuffered to 18 decimals per sat
     let totalSwapExchangeRate;

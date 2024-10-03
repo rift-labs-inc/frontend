@@ -336,7 +336,7 @@ const ReservationDetails = () => {
                                         </span>
                                     </Flex>
                                     <Text fontSize='16px' textAlign='center' w='800px' mt='0px' mb='20px' fontWeight={'normal'} color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                        Your reservation is confirmed - please send the following amount of Bitcoin to the address below within 1 hour to initiate the swap:
+                                        Your reservation is confirmed! Send the following amount of Bitcoin to the address below within 1 hour to initiate the swap:
                                     </Text>
                                     <Flex mt='10px' mx='10px'>
                                         {bitcoinUri && bitcoinUri !== '' && (

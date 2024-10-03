@@ -33,7 +33,6 @@ export const RiftApi = {
 
     async spawn(): Promise<void> {
         const swaps = await storage.getSwaps();
-        console.log('All Swaps', swaps);
         const waitingSwaps = swaps.filter((swap) => swap.status === SwapStatus.WAITING_FOR_FUNDING_TRANSACTION);
 
         for (const swap of waitingSwaps) {

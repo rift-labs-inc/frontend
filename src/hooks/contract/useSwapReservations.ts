@@ -11,6 +11,7 @@ type UseSwapReservationsResult = {
     allSwapReservations: SwapReservation[];
     loading: boolean;
     error: Error | null;
+    refreshSwapReservations: () => Promise<void>;
 };
 
 export function useSwapReservations(): UseSwapReservationsResult {
@@ -24,21 +25,28 @@ export function useSwapReservations(): UseSwapReservationsResult {
     const storeSetSwapReservations = store ? store.setAllSwapReservations : null;
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
 
-    async function fetchSwapReservations(swapReservationsLength: number) {
+    async function fetchSwapReservations() {
+        if (!ethersRpcProvider) {
+            return;
+        }
+
         try {
-            const bytecode = swapReservationsAggregatorABI.bytecode;
-            const abi = swapReservationsAggregatorABI.abi;
+            // Fetch the length of swap reservations
+            const swapReservationsLength = await getSwapReservationsLength(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress);
+
+            // Generate indices based on the length
             const indices = Array.from({ length: swapReservationsLength }).map((_, i) => i);
 
+            // Fetch the swap reservations
+            const bytecode = swapReservationsAggregatorABI.bytecode;
+            const abi = swapReservationsAggregatorABI.abi;
             const swapReservations = await getSwapReservations(ethersRpcProvider, bytecode.object, abi, selectedInputAsset.riftExchangeContractAddress, indices);
 
-            // Map over the fetched reservations and assign indexInContract
+            // Add index to each reservation
             const swapReservationsWithIndex = swapReservations.map((reservation, i) => ({
                 ...reservation,
                 indexInContract: indices[i],
             }));
-
-            console.log('swapReservationsWithIndex', swapReservationsWithIndex);
 
             setAllSwapReservations(swapReservationsWithIndex);
 
@@ -54,26 +62,20 @@ export function useSwapReservations(): UseSwapReservationsResult {
         }
     }
 
+    async function refreshSwapReservations() {
+        setLoading(true);
+        await fetchSwapReservations();
+    }
+
     useEffect(() => {
-        if (!ethersRpcProvider) return;
-
-        (async () => {
-            try {
-                const swapReservationsLength = await getSwapReservationsLength(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress);
-                console.log('swapReservationsLength:', swapReservationsLength);
-
-                await fetchSwapReservations(swapReservationsLength);
-            } catch (err) {
-                console.error('Error in useSwapReservations effect:', err);
-                setError(err instanceof Error ? err : new Error('An unknown error occurred'));
-                setLoading(false);
-            }
-        })();
+        refreshSwapReservations();
     }, [ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress]);
+
 
     return {
         allSwapReservations: allSwapReservations.length > 0 ? allSwapReservations : storeSwapReservations,
         loading,
         error,
+        refreshSwapReservations,
     };
 }

@@ -16,7 +16,7 @@ export default function Document() {
                     `}
                 </Script>
                 {/* Twitter Pixel */}
-                <Script src='/twitter-pixel.js' strategy='lazyOnload' />
+                {/* <Script src='/twitter-pixel.js' strategy='lazyOnload' /> */}
                 
                 {/* Favicon and manifest links */}
                 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />

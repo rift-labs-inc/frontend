@@ -79,11 +79,15 @@ export async function estimateRiftPaymentTransactionFees(liquidityProviderCount:
 
     let amount = liquidityProviders.reduce((sum, lp) => sum + weiToSatoshi(lp.amount, lp.btcExchangeRate), 0);
 
-    if (feeRateQuote.economyFee) {
+    if (feeRateQuote?.fastestFee) {
         return {
-            fastFeeAmount: feeRateQuote?.fastestFee ? feeRateQuote.fastestFee * virtualSize : 550,
-        };
-    }
+            fastFeeAmount: feeRateQuote.fastestFee * virtualSize,
+        } 
+    }else {
+            return {
+                fastFeeAmount: 30 * virtualSize
+            }
+        }
 }
 
 async function buildRiftPaymentTransaction(

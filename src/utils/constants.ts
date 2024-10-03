@@ -32,6 +32,7 @@ export const PROTOCOL_FEE = BigNumber.from(1); // 0.1%
 export const PROTOCOL_FEE_DENOMINATOR = BigNumber.from(1000); // 100% / 0.1% = 1000
 export const CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS = 4 * 60 * 60; // 4 hours
 export const FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS = 1 * 60 * 60; // 1 hour
+
 export const BITCOIN_DECIMALS = 8;
 export const SATS_PER_BTC = 100000000; // 10^8
 

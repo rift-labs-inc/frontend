@@ -317,7 +317,7 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                             gap='0px'>
                             <Text fontSize='13px' letterSpacing='-1px' my='10px' textAlign='center'>
                                 Update your sell order by adjusting the <WhiteText>Exchange Rate</WhiteText>. If you have active reservations on this vault, the remaining unreserved liqudity will be
-                                fund a new vault with your updated exchange rate
+                                <Text as="span" color="orange"> forked into a new vault </Text> with your updated exchange rate
                             </Text>
                             <Flex mt='25px' direction='column' overflow='visible'>
                                 {/* Deposit Input */}
