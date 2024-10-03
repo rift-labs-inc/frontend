@@ -1,7 +1,7 @@
 import { Flex, Box, Button, Text, Avatar } from '@chakra-ui/react';
 import { useStore } from '../../store';
 import useWindowSize from '../../hooks/useWindowSize';
-import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon, USDT_Icon } from './SVGs'; // Assuming you also have a BTC logo
+import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon, USDT_Icon, ARBITRUM_LOGO } from './SVGs'; // Assuming you also have a BTC logo
 import { ConnectButton, AvatarComponent } from '@rainbow-me/rainbowkit';
 import { colors } from '../../utils/colors';
 import { useEffect, useState } from 'react';
@@ -100,7 +100,9 @@ export const ConnectWalletButton = ({}) => {
                                                         case 'USDT':
                                                             return (
                                                                 <Flex mt='-2px' mr='0px'>
-                                                                    <USDT_Icon width='20' height='20' viewBox='0 0 80 80' />
+                                                                    <USDT_Icon width='22' height='22' viewBox='0 0 80 80' />
+                                                                     <Flex ml='8px' mr='-1px' mt='0px' ><ARBITRUM_LOGO />
+                                                </Flex>
                                                                 </Flex>
                                                             );
                                                         default:
@@ -109,7 +111,9 @@ export const ConnectWalletButton = ({}) => {
                                                 })()}
                                             </Flex>
                                             <Flex mt='-2px' mr='-2px' fontSize='17px' paddingX='22px' fontFamily={'aux'}>
-                                                {`${parseFloat(localBalance).toFixed(2).toString()} ${selectedInputAsset.name}`}
+                                               
+                                              
+                                                 {`${parseFloat(localBalance).toFixed(2).toString()} ${selectedInputAsset.name}`}
                                             </Flex>
                                         </>
                                     </Button>

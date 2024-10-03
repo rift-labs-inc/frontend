@@ -108,7 +108,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                             {formatUnits(BigNumber.from(selectedVaultToManage.initialBalance).toString(), selectedVaultToManage.depositAsset.decimals).toString()}
                         </Text>
                         <Spacer />
-                        <AssetTag assetName={selectedVaultToManage.depositAsset.name} width='84px' />
+                        <AssetTag assetName={'ARBITRUM_USDT'} width='110px' />
                     </Flex>
                 </Flex>
                 <Text mt='46px' pl='16px' fontSize='20px' opacity={0.9} fontWeight={'bold'} color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
@@ -127,7 +127,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                         </Text>
 
                         <Spacer />
-                        <AssetTag assetName={'BTC'} width='80px' />
+                        <AssetTag assetName={'BTC'} width='84px' />
                     </Flex>
                 </Flex>
             </Flex>

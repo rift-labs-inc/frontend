@@ -619,7 +619,8 @@ export const DepositConfirmation = ({}) => {
                                                         </Flex>
                                                         <Spacer />
                                                         <Flex mt='8px' mr='6px'>
-                                                            <AssetTag assetName={selectedInputAsset.name} />
+                                                                                            <AssetTag assetName='ARBITRUM_USDT' width='132px' />
+
                                                         </Flex>
                                                     </Flex>
                                                     {/* Profit Percentage Input */}

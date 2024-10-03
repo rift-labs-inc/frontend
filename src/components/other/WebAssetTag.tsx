@@ -4,6 +4,7 @@ import { FONT_FAMILIES } from '../../utils/font';
 import { FaChevronDown } from 'react-icons/fa';
 import { AssetType } from '../../types';
 import useWindowSize from '../../hooks/useWindowSize';
+import { ARBITRUM_LOGO } from './SVGs';
 
 interface WebAssetTagProps {
     asset: AssetType;
@@ -65,6 +66,10 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, font
                 gap='8px'
                 cursor={cursor}
                 onClick={onDropDown}>
+                    {asset != 'BTC' && <Flex ml='-4px' mr='-1px' mt='-1px'>
+                        <ARBITRUM_LOGO />
+                        </Flex>
+                        }
                 <Text fontSize={adjustedFontSize} color={'white'} fontFamily={FONT_FAMILIES.NOSTROMO} userSelect='none'>
                     {asset}
                 </Text>

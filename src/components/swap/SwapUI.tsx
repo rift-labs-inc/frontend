@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { colors } from '../../utils/colors';
 import { useStore } from '../../store';
-import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
+import { ARBITRUM_LOGO, BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { BigNumber } from 'ethers';
 import { formatUnits, parseEther, parseUnits } from 'ethers/lib/utils';
 import {
@@ -901,6 +901,7 @@ export const SwapUI = () => {
                         </Flex>
                         <Spacer />
                         <Flex mr='6px'>
+
                             <WebAssetTag
                                 asset='USDT'
                                 cursor='pointer'

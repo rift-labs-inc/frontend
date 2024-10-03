@@ -91,7 +91,7 @@ const CurrencyModal: React.FC<CurrencyModalProps> = () => {
                                 }
                                 onClose();
                             }}>
-                            For LPs who don’t want to manage their position, wBTC provides less volatility in exchange for increased risk (trusting wBTC).
+                            Mainnet Bitcoin
                         </CurrencyItem>
                         <CurrencyItem
                             asset='USDT'
@@ -104,7 +104,7 @@ const CurrencyModal: React.FC<CurrencyModalProps> = () => {
                                 }
                                 onClose();
                             }}>
-                            Most secure but can lead to less optimal execution price as the exchange rate between BTC and ETH diverges.
+                            Arbitrum USDT
                         </CurrencyItem>
 
                         <CurrencyItem asset='ETH' isComingSoon>

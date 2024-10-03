@@ -129,7 +129,7 @@ export const useStore = create<Store>((set) => {
             name: 'BTC',
             decimals: 8,
             icon_svg: null,
-            bg_color: '#c26920',
+            bg_color: '#A6591B',
             border_color: '#FFA04C',
             border_color_light: '#FFA04C',
             dark_bg_color: '#372412',

@@ -29,7 +29,8 @@ export const DepositAmounts = () => {
                             {usdtDepositAmount}
                         </Text>
                         <Flex mt='-14px' mb='-9px'>
-                            <AssetTag assetName='USDT' width='90px' />
+                                                            <AssetTag assetName='ARBITRUM_USDT' width='108px' />
+
                         </Flex>
                     </Flex>
                     <Text color={colors.textGray} fontSize='13px' mt='-12px' ml='6px' letterSpacing='-2px' fontWeight='normal' fontFamily='Aux'>

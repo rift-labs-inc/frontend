@@ -126,7 +126,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                                   )
                                 : renderAmount(vault.initialBalance && formatUnits(BigNumber.from(vault.initialBalance).toString(), vault.depositAsset?.decimals).toString(), false, undefined)}
                             <Spacer />
-                            <AssetTag assetName={reservation ? 'BTC' : vault.depositAsset?.name} width={reservation ? '80px' : '84px'} />
+                            <AssetTag assetName={reservation ? 'BTC' : vault.depositAsset?.name == 'USDT' ? 'ARBITRUM_USDT' : vault.depositAsset?.name} width={reservation ? '80px' : '100px'} />
                         </Flex>
                     </Flex>
 
@@ -155,7 +155,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                                       vault?.btcExchangeRate && calculateBtcOutputAmountFromExchangeRate(vault.initialBalance, vault.depositAsset?.decimals, vault.btcExchangeRate),
                                   )}
                             <Spacer />
-                            <AssetTag assetName={reservation ? 'USDT' : 'BTC'} width='80px' />
+                            <AssetTag assetName={reservation ? 'ARBITRUM_USDT' : 'BTC'} width={reservation ? '100px' : '80px'} />
                         </Flex>
                     </Flex>
                 </Flex>
