@@ -1,8 +1,5 @@
 import {RIFT_URL_PATTERN} from "./constants";
-import injectRiftCS from "./injectRiftCS";
 import { RiftApi } from "./rift";
-
-injectRiftCS();
 
 export async function dispatchRequest(data: { data: { method: string; params: any } }, responseCallback: Function) {
   const { method, params } = data.data;
