@@ -13,7 +13,7 @@ import { SwapAmounts } from '../../../components/swap/SwapAmounts';
 import { OpenGraph } from '../../../components/background/OpenGraph';
 import { ChromeLogoSVG, WarningSVG } from '../../../components/other/SVGs';
 import { FONT_FAMILIES } from '../../../utils/font';
-import { BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, opaqueBackgroundColor } from '../../../utils/constants';
+import { BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, opaqueBackgroundColor, PROTOCOL_FEE, PROTOCOL_FEE_DENOMINATOR } from '../../../utils/constants';
 import { formatUnits } from 'ethers/lib/utils';
 import QRCode from 'qrcode.react';
 import swapReservationsAggregatorABI from '../../../abis/SwapReservationsAggregator.json';
@@ -25,6 +25,7 @@ import { bitcoin } from 'bitcoinjs-lib/src/networks';
 import { SwapReservation } from '../../../types';
 import { LuCopy } from 'react-icons/lu';
 import { AssetTag } from '../../../components/other/AssetTag';
+import { FaClock } from 'react-icons/fa';
 
 const ReservationDetails = () => {
     const router = useRouter();
@@ -73,7 +74,7 @@ const ReservationDetails = () => {
             }
 
             setMinutesLeft(0);
-            return 'Expired';
+            return;
         };
 
         const timer = setInterval(() => {
@@ -163,7 +164,6 @@ const ReservationDetails = () => {
                     setSwapReservationNotFound(false);
 
                     const currentReservationStateFromContract = getReservationStateString(reservationDetails.swapReservationData.state);
-                    console.log('proc Current reservation state:', currentReservationStateFromContract);
                     setCurrentReservationState(currentReservationStateFromContract);
                     // set swap flow state to expired if its been 8 hours since the reservation was created
                     const isReservationExpired = Date.now() - reservationDetails.swapReservationData.reservationTimestamp * 1000 > 8 * 60 * 60 * 1000;
@@ -179,7 +179,17 @@ const ReservationDetails = () => {
                     }
 
                     setSwapReservationData(reservationDetails.swapReservationData);
-                    setUsdtOutputSwapAmount(reservationDetails.totalReservedAmountInUsdt);
+
+
+                    
+                    // set swap amounts
+                    const outputAmountInMicroUsdtWithoutProtocolFee = BigNumber.from(reservationDetails.totalReservedAmountInMicroUsdt)
+                        .mul(PROTOCOL_FEE_DENOMINATOR)
+                        .div(PROTOCOL_FEE.add(PROTOCOL_FEE_DENOMINATOR));
+                    console.log('proc totalReservedAmountInMicroUsdt:', reservationDetails.totalReservedAmountInMicroUsdt.toString());
+                    console.log('proc outputAmountInMicroUsdtWithoutProtocolFee:', outputAmountInMicroUsdtWithoutProtocolFee.toString());
+
+                    setUsdtOutputSwapAmount(formatUnits(outputAmountInMicroUsdtWithoutProtocolFee, selectedInputAsset.decimals));
                     setBtcInputSwapAmount(reservationDetails.btcInputSwapAmount);
                     setTotalSwapAmountInSats(reservationDetails.totalSwapAmountInSats);
                 } catch (error) {
@@ -295,15 +305,30 @@ const ReservationDetails = () => {
                                 <RecieveUsdt />
                             ) : (
                                 <>
-                                    <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight={'bold'} fontSize={'24px'} mt='-5px' mb='20px'>
-                                        Reservation Locked for{' '}
+                                    <Flex alignItems="center" fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight={'bold'} fontSize={'24px'} mt='-5px' mb='18px'>
+                                        <Text marginRight="4px">Reservation Locked for:</Text>
                                         <span
                                             style={{
-                                                color: minutesLeft >= 50 ? colors.greenOutline : minutesLeft >= 10 ? 'yellow' : 'red',
+                                                color: minutesLeft >= 20 ? colors.greenOutline : minutesLeft >= 10 ? 'yellow' : 'red',
+                                                display: 'flex',
+                                                alignItems: 'center',
                                             }}>
-                                            {timeLeft ? timeLeft : <Spinner color={colors.textGray} h={'18px'} w={'18px'} thickness='3px' speed='0.65s' />}
+                                            {timeLeft ? (
+                                                <>
+                                                    <Flex  mr='7px' mt='-1px'>
+
+                                                    <FaClock size={'22px'} color={minutesLeft >= 20 ? colors.greenOutline : minutesLeft >= 10 ? 'yellow' : 'red'} style={{ marginLeft: '8px' }} />
+                                                    </Flex>
+                                                    {timeLeft}
+                                                </>
+                                            ) : (
+                                                <Flex ml='6px'  mt='-1px'>
+
+                                                <Spinner color={colors.textGray} h={'18px'} w={'18px'} thickness='3px' speed='0.65s' />
+                                                </Flex>
+                                            )}
                                         </span>
-                                    </Text>
+                                    </Flex>
                                     <Text fontSize='16px' textAlign='center' w='800px' mt='-2px' mb='20px' fontWeight={'normal'} color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
                                         Your reservation is confirmed please send the following amount of Bitcoin to the address below within 1 hour to initiate the swap:
                                     </Text>

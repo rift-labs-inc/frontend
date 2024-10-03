@@ -267,7 +267,19 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
         }
     }
 
+    //console.log everything
+    console.log('bruh all data from calculateBestVaultsForBitcoinInput:', {
+        totalSatsUsed,
+        totalMicroUsdtSwapOutput,
+        vaultIndexes,
+        amountsInMicroUsdtToReserve,
+        amountsInSatsToBePaid,
+        btcPayoutLockingScripts,
+        btcExchangeRates,
+    });
+
     // calculate the protocol fee in micro USDT
+    console.log('proc totalMicroUsdtSwapOutput HERE:', totalMicroUsdtSwapOutput.toString()); 
     const protocolFeeInMicroUsdt = totalMicroUsdtSwapOutput.mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
 
     // [6] calculate the total swap exchange rate in microusdtbuffered to 18 decimals per sat
@@ -305,6 +317,7 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
 export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputAmount, maxLpOutputs = MAX_SWAP_LP_OUTPUTS) {
     // [0] calculate the protocol fee in micro USDT and inlcude in the output amount
     const protocolFeeInMicroUsdt = microUsdtOutputAmount.mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
+    console.log('procbruh protocolFeeInMicroUsdt:', protocolFeeInMicroUsdt.toString());
     microUsdtOutputAmount = microUsdtOutputAmount.add(protocolFeeInMicroUsdt);
 
     // [1] validate inputs
@@ -321,6 +334,7 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
     });
 
     // [3] setup variables to track results
+    let totalLpOutputsUsed = 0;
     let totalSatsUsed = BigNumber.from(0);
     let remainingUsdtToAchieve = BigNumber.from(microUsdtOutputAmount);
 
@@ -330,7 +344,6 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
     let amountsInSatsToBePaid = [];
     let btcPayoutLockingScripts = [];
     let btcExchangeRates = [];
-    let totalLpOutputsUsed = 0;
 
     // [5] iterate through the sorted vaults and calculate optimal combo
     for (let i = 0; i < sortedVaults.length; i++) {
@@ -347,40 +360,40 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
         const fixedNumberBufferedMicroUsdtToTake = FixedNumber.from(bufferedMicroUsdtToTake.toString());
         const fixedNumberExchangeRate = FixedNumber.from(vault.btcExchangeRate.toString());
         const satsNeeded = Math.floor(fixedNumberBufferedMicroUsdtToTake.divUnsafe(fixedNumberExchangeRate).toUnsafeFloat());
-        const exchangeRate = vault.btcExchangeRate;
 
-        // [3] update tracked amounts, but skip vaults with 0 sats or 0 micro USDT
+        // [3] update tracked amounts
         if (microUsdtToTake.gt(0) && satsNeeded > 0) {
+            totalLpOutputsUsed++;
             totalSatsUsed = totalSatsUsed.add(satsNeeded);
             remainingUsdtToAchieve = remainingUsdtToAchieve.sub(microUsdtToTake);
-
-            // Store results
             vaultIndexes.push(vault.index);
             amountsInMicroUsdtToReserve.push(microUsdtToTake.toString());
             amountsInSatsToBePaid.push(satsNeeded);
             btcPayoutLockingScripts.push(vault.btcPayoutLockingScript);
             btcExchangeRates.push(vault.btcExchangeRate.toString());
-            totalLpOutputsUsed++;
         }
     }
 
     // [6] calculate the total swap exchange rate in microusdtbuffered to 18 decimals per sat
     let totalSwapExchangeRate;
-    let totalExchangeRateWithoutProtocolFees;
+    let effectiveExchangeRateForUser;
     if (totalSatsUsed.gt(0)) {
-        totalExchangeRateWithoutProtocolFees = bufferTo18Decimals(microUsdtOutputAmount.sub(protocolFeeInMicroUsdt), depositVaults[0].depositAsset.decimals).div(totalSatsUsed);
+        effectiveExchangeRateForUser = bufferTo18Decimals(microUsdtOutputAmount.sub(protocolFeeInMicroUsdt), depositVaults[0].depositAsset.decimals).div(totalSatsUsed);
         totalSwapExchangeRate = bufferTo18Decimals(BigNumber.from(microUsdtOutputAmount), depositVaults[0].depositAsset.decimals).div(totalSatsUsed);
     } else {
-        totalExchangeRateWithoutProtocolFees = BigNumber.from(0);
+        effectiveExchangeRateForUser = BigNumber.from(0);
         totalSwapExchangeRate = BigNumber.from(0);
     }
+
+    console.log('procbruh totalSwapExchangeRate:', totalSwapExchangeRate.toString());
+    console.log('procbruh effectiveExchangeRateForUser:', effectiveExchangeRateForUser.toString());
 
     //TODO: handle over maxLpOutputs case?
 
     // [7] return results
     return {
         totalSatsUsed,
-        totalMicroUsdtOutput: microUsdtOutputAmount, // Note we use the input as total output since we're aiming for this target
+        totalMicroUsdtOutput: microUsdtOutputAmount,
         vaultIndexes,
         amountsInMicroUsdtToReserve,
         amountsInSatsToBePaid,
@@ -388,7 +401,7 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
         btcExchangeRates,
         totalSwapExchangeRate,
         protocolFeeInMicroUsdt,
-        totalExchangeRateWithoutProtocolFees,
+        effectiveExchangeRateForUser,
     };
 }
 
@@ -434,7 +447,9 @@ export const fetchReservationDetails = async (swapReservationURL: string, ethers
             const totalReservedAmountInMicroUsdt = swapReservationData.totalSwapOutputAmount;
 
             // [2] Convert BigNumber reserved vault indexes to numbers
-            const reservedVaultIndexesConverted = swapReservationData.vaultIndexes.map((index) => index);
+            const reservedVaultIndexesConverted = Array.isArray(swapReservationData.vaultIndexes)
+                ? swapReservationData.vaultIndexes.map((index) => index)
+                : [swapReservationData.vaultIndexes];
 
             // [3] Fetch the reserved deposit vaults on the reservation
             const depositVaultBytecode = depositVaultAggregatorABI.bytecode;
@@ -461,6 +476,7 @@ export const fetchReservationDetails = async (swapReservationURL: string, ethers
             return {
                 swapReservationData,
                 totalReservedAmountInUsdt,
+                totalReservedAmountInMicroUsdt,
                 btcInputSwapAmount,
                 totalSwapAmountInSats,
                 reservedVaults,

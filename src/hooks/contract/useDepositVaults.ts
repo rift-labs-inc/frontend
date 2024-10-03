@@ -8,7 +8,7 @@ import { useStore } from '../../store';
 import { useSwapReservations } from './useSwapReservations';
 import { DepositVault, SwapReservation, ReservationState } from '../../types';
 import { calculateFillPercentage } from '../../utils/dappHelper';
-import { FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS } from '../../utils/constants';
+import { CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS } from '../../utils/constants';
 
 type UseDepositVaultsResult = {
     allFetchedDepositVaults: DepositVault[];
@@ -61,7 +61,9 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const isCompleted = reservation.state === ReservationState.Completed;
             const isExpired =
                 reservation.state === ReservationState.Expired ||
-                (reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS);
+                (reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp > CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS);
+
+
 
             if (isCompleted) {
                 completedReservationsCount++;
@@ -74,10 +76,9 @@ export function useDepositVaults(): UseDepositVaultsResult {
             } else {
                 // active reservations (created and not expired, completed, or unlocked)
                 activeReservationsCount++;
-                console.log('Active reservation:', reservation);
             }
 
-            reservation.vaultIndexes.forEach((vaultIndex, i) => {
+            const processVaultIndex = (vaultIndex, i) => {
                 const vaultIndexKey = vaultIndex.toString();
                 const amountToAdd = reservation.amountsToReserve[i];
 
@@ -94,7 +95,13 @@ export function useDepositVaults(): UseDepositVaultsResult {
                     const currentActive = activelyReservedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
                     activelyReservedAmountsPerVault.set(vaultIndexKey, currentActive.add(amountToAdd));
                 }
-            });
+            };
+
+            if (Array.isArray(reservation.vaultIndexes)) {
+                reservation.vaultIndexes.forEach(processVaultIndex);
+            } else {
+                processVaultIndex(reservation.vaultIndexes, 0);
+            }
         });
 
         setCurrentlyExpiredReservationIndexes(expiredReservationIndexes);
@@ -231,7 +238,6 @@ export function useDepositVaults(): UseDepositVaultsResult {
     }, [swapReservationsError]);
 
     const refreshAllDepositData = async () => {
-        console.log('Refreshing all deposit data...');
         try {
             await fetchDepositVaultsReservationsData();
         } catch (error) {

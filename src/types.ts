@@ -14,18 +14,20 @@ export type SwapReservation = {
     owner: string;
     confirmationBlockHeight: number;
     reservationTimestamp: number;
-    unlockTimestamp: number;
+    liquidityUnlockedTimestamp: number;
     state: ReservationState;
     ethPayoutAddress: string;
     lpReservationHash: string;
     nonce: string;
     indexInContract?: number;
     totalSatsInputInlcudingProxyFee: BigNumber;
+    protocolFee: BigNumber;
     totalSwapOutputAmount: BigNumber;
     proposedBlockHeight: BigNumber;
     proposedBlockHash: string;
     vaultIndexes: number[];
     amountsToReserve: BigNumber[];
+    expectedSatsOutput: BigNumber[];
 };
 
 export type ReserveLiquidityParams = {

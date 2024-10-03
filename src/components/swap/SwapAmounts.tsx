@@ -31,10 +31,6 @@ export const SwapAmounts = ({}) => {
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
 
-    useEffect(() => {
-        console.log('usdtOutputSwapAmount', usdtOutputSwapAmount);
-    }, [usdtOutputSwapAmount]);
-
     return (
         <>
             {btcInputSwapAmount === '-1' || usdtOutputSwapAmount === '-1' ? (

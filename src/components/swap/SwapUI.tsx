@@ -292,8 +292,14 @@ export const SwapUI = () => {
             setIsBelowMinBtcInput(false);
         }
 
+        // 5895 out fee
         // set new exchange rate & usdt output based on new ideal reservation
         if (newIdealReservationDetails) {
+            console.log('proc newIdealReservationDetails.protocolFeeInMicroUsdt:', newIdealReservationDetails.protocolFeeInMicroUsdt.toString());
+            console.log('proc newIdealReservationDetails.totalMicroUsdtSwapOutput:', newIdealReservationDetails.totalMicroUsdtSwapOutput.toString());
+            console.log('proc newIdealReservationDetails.totalMicroUsdtSwapOutput.sub(newIdealReservationDetails.protocolFeeInMicroUsdt):', newIdealReservationDetails.totalMicroUsdtSwapOutput.sub(newIdealReservationDetails.protocolFeeInMicroUsdt).toString());
+
+
             setProtocolFeeAmountMicroUsdt(newIdealReservationDetails.protocolFeeInMicroUsdt.toString());
             setUsdtOutputSwapAmount(
                 formatAmountToString(
@@ -372,14 +378,14 @@ export const SwapUI = () => {
         const proxyWalletSwapFeeInSats = fastestProxyWalletFeeInSats;
         const newAmountSatsSwapInput = idealReservationDetails.totalSatsUsed.add(BigNumber.from(proxyWalletSwapFeeInSats));
         console.log('og calculated sats input amount', idealReservationDetails.totalSatsUsed.toString());
-        console.log('+ proxy wallet fee in sats', proxyWalletSwapFeeInSats);
-        console.log('new amountSatsSwapInput:', newAmountSatsSwapInput.toString());
+        console.log('procbruh + proxy wallet fee in sats', proxyWalletSwapFeeInSats);
+        console.log(' new amountSatsSwapInput:', newAmountSatsSwapInput.toString());
 
         // set new exchange rate & usdt output based on new ideal reservation
         if (idealReservationDetails) {
             setBtcInputSwapAmount(formatUnits(newAmountSatsSwapInput, BITCOIN_DECIMALS).toString());
             setBtcOutputAmount(formatUnits(newAmountSatsSwapInput, BITCOIN_DECIMALS).toString());
-            setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(idealReservationDetails?.totalExchangeRateWithoutProtocolFees, selectedInputAsset.decimals)).toFixed(2)));
+            setUsdtExchangeRatePerBTC(parseFloat(parseFloat(formatBtcExchangeRate(idealReservationDetails?.effectiveExchangeRateForUser, selectedInputAsset.decimals)).toFixed(2)));
             const reserveLiquidityParams: ReserveLiquidityParams = {
                 swapAmountInSats: BigNumber.from(idealReservationDetails?.totalSatsUsed).toNumber(),
                 vaultIndexesToReserve: idealReservationDetails.vaultIndexes,

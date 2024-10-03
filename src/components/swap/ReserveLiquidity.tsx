@@ -18,7 +18,7 @@ import ReservationStatusModal from './ReservationStatusModal';
 import { formatUnits } from 'ethers/lib/utils';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { opaqueBackgroundColor } from '../../utils/constants';
+import { FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, opaqueBackgroundColor } from '../../utils/constants';
 import { IoMdCheckmarkCircle } from 'react-icons/io';
 import { HiXCircle } from 'react-icons/hi';
 import { FaClock, FaLock } from 'react-icons/fa';
@@ -164,11 +164,14 @@ export const ReserveLiquidity = ({}) => {
                 expired_swap_reservation_indexes: lowestFeeReservationParams.expiredSwapReservationIndexes.map(String), // convert each expired reservation index to a string
             };
 
+            console.log('reservationRequest', reservationRequest);
+
             const result = await reserveByPaymaster(reservationRequest);
             console.log('Reservation result:', result);
 
             if (!result.status) {
                 console.error('Error reserving liquidity:', result);
+                toastError('', { title: 'Error reserving liquidity', description: 'There was an error reserving liquidity, please try again.' });
                 setLoadingReservation(false);
                 return;
             }
@@ -312,7 +315,7 @@ export const ReserveLiquidity = ({}) => {
                 borderWidth={3}
                 borderColor={colors.borderGray}>
                 <Text fontSize='14px' mb='18px' maxW={'900px'} fontWeight={'normal'} color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='25px' flex='1'>
-                    Initiate the swap by paying a reservation fee to lock the seller’s USDT. After the reservation is confirmed, you will have 6 hours to send BTC to complete the swap.
+                    Initiate the swap by reserving liquidity to lock the seller’s USDT. After the reservation is confirmed, you will have {FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS / 60/60} hour to send BTC to complete the swap.
                 </Text>
 
                 {/* Fees and Swap Time Estimate */}

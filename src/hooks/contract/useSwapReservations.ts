@@ -38,6 +38,8 @@ export function useSwapReservations(): UseSwapReservationsResult {
                 indexInContract: indices[i],
             }));
 
+            console.log('swapReservationsWithIndex', swapReservationsWithIndex);
+
             setAllSwapReservations(swapReservationsWithIndex);
 
             if (storeSetSwapReservations) {

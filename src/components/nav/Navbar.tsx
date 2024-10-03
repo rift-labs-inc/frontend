@@ -177,16 +177,16 @@ export const Navbar = ({}) => {
                     {/* {navItem('Activity', '/activity')} */}
                     {navItem('About', '/about')}
                 </Flex>
-                {/* <Flex ml='32px' gap='32px' align='center'>
+                <Flex ml='25px' gap='30px' align='center'>
                     <a href='https://x.com/riftdex' target='_blank' rel='noopener noreferrer'>
-                        <Image src='/images/social/x.svg' w='20px' aspectRatio={1} />
+                        <Image src='/images/social/x.svg' w='17px' aspectRatio={1} />
                     </a>
                     <a href='https://t.me/riftdex' target='_blank' rel='noopener noreferrer'>
-                        <Image src='/images/social/telegram.svg' w='30px' aspectRatio={1} />
+                        <Image src='/images/social/telegram.svg' w='35px' aspectRatio={1} />
                     </a>
-                </Flex> */}
+                    
+                </Flex>
                 <Spacer />
-                {/* TODO: Remove below perhaps in prod: */}
                 <Flex direction='column' fontFamily={FONT_FAMILIES.AUX_MONO} align='center' fontSize='12px' position='absolute' top={0} left={0} right={0}>
                     {/* {isLocalhost && ( */}
                     <Button
@@ -220,7 +220,9 @@ export const Navbar = ({}) => {
                                 <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
                                     Vault Selection Algo VISUALIZER
                                 </Text>
-
+<Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
+                                    If you found this, you're a wizard
+                                </Text>
                                 <Flex justify='center' wrap='wrap' gap={4} alignItems='center'>
                                     {lowestFeeReservationParams?.vaultIndexesToReserve?.map((index, i) => (
                                         <React.Fragment key={`${index}-${i}`}>
