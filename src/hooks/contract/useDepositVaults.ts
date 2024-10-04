@@ -124,7 +124,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
             totalAvailableLiquidity = totalAvailableLiquidity.add(unreservedBalance);
 
-            if (vaultIndex === 1) {
+            if (vaultIndex === 6) {
                 console.log(`Vault ${vaultIndex} data:`, {
                     unreservedBalance: unreservedBalance.toString(),
                     additionalBalance: additionalBalance.toString(),
