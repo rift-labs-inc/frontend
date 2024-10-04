@@ -491,18 +491,6 @@ export const SwapUI = () => {
                 return;
             }
 
-            // ensure there is liquidity available for the swap output
-            const amountBufferedTo6Decimals = Number(usdtValue).toFixed(selectedInputAsset.decimals);
-            const microUsdtAmount = parseUnits(amountBufferedTo6Decimals, selectedInputAsset.decimals);
-            const isExceeded = BigNumber.from(microUsdtAmount).gt(validAssets[selectedInputAsset.name]?.totalAvailableLiquidity);
-            setIsLiquidityExceeded(isExceeded);
-
-            if (isExceeded) {
-                setBtcInputSwapAmount('');
-                setBtcOutputAmount('');
-                setLowestFeeReservationParams(null);
-            }
-
             // check if output is above max swap limit
             if (parseFloat(usdtValue) > parseFloat(formatUnits(MAX_SWAP_AMOUNT_MICRO_USDT, selectedInputAsset.decimals))) {
                 setIsAboveMaxSwapLimitUsdtOutput(true);
@@ -514,6 +502,18 @@ export const SwapUI = () => {
                 return;
             } else {
                 setIsAboveMaxSwapLimitUsdtOutput(false);
+            }
+
+            // ensure there is liquidity available for the swap output
+            const amountBufferedTo6Decimals = Number(usdtValue).toFixed(selectedInputAsset.decimals);
+            const microUsdtAmount = parseUnits(amountBufferedTo6Decimals, selectedInputAsset.decimals);
+            const isExceeded = BigNumber.from(microUsdtAmount).gt(validAssets[selectedInputAsset.name]?.totalAvailableLiquidity);
+            setIsLiquidityExceeded(isExceeded);
+
+            if (isExceeded) {
+                setBtcInputSwapAmount('');
+                setBtcOutputAmount('');
+                setLowestFeeReservationParams(null);
             }
 
             const isBelowMin = checkAmountBelowMinUsdtOutput(usdtValue);

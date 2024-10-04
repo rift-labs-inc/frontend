@@ -31,7 +31,6 @@ export async function getRiftSwapFees(numLpOutputs) {
     const mnemonic = 'ladder crystal wool wheat fossil large unable firm vicious index index outer';
     let wallet = buildWalletFromMnemonic(mnemonic);
 
-
     return await estimateRiftPaymentTransactionFees(numLpOutputs, wallet, MEMPOOL_HOST);
 }
 
@@ -52,7 +51,6 @@ export function buildWalletFromMnemonic(mnemonic: string): BitcoinWallet {
 }
 
 export async function estimateRiftPaymentTransactionFees(liquidityProviderCount: number, wallet: BitcoinWallet, mempoolApiHostname: string) {
-
     let dummy_lp = {
         amount: '1000',
         btcExchangeRate: '1',
@@ -74,20 +72,21 @@ export async function estimateRiftPaymentTransactionFees(liquidityProviderCount:
     // standard byte size for nonsegwit, minimized byte weight applied for segwit
     let virtualSize = txn.virtualSize();
 
-
     let feeRateQuote = await getBtcFeeRates(mempoolApiHostname);
 
     let amount = liquidityProviders.reduce((sum, lp) => sum + weiToSatoshi(lp.amount, lp.btcExchangeRate), 0);
 
     if (feeRateQuote?.fastestFee) {
+        console.log('god feeRateQuote.fastestFee', feeRateQuote.fastestFee);
+        console.log('god fastFeeAmount', (feeRateQuote.fastestFee + 2) * virtualSize);
         return {
-            fastFeeAmount: feeRateQuote.fastestFee * virtualSize,
-        } 
-    }else {
-            return {
-                fastFeeAmount: 30 * virtualSize
-            }
-        }
+            fastFeeAmount: (feeRateQuote.fastestFee + 2) * virtualSize,
+        };
+    } else {
+        return {
+            fastFeeAmount: 6 * virtualSize,
+        };
+    }
 }
 
 async function buildRiftPaymentTransaction(
@@ -198,7 +197,6 @@ export async function getBtcFeeRates(hostname: string): Promise<Fees> {
 
     const endpoint = `${hostname}/api/v1/fees/recommended`;
     try {
-
         const response = await fetch(endpoint);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
