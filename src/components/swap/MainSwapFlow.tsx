@@ -159,7 +159,7 @@ export const MainSwapFlow = () => {
                                     {` ${currentTotalBlockConfirmations}/${confirmationBlocksNeeded} Block Confirmations${currentTotalBlockConfirmations >= confirmationBlocksNeeded ? '' : dots}`}
                                 </Text>
                                 {currentTotalBlockConfirmations >= confirmationBlocksNeeded && (
-                                    <Text fontSize={'12px'} color={colors.greenOutline}>{`Block confirmations reached! Generating proof${dots}`}</Text>
+                                    <Text ml='8px' fontSize={'12px'} color={colors.greenOutline}>{`Block confirmations reached! Generating proof${dots}`}</Text>
                                 )}
                             </Flex>
                         </>
