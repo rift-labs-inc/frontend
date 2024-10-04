@@ -414,9 +414,12 @@ const ReservationDetails = () => {
                                         </Flex>
                                     </Flex>
 
-                                    <Text fontWeight={'normal'} fontSize='13px' mt='32px' color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                        {proxyWalletSwapInternalID ? 'Internal ID - ' + proxyWalletSwapInternalID : 'Loading internal id...'}
+                                    <Text fontWeight={'normal'} fontSize='13px' mt='32px' color={colors.RiftOrange} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                        WARNING: Do not clear browser cache or cookies until the swap is complete.
                                     </Text>
+                                    {/* <Text fontWeight={'normal'} fontSize='13px' mt='0px' color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                        {proxyWalletSwapInternalID ? 'Internal ID - ' + proxyWalletSwapInternalID : 'Loading internal id...'}
+                                    </Text> */}
                                 </>
                             ) : (
                                 <Flex direction='column'>
