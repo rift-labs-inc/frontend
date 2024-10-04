@@ -79,7 +79,18 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                 borderColor={colors.borderGray}
                 borderRadius='20px'
                 fontFamily={FONT_FAMILIES.AUX_MONO}
-                color={colors.offWhite}>
+                color={colors.offWhite}
+                animation={`breathe 3s infinite ease-in-out`}
+                sx={{
+                    '@keyframes breathe': {
+                        '0%, 100%': {
+                            filter: isError ? 'drop-shadow(0px 0px 30px rgba(183, 6, 6, 0.3))' : 'drop-shadow(0px 0px 30px rgba(6, 64, 183, 0.4))',
+                        },
+                        '50%': {
+                            filter: isError ? 'drop-shadow(0px 0px 40px rgba(183, 6, 6, 0.5))' : 'drop-shadow(0px 0px 50px rgba(6, 64, 183, 0.6))',
+                        },
+                    },
+                }}>
                 <ModalHeader mt='10px' fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
                     Deposit Status
                 </ModalHeader>

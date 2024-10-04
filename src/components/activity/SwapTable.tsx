@@ -20,7 +20,7 @@ import {
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { FONT_FAMILIES } from '../../utils/font';
-import { formatAddress } from '../../utils/format';
+import { formatAddress } from '../../utils/frontendHelpers';
 import { BTC_Tag, ETH_Logo, USDT_Icon, USDT_Tag, WETH_Tag } from '../other/SVGs';
 import { FaSearch } from 'react-icons/fa';
 

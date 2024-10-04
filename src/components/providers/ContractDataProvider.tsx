@@ -124,17 +124,15 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     // New useEffect for continuous refresh
     useEffect(() => {
         const continuouslyRefreshDepositData = async () => {
+            await refreshAllDepositData();
             if (isConnected && address) {
-                await refreshAllDepositData();
                 await refreshConnectedUserBalance();
             }
         };
 
-        if (isConnected && address) {
-            continuouslyRefreshDepositData();
-            const intervalId = setInterval(continuouslyRefreshDepositData, 3000); // 3 seconds
-            return () => clearInterval(intervalId);
-        }
+        continuouslyRefreshDepositData();
+        const intervalId = setInterval(continuouslyRefreshDepositData, 3000); // 3 seconds
+        return () => clearInterval(intervalId);
     }, [isConnected, address]);
 
     const isLoading = loading || bitcoinPriceUSD === 0;

@@ -26,7 +26,7 @@ import { LockClosed } from 'react-ionicons';
 import { AssetTag } from '../other/AssetTag';
 import WebAssetTag from '../other/WebAssetTag';
 import { toastError, toastInfo } from '../../hooks/toast';
-import { listenForLiquidityReservedEvent } from '../../utils/contractReadFunctions';
+import { listenForLiquidityReservedEvent, validateReserveLiquidity } from '../../utils/contractReadFunctions';
 import { useContractData } from '../../components/providers/ContractDataProvider';
 import { bufferTo18Decimals, createReservationUrl } from '../../utils/dappHelper';
 import { ProxyWalletLiquidityProvider, ReservationByPaymasterRequest, ReservationByPaymasterResponse } from '../../types';
@@ -164,20 +164,41 @@ export const ReserveLiquidity = ({}) => {
                 expired_swap_reservation_indexes: lowestFeeReservationParams.expiredSwapReservationIndexes.map(String), // convert each expired reservation index to a string
             };
 
+            // Retry if we get this error with different deposit vaults:
+            // NotEnoughLiquidity() -> 0x4323a555
             console.log('reservationRequest', reservationRequest);
+            try {
+                let resp = await validateReserveLiquidity(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress, reservationRequest);
+            } catch (e) {
+                if (e.toString().includes('0x4323a555')) {
+                    // liquidity being unavail/changed
+                    toastError('', { title: 'Liquidity Unavailable', description: 'Someone else reserved your liquidity from under your feet :(' });
+                    setSwapFlowState('0-not-started');
+                } else {
+                    // some other reservation error
+                    toastError('', { title: 'Reservation Failed', description: 'There was an error reserving liquidity, please try again.' });
+                    setSwapFlowState('0-not-started');
+                }
+                const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+                await sleep(5000);
+            }
+
+            // [0] start listening for the liquidity reserved event
+            let reservationsDetailPromise = listenForLiquidityReservedEvent(ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress, riftExchangeABI.abi, ethPayoutAddress, blockHeight);
 
             const result = await reserveByPaymaster(reservationRequest);
             console.log('Reservation result:', result);
 
             if (!result.status) {
                 console.error('Error reserving liquidity:', result);
-                toastError('', { title: 'Error reserving liquidity', description: 'There was an error reserving liquidity, please try again.' });
+                    toastError('', { title: 'Liquidity Unavailable', description: 'Someone else reserved your liquidity from under your feet :(' });
+                    setSwapFlowState('0-not-started');
                 setLoadingReservation(false);
                 return;
             }
 
-            // [0] start listening for the liquidity reserved event
-            const reservationDetails = await listenForLiquidityReservedEvent(ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress, riftExchangeABI.abi, ethPayoutAddress, blockHeight);
+            // [1] wait for the reservation to confirm
+            const reservationDetails = await reservationsDetailPromise;
             console.log('are we getting past the listenForLiquidityReservedEvent call?');
 
             console.log('Liquidity reserved successfully');
@@ -315,48 +336,16 @@ export const ReserveLiquidity = ({}) => {
                 borderWidth={3}
                 borderColor={colors.borderGray}>
                 <Text fontSize='14px' mb='18px' maxW={'900px'} fontWeight={'normal'} color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='25px' flex='1'>
-                    Initiate the swap by reserving liquidity to lock the seller’s USDT. After the reservation is confirmed, you will have {FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS / 60/60} hour to send BTC to complete the swap.
+                    Initiate the swap by reserving liquidity to lock the seller’s USDT. After the reservation is confirmed, you will have {FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS / 60 / 60}{' '}
+                    hour to send BTC to complete the swap.
                 </Text>
 
-                {/* Fees and Swap Time Estimate */}
-                <Flex w='100%' justify={'center'}>
-                    <Flex w='49%' justify={'center'} mt='20px'>
-                        <Flex w='100%' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='0px' mb='0px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
-                            <Flex w='50%' align='center' bg={colors.offBlack}>
-                                <Flex mx='13px' w='20px'>
-                                    <FaLock size={'22px'} color={colors.offWhite} />
-                                </Flex>
-                                <Flex direction={'column'}>
-                                    <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
-                                        Reservation Fee
-                                    </Text>
-                                    <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
-                                        Free
-                                    </Text>
-                                </Flex>
-                            </Flex>
-                            <Flex w='50%' align='center' bg={colors.borderGray}>
-                                <Flex mx='15px'>
-                                    <FaClock size={'24px'} color={colors.offWhite} />
-                                </Flex>
-                                <Flex direction={'column'}>
-                                    <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
-                                        Estimated Swap Time
-                                    </Text>{' '}
-                                    <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
-                                        20 Minutes
-                                    </Text>
-                                </Flex>
-                            </Flex>
-                        </Flex>
-                    </Flex>
-                </Flex>
 
                 {/* USDT Payout Address */}
-                <Text ml='8px' mt='26px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                <Text ml='8px' mt='24px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                     USDT Payout Address
                 </Text>
-                <Flex mt='-2px' mb='15px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
+                <Flex mt='-2px' mb='22px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
                     <Flex direction={'row'} py='6px' px='5px'>
                         <Input
                             value={ethPayoutAddress}
@@ -387,17 +376,54 @@ export const ReserveLiquidity = ({}) => {
                     </Flex>
                 </Flex>
 
+                {/* Fees and Swap Time Estimate */}
+                <Flex w='100%' justify={'center'} mb='7px'>
+                    <Flex w='48%' justify={'center'} mt='16px'>
+                        <Flex w='100%' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='0px' mb='6px' bg={colors.borderGray} borderColor={'#212229'} borderWidth={2}>
+                            <Flex w='50%' align='center' bg={'linear-gradient(180deg, #111219 0%, #0D0E14 100%)'}>
+                                <Flex mx='13px' w='20px'>
+                                    <FaLock size={'22px'} color={colors.textGray} />
+                                </Flex>
+                                <Flex direction={'column'}>
+                                    <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
+                                        Reservation Fee
+                                    </Text>
+                                    <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
+                                        Free
+                                    </Text>
+                                </Flex>
+                            </Flex>
+                            <Flex w='50%' align='center' bg={'linear-gradient(180deg, #212229 0%, #1A1B20 100%)'}>
+                                <Flex mx='15px'>
+                                    <FaClock size={'24px'} color={colors.textGray} />
+                                </Flex>
+                                <Flex direction={'column'}>
+                                    <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
+                                        Estimated Swap Time
+                                    </Text>{' '}
+                                    <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
+                                        20-30 Minutes
+                                    </Text>
+                                </Flex>
+                            </Flex>
+                        </Flex>
+                    </Flex>
+                </Flex>
                 {/* Reserve Button */}
             </Flex>
             <Flex
                 bg={ethPayoutAddress && isEthereumPayoutAddressValid ? colors.purpleBackground : colors.purpleBackgroundDisabled}
                 _hover={{ bg: colors.purpleHover }}
                 w='400px'
-                mt='25px'
                 transition={'0.2s'}
-                h='45px'
+
+                px='20px'
+                                py='4px'
+                                mt={'22px'}
+                                h={'50px'}
+
                 onClick={ethPayoutAddress && isEthereumPayoutAddressValid ? () => (isPayingFeesInBTC ? proceedWithReservationPayingFeesUsingBtc() : initiateReservationPayingFeesInEth()) : null}
-                fontSize={'15px'}
+                fontSize={'16px'}
                 align={'center'}
                 userSelect={'none'}
                 cursor={'pointer'}

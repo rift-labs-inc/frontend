@@ -216,7 +216,7 @@ export const Navbar = ({}) => {
                                     );
                                 })}
                             </VStack>
-                            <Flex direction='column' mt='200px' align='center' width='100%'>
+                            <Flex direction='column' mt='50vh' align='center' width='100%'>
                                 <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
                                     Vault Selection Algo VISUALIZER
                                 </Text>

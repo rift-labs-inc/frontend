@@ -61,6 +61,7 @@ export const DepositUI = () => {
     const areNewDepositsPaused = useStore((state) => state.areNewDepositsPaused);
     const [dots, setDots] = useState('');
 
+
     // update token price and available liquidity
     useEffect(() => {
         if (selectedInputAsset && validAssets[selectedInputAsset.name]) {
@@ -252,8 +253,8 @@ export const DepositUI = () => {
             <Flex
                 direction='column'
                 align='center'
-                py='27px'
-                w={depositFlowState === '1-confirm-deposit' ? '800px' : '630px'}
+            py={isMobile ? '20px': '27px'}
+                            w={isMobile ? '100%' :depositFlowState === '1-confirm-deposit' ? '800px' : '630px'}
                 borderRadius='20px'
                 {...opaqueBackgroundColor}
                 borderBottom={borderColor}
@@ -278,7 +279,7 @@ export const DepositUI = () => {
                                             userSelect='none'>
                                             {loading ? `Loading contract data${dots}` : 'You Deposit'}
                                         </Text>
-                                        {loading ? (
+                                        {loading && !isMobile ?  (
                                             <Skeleton height='62px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#2E5F50'} endColor={'#0F4534'} />
                                         ) : (
                                             <Input
@@ -408,7 +409,7 @@ export const DepositUI = () => {
                                             userSelect='none'>
                                             {loading ? `Loading contract data${dots}` : `You Receive`}
                                         </Text>
-                                        {loading ? (
+                                        {loading && !isMobile ?  (
                                             <Skeleton height='62px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#795436'} endColor={'#6C4525'} />
                                         ) : (
                                             <Input
@@ -549,21 +550,21 @@ export const DepositUI = () => {
                                     areNewDepositsPaused
                                         ? null
                                         : isMobile
-                                        ? () => toastInfo({ title: 'Hop on your laptop', description: 'This app is too cool for small screens' })
-                                        : usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded
+                                        ? () => toastInfo({ title: 'Hop on your laptop', description: 'This app is too cool for small screens, mobile coming soon!' })
+                                        : usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded && btcOutputAmount 
                                         ? () => initiateDeposit()
                                         : null
                                 }
                                 fontSize={'16px'}
                                 align={'center'}
                                 userSelect={'none'}
-                                cursor={usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded ? 'pointer' : 'not-allowed'}
+                                cursor={usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded && btcOutputAmount ? 'pointer' : 'not-allowed'}
                                 borderRadius={'10px'}
                                 justify={'center'}
-                                border={usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded ? '3px solid #445BCB' : '3px solid #3242a8'}>
+                                border={usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded&& btcOutputAmount  ? '3px solid #445BCB' : '3px solid #3242a8'}>
                                 <Text
                                     color={
-                                        usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded && !areNewDepositsPaused
+                                        usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded && btcOutputAmount && !areNewDepositsPaused
                                             ? colors.offWhite
                                             : colors.darkerGray
                                     }

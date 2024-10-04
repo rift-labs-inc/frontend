@@ -459,43 +459,11 @@ export const DepositConfirmation = ({}) => {
 
             {/* INSTRUCTIONAL TEXT  */}
             <Text mb='10px' justifyContent='center' w='100%' fontSize={'13px'} letterSpacing={'-1px'} textAlign={'center'}>
-                Create a sell order deposit vault, get payed out in
-                <OrangeText> Bitcoin</OrangeText> when your order is filled by a buyer. Withdraw unreserved liquidity anytime.
+                Create a sell order deposit vault, get paid out in
+                <OrangeText> Bitcoin</OrangeText> when your order is filled. Vaults can go stale if the price of the underlying asset diverges, however you can update or withdraw unreserved liquidity anytime.
             </Text>
 
-            {/* Fees and Swap Time Estimate */}
-            <Flex w='100%' justify={'center'}>
-                <Flex w='60%' justify={'center'} mt='20px'>
-                    <Flex w='100%' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='0px' mb='0px' bg={colors.borderGray} borderColor={colors.borderGray} borderWidth={2}>
-                        <Flex w='50%' align='center' bg={colors.offBlack}>
-                            <Flex mx='13px' w='20px'>
-                                <FaLock size={'22px'} color={colors.offWhite} />
-                            </Flex>
-                            <Flex direction={'column'}>
-                                <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
-                                    DEPOSIT FEE
-                                </Text>
-                                <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
-                                    FREE
-                                </Text>
-                            </Flex>
-                        </Flex>
-                        <Flex w='50%' align='center' bg={colors.borderGray}>
-                            <Flex mx='15px'>
-                                <FaClock size={'24px'} color={colors.offWhite} />
-                            </Flex>
-                            <Flex direction={'column'}>
-                                <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
-                                    Estimated Swap Time
-                                </Text>{' '}
-                                <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
-                                    20 Minutes
-                                </Text>
-                            </Flex>
-                        </Flex>
-                    </Flex>
-                </Flex>
-            </Flex>
+          
 
             <Flex mt='10px' direction={'column'} overflow={'visible'}>
                 <Flex direction='column' align='center' overflow={'visible'}>
@@ -534,6 +502,40 @@ export const DepositConfirmation = ({}) => {
                                 )}
                             </Flex>
                         </Flex>
+
+ {/* Fees and Swap Time Estimate */}
+                <Flex w='100%' justify={'center'} mb='7px'>
+                    <Flex w='62%' justify={'center'} mt='20px'>
+                        <Flex w='100%' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='0px' mb='6px' bg={colors.borderGray} borderColor={'#212229'} borderWidth={2}>
+                            <Flex w='50%' align='center' bg={'linear-gradient(180deg, #111219 0%, #0D0E14 100%)'}>
+                                <Flex mx='13px' w='20px'>
+                                    <FaLock size={'22px'} color={colors.textGray} />
+                                </Flex>
+                                <Flex direction={'column'}>
+                                    <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
+                                        Reservation Fee
+                                    </Text>
+                                    <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
+                                        Free
+                                    </Text>
+                                </Flex>
+                            </Flex>
+                            <Flex w='50%' align='center' bg={'linear-gradient(180deg, #212229 0%, #1A1B20 100%)'}>
+                                <Flex mx='15px'>
+                                    <FaClock size={'24px'} color={colors.textGray} />
+                                </Flex>
+                                <Flex direction={'column'}>
+                                    <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
+                                        Estimated Swap Time
+                                    </Text>{' '}
+                                    <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
+                                        20-30 Minutes
+                                    </Text>
+                                </Flex>
+                            </Flex>
+                        </Flex>
+                    </Flex>
+                </Flex>
 
                         {/* Advanced Settings Modal */}
                         <Modal isOpen={isOpen} onClose={onClose}>
@@ -795,7 +797,7 @@ export const DepositConfirmation = ({}) => {
                             alignSelf={'center'}
                             bg={isConnected ? (usdtDepositAmount && btcOutputAmount && payoutBTCAddress ? colors.purpleBackground : colors.purpleBackgroundDisabled) : colors.purpleBackground}
                             _hover={{ bg: colors.purpleHover }}
-                            w='290px'
+                            w='300px'
                             mt='10px'
                             transition={'0.2s'}
                             h='45px'

@@ -6,18 +6,17 @@ import { Navbar } from '../../../components/nav/Navbar';
 import { colors } from '../../../utils/colors';
 import { bufferTo18Decimals, calculateBtcOutputAmountFromExchangeRate, calculateOriginalAmountBeforeFee, decodeReservationUrl, fetchReservationDetails } from '../../../utils/dappHelper';
 import CurrencyModal from '../../../components/swap/CurrencyModal';
-import { RecieveUsdt } from '../../../components/swap/RecieveUsdt';
+import { MainSwapFlow } from '../../../components/swap/MainSwapFlow';
 import { SwapStatusTimeline } from '../../../components/swap/SwapStatusTimeline';
-import { ChevronLeftIcon } from '@chakra-ui/icons';
+import { CheckCircleIcon, ChevronLeftIcon } from '@chakra-ui/icons';
 import { SwapAmounts } from '../../../components/swap/SwapAmounts';
 import { OpenGraph } from '../../../components/background/OpenGraph';
 import { ChromeLogoSVG, WarningSVG } from '../../../components/other/SVGs';
 import { FONT_FAMILIES } from '../../../utils/font';
-import { BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, opaqueBackgroundColor, PROTOCOL_FEE, PROTOCOL_FEE_DENOMINATOR } from '../../../utils/constants';
+import { bitcoin_dark_bg_color, BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, opaqueBackgroundColor, PROTOCOL_FEE, PROTOCOL_FEE_DENOMINATOR } from '../../../utils/constants';
 import { formatUnits } from 'ethers/lib/utils';
 import QRCode from 'qrcode.react';
 import swapReservationsAggregatorABI from '../../../abis/SwapReservationsAggregator.json';
-import { getDepositVaults, getSwapReservations } from '../../../utils/contractReadFunctions';
 import { BigNumber } from 'ethers';
 import depositVaultAggregatorABI from '../../../abis/DepositVaultsAggregator.json';
 import { parseUnits } from 'viem';
@@ -166,7 +165,7 @@ const ReservationDetails = () => {
                     const currentReservationStateFromContract = getReservationStateString(reservationDetails.swapReservationData.state);
                     setCurrentReservationState(currentReservationStateFromContract);
                     // set swap flow state to expired if its been 8 hours since the reservation was created
-                    const isReservationExpired = Date.now() - reservationDetails.swapReservationData.reservationTimestamp * 1000 > 8 * 60 * 60 * 1000;
+                    const isReservationExpired = Date.now() - reservationDetails.swapReservationData.reservationTimestamp * 1000 > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS * 1000;
 
                     if (currentReservationStateFromContract === 'Created' && isReservationExpired) {
                         setSwapFlowState('5-expired');
@@ -180,19 +179,15 @@ const ReservationDetails = () => {
 
                     setSwapReservationData(reservationDetails.swapReservationData);
 
-
-                    
-                   const microUsdtOutputAmountWithoutFee = calculateOriginalAmountBeforeFee(reservationDetails.totalReservedAmountInMicroUsdt);
+                    const microUsdtOutputAmountWithoutFee = calculateOriginalAmountBeforeFee(reservationDetails.totalReservedAmountInMicroUsdt);
                     console.log('proc reservationDetails.totalReservedAmountInMicroUsdt:', reservationDetails.totalReservedAmountInMicroUsdt.toString());
                     console.log('proc calculateOriginalAmountBeforeFee', microUsdtOutputAmountWithoutFee.toString());
-                    const trueProtocolFee =  reservationDetails.totalReservedAmountInMicroUsdt.sub(microUsdtOutputAmountWithoutFee).toString();
+                    const trueProtocolFee = reservationDetails.totalReservedAmountInMicroUsdt.sub(microUsdtOutputAmountWithoutFee).toString();
                     console.log('proc trueProtocolFee:', trueProtocolFee);
                     const trueMircoUsdtSwapOutputAmount = reservationDetails.totalReservedAmountInMicroUsdt.sub(trueProtocolFee).toString();
                     console.log('proc trueMircoUsdtSwapOutputAmount:', trueMircoUsdtSwapOutputAmount);
 
-                    setUsdtOutputSwapAmount(
-                        formatUnits(
-                            trueMircoUsdtSwapOutputAmount.toString(), selectedInputAsset.decimals));
+                    setUsdtOutputSwapAmount(formatUnits(trueMircoUsdtSwapOutputAmount.toString(), selectedInputAsset.decimals));
                     setBtcInputSwapAmount(reservationDetails.btcInputSwapAmount);
                     setTotalSwapAmountInSats(reservationDetails.totalSwapAmountInSats);
                 } catch (error) {
@@ -241,7 +236,7 @@ const ReservationDetails = () => {
                 <Flex direction={'column'} align='center' w='100%' mt={'130px'}>
                     <Flex width='1000px' align={'center'} direction={'column'}>
                         <SwapAmounts />
-                        {!loadingState && swapFlowState !== '5-expired' && (
+                        {proxyWalletSwapInternalID && !loadingState && swapFlowState !== '5-expired' && (
                             <Flex justify={'center'} w='100%' mt='20px'>
                                 <SwapStatusTimeline />
                             </Flex>
@@ -253,7 +248,7 @@ const ReservationDetails = () => {
                             mt='20px'
                             borderRadius='30px'
                             px='40px'
-                            boxShadow={'0px 0px 20px 2px rgba(0, 0, 0, 0.1)'}
+                            boxShadow={currentReservationState === 'Completed' ? `0px 0px 15px 1px ${colors.greenOutline}` : '0px 0px 20px 2px rgba(0, 0, 0, 0.1)'}
                             direction='column'
                             py='35px'
                             align='center'
@@ -305,15 +300,14 @@ const ReservationDetails = () => {
                               currentReservationState === 'Proved' ||
                               currentReservationState === 'Expired' ||
                               currentReservationState === 'Completed' ? (
-                                <RecieveUsdt />
-                            ) : (
+                                <MainSwapFlow />
+                            ) : proxyWalletSwapInternalID ? (
                                 <>
-                                    <Flex alignItems="center" fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight={'bold'} fontSize={'24px'} mt='-5px' mb='18px'>
-                                        <Flex  mr='10px' mt='-1px'>
-
-                                                    <FaClock size={'22px'} color={colors.darkerGray}  />
-                                                    </Flex>
-                                        <Text marginRight="4px">Reservation Locked for:</Text>
+                                    <Flex alignItems='center' fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight={'bold'} fontSize={'24px'} mt='-5px' mb='18px'>
+                                        <Flex mr='10px' mt='-1px'>
+                                            <FaClock size={'22px'} color={colors.darkerGray} />
+                                        </Flex>
+                                        <Text marginRight='4px'>Reservation Locked for:</Text>
                                         <span
                                             style={{
                                                 color: minutesLeft >= 20 ? colors.greenOutline : minutesLeft >= 10 ? 'yellow' : 'red',
@@ -322,15 +316,12 @@ const ReservationDetails = () => {
                                             }}>
                                             {timeLeft ? (
                                                 <>
-                                                    <Flex  mr='7px' mt='-1px'>
-
-                                                    </Flex>
+                                                    <Flex mr='7px' mt='-1px'></Flex>
                                                     {timeLeft}
                                                 </>
                                             ) : (
-                                                <Flex ml='6px'  mt='-1px'>
-
-                                                <Spinner color={colors.textGray} h={'18px'} w={'18px'} thickness='3px' speed='0.65s' />
+                                                <Flex ml='6px' mt='-1px'>
+                                                    <Spinner color={colors.textGray} h={'18px'} w={'18px'} thickness='3px' speed='0.65s' />
                                                 </Flex>
                                             )}
                                         </span>
@@ -427,14 +418,29 @@ const ReservationDetails = () => {
                                         {proxyWalletSwapInternalID ? 'Internal ID - ' + proxyWalletSwapInternalID : 'Loading internal id...'}
                                     </Text>
                                 </>
+                            ) : (
+                                <Flex direction='column'>
+                                    <Text>Invalid reservation id...</Text>
+                                    <Button
+                                        mt='18px'
+                                        px='38px'
+                                        bg={colors.purpleBackground}
+                                        _hover={{ bg: colors.purpleHover }}
+                                        onClick={() => handleNavigation('/')}
+                                        color={colors.offWhite}
+                                        border={'2px solid'}
+                                        borderColor={colors.purpleBorder}>
+                                        <Text>Start a new swap</Text>
+                                    </Button>
+                                </Flex>
                             )}
                         </Flex>
-                        {!loadingState && swapFlowState === '2-send-bitcoin' && currentReservationState !== 'Proved' && currentReservationState !== 'Completed' && (
+                        {proxyWalletSwapInternalID && !loadingState && swapFlowState === '2-send-bitcoin' && currentReservationState !== 'Proved' && currentReservationState !== 'Completed' && (
                             <Flex
                                 bg={colors.purpleBackgroundDisabled}
                                 borderColor={colors.purpleBorderDark}
                                 borderWidth={3}
-                                borderRadius='15px'
+                                borderRadius='14px'
                                 px='20px'
                                 w='540px'
                                 py='4px'
@@ -448,13 +454,12 @@ const ReservationDetails = () => {
                                 <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
                             </Flex>
                         )}
-
-                        {swapFlowState === '3-receive-evm-token' && currentTotalBlockConfirmations < confirmationBlocksNeeded && (
+                        {currentReservationState === 'Created' && swapFlowState === '3-receive-evm-token' && currentTotalBlockConfirmations < confirmationBlocksNeeded && (
                             <Flex
                                 bg={colors.purpleBackgroundDisabled}
                                 borderColor={colors.purpleBorderDark}
                                 borderWidth={3}
-                                borderRadius='15px'
+                                borderRadius='14px'
                                 px='20px'
                                 w='540px'
                                 py='4px'
@@ -465,6 +470,44 @@ const ReservationDetails = () => {
                                 <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
                                     Awaiting {confirmationBlocksNeeded - currentTotalBlockConfirmations} Block Confirmation
                                     {confirmationBlocksNeeded - currentTotalBlockConfirmations > 1 ? 's' : ''}
+                                </Text>
+                                <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
+                            </Flex>
+                        )}{' '}
+                        {currentReservationState === 'Created' && currentTotalBlockConfirmations >= confirmationBlocksNeeded && (
+                            <Flex
+                                bg={colors.purpleBackgroundDisabled}
+                                borderColor={colors.purpleBorderDark}
+                                borderWidth={3}
+                                borderRadius='14px'
+                                px='20px'
+                                w='540px'
+                                py='4px'
+                                mt={'20px'}
+                                h={'60px'}
+                                align={'center'}
+                                justify={'center'}>
+                                <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                    Generating Transaction Proof
+                                </Text>
+                                <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
+                            </Flex>
+                        )}
+                        {currentReservationState === 'Proved' && (
+                            <Flex
+                                bg={'rgba(8, 34, 22, 0.8)'}
+                                borderColor={colors.greenBackground}
+                                borderWidth={3}
+                                borderRadius='14px'
+                                px='20px'
+                                w='400px'
+                                py='4px'
+                                mt={'20px'}
+                                h={'60px'}
+                                align={'center'}
+                                justify={'center'}>
+                                <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                    RELEASING FUNDS
                                 </Text>
                                 <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
                             </Flex>

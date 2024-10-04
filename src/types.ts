@@ -48,6 +48,7 @@ export type UpdateExchangeRateParams = {
 };
 
 export type DepositVault = {
+    owner: string;
     depositTimestamp: number;
     initialBalance: BigNumberish;
     unreservedBalanceFromContract: BigNumberish;

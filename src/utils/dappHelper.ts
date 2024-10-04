@@ -268,14 +268,13 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
         }
     }
 
-
     // calculate the protocol fee in micro USDT
     const userOutputMicroUsdt = calculateOriginalAmountBeforeFee(totalMicroUsdtSwapOutput);
     const protocolFeeInMicroUsdt = calculateProtocolFeeInMicroUsdt(userOutputMicroUsdt);
 
-    console.log("real totalMicroUsdtSwapOutput", totalMicroUsdtSwapOutput.toString());
-    console.log("- protocolFeeInMicroUsdt", protocolFeeInMicroUsdt.toString());
-    console.log("= userOutputMicroUsdt", userOutputMicroUsdt.toString());
+    console.log('real totalMicroUsdtSwapOutput', totalMicroUsdtSwapOutput.toString());
+    console.log('- protocolFeeInMicroUsdt', protocolFeeInMicroUsdt.toString());
+    console.log('= userOutputMicroUsdt', userOutputMicroUsdt.toString());
 
     // [6] calculate the total swap exchange rate in microusdtbuffered to 18 decimals per sat
     let totalSwapExchangeRate;
@@ -316,7 +315,6 @@ export function calculateProtocolFeeInMicroUsdt(microUsdtOutputAmount: BigNumber
 
 export function calculateOriginalAmountBeforeFee(totalAmountWithFee: BigNumber): BigNumber {
     // set bignumberjs to round up
-    console.log("bigdog totalAmountWithFee", totalAmountWithFee.toString());
     let roundedOutputAmount = BigNumberJs(totalAmountWithFee.toString())
         .times(BigNumberJs(PROTOCOL_FEE_DENOMINATOR.toString()))
         .div(BigNumberJs(PROTOCOL_FEE.add(PROTOCOL_FEE_DENOMINATOR).toString()))
@@ -325,12 +323,8 @@ export function calculateOriginalAmountBeforeFee(totalAmountWithFee: BigNumber):
     if (roundedOutputAmount.isZero()) {
         roundedOutputAmount = BigNumberJs(10000);
     }
-    console.log("bigdog roundedOutputAmount", roundedOutputAmount.toString());
     return BigNumber.from(roundedOutputAmount.toString());
 }
-
-
-
 
 export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputAmount, maxLpOutputs = MAX_SWAP_LP_OUTPUTS) {
     // [0] calculate the protocol fee in micro USDT and inlcude in the output amount
@@ -370,8 +364,10 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
         if (totalLpOutputsUsed >= maxLpOutputs || remainingUsdtToAchieve.lte(0)) break;
 
         const vault = sortedVaults[i];
+        console.log('jeff vault', vault.index);
+        console.log('jeff vault.unreservedBalance', vault.unreservedBalance);
         const microUsdtAvailable = BigNumber.from(vault.trueUnreservedBalance);
-
+        console.log('jeff microUsdtAvailable', microUsdtAvailable.toString());
         // [1] calculate the amount of μUSDT to take from the current vault
         const microUsdtToTake = microUsdtAvailable.lt(remainingUsdtToAchieve) ? microUsdtAvailable : remainingUsdtToAchieve;
         const bufferedMicroUsdtToTake = bufferTo18Decimals(microUsdtToTake, vault.depositAsset.decimals);
@@ -464,9 +460,7 @@ export const fetchReservationDetails = async (swapReservationURL: string, ethers
             const totalReservedAmountInMicroUsdt = swapReservationData.totalSwapOutputAmount;
 
             // [2] Convert BigNumber reserved vault indexes to numbers
-            const reservedVaultIndexesConverted = Array.isArray(swapReservationData.vaultIndexes)
-                ? swapReservationData.vaultIndexes.map((index) => index)
-                : [swapReservationData.vaultIndexes];
+            const reservedVaultIndexesConverted = Array.isArray(swapReservationData.vaultIndexes) ? swapReservationData.vaultIndexes.map((index) => index) : [swapReservationData.vaultIndexes];
 
             // [3] Fetch the reserved deposit vaults on the reservation
             const depositVaultBytecode = depositVaultAggregatorABI.bytecode;

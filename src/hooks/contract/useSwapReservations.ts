@@ -24,7 +24,7 @@ export function useSwapReservations(): UseSwapReservationsResult {
     const storeSwapReservations = store ? store.allSwapReservations : [];
     const storeSetSwapReservations = store ? store.setAllSwapReservations : null;
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-
+    const [refreshReservationData, setRefreshReservationData] = useState<boolean>(false);
     async function fetchSwapReservations() {
         if (!ethersRpcProvider) {
             return;
@@ -48,6 +48,8 @@ export function useSwapReservations(): UseSwapReservationsResult {
                 indexInContract: indices[i],
             }));
 
+            console.log('All Swap Reservations:', swapReservationsWithIndex);
+
             setAllSwapReservations(swapReservationsWithIndex);
 
             if (storeSetSwapReservations) {
@@ -62,15 +64,21 @@ export function useSwapReservations(): UseSwapReservationsResult {
         }
     }
 
-    async function refreshSwapReservations() {
-        setLoading(true);
-        await fetchSwapReservations();
-    }
-
     useEffect(() => {
-        refreshSwapReservations();
-    }, [ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress]);
+        refreshData();
+    }, [refreshReservationData]);
 
+    const refreshData = async () => {
+        try {
+            await fetchSwapReservations();
+        } catch (error) {
+            console.error('Error refreshing user deposit data:', error);
+        }
+    };
+
+    const refreshSwapReservations = async () => {
+        setRefreshReservationData((prev) => !prev);
+    };
 
     return {
         allSwapReservations: allSwapReservations.length > 0 ? allSwapReservations : storeSwapReservations,

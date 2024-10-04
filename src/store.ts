@@ -129,7 +129,7 @@ export const useStore = create<Store>((set) => {
             name: 'BTC',
             decimals: 8,
             icon_svg: null,
-            bg_color: '#A6591B',
+            bg_color: '#c26920',
             border_color: '#FFA04C',
             border_color_light: '#FFA04C',
             dark_bg_color: '#372412',
@@ -277,7 +277,7 @@ export const useStore = create<Store>((set) => {
         setIsPayingFeesInBTC: (isPayingFeesInBTC) => set({ isPayingFeesInBTC }),
 
         // contract data (deposit vaults, swap reservations)
-        allDepositVaults: {},
+        allDepositVaults: [],
         setAllDepositVaults: (allDepositVaults) => set({ allDepositVaults }),
         userActiveDepositVaults: [],
         setUserActiveDepositVaults: (userActiveDepositVaults) => set({ userActiveDepositVaults }),

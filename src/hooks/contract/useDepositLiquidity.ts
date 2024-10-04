@@ -77,7 +77,22 @@ export function useDepositLiquidity() {
 
                 setStatus(DepositStatus.WaitingForWalletConfirmation);
 
-                const depositTx = await riftExchangeContractInstance.depositLiquidity(params.tokenDepositAmountInSmallestTokenUnits, params.btcExchangeRate, params.btcPayoutLockingScript);
+                // estimate gas
+                const estimatedGas = await riftExchangeContractInstance.estimateGas.depositLiquidity(
+                    params.tokenDepositAmountInSmallestTokenUnits,
+                    params.btcExchangeRate,
+                    params.btcPayoutLockingScript
+                );
+
+                // double the estimated gas
+                const doubledGasLimit = estimatedGas.mul(2);
+
+                const depositTx = await riftExchangeContractInstance.depositLiquidity(
+                    params.tokenDepositAmountInSmallestTokenUnits,
+                    params.btcExchangeRate,
+                    params.btcPayoutLockingScript,
+                    { gasLimit: doubledGasLimit } 
+                );
                 setStatus(DepositStatus.DepositPending);
 
                 setTxHash(depositTx.hash);
@@ -91,7 +106,7 @@ export function useDepositLiquidity() {
                 setStatus(DepositStatus.Error);
             }
         },
-        [isClient],
+        [isClient, userEthAddress, selectedInputAsset, validAssets, refreshAllDepositData],
     );
 
     if (!isClient) {

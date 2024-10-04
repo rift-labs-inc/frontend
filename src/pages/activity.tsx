@@ -18,6 +18,10 @@ import HorizontalButtonSelector from '../components/other/HorizontalButtonSelect
 import ActivityChartContainer from '../components/charts/ActivityChartContainer';
 import ActiveLiquidityRawChart from '../components/charts/ActiveLiquidityRawChart';
 import MonthlyValueRawChart from '../components/charts/MonthlyValueRawChart';
+import { FONT_FAMILIES } from '../utils/font';
+import SwapPreviewCard from '../components/deposit/SwapPreviewCard';
+import { DepositVault, SwapReservation } from '../types';
+import { createReservationUrl } from '../utils/dappHelper';
 
 const Activity = () => {
     const { isMobile } = useWindowSize();
@@ -25,10 +29,9 @@ const Activity = () => {
     const handleNavigation = (route: string) => {
         router.push(route);
     };
-    // const activityData = useStore((state) => state.activityData);
-
-    const [showMyActivity, setShowMyActivity] = useState(false);
-
+    const allDepositVaults = useStore((state) => state.allDepositVaults);
+    const allSwapReservations = useStore((state) => state.allSwapReservations);
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const { options: optionsButton, selected: selectedButton, setSelected: setSelectedButton } = useHorizontalSelectorInput(['Swaps', 'Deposits'] as const);
 
     return (
@@ -66,6 +69,8 @@ const Activity = () => {
                             Manage current swaps and previous bridge activity.
                         </Text>
                     </Flex>
+
+                    {/* CHARTS */}
                     <Flex w='100%' maxW='1200px' gap='12px' px='20px'>
                         <ActivityChartContainer title='Active Liquidity' value='329,343.32'>
                             <ActiveLiquidityRawChart />
@@ -74,62 +79,138 @@ const Activity = () => {
                             <MonthlyValueRawChart />
                         </ActivityChartContainer>
                     </Flex>
-                    <Flex mt='52px' mb='20px'>
-                        <HorizontalButtonSelector options={optionsButton} selectedItem={selectedButton} onSelectItem={setSelectedButton} h='40px' />
-                    </Flex>
-                    <Flex w='100%' maxW='1200px' gap='12px' px='20px'>
-                        <SwapTable />
+
+                    <Flex w='100%' maxW='1200px'  gap='12px' px='20px' mt='40px'>
+                         <Flex w='100%' direction='column'>
+                            {(allDepositVaults && allDepositVaults.length > 0) || (allSwapReservations && allSwapReservations.length > 0) ? (
+                                <Flex
+                                    w='100%'
+                                    h='30px'
+                                    py='5px'
+                                    mt='5px'
+                                    mb='9px'
+                                    pl='18px'
+                                    align='center'
+                                    justify='flex-start'
+                                    borderRadius={'10px'}
+                                    fontSize={'14px'}
+                                    fontFamily={FONT_FAMILIES.NOSTROMO}
+                                    borderColor={colors.borderGray}
+                                    fontWeight='bold'
+                                    color={colors.offWhite}
+                                    gap='12px'>
+                                    <Flex  gap='12px'>
+                                        <Flex width='109px'>
+                                    <Text >TIMESTAMP</Text>
+                                    </Flex>
+                                        <Flex w='105px'  > 
+                                        <Text>OWNER</Text>
+                                        </Flex>
+                                        <Flex w='375px'  > 
+                                        <Text >SWAP INPUT</Text>
+                                        </Flex>
+                                        <Flex  w='335px' >
+
+                                        <Text >SWAP OUTPUT</Text>
+                                        </Flex>
+                                    </Flex>
+                                    <Text width='140px' ml='20px' mr='52px'>
+                                        STATUS
+                                    </Text>
+                                </Flex>
+                            ) : null}
+                            <style>
+                                {`
+                                .flex-scroll-dark::-webkit-scrollbar {
+                                    width: 8px;
+                                    padding-left: 10px;
+                                }
+                                .flex-scroll-dark::-webkit-scrollbar-track {
+                                    background: transparent;
+                                    margin-left: 10px;
+                                }
+                                .flex-scroll-dark::-webkit-scrollbar-thumb {
+                                    background-color: #555;
+                                    border-radius: 6px;
+                                    border: 2px solid #2D2D2D;
+                                }
+                            `}
+                            </style>
+                            <Flex
+                                className='flex-scroll-dark'
+                                overflowY={ 'scroll'
+                                }
+                                direction='column'
+                                w='100%'>
+                                {(allSwapReservations == null || allSwapReservations.length === 0) && (allDepositVaults == null || allDepositVaults.length === 0) ? (
+                                    <Flex justify={'center'} direction='column' fontSize={'16px'} alignItems={'center'}>
+                                        <Text mb='10px'>No active swaps found with your address...</Text>
+                                        <Flex
+                                            bg={colors.purpleBackground}
+                                            _hover={{ bg: colors.purpleHover }}
+                                            w='320px'
+                                            mt='15px'
+                                            transition={'0.2s'}
+                                            h='48px'
+                                            onClick={() => handleNavigation('/')}
+                                            fontSize={'16px'}
+                                            align={'center'}
+                                            userSelect={'none'}
+                                            cursor={'pointer'}
+                                            borderRadius={'10px'}
+                                            justify={'center'}
+                                            border={'3px solid #445BCB'}>
+                                            <Text color={colors.offWhite} fontFamily='Nostromo'>
+                                                Create a swap
+                                            </Text>
+                                        </Flex>
+                                    </Flex>
+                                ) : (
+                                    <>
+                                        {(() => {
+                                            // Combine reservations and vaults into a single array
+                                            const combinedReservationsAndVaults = [
+                                                ...allSwapReservations.map((reservation) => ({ type: 'reservation', data: reservation })),
+                                                ...allDepositVaults.map((vault) => ({ type: 'vault', data: vault })),
+                                            ];
+
+                                            // Sort the combined array by timestamp in descending order
+                                            combinedReservationsAndVaults.sort((a, b) => {
+                                                // Directly check properties to access the correct timestamp
+                                                const timestampA = 'reservationTimestamp' in a.data ? a.data.reservationTimestamp : a.data.depositTimestamp;
+                                                const timestampB = 'reservationTimestamp' in b.data ? b.data.reservationTimestamp : b.data.depositTimestamp;
+                                                return timestampB - timestampA;
+                                            });
+
+                                            // Map the sorted array back to the unified LightDepositVault component
+                                            return combinedReservationsAndVaults.map((item, index) => {
+                                                if (item.type === 'reservation') {
+                                                    const reservation = item.data as SwapReservation;
+                                                    return (
+                                                        <SwapPreviewCard
+                                                        key={`reservation-${index}`}
+                                                        reservation={reservation}
+                                                        selectedInputAsset={selectedInputAsset}
+                                                        isActivityPage={true}
+                                                        />
+                                                    );
+                                                } else {
+                                                    const vault = item.data as DepositVault;
+                                                    return (
+                                                        <SwapPreviewCard key={`vault-${index}`} vault={vault} selectedInputAsset={selectedInputAsset} isActivityPage={true} />
+                                                    );
+                                                }
+                                            });
+                                        })()}
+                                    </>
+                                )}
+                            </Flex>
+                        </Flex>
                     </Flex>
                 </Flex>
             </Flex>
         </>
     );
-};
-
-const copyToClipboard = (content: string, successText?: string | undefined) => {
-    const text = successText ? successText : 'Contract address copied to clipboard.';
-    navigator.clipboard.writeText(content);
-    toastSuccess({ title: text });
-};
-
-function formatAmount(amount) {
-    const num = parseFloat(amount);
-    const numStr = num.toString();
-    const decimalIndex = numStr.indexOf('.');
-    if (decimalIndex !== -1) {
-        const decimalPlaces = numStr.length - decimalIndex - 1;
-        if (decimalPlaces > 6) {
-            return num.toFixed(6);
-        }
-    }
-    return numStr;
-}
-
-const timeAgo = (unixTimestamp) => {
-    const seconds = Math.floor(
-        // @ts-ignore
-        (new Date() - new Date(unixTimestamp * 1000)) / 1000,
-    );
-
-    let interval = seconds / 86400; // days
-    if (interval >= 1) {
-        const days = Math.floor(interval);
-        return days === 1 ? '1 day ago' : `${days} days ago`;
-    }
-
-    interval = seconds / 3600; // hours
-    if (interval >= 1) {
-        const hours = Math.floor(interval);
-        return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
-    }
-
-    interval = seconds / 60; // minutes
-    if (interval >= 1) {
-        const minutes = Math.floor(interval);
-        return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
-    }
-
-    return seconds === 1 ? '1 second ago' : `${Math.floor(seconds)} seconds ago`;
 };
 
 export default Activity;

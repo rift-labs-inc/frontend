@@ -17,6 +17,8 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { getDefaultConfig, RainbowKitProvider, darkTheme, Theme } from '@rainbow-me/rainbowkit';
 import { ContractDataProvider } from '../components/providers/ContractDataProvider';
 import { RiftApi } from '../proxy-wallet/rift';
+import useWindowSize from '../hooks/useWindowSize';
+import { FONT_FAMILIES } from '../utils/font';
 
 const config = getDefaultConfig({
     appName: 'My RainbowKit App',
@@ -62,7 +64,7 @@ const myCustomTheme = {
         standby: '#FFD641',
     },
     fonts: {
-        body: '...',
+        body: FONT_FAMILIES.NOSTROMO
     },
     radii: {
         actionButton: '5px',
@@ -84,6 +86,7 @@ const myCustomTheme = {
 function MyApp({ Component, pageProps }: AppProps) {
     const queryClient = new QueryClient();
     const proxyWalletInjected = useRef(false);
+    const { isTablet, isMobile } = useWindowSize();
 
     useEffect(() => {
         if (!proxyWalletInjected.current) {
@@ -94,6 +97,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         }
     }, []);
 
+    
     // TODO: The offline error is here
     // const setIsOnline = useStore((state) => state.setIsOnline);
 

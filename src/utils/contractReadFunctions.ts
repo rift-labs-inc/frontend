@@ -1,6 +1,6 @@
 import { ethers, BigNumberish, BigNumber } from 'ethers';
 import { JsonFragment } from '@ethersproject/abi';
-import { LiqudityProvider, LiquidityReservedEvent, ReservationState, SwapReservation } from '../types';
+import { LiqudityProvider, LiquidityReservedEvent, ReservationByPaymasterRequest, ReservationState, SwapReservation } from '../types';
 import { DepositVault, ValidAsset } from '../types';
 import { useStore } from '../store';
 
@@ -26,12 +26,13 @@ export async function getDepositVaultByIndex(provider: ethers.providers.Provider
         }
 
         return {
-            depositTimestamp: depositVault[0],
-            initialBalance: BigNumber.from(depositVault[1]),
-            unreservedBalanceFromContract: BigNumber.from(depositVault[2]),
-            withdrawnAmount: BigNumber.from(depositVault[3]),
-            btcExchangeRate: BigNumber.from(depositVault[4]),
-            btcPayoutLockingScript: depositVault[5],
+            owner: depositVault[0],
+            depositTimestamp: depositVault[1],
+            initialBalance: BigNumber.from(depositVault[2]),
+            unreservedBalanceFromContract: BigNumber.from(depositVault[3]),
+            withdrawnAmount: BigNumber.from(depositVault[4]),
+            btcExchangeRate: BigNumber.from(depositVault[5]),
+            btcPayoutLockingScript: depositVault[6],
             depositAsset: useStore.getState().validAssets['USDT'], // TODO: get this from the contract you are reading from
             index: index,
         };
@@ -56,6 +57,33 @@ export async function getLiquidityProvider(
 ): Promise<LiqudityProvider> {
     const contract = new ethers.Contract(riftExchangeContract, abi, provider);
     return await contract.getLiquidityProvider(liquidityProviderAddress);
+}
+
+export async function validateReserveLiquidity(
+    provider: ethers.providers.Provider,
+    abi: ethers.ContractInterface,
+    riftExchangeContract: string,
+    reserveArgs: ReservationByPaymasterRequest,
+): Promise<boolean> {
+    const contract = new ethers.Contract(riftExchangeContract, abi, provider);
+    const reserveLiquidityFunction = contract.interface.getFunction('reserveLiquidity');
+    const callData = contract.interface.encodeFunctionData(reserveLiquidityFunction, [
+        reserveArgs.sender,
+        reserveArgs.vault_indexes_to_reserve,
+        reserveArgs.amounts_to_reserve,
+        reserveArgs.eth_payout_address,
+        reserveArgs.total_sats_input_inlcuding_proxy_fee,
+        reserveArgs.expired_swap_reservation_indexes,
+    ]);
+
+    const result = await provider.call({
+        to: riftExchangeContract,
+        data: callData,
+    });
+
+    console.log('validateReserveLiquidity call raw', result);
+
+    return contract.interface.decodeFunctionResult(reserveLiquidityFunction, result)[0];
 }
 
 export async function getTokenBalance(provider: ethers.providers.Provider | ethers.Signer, tokenAddress: string, accountAddress: string, abi: ethers.ContractInterface): Promise<BigNumber> {
@@ -85,14 +113,22 @@ export async function getDepositVaults(
     indexesArray: number[],
 ): Promise<DepositVault[]> {
     const factory = new ethers.ContractFactory(abi, bytecode);
-    const deployTransaction = factory.getDeployTransaction(indexesArray, rift_exchange_contract);
+    const chunkSize = 30;
+    const chunks = [];
 
-    const retryEthCall = async <T>(fn: () => Promise<T>): Promise<T> => {
-        return fn();
+    for (let i = 0; i < indexesArray.length; i += chunkSize) {
+        chunks.push(indexesArray.slice(i, i + chunkSize));
+    }
+
+    const callChunk = async (chunk: number[]) => {
+        const deployTransaction = factory.getDeployTransaction(chunk, rift_exchange_contract);
+        return provider.call({ data: deployTransaction.data as string });
     };
-    const result = await retryEthCall(() => provider.call({ data: deployTransaction.data as string }));
-    const decodedResults = decodeDepositVaults(result);
-    return decodedResults;
+
+    const results = await Promise.all(chunks.map(callChunk));
+
+    const allDecodedResults = results.flatMap(decodeDepositVaults);
+    return allDecodedResults;
 }
 
 export function decodeDepositVaults(data: string): DepositVault[] {
@@ -109,7 +145,7 @@ export function decodeDepositVaults(data: string): DepositVault[] {
         );
 
         return {
-            vaultOwnerAddress: owner,
+            owner: owner,
             depositTimestamp: depositTimestamp,
             initialBalance: initialBalance,
             unreservedBalanceFromContract: unreservedBalanceFromContract,
@@ -130,15 +166,26 @@ export async function getSwapReservations(
     indexesArray: number[],
 ): Promise<SwapReservation[]> {
     const factory = new ethers.ContractFactory(abi, bytecode);
-    const deployTransaction = factory.getDeployTransaction(indexesArray, rift_exchange_contract);
+
+    const chunkSize = 5;
+    const chunks = [];
+    for (let i = 0; i < indexesArray.length; i += chunkSize) {
+        chunks.push(indexesArray.slice(i, i + chunkSize));
+    }
 
     const retryEthCall = async <T>(fn: () => Promise<T>): Promise<T> => {
         return fn();
     };
 
-    const result = await retryEthCall(() => provider.call({ data: deployTransaction.data as string }));
+    const callChunk = async (chunk: number[]) => {
+        const deployTransaction = factory.getDeployTransaction(chunk, rift_exchange_contract);
+        const result = await retryEthCall(() => provider.call({ data: deployTransaction.data as string }));
+        return result;
+    };
+
     try {
-        const decodedResults = decodeSwapReservations(result);
+        const results = await Promise.all(chunks.map(callChunk));
+        const decodedResults = results.flatMap((result) => decodeSwapReservations(result));
         return decodedResults;
     } catch (err) {
         console.error('Error in getSwapReservations:', err);
@@ -191,7 +238,6 @@ function decodeSwapReservations(data: string): SwapReservation[] {
             expectedSatsOutput,
         ] = decodedResults[0];
 
-
         return {
             owner,
             confirmationBlockHeight,
@@ -214,7 +260,7 @@ function decodeSwapReservations(data: string): SwapReservation[] {
     return swapReservations;
 }
 
-export function listenForLiquidityReservedEvent(
+export async function listenForLiquidityReservedEvent(
     provider: ethers.providers.Provider,
     contractAddress: string,
     abi: ethers.ContractInterface,
@@ -222,67 +268,53 @@ export function listenForLiquidityReservedEvent(
     startBlockHeight: number,
 ): Promise<LiquidityReservedEvent> {
     const contract = new ethers.Contract(contractAddress, abi, provider);
+    const latestBlock = await provider.getBlockNumber();
+    const adjustedStartBlockHeight = Math.max(0, startBlockHeight - 5);
+    const adjustedLatestBlock = latestBlock + 50;
 
-    return new Promise((resolve, reject) => {
-        let isResolved = false;
-
-        const resolveOnce = (event: LiquidityReservedEvent) => {
-            if (!isResolved) {
-                isResolved = true;
+    console.log(`Setting up listener for LiquidityReserved events`);
+    const eventPromise = new Promise<LiquidityReservedEvent>((resolve) => {
+        const listener = (reserver: string, swapReservationIndex: ethers.BigNumber, orderNonce: string, event: ethers.Event) => {
+            console.log(`New event received: Reserver: ${reserver}, SwapReservationIndex: ${swapReservationIndex}, OrderNonce: ${orderNonce}`);
+            if (reserver.toLowerCase() === reserverAddress.toLowerCase()) {
+                console.log(`Match found for reserver ${reserverAddress} in new event`);
                 contract.off('LiquidityReserved', listener);
-                resolve(event);
+                resolve({
+                    reserver,
+                    swapReservationIndex: swapReservationIndex.toString(),
+                    orderNonce,
+                    event,
+                });
             }
         };
 
-        // Set up listener for new events
-        const listener = (reserver: string, swapReservationIndex: ethers.BigNumber, orderNonce: string, event: ethers.Event) => {
+        contract.on('LiquidityReserved', listener);
+    });
+
+    console.log(`Starting search from block ${adjustedStartBlockHeight} to ${adjustedLatestBlock}`);
+
+    // Search historical blocks
+    for (let blockNumber = adjustedStartBlockHeight; blockNumber <= adjustedLatestBlock; blockNumber++) {
+        console.log(`Searching block ${blockNumber}`);
+        const events = await contract.queryFilter('LiquidityReserved', blockNumber, blockNumber);
+        console.log(`Found ${events.length} LiquidityReserved events in block ${blockNumber}`);
+        for (const event of events) {
+            const [reserver, swapReservationIndex, orderNonce] = event.args as [string, ethers.BigNumber, string];
+            console.log(`Event found: Reserver: ${reserver}, SwapReservationIndex: ${swapReservationIndex}, OrderNonce: ${orderNonce}`);
             if (reserver.toLowerCase() === reserverAddress.toLowerCase()) {
-                const matchingEvent: LiquidityReservedEvent = {
+                console.log(`Match found for reserver ${reserverAddress} in block ${blockNumber}`);
+                contract.removeAllListeners('LiquidityReserved');
+                return {
                     reserver,
                     swapReservationIndex: swapReservationIndex.toString(),
                     orderNonce,
                     event,
                 };
-                console.log('Matching LiquidityReserved event found in new events:', matchingEvent);
-                resolveOnce(matchingEvent);
             }
-        };
+        }
+    }
 
-        contract.on('LiquidityReserved', listener);
+    console.log(`No matching events found in historical blocks. Waiting for new events.`);
 
-        // Check past events
-        const checkPastEvents = async () => {
-            try {
-                const filter = contract.filters.LiquidityReserved(reserverAddress);
-                const currentBlock = await provider.getBlockNumber();
-                const pastEvents = await contract.queryFilter(filter, startBlockHeight, currentBlock);
-
-                for (const event of pastEvents) {
-                    if (isResolved) break; // Stop processing if an event has already been found
-                    const [reserver, swapReservationIndex, orderNonce] = event.args as [string, ethers.BigNumber, string];
-                    if (reserver.toLowerCase() === reserverAddress.toLowerCase()) {
-                        const matchingEvent: LiquidityReservedEvent = {
-                            reserver,
-                            swapReservationIndex: swapReservationIndex.toString(),
-                            orderNonce,
-                            event,
-                        };
-                        console.log('Matching LiquidityReserved event found in past events:', matchingEvent);
-                        resolveOnce(matchingEvent);
-                        return;
-                    }
-                }
-                console.log('No matching past events found');
-            } catch (error) {
-                if (!isResolved) {
-                    console.error('Error checking past events:', error);
-                    contract.off('LiquidityReserved', listener);
-                    reject(error);
-                }
-            }
-        };
-
-        // Start checking past events
-        checkPastEvents();
-    });
+    return eventPromise;
 }

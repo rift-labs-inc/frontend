@@ -13,6 +13,7 @@ import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
 import useWindowSize from '../hooks/useWindowSize';
 import { useStore } from '../store';
 import { colors } from '../utils/colors';
+import { useContractData } from '../components/providers/ContractDataProvider';
 
 const Manage = () => {
     const { isMobile } = useWindowSize();
@@ -29,6 +30,7 @@ const Manage = () => {
     const showManageDepositVaultsScreen = useStore((state) => state.showManageDepositVaultsScreen);
     const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
     const { address, isConnected } = useAccount();
+    const { refreshAllDepositData, loading } = useContractData();
 
     // switch to manage vaults screen if user has just created a vault
     useEffect(() => {

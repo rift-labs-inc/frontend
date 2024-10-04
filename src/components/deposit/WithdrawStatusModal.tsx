@@ -17,6 +17,7 @@ import GooSpinner from '../other/GooSpiner';
 import { IoIosCheckmarkCircle } from 'react-icons/io';
 import { useChainId, useSwitchChain } from 'wagmi';
 import { useContractData } from '../providers/ContractDataProvider';
+import { toastError } from '../../hooks/toast';
 
 interface WithdrawStatusModalProps {
     isOpen: boolean;
@@ -44,6 +45,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
         if (isOpen) {
             setWithdrawAmount('');
             setIsConfirmStep(true);
+
         }
     }, [isOpen, setWithdrawAmount]);
 
@@ -53,6 +55,11 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
             handleConfirmWithdraw();
         }
     }, [isWaitingForCorrectNetwork, chainId, selectedInputAsset.contractChainID]);
+
+    const handleClose = () => {
+        resetWithdrawState();
+        onClose();
+    };
 
     // handle withdraw liquidity
     const handleWithdraw = async () => {
@@ -136,6 +143,11 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
     };
 
     const handleConfirmWithdraw = () => {
+        if (isExceedingMax) {
+            toastError('', { title: 'Invalid withdraw amount', description: 'There is not enough unreserved liquidity to withdraw this amount' });
+            return;
+        }
+
         if (chainId !== selectedInputAsset.contractChainID) {
             console.log('Switching network');
             setIsWaitingForCorrectNetwork(true);
@@ -174,7 +186,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} isCentered closeOnOverlayClick={!isLoading} closeOnEsc={!isLoading}>
+        <Modal isOpen={isOpen} onClose={handleClose} isCentered closeOnOverlayClick={!isLoading} closeOnEsc={!isLoading}>
             <ModalOverlay />
             <ModalContent
                 top={'20px'}
@@ -182,12 +194,24 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                 bg={colors.offBlack}
                 borderWidth={2}
                 minH={isCompleted ? '280px' : '290px'}
-                w={isError ? '600px' : isCompleted ? '420px' : '510px'}
+                w={isError ? '600px' : isCompleted ? '420px' : '560px'}
                 maxWidth='100%'
                 borderColor={colors.borderGray}
                 borderRadius='20px'
                 fontFamily={FONT_FAMILIES.AUX_MONO}
-                color={colors.offWhite}>
+                color={colors.offWhite}
+                animation={`breathe 3s infinite ease-in-out`}
+                sx={{
+                    '@keyframes breathe': {
+                        '0%, 100%': {
+                            filter: isError ? 'drop-shadow(0px 0px 30px rgba(183, 6, 6, 0.3))' : 'drop-shadow(0px 0px 30px rgba(6, 64, 183, 0.4))',
+                        },
+                        '50%': {
+                            filter: isError ? 'drop-shadow(0px 0px 40px rgba(183, 6, 6, 0.5))' : 'drop-shadow(0px 0px 50px rgba(6, 64, 183, 0.6))',
+                        },
+                    },
+                }}
+                >
                 <ModalHeader fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
                     {isConfirmStep ? 'Withdraw Liquidity' : 'Withdrawal Status'}
                 </ModalHeader>
@@ -329,7 +353,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                                         borderColor={colors.borderGrayLight}
                                         fontWeight={'normal'}
                                         onClick={() => {
-                                            onClose();
+                                            handleClose();
                                         }}
                                         _hover={{ bg: colors.offBlackLighter2 }}
                                         borderRadius='md'>
@@ -353,7 +377,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                                     </Box>
                                     <Button
                                         mt={'25px'}
-                                        onClick={onClose}
+                                        onClick={handleClose}
                                         bg={colors.borderGray}
                                         borderWidth={2}
                                         borderColor={colors.offBlackLighter2}

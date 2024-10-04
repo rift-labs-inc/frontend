@@ -2,14 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Button, Flex, Spinner, Text } from '@chakra-ui/react';
 import { colors } from '../../utils/colors';
 import { IoIosCheckmarkCircle } from 'react-icons/io';
-import { LuCopy } from 'react-icons/lu';
+import { LuCopy, LuExternalLink } from 'react-icons/lu';
 import { FONT_FAMILIES } from '../../utils/font';
 import { useStore } from '../../store';
 import { FaClock } from 'react-icons/fa';
 import { useRouter } from 'next/router';
 import { FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS } from '../../utils/constants';
+import { copyToClipboard } from '../../utils/frontendHelpers';
 
-export const RecieveUsdt = () => {
+export const MainSwapFlow = () => {
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -104,39 +105,7 @@ export const RecieveUsdt = () => {
                     <Text textAlign={'center'} mt='12px' fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.greenOutline} mb='20px'>
                         Bitcoin Transaction Detected!
                     </Text>
-                    {/* TXN HASH */}
-                    <Flex mt='-12px' align={'center'}>
-                        <Text fontSize='14px' mr='10px' fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray}>
-                            Hash:{' '}
-                        </Text>
-
-                        <Text
-                            as='a'
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            fontSize='14px'
-                            fontFamily={FONT_FAMILIES.AUX_MONO}
-                            color={colors.offWhite}
-                            style={{
-                                textDecoration: 'none',
-                                cursor: 'pointer',
-                            }}
-                            _hover={{
-                                textDecoration: 'underline',
-                            }}>
-                            {bitcoinSwapTransactionHash}
-                        </Text>
-
-                        <LuCopy
-                            color='gray'
-                            size={20}
-                            style={{
-                                cursor: 'pointer',
-                                marginLeft: '10px',
-                            }}
-                            onClick={() => navigator.clipboard.writeText(bitcoinSwapTransactionHash)}
-                        />
-                    </Flex>
+                    
                     {/* INFO TEXT */}
                     <Text
                         fontSize='14px'
@@ -145,75 +114,79 @@ export const RecieveUsdt = () => {
                         color={colors.textGray}
                         fontFamily={FONT_FAMILIES.AUX_MONO}
                         textAlign='center'
-                        mt='30px'
+                        mt='0px'
                         flex='1'
                         letterSpacing={'-1.2px'}>
-                        A hypernode will now automatically generate a proof of your transaction, and your requested USDT will be released upon 6 block confirmations. You can safely leave this tab or
+                        A hypernode will now automatically generate a proof of your transaction, and your requested USDT will be released upon {confirmationBlocksNeeded} block confirmations. You can safely leave this tab or
                         return to see swap status.
                     </Text>
+
+                    {/* TXN BUTTONS */}
+                    <Flex mt='30px' mb='0px' gap='10px' justify={'center'}>
+                        <Button
+                            rightIcon={<LuCopy />}
+                            onClick={() => copyToClipboard(bitcoinSwapTransactionHash, 'Transaction hash copied to clipboard!')}
+                            bgGradient='linear(to-b, #222, #111)'
+                            color={colors.textGray}
+                            h='42px'
+                            px='15px'
+                            w='190px'
+                            fontSize='14px'
+                            borderRadius='8px'
+                            border={`2px solid ${colors.offBlackLighter3}`}
+                            _hover={{ bgGradient: 'linear(to-b, #3A3A3A, #2A2A2A)' }}
+                        >
+                            Copy Hash
+                        </Button>
+                        <Button
+                            rightIcon={<LuExternalLink />}
+                            onClick={() => window.open(`https://mempool.space/tx/${bitcoinSwapTransactionHash}`, '_blank')}
+                            bgGradient='linear(to-b, #222, #111)'
+                            color={colors.textGray}
+                            h='42px'
+                            borderRadius='8px'
+                            px='15px'
+                            w='190px'
+                            fontSize='14px' 
+                            border={`2px solid ${colors.offBlackLighter3}`}
+                            _hover={{ bgGradient: 'linear(to-b, #3A3A3A, #2A2A2A)' }}
+                            mr={2}
+                        >
+                            View Mempool
+                        </Button>
+                    </Flex>
 
                     {/* BLOCK CONFIRMATIONS  */}
                     {currentTotalBlockConfirmations !== null ? (
                         <>
-                            <Flex mt='30px' w='100%' textAlign='center' align={'center'} direction={'column'}>
+                            <Flex mt='30px' w='469px' mr='-40px' textAlign='left' align={'flex-start'} direction={'column'}>
                                 <Text
                                     ml='8px'
                                     textAlign={'center'}
                                     fontSize='25px'
                                     fontFamily={FONT_FAMILIES.AUX_MONO}
                                     color={currentTotalBlockConfirmations >= confirmationBlocksNeeded ? colors.greenOutline : colors.RiftOrange}>
-                                    {currentTotalBlockConfirmations}/{confirmationBlocksNeeded}
+                                   {` ${currentTotalBlockConfirmations}/${confirmationBlocksNeeded} Block Confirmations${dots}`}
                                 </Text>
-                                <Flex w={'100%'} direction={'column'} mr='-35px' mt='5px'>
-                                    <Text
-                                        fontSize='14px'
-                                        fontFamily={FONT_FAMILIES.AUX_MONO}
-                                        color={currentTotalBlockConfirmations >= confirmationBlocksNeeded ? colors.greenOutline : colors.RiftOrange}>
-                                        {currentTotalBlockConfirmations < confirmationBlocksNeeded
-                                            ? `${confirmationBlocksNeeded - currentTotalBlockConfirmations} Block Confirmation Remaining${dots}`
-                                            : `${confirmationBlocksNeeded} Block Confirmations Achieved!`}
-                                    </Text>
-                                </Flex>
+                                
                             </Flex>
                         </>
                     ) : (
                         <Spinner color={colors.greenOutline} mt='20px' />
                     )}
 
-                    {/* VIEW TXN BUTTON */}
-                    <Flex w='100%' justify='center'>
-                        <Flex
-                            mt='30px'
-                            mb='-5px'
-                            onClick={() => window.open(`https://mempool.space/tx/${bitcoinSwapTransactionHash}`, '_blank')}
-                            bg={colors.purpleButtonBG}
-                            borderRadius='9px'
-                            px='70px'
-                            align={'center'}
-                            h={'38px'}
-                            fontSize={'14px'}
-                            border={'2px solid'}
-                            borderColor={colors.purpleBorder}
-                            _hover={{
-                                bg: colors.purpleHover,
-                            }}
-                            style={{
-                                cursor: 'pointer',
-                            }}>
-                            View Bitcoin Transaction
-                        </Flex>
-                    </Flex>
+                    
                 </>
             )}
 
             {currentReservationState === 'Proved' && (
                 <>
-                    <Flex mb='10px' ml='4px'>
-                        <FaClock size={34} color={colors.textGray} />
-                    </Flex>
-                    <Text textAlign={'center'} mt='12px' fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.RiftOrange} mb='20px'>
-                        Your transaction has been proved by a hypernode!
+                    <Flex mb='0px' ml='4px'>
+                            
+                    <Text textAlign={'center'} mt='0px' fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.RiftOrange} mb='20px'>
+                       PROOF VERIFICATION SUCCESSFUL!
                     </Text>
+                    </Flex>
 
                     <Text
                         fontSize='14px'
@@ -222,10 +195,10 @@ export const RecieveUsdt = () => {
                         color={colors.textGray}
                         fontFamily={FONT_FAMILIES.AUX_MONO}
                         textAlign='center'
-                        mt='10px'
+                        mt='5px'
                         flex='1'
                         letterSpacing={'-1.2px'}>
-                        A hypernode successfully submitted a proof of your transaction, and your requested USDT will be realeased to you in 10 minutes. You can safely leave this tab or return to see
+                        Your bitcoin transaction was successfully proved on-chain, your requested USDT will be realeased to you in 10 minutes. You can safely leave this tab or return to see
                         swap status.
                     </Text>
                     {/* // TODO ADD PROOF/UNLOCK HASH */}
@@ -260,8 +233,8 @@ export const RecieveUsdt = () => {
                             onClick={() => navigator.clipboard.writeText(bitcoinSwapTransactionHash)}
                         />
                     </Flex> */}
-                    <Flex mt='20px'>
-                        <Text fontSize='14px' mr='10px' fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray}>
+                    <Flex mt='35px'>
+                        <Text fontSize='16px' mr='10px' fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray}>
                             Estimated Time Remaining:
                         </Text>
                         <Text
@@ -269,9 +242,9 @@ export const RecieveUsdt = () => {
                             href={`https://mempool.space/tx/${bitcoinSwapTransactionHash}`}
                             target='_blank'
                             rel='noopener noreferrer'
-                            fontSize='14px'
+                            fontSize='16px'
                             fontFamily={FONT_FAMILIES.AUX_MONO}
-                            color={colors.offWhite}
+                            color={colors.greenOutline}
                             style={{
                                 textDecoration: 'none',
                                 cursor: 'pointer',

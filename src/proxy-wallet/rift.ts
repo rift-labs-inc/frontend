@@ -45,7 +45,6 @@ export const RiftApi = {
                     liquidityProviders: swap.liquidityProviders,
                 };
 
-                console.log(`Executing old swap thread for ${swap.id}`);
                 // Execute the swap
                 executeRiftSwapOnAvailableUTXO(args, mnemonic, MEMPOOL_HOST, swap.id);
             } catch (error) {

@@ -71,7 +71,8 @@ export function useReserveLiquidity() {
 
         try {
             // get current block height
-            const currentBlock = await ethersRpcProvider.getBlockNumber();
+            const arbSepoliaProvider = new ethers.providers.JsonRpcProvider(selectedInputAsset.contractRpcURL);
+            const currentBlock = await arbSepoliaProvider.getBlockNumber();
 
             setStatus(ReserveStatus.WaitingForWalletConfirmation);
             setError(null);
