@@ -196,7 +196,7 @@ async function executeRiftSwapOnAvailableUTXO(swapData: CreateRiftSwapArgs, rece
     // Wait for the UTXO to be available, max wait is the reservation duration
     for (let i = 0; i < MAX_RESERVATION_DURATION / UTXO_POLLING_INTERVAL; i++) {
         // show minutes remaining
-        // console.log(`Polling for UTXO, ${MAX_RESERVATION_DURATION / 60 - (i * UTXO_POLLING_INTERVAL) / 60} minutes remaining`);
+        console.log(`Polling for UTXO, ${MAX_RESERVATION_DURATION / 60 - (i * UTXO_POLLING_INTERVAL) / 60} minutes remaining`);
         try {   
             const utxos = await fetchAddressUTXOs(wallet.address, mempoolApiHostname);
         

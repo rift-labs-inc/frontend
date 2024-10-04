@@ -105,7 +105,7 @@ export const MainSwapFlow = () => {
                     <Text textAlign={'center'} mt='12px' fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.greenOutline} mb='20px'>
                         Bitcoin Transaction Detected!
                     </Text>
-                    
+
                     {/* INFO TEXT */}
                     <Text
                         fontSize='14px'
@@ -117,9 +117,27 @@ export const MainSwapFlow = () => {
                         mt='0px'
                         flex='1'
                         letterSpacing={'-1.2px'}>
-                        A hypernode will now automatically generate a proof of your transaction, and your requested USDT will be released upon {confirmationBlocksNeeded} block confirmations. You can safely leave this tab or
-                        return to see swap status.
+                        A hypernode will now automatically generate a proof of your transaction, and your requested USDT will be released upon {confirmationBlocksNeeded} block confirmations. You can
+                        safely leave this tab or return to see swap status.
                     </Text>
+
+                    {/* BLOCK CONFIRMATIONS  */}
+                    {currentTotalBlockConfirmations !== null ? (
+                        <>
+                            <Flex mt='30px' w='469px' mr='-40px' textAlign='left' align={'flex-start'} direction={'column'}>
+                                <Text
+                                    ml='8px'
+                                    textAlign={'center'}
+                                    fontSize='25px'
+                                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                                    color={currentTotalBlockConfirmations >= confirmationBlocksNeeded ? colors.greenOutline : colors.RiftOrange}>
+                                    {` ${currentTotalBlockConfirmations}/${confirmationBlocksNeeded} Block Confirmations${dots}`}
+                                </Text>
+                            </Flex>
+                        </>
+                    ) : (
+                        <Spinner color={colors.greenOutline} mt='20px' />
+                    )}
 
                     {/* TXN BUTTONS */}
                     <Flex mt='30px' mb='0px' gap='10px' justify={'center'}>
@@ -134,8 +152,7 @@ export const MainSwapFlow = () => {
                             fontSize='14px'
                             borderRadius='8px'
                             border={`2px solid ${colors.offBlackLighter3}`}
-                            _hover={{ bgGradient: 'linear(to-b, #3A3A3A, #2A2A2A)' }}
-                        >
+                            _hover={{ bgGradient: 'linear(to-b, #3A3A3A, #2A2A2A)' }}>
                             Copy Hash
                         </Button>
                         <Button
@@ -147,45 +164,22 @@ export const MainSwapFlow = () => {
                             borderRadius='8px'
                             px='15px'
                             w='190px'
-                            fontSize='14px' 
+                            fontSize='14px'
                             border={`2px solid ${colors.offBlackLighter3}`}
                             _hover={{ bgGradient: 'linear(to-b, #3A3A3A, #2A2A2A)' }}
-                            mr={2}
-                        >
+                            mr={2}>
                             View Mempool
                         </Button>
                     </Flex>
-
-                    {/* BLOCK CONFIRMATIONS  */}
-                    {currentTotalBlockConfirmations !== null ? (
-                        <>
-                            <Flex mt='30px' w='469px' mr='-40px' textAlign='left' align={'flex-start'} direction={'column'}>
-                                <Text
-                                    ml='8px'
-                                    textAlign={'center'}
-                                    fontSize='25px'
-                                    fontFamily={FONT_FAMILIES.AUX_MONO}
-                                    color={currentTotalBlockConfirmations >= confirmationBlocksNeeded ? colors.greenOutline : colors.RiftOrange}>
-                                   {` ${currentTotalBlockConfirmations}/${confirmationBlocksNeeded} Block Confirmations${dots}`}
-                                </Text>
-                                
-                            </Flex>
-                        </>
-                    ) : (
-                        <Spinner color={colors.greenOutline} mt='20px' />
-                    )}
-
-                    
                 </>
             )}
 
             {currentReservationState === 'Proved' && (
                 <>
                     <Flex mb='0px' ml='4px'>
-                            
-                    <Text textAlign={'center'} mt='0px' fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.RiftOrange} mb='20px'>
-                       PROOF VERIFICATION SUCCESSFUL!
-                    </Text>
+                        <Text textAlign={'center'} mt='0px' fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.RiftOrange} mb='20px'>
+                            PROOF VERIFICATION SUCCESSFUL!
+                        </Text>
                     </Flex>
 
                     <Text
@@ -198,8 +192,8 @@ export const MainSwapFlow = () => {
                         mt='5px'
                         flex='1'
                         letterSpacing={'-1.2px'}>
-                        Your bitcoin transaction was successfully proved on-chain, your requested USDT will be realeased to you in 10 minutes. You can safely leave this tab or return to see
-                        swap status.
+                        Your bitcoin transaction was successfully proved on-chain, your requested USDT will be realeased to you in 10 minutes. You can safely leave this tab or return to see swap
+                        status.
                     </Text>
                     {/* // TODO ADD PROOF/UNLOCK HASH */}
                     {/* <Flex mt='10px'>

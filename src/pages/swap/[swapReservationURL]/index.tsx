@@ -129,7 +129,7 @@ const ReservationDetails = () => {
             window.rift
                 .getRiftSwapStatus({ internalId: swapReservationData.nonce })
                 .then((status) => {
-                    // console.log('Swap status from proxy wallet:', status);
+                    console.log('Swap status from proxy wallet:', status);
                     // console.log('Swap flow state:', swapFlowState);
                     // console.log('Current reservation state:', currentReservationState);
 
@@ -468,7 +468,7 @@ const ReservationDetails = () => {
                                 align={'center'}
                                 justify={'center'}>
                                 <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
-                                    Awaiting {confirmationBlocksNeeded - currentTotalBlockConfirmations} Block Confirmation
+                                    Awaiting Block Confirmation
                                     {confirmationBlocksNeeded - currentTotalBlockConfirmations > 1 ? 's' : ''}
                                 </Text>
                                 <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />

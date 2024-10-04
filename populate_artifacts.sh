@@ -1,5 +1,5 @@
 # Helper script to compile contract artifacts and move them to artifacts/ dir 
-cd contracts/ && forge compile && cd ..
+cd contracts/ && forge compile --via-ir && cd ..
 rm -rf artifacts/*
 mv contracts/out/RiftExchange.sol/RiftExchange.json src/abis/RiftExchange.json
 cd data-aggregation-contracts/ && forge compile && cd ..

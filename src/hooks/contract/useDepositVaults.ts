@@ -62,7 +62,6 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const isCompleted = reservation.state === ReservationState.Completed;
             const isExpiredOnChain = reservation.state === ReservationState.Expired;
             if (isExpiredOnChain) {
-                console.log('expired on chain reservation', reservationIndex);
                 expiredReservationIndexes.push(reservationIndex);
             }
 

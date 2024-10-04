@@ -140,7 +140,7 @@ export const useStore = create<Store>((set) => {
             name: 'USDT',
             tokenAddress: isMainnet ? MAINNET_ARBITRUM_USDT_TOKEN_ADDRESS : TESTNET_ARBITRUM_USDT_TOKEN_ADDRESS,
             decimals: 6,
-            riftExchangeContractAddress: (isMainnet ? arbitrumMainnetDeployment : arbitrumSepoliaDeployment)?.transactions?.find((tx) => tx.contractName === 'RiftExchange')?.contractAddress ?? '',
+            riftExchangeContractAddress: (isMainnet ? arbitrumMainnetDeployment : arbitrumSepoliaDeployment)?.transactions?.find((tx) => tx.contractName === 'ERC1967Proxy')?.contractAddress ?? '',
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: isMainnet ? MAINNET_ARBITRUM_CHAIN_ID : TESTNET_ARBITRUM_CHAIN_ID,
             chainDetails: isMainnet ? arbitrum : arbitrumSepolia,
