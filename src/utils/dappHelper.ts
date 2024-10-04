@@ -4,7 +4,15 @@ import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
 import * as bitcoin from 'bitcoinjs-lib';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, MAX_SWAP_LP_OUTPUTS, PROTOCOL_FEE, PROTOCOL_FEE_DENOMINATOR, SATS_PER_BTC } from './constants';
+import {
+    BITCOIN_DECIMALS,
+    FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS,
+    MAX_SWAP_LP_OUTPUTS,
+    MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT,
+    PROTOCOL_FEE,
+    PROTOCOL_FEE_DENOMINATOR,
+    SATS_PER_BTC,
+} from './constants';
 import { format } from 'path';
 import swapReservationsAggregatorABI from '../abis/SwapReservationsAggregator.json';
 import { getDepositVaults, getSwapReservations } from '../utils/contractReadFunctions';
@@ -307,8 +315,8 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
 export function calculateProtocolFeeInMicroUsdt(microUsdtOutputAmount: BigNumber) {
     let protocolFeeInMicroUsdt = microUsdtOutputAmount.mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
     protocolFeeInMicroUsdt = protocolFeeInMicroUsdt;
-    if (protocolFeeInMicroUsdt.isZero()) {
-        protocolFeeInMicroUsdt = BigNumber.from(10000);
+    if (protocolFeeInMicroUsdt.lt(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT)) {
+        protocolFeeInMicroUsdt = BigNumber.from(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT);
     }
     return protocolFeeInMicroUsdt;
 }
@@ -320,8 +328,9 @@ export function calculateOriginalAmountBeforeFee(totalAmountWithFee: BigNumber):
         .div(BigNumberJs(PROTOCOL_FEE.add(PROTOCOL_FEE_DENOMINATOR).toString()))
         .integerValue(BigNumberJs.ROUND_UP);
 
-    if (roundedOutputAmount.isZero()) {
-        roundedOutputAmount = BigNumberJs(10000);
+    const diff = BigNumberJs(totalAmountWithFee.toString()).minus(roundedOutputAmount);
+    if (diff.lt(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT)) {
+        roundedOutputAmount = BigNumberJs(totalAmountWithFee.toString()).minus(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT);
     }
     return BigNumber.from(roundedOutputAmount.toString());
 }

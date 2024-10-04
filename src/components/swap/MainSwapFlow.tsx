@@ -20,18 +20,43 @@ export const MainSwapFlow = () => {
     const setConfirmationBlocksNeeded = useStore((state) => state.setConfirmationBlocksNeeded);
     const currentTotalBlockConfirmations = useStore((state) => state.currentTotalBlockConfirmations);
     const setCurrentTotalBlockConfirmations = useStore((state) => state.setCurrentTotalBlockConfirmations);
+    const bitcoinSwapTransactionHash = useStore((state) => state.bitcoinSwapTransactionHash);
+    const setBitcoinSwapTransactionHash = useStore((state) => state.setBitcoinSwapTransactionHash);
 
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
-    const bitcoinSwapTransactionHash = useStore((state) => state.bitcoinSwapTransactionHash);
     const currentReservationState = useStore((state) => state.currentReservationState);
     const swapReservationData = useStore((state) => state.swapReservationData);
     const [timeLeft, setTimeLeft] = useState(0);
     const router = useRouter();
     const [dots, setDots] = useState('');
+    const [isActiveProxyTxn, setIsActiveProxyTxn] = useState(false);
 
     const handleNavigation = (route: string) => {
         router.push(route);
     };
+
+    useEffect(() => {
+        const checkSwapStatus = async () => {
+            if (!swapReservationData || !swapReservationData.nonce) return;
+
+            try {
+                const status = await window.rift.getRiftSwapStatus({ internalId: swapReservationData.nonce });
+                console.log('Swap status from proxy wallet:', status);
+
+                if (status.status === 1) {
+                    setIsActiveProxyTxn(true);
+                } else {
+                    setIsActiveProxyTxn(false);
+                }
+            } catch (error) {
+                console.error('Error fetching swap status:', error);
+            }
+        };
+
+        checkSwapStatus();
+    }, [currentReservationState]);
+
+    console.log('send help', bitcoinSwapTransactionHash);
 
     // loading dots effect
     useEffect(() => {
@@ -307,7 +332,7 @@ export const MainSwapFlow = () => {
                 </>
             )}
 
-            {currentReservationState === 'Expired' && (
+            {currentReservationState === 'Expired' && !isActiveProxyTxn && (
                 <>
                     <Flex mb='10px' ml='4px' opacity={1}>
                         <FaClock size={38} color={colors.red} />
