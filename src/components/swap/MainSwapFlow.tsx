@@ -156,8 +156,9 @@ export const MainSwapFlow = () => {
                                     fontSize='25px'
                                     fontFamily={FONT_FAMILIES.AUX_MONO}
                                     color={currentTotalBlockConfirmations >= confirmationBlocksNeeded ? colors.greenOutline : colors.RiftOrange}>
-                                    {` ${currentTotalBlockConfirmations}/${confirmationBlocksNeeded} Block Confirmations${dots}`}
+                                    {` ${currentTotalBlockConfirmations}/${confirmationBlocksNeeded} Block Confirmations${currentTotalBlockConfirmations >= confirmationBlocksNeeded ? '' : dots}`}
                                 </Text>
+                                {currentTotalBlockConfirmations >= confirmationBlocksNeeded && <Text color={colors.greenOutline}>{`Block confirmations reached! Generating proof${dots}`}</Text>}
                             </Flex>
                         </>
                     ) : (
