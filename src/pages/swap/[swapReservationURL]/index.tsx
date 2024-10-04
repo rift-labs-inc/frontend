@@ -134,7 +134,7 @@ const ReservationDetails = () => {
                     // console.log('Current reservation state:', currentReservationState);
 
                     // New condition to check currentReservationState
-                    if (status.status === 1 && currentReservationState !== 'Proved' && currentReservationState !== 'Completed' && currentReservationState !== 'Expired') {
+                    if (currentReservationState && status.status === 1 && currentReservationState !== 'Proved' && currentReservationState !== 'Completed' && currentReservationState !== 'Expired') {
                         console.log('Setting Swap status to 3-receive-evm-token');
                         setSwapFlowState('3-receive-evm-token');
                         setBitcoinSwapTransactionHash(status.paymentTxid);
