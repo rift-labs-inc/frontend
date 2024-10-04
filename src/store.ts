@@ -109,6 +109,8 @@ type Store = {
     setConfirmationBlocksNeeded: (blocks: number) => void;
     currentTotalBlockConfirmations: number;
     setCurrentTotalBlockConfirmations: (confirmations: number) => void;
+    proxyWalletSwapStatus: number;
+    setProxyWalletSwapStatus: (status: number) => void;
 
     // modals
     currencyModalTitle: CurrencyModalTitle;
@@ -345,6 +347,8 @@ export const useStore = create<Store>((set) => {
         setConfirmationBlocksNeeded: (confirmationBlocksNeeded) => set({ confirmationBlocksNeeded }),
         currentTotalBlockConfirmations: 0,
         setCurrentTotalBlockConfirmations: (currentTotalBlockConfirmations) => set({ currentTotalBlockConfirmations }),
+        proxyWalletSwapStatus: null,
+        setProxyWalletSwapStatus: (proxyWalletSwapStatus) => set({ proxyWalletSwapStatus }),
 
         // global
         isOnline: true, // typeof window != 'undefined' ? navigator.onLine : true

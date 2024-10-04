@@ -23,6 +23,8 @@ export const SwapAmounts = ({}) => {
     const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const swapReservationNotFound = useStore((state) => state.swapReservationNotFound);
+    const swapFlowState = useStore((state) => state.swapFlowState);
+    const setSwapFlowState = useStore((state) => state.setSwapFlowState);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -52,6 +54,7 @@ export const SwapAmounts = ({}) => {
                 )
             ) : (
                 <Flex
+                    mt={swapFlowState === '2-send-bitcoin' ? '-55px' : '0px'}
                     borderRadius={'full'}
                     h='88px'
                     {...opaqueBackgroundColor}

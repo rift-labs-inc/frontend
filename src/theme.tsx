@@ -1,5 +1,6 @@
 import { extendTheme } from '@chakra-ui/react';
 import { colors } from './utils/colors';
+import { FONT_FAMILIES } from './utils/font';
 
 const fonts = { mono: `'Menlo', monospace` };
 
@@ -8,15 +9,11 @@ const theme = extendTheme({
         global: {
             'html, body': {
                 backgroundColor: '#020202',
-                fontFamily: 'Nostromo Regular',
-                fontWeight: 'bold',
-                letterSpacing: '-15%',
+                fontFamily: FONT_FAMILIES.NOSTROMO,
                 color: colors.offWhite,
             },
             text: {
-                fontFamily: 'Nostromo Regular',
-                fontWeight: 'bold',
-                letterSpacing: '-15%',
+                fontFamily: FONT_FAMILIES.NOSTROMO,
                 color: colors.offWhite,
             },
             // label: {

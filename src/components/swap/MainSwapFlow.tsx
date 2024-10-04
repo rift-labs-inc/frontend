@@ -56,8 +56,6 @@ export const MainSwapFlow = () => {
         checkSwapStatus();
     }, [currentReservationState]);
 
-    console.log('send help', bitcoinSwapTransactionHash);
-
     // loading dots effect
     useEffect(() => {
         if (loading) {
@@ -159,7 +157,7 @@ export const MainSwapFlow = () => {
                                     {` ${currentTotalBlockConfirmations}/${confirmationBlocksNeeded} Block Confirmations${currentTotalBlockConfirmations >= confirmationBlocksNeeded ? '' : dots}`}
                                 </Text>
                                 {currentTotalBlockConfirmations >= confirmationBlocksNeeded && (
-                                    <Text ml='8px' fontSize={'12px'} color={colors.greenOutline}>{`Block confirmations reached! Generating proof${dots}`}</Text>
+                                    <Text ml='8px' fontSize={'12px'} fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.RiftOrange}>{`Block confirmations reached! Generating proof${dots}`}</Text>
                                 )}
                             </Flex>
                         </>
@@ -176,9 +174,10 @@ export const MainSwapFlow = () => {
                             color={colors.textGray}
                             h='42px'
                             px='15px'
-                            w='190px'
+                            w='175px'
                             fontSize='14px'
                             borderRadius='8px'
+                            fontFamily={FONT_FAMILIES.NOSTROMO}
                             border={`2px solid ${colors.offBlackLighter3}`}
                             _hover={{ bgGradient: 'linear(to-b, #3A3A3A, #2A2A2A)' }}>
                             Copy Hash
@@ -191,12 +190,13 @@ export const MainSwapFlow = () => {
                             h='42px'
                             borderRadius='8px'
                             px='15px'
-                            w='190px'
+                            w='175px'
                             fontSize='14px'
+                            fontFamily={FONT_FAMILIES.NOSTROMO}
                             border={`2px solid ${colors.offBlackLighter3}`}
                             _hover={{ bgGradient: 'linear(to-b, #3A3A3A, #2A2A2A)' }}
                             mr={2}>
-                            View Mempool
+                            View TXN
                         </Button>
                     </Flex>
                 </>
@@ -256,20 +256,16 @@ export const MainSwapFlow = () => {
                         />
                     </Flex> */}
                     <Flex mt='35px'>
-                        <Text fontSize='16px' mr='10px' fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray}>
+                        <Text fontWeight='bold' fontSize='16px' mr='10px' fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray}>
                             Estimated Time Remaining:
                         </Text>
                         <Text
-                            as='a'
-                            href={`https://mempool.space/tx/${bitcoinSwapTransactionHash}`}
-                            target='_blank'
-                            rel='noopener noreferrer'
+                            fontWeight='bold'
                             fontSize='16px'
                             fontFamily={FONT_FAMILIES.AUX_MONO}
                             color={colors.greenOutline}
                             style={{
                                 textDecoration: 'none',
-                                cursor: 'pointer',
                             }}
                             _hover={{
                                 textDecoration: 'underline',

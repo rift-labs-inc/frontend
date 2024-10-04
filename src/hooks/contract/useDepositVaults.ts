@@ -68,18 +68,6 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const isExpired =
                 isExpiredOnChain || (reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp >= CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS);
 
-            if (Array.isArray(reservation.vaultIndexes)) {
-                reservation.vaultIndexes.forEach((vaultIndex, i) => {
-                    if (vaultIndex.toString() === '1') {
-                        console.log(`nightmare Vault Index: ${vaultIndex}, Amount: ${reservation.amountsToReserve[i].toString()}, Is Expired: ${isExpired}, Is Expired On Chain: ${isExpiredOnChain}`);
-                    }
-                });
-            } else {
-                console.log(
-                    `nightmare Vault Index: ${reservation.vaultIndexes}, Amount: ${reservation.amountsToReserve[0].toString()}, Is Expired: ${isExpired}, Is Expired On Chain: ${isExpiredOnChain}`,
-                );
-            }
-
             if (isCompleted) {
                 completedReservationsCount++;
             } else if (isProved) {

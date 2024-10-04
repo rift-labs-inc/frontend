@@ -55,7 +55,7 @@ const ReservationDetails = () => {
     const currentTotalBlockConfirmations = useStore((state) => state.currentTotalBlockConfirmations);
     const confirmationBlocksNeeded = useStore((state) => state.confirmationBlocksNeeded);
     const [timeLeft, setTimeLeft] = useState('');
-
+    const setProxyWalletSwapStatus = useStore((state) => state.setProxyWalletSwapStatus);
     const [minutesLeft, setMinutesLeft] = useState(0);
 
     useEffect(() => {
@@ -110,6 +110,7 @@ const ReservationDetails = () => {
     // constantly look for swap status updates from proxy wallet
     useEffect(() => {
         const checkSwapStatus = async () => {
+            console.log('checkSwapStatus called');
             if (typeof window === 'undefined' || !window.rift || !window.rift.getRiftSwapStatus || !swapReservationData) {
                 setError('Rift wallet not detected or getRiftSwapStatus not available.');
                 return;
@@ -126,31 +127,35 @@ const ReservationDetails = () => {
                 }
             }
 
-            window.rift
-                .getRiftSwapStatus({ internalId: swapReservationData.nonce })
-                .then((status) => {
-                    console.log('Swap status from proxy wallet:', status);
-                    // console.log('Swap flow state:', swapFlowState);
-                    // console.log('Current reservation state:', currentReservationState);
+            if (typeof window !== 'undefined') {
+                window.rift
+                    .getRiftSwapStatus({ internalId: swapReservationData.nonce })
+                    .then((status) => {
+                        console.log('Swap status from proxy wallet:', status);
+                        console.log('Swap flow state:', swapFlowState);
+                        console.log('Current reservation state:', currentReservationState);
 
-                    // New condition to check currentReservationState
-                    if (currentReservationState && status.status === 1 && currentReservationState !== 'Proved' && currentReservationState !== 'Completed' && currentReservationState !== 'Expired') {
-                        console.log('Setting Swap status to 3-receive-evm-token');
-                        setSwapFlowState('3-receive-evm-token');
-                        setBitcoinSwapTransactionHash(status.paymentTxid);
-                    }
-                    setProxyWalletSwapInternalID(status.internalId);
-                })
-                .catch((err) => {
-                    console.error('Error fetching swap status:', err);
-                });
+                        // New condition to check currentReservationState
+                        if (currentReservationState && currentReservationState === 'Completed') {
+                            console.log('Setting Swap status to 4-completed');
+                            setSwapFlowState('4-completed');
+                        } else if (status.status === 1 && currentReservationState === 'Created') {
+                            console.log('Setting Swap status to 3-receive-evm-token');
+                            setSwapFlowState('3-receive-evm-token');
+                            setProxyWalletSwapStatus(status.status);
+                            setBitcoinSwapTransactionHash(status.paymentTxid);
+                        }
+                        setProxyWalletSwapInternalID(status.internalId);
+                    })
+                    .catch((err) => {
+                        console.error('Error fetching swap status:', err);
+                    });
+            }
         };
 
-        if (typeof window !== 'undefined') {
-            checkSwapStatus();
-            const intervalId = setInterval(checkSwapStatus, 1000); // check every second
-            return () => clearInterval(intervalId);
-        }
+        checkSwapStatus();
+        const intervalId = setInterval(checkSwapStatus, 1000); // check every second
+        return () => clearInterval(intervalId);
     }, [swapReservationData?.nonce]);
 
     useEffect(() => {
@@ -164,7 +169,7 @@ const ReservationDetails = () => {
 
                     const currentReservationStateFromContract = getReservationStateString(reservationDetails.swapReservationData.state);
                     setCurrentReservationState(currentReservationStateFromContract);
-                    // set swap flow state to expired if its been 8 hours since the reservation was created
+                    // set swap flow state to expired if its been 4 hours since the reservation was created
                     const isReservationExpired = Date.now() - reservationDetails.swapReservationData.reservationTimestamp * 1000 > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS * 1000;
 
                     if (currentReservationStateFromContract === 'Created' && isReservationExpired) {
@@ -184,10 +189,9 @@ const ReservationDetails = () => {
                     console.log('proc calculateOriginalAmountBeforeFee', microUsdtOutputAmountWithoutFee.toString());
                     const trueProtocolFee = reservationDetails.totalReservedAmountInMicroUsdt.sub(microUsdtOutputAmountWithoutFee).toString();
                     console.log('proc trueProtocolFee:', trueProtocolFee);
-                    const trueMircoUsdtSwapOutputAmount = reservationDetails.totalReservedAmountInMicroUsdt.sub(trueProtocolFee).toString();
-                    console.log('proc trueMircoUsdtSwapOutputAmount:', trueMircoUsdtSwapOutputAmount);
+                    const trueMicroUsdtSwapOutputAmount = reservationDetails.totalReservedAmountInMicroUsdt.sub(trueProtocolFee).toString();
 
-                    setUsdtOutputSwapAmount(formatUnits(trueMircoUsdtSwapOutputAmount.toString(), selectedInputAsset.decimals));
+                    setUsdtOutputSwapAmount(formatUnits(trueMicroUsdtSwapOutputAmount.toString(), selectedInputAsset.decimals));
                     setBtcInputSwapAmount(reservationDetails.btcInputSwapAmount);
                     setTotalSwapAmountInSats(reservationDetails.totalSwapAmountInSats);
                 } catch (error) {
@@ -499,7 +503,7 @@ const ReservationDetails = () => {
                         {currentReservationState === 'Proved' && (
                             <Flex
                                 bg={'rgba(8, 34, 22, 0.8)'}
-                                borderColor={colors.greenBackground}
+                                borderColor='#3D5A44'
                                 borderWidth={3}
                                 borderRadius='14px'
                                 px='20px'
