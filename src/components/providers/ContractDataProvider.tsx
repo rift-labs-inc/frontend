@@ -82,8 +82,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             if (!ethersRpcProvider || !selectedInputAsset) return;
 
             const areNewDepositsPausedBool = await checkIfNewDepositsArePaused(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress);
-            // setAreNewDepositsPaused(areNewDepositsPausedBool);
-            setAreNewDepositsPaused(true);
+            setAreNewDepositsPaused(areNewDepositsPausedBool);
         };
 
         if (address) {
