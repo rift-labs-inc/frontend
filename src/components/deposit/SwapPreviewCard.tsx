@@ -71,29 +71,30 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
             </Tooltip>
         );
     };
-const renderAddress = (address: string | undefined) => {
+
+    const renderAddress = (address: string | undefined) => {
         if (!address || !isActivityPage) return null;
         const shortenedAddress = `${address.slice(0, 4)}...${address.slice(-4)}`;
-        
+
         const handleAddressClick = (e: React.MouseEvent) => {
             e.stopPropagation(); // Prevent triggering the parent onClick
-           copyToClipboard(address, 'Address copied to clipboard.');
+            copyToClipboard(address, 'Address copied to clipboard.');
         };
 
         return (
-            <Text 
-                fontSize="10px" 
-                fontFamily={FONT_FAMILIES.NOSTROMO} 
+            <Text
+                fontSize='10px'
+                fontFamily={FONT_FAMILIES.NOSTROMO}
                 letterSpacing={'1px'}
                 color={colors.textGray}
-                cursor="pointer"
+                cursor='pointer'
                 onClick={handleAddressClick}
-                _hover={{ textDecoration: 'underline' }}
-            >
+                _hover={{ textDecoration: 'underline' }}>
                 {shortenedAddress}
             </Text>
         );
     };
+
     const renderAmount = (amount: string | null, isLoading: boolean, fallbackValue: string | undefined) => {
         if (isLoading) {
             return <Spinner size='sm' color={colors.offWhite} />;
@@ -105,17 +106,45 @@ const renderAddress = (address: string | undefined) => {
         );
     };
 
-    const isReservationExpired = reservation && 
-    ((reservation.state === 1 && Date.now() / 1000 - BigNumber.from(reservation.reservationTimestamp).toNumber() > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS) || 
-    reservation.state === 4);
+    const renderArrayDetailRow = (label: string, array: any[], formatter: (item: any) => string) => (
+        <Flex mr='20px' py='4px' fontSize='13px' flexDirection='column'>
+            <Text fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray}>
+                {label}:
+            </Text>
+            {array.map((item, index) => (
+                <Text key={index} ml='10px' fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.offWhite}>
+                    {formatter(item)}
+                </Text>
+            ))}
+        </Flex>
+    );
+
+    const isReservationExpired =
+        reservation &&
+        ((reservation.state === 1 && Date.now() / 1000 - BigNumber.from(reservation.reservationTimestamp).toNumber() > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS) || reservation.state === 4);
+
+    const renderDetailRow = (label: string, value: string | number | null | undefined) => (
+        <Flex mr='20px' py='4px' fontSize='13px'>
+            <Text fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.textGray}>
+                {label}:
+            </Text>
+            <Text ml='3px' fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.offWhite}>
+                {value}
+            </Text>
+        </Flex>
+    );
 
     return (
         <Flex>
             <Flex
-                _hover={isActivityPage ? {} : {
-                    bg: colors.purpleBackground,
-                    borderColor: colors.purpleBorder,
-                }}
+                _hover={
+                    isActivityPage
+                        ? {}
+                        : {
+                              bg: colors.purpleBackground,
+                              borderColor: colors.purpleBorder,
+                          }
+                }
                 onClick={onClick}
                 cursor={isActivityPage ? 'normal' : 'pointer'}
                 letterSpacing={'-2px'}
@@ -124,120 +153,161 @@ const renderAddress = (address: string | undefined) => {
                 mb='10px'
                 fontSize={'18px'}
                 px='16px'
-                py='12px'
-                align='center'
+                py={isActivityPage ? '24px' : '12px'}
+                align='flex-start'
                 justify='flex-start'
                 borderRadius={'10px'}
                 border='2px solid '
                 color={colors.textGray}
                 borderColor={colors.borderGray}
-                gap='12px'>
-                <Text width='110px' pr='10px' fontSize={'14px'} fontFamily={FONT_FAMILIES.AUX_MONO} fontWeight={'normal'}>
-                    {timeAgo}
-                </Text>
-                <Flex flex={1} align='center' gap='12px'>
-                    <Flex w='100px' direction='column'>
-                        {renderAddress(vault?.owner || reservation?.owner)}
-                    </Flex>
-                    
-                    {/* Input Section */}
-                    <Flex flex={1} direction='column'>
-                        <Flex
-                            h='50px'
-                            w='100%'
-                            bg={reservation ? colors.currencyCard.btc.background : selectedInputAsset.dark_bg_color}
-                            border='2px solid'
-                            borderColor={reservation ? colors.currencyCard.btc.border : selectedInputAsset.bg_color}
-                            borderRadius={'14px'}
-                            pl='15px'
-                            pr='10px'
-                            align={'center'}>
-                            {reservation
-                                ? renderAmount(
-                                      formatUnits(reservation.totalSatsInputInlcudingProxyFee.toString(), BITCOIN_DECIMALS),
-                                      isLoading,
-                                      vault?.btcExchangeRate && calculateBtcOutputAmountFromExchangeRate(vault.initialBalance, vault.depositAsset?.decimals, vault.btcExchangeRate),
-                                  )
-                                : renderAmount(vault.initialBalance && formatUnits(BigNumber.from(vault.initialBalance).toString(), vault.depositAsset?.decimals).toString(), false, undefined)}
-                            <Spacer />
-                            <AssetTag assetName={reservation ? 'BTC' : vault.depositAsset?.name == 'USDT' ? 'ARBITRUM_USDT' : vault.depositAsset?.name} width={reservation ? '80px' : '100px'} />
+                gap='12px'
+                flexDirection={isActivityPage ? 'column' : 'row'}
+                height={isActivityPage ? 'auto' : 'unset'}>
+                <Flex w='100%'>
+                    <Text width='110px' pr='10px' fontSize={'14px'} fontFamily={FONT_FAMILIES.AUX_MONO} fontWeight={'normal'}>
+                        {timeAgo}
+                    </Text>
+                    <Flex flex={1} align='center' gap='12px' direction='row'>
+                        <Flex w='100px' direction='column'>
+                            {renderAddress(vault?.owner || reservation?.owner)}
                         </Flex>
-                    </Flex>
 
-                    {/* Arrow */}
-                    <Flex mt='0px' fontSize='20px' opacity={0.9}>
-                        <FaRegArrowAltCircleRight color={reservation ? selectedInputAsset.border_color : colors.RiftOrange} />
-                    </Flex>
-
-                    {/* Output Section */}
-                    <Flex flex={1} direction='column'>
-                        <Flex
-                            h='50px'
-                            w='100%'
-                            bg={reservation ? colors.currencyCard.usdt.background : colors.currencyCard.btc.background}
-                            border='2px solid'
-                            borderColor={reservation ? colors.currencyCard.usdt.border : colors.currencyCard.btc.border}
-                            borderRadius={'14px'}
-                            pl='15px'
-                            pr='10px'
-                            align={'center'}>
-                            {reservation
-                                ? renderAmount(
-                                    reservation 
-                                      ? formatUnits(calculateOriginalAmountBeforeFee(reservation?.totalSwapOutputAmount), selectedInputAsset.decimals)
-                                      : '...',
-                                    isLoading,
-                                    undefined
-                                  )
-                                : renderAmount(
-                                      btcInputSwapAmount,
-                                      isLoading,
-                                      vault?.btcExchangeRate && calculateBtcOutputAmountFromExchangeRate(vault.initialBalance, vault.depositAsset?.decimals, vault.btcExchangeRate),
-                                  )}
-                            <Spacer />
-                            <AssetTag assetName={reservation ? 'ARBITRUM_USDT' : 'BTC'} width={reservation ? '100px' : '80px'} />
-                        </Flex>
-                    </Flex>
-                </Flex>
-
-                <Flex width='125px' ml='10px'>
-                    {/* vault status bar */}
-                    {vault && (
-                        <Flex w='100%'>
-                            <VaultStatusBar mini={true} selectedVault={vault} />
-                        </Flex>
-                    )}
-
-                    {/* reservation state */}
-                    {reservation && (
-                        <Flex w='100%' justify='flex-starts' gap='12px' align='center'>
-                            {/* Status text */}
-                            <Text fontSize={'14px'} fontFamily={FONT_FAMILIES.AUX_MONO} color={isReservationExpired ? colors.darkerGray : ReservationState[reservation.state] === 'Completed' ? colors.greenOutline : colors.offWhite}>
-                    {isReservationExpired ? 'Expired' : ReservationState[reservation.state]}
-                            </Text>
-                            {/* Dot indicating status color */}
+                        {/* Input Section */}
+                        <Flex flex={1} direction='column'>
                             <Flex
-                                h='10px'
-                                w='10px'
-                                borderRadius='10px'
-                                bg={
-                                    isReservationExpired
-                                        ? colors.darkerGray:
-                                    ReservationState[reservation.state] === 'Created'
-                                        ? colors.RiftOrange
-                                        : ReservationState[reservation.state] === 'Completed'
-                                        ? colors.greenOutline
-                                        : ReservationState[reservation.state] === 'Unlocked'
-                                        ? colors.purpleBackground
-                                        : colors.borderGray // Fallback for 'Expired' or any other status
-                                }
-                            />
+                                h='50px'
+                                w='100%'
+                                bg={reservation ? colors.currencyCard.btc.background : selectedInputAsset.dark_bg_color}
+                                border='2px solid'
+                                borderColor={reservation ? colors.currencyCard.btc.border : selectedInputAsset.bg_color}
+                                borderRadius={'14px'}
+                                pl='15px'
+                                pr='10px'
+                                align={'center'}>
+                                {reservation
+                                    ? renderAmount(
+                                          formatUnits(reservation.totalSatsInputInlcudingProxyFee.toString(), BITCOIN_DECIMALS),
+                                          isLoading,
+                                          vault?.btcExchangeRate && calculateBtcOutputAmountFromExchangeRate(vault.initialBalance, vault.depositAsset?.decimals, vault.btcExchangeRate),
+                                      )
+                                    : renderAmount(vault.initialBalance && formatUnits(BigNumber.from(vault.initialBalance).toString(), vault.depositAsset?.decimals).toString(), false, undefined)}
+                                <Spacer />
+                                <AssetTag assetName={reservation ? 'BTC' : vault.depositAsset?.name == 'USDT' ? 'ARBITRUM_USDT' : vault.depositAsset?.name} width={reservation ? '80px' : '100px'} />
+                            </Flex>
+                        </Flex>
+
+                        {/* Arrow */}
+                        <Flex mt='0px' fontSize='20px' opacity={0.9}>
+                            <FaRegArrowAltCircleRight color={reservation ? selectedInputAsset.border_color : colors.RiftOrange} />
+                        </Flex>
+
+                        {/* Output Section */}
+                        <Flex flex={1} direction='column'>
+                            <Flex
+                                h='50px'
+                                w='100%'
+                                bg={reservation ? colors.currencyCard.usdt.background : colors.currencyCard.btc.background}
+                                border='2px solid'
+                                borderColor={reservation ? colors.currencyCard.usdt.border : colors.currencyCard.btc.border}
+                                borderRadius={'14px'}
+                                pl='15px'
+                                pr='10px'
+                                align={'center'}>
+                                {reservation
+                                    ? renderAmount(
+                                          reservation ? formatUnits(calculateOriginalAmountBeforeFee(reservation?.totalSwapOutputAmount), selectedInputAsset.decimals) : '...',
+                                          isLoading,
+                                          undefined,
+                                      )
+                                    : renderAmount(
+                                          btcInputSwapAmount,
+                                          isLoading,
+                                          vault?.btcExchangeRate && calculateBtcOutputAmountFromExchangeRate(vault.initialBalance, vault.depositAsset?.decimals, vault.btcExchangeRate),
+                                      )}
+                                <Spacer />
+                                <AssetTag assetName={reservation ? 'ARBITRUM_USDT' : 'BTC'} width={reservation ? '100px' : '80px'} />
+                            </Flex>
+                        </Flex>
+                    </Flex>
+
+                    <Flex width='125px' ml='10px'>
+                        {/* vault status bar */}
+                        {vault && (
+                            <Flex w='100%'>
+                                <VaultStatusBar mini={true} selectedVault={vault} />
+                            </Flex>
+                        )}
+
+                        {/* reservation state */}
+                        {reservation && (
+                            <Flex w='100%' justify='flex-starts' gap='12px' align='center'>
+                                {/* Status text */}
+                                <Text
+                                    fontSize={'14px'}
+                                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                                    color={isReservationExpired ? colors.darkerGray : ReservationState[reservation.state] === 'Completed' ? colors.greenOutline : colors.offWhite}>
+                                    {isReservationExpired ? 'Expired' : ReservationState[reservation.state]}
+                                </Text>
+                                {/* Dot indicating status color */}
+                                <Flex
+                                    h='10px'
+                                    w='10px'
+                                    borderRadius='10px'
+                                    bg={
+                                        isReservationExpired
+                                            ? colors.darkerGray
+                                            : ReservationState[reservation.state] === 'Created'
+                                            ? colors.RiftOrange
+                                            : ReservationState[reservation.state] === 'Completed'
+                                            ? colors.greenOutline
+                                            : ReservationState[reservation.state] === 'Unlocked'
+                                            ? colors.purpleBackground
+                                            : colors.borderGray // Fallback for 'Expired' or any other status
+                                    }
+                                />
+                            </Flex>
+                        )}
+                    </Flex>
+
+                    {/* Settings tooltip */}
+                    {!isActivityPage && <SettingsWithTooltip />}
+                </Flex>
+
+                <Flex w='100%'>
+                    {isActivityPage && (
+                        <Flex w='100%' flexDirection='row' gap='1px' mt='16px' fontSize='12px' fontFamily={FONT_FAMILIES.AUX_MONO}>
+                            {vault && (
+                                <>
+                                    {renderDetailRow('D-', vault.index)}
+                                    {renderDetailRow(
+                                        'Deposit Timestamp',
+                                        new Date(BigNumber.from(vault.depositTimestamp).toNumber() * 1000).toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }),
+                                    )}
+                                    {renderDetailRow('Initial Balance', formatUnits(vault.initialBalance, vault.depositAsset?.decimals))}
+                                    {renderDetailRow('BTC Exchange Rate', formatBtcExchangeRate(vault.btcExchangeRate, vault.depositAsset?.decimals))}
+                                </>
+                            )}
+                            {reservation && (
+                                <>
+                                    {renderDetailRow('R-', reservation.indexInContract)}
+                                    {renderDetailRow(
+                                        'Reservation Timestamp',
+                                        new Date(BigNumber.from(reservation.reservationTimestamp).toNumber() * 1000).toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }),
+                                    )}
+                                    {renderDetailRow('Total Sats Input', formatUnits(reservation.totalSatsInputInlcudingProxyFee, BITCOIN_DECIMALS))}
+                                    {renderDetailRow('Total Swap Output', formatUnits(reservation.totalSwapOutputAmount, selectedInputAsset.decimals))}
+                                    {renderDetailRow('State onchain', ReservationState[reservation.state])}
+                                    {renderArrayDetailRow('Reserved Vaults', reservation.vaultIndexes, (index) => `D-${index}`)}
+                                    {renderArrayDetailRow(
+                                        'Reserved Amounts',
+                                        reservation.amountsToReserve,
+                                        (amount) => `${formatUnits(amount, selectedInputAsset.decimals)} ${selectedInputAsset.name}`,
+                                    )}
+                                </>
+                            )}
                         </Flex>
                     )}
                 </Flex>
-
-                {/* Settings tooltip */}
-                {!isActivityPage && <SettingsWithTooltip />}
             </Flex>
         </Flex>
     );

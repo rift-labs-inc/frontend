@@ -114,15 +114,18 @@ export function useDepositVaults(): UseDepositVaultsResult {
         // Now update the deposit vaults with the additional balances and active reservations
         const updatedVaults = depositVaults.map((vault, vaultIndex) => {
             const vaultIndexKey = vaultIndex.toString();
-            const additionalBalance = additionalBalances.get(vaultIndexKey) ? additionalBalances.get(vaultIndexKey).sub(vault.withdrawnAmount) : BigNumber.from(0);
-            const unreservedBalance = vault.unreservedBalanceFromContract ?? BigNumber.from(0);
             const completedAmount = completedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
+            let additionalBalance = additionalBalances.get(vaultIndexKey) ? additionalBalances.get(vaultIndexKey).sub(vault.withdrawnAmount) : BigNumber.from(0);
+            // Ensure additional balance can never be more than vault.initialBalance - completedAmount
+            const maxAdditionalBalance = BigNumber.from(vault.initialBalance).sub(completedAmount);
+            additionalBalance = additionalBalance.gt(maxAdditionalBalance) ? maxAdditionalBalance : additionalBalance;
+            const unreservedBalance = vault.unreservedBalanceFromContract ?? BigNumber.from(0);
             const provedAmount = provedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
             const activelyReservedAmount = activelyReservedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
 
             totalAvailableLiquidity = totalAvailableLiquidity.add(unreservedBalance);
 
-            if (vaultIndex === 6) {
+            if (vaultIndex === 7) {
                 console.log(`Vault ${vaultIndex} data:`, {
                     unreservedBalance: unreservedBalance.toString(),
                     additionalBalance: additionalBalance.toString(),

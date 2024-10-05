@@ -22,7 +22,9 @@ export const ManageSwaps = ({}) => {
     const userCompletedDepositVaults = useStore((state) => state.userCompletedDepositVaults);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const [hideCompletedVaults, setHideCompletedVaults] = useState(false);
+    const allDepositVaults = useStore((state) => state.allDepositVaults);
     const vaultsToDisplay = hideCompletedVaults ? userActiveDepositVaults : userActiveDepositVaults.concat(userCompletedDepositVaults);
+    // const vaultsToDisplay = allDepositVaults;
     const { address, isConnected } = useAccount();
     const { refreshAllDepositData, loading } = useContractData();
     const allSwapReservations = useStore((state) => state.allSwapReservations);

@@ -32,6 +32,8 @@ const Activity = () => {
     const allDepositVaults = useStore((state) => state.allDepositVaults);
     const allSwapReservations = useStore((state) => state.allSwapReservations);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
+    const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
+    const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const { options: optionsButton, selected: selectedButton, setSelected: setSelectedButton } = useHorizontalSelectorInput(['Swaps', 'Deposits'] as const);
 
     return (
@@ -80,8 +82,8 @@ const Activity = () => {
                         </ActivityChartContainer>
                     </Flex>
 
-                    <Flex w='100%' maxW='1200px'  gap='12px' px='20px' mt='40px'>
-                         <Flex w='100%' direction='column'>
+                    <Flex w='100%' maxW='1200px' gap='12px' px='20px' mt='40px'>
+                        <Flex w='100%' direction='column'>
                             {(allDepositVaults && allDepositVaults.length > 0) || (allSwapReservations && allSwapReservations.length > 0) ? (
                                 <Flex
                                     w='100%'
@@ -99,19 +101,18 @@ const Activity = () => {
                                     fontWeight='bold'
                                     color={colors.offWhite}
                                     gap='12px'>
-                                    <Flex  gap='12px'>
+                                    <Flex gap='12px'>
                                         <Flex width='109px'>
-                                    <Text >TIMESTAMP</Text>
-                                    </Flex>
-                                        <Flex w='105px'  > 
-                                        <Text>OWNER</Text>
+                                            <Text>TIMESTAMP</Text>
                                         </Flex>
-                                        <Flex w='375px'  > 
-                                        <Text >SWAP INPUT</Text>
+                                        <Flex w='105px'>
+                                            <Text>OWNER</Text>
                                         </Flex>
-                                        <Flex  w='335px' >
-
-                                        <Text >SWAP OUTPUT</Text>
+                                        <Flex w='375px'>
+                                            <Text>SWAP INPUT</Text>
+                                        </Flex>
+                                        <Flex w='335px'>
+                                            <Text>SWAP OUTPUT</Text>
                                         </Flex>
                                     </Flex>
                                     <Text width='140px' ml='20px' mr='52px'>
@@ -136,12 +137,7 @@ const Activity = () => {
                                 }
                             `}
                             </style>
-                            <Flex
-                                className='flex-scroll-dark'
-                                overflowY={ 'scroll'
-                                }
-                                direction='column'
-                                w='100%'>
+                            <Flex className='flex-scroll-dark' overflowY={'scroll'} direction='column' w='100%'>
                                 {(allSwapReservations == null || allSwapReservations.length === 0) && (allDepositVaults == null || allDepositVaults.length === 0) ? (
                                     <Flex justify={'center'} direction='column' fontSize={'16px'} alignItems={'center'}>
                                         <Text mb='10px'>No active swaps found with your address...</Text>
@@ -186,18 +182,17 @@ const Activity = () => {
                                             return combinedReservationsAndVaults.map((item, index) => {
                                                 if (item.type === 'reservation') {
                                                     const reservation = item.data as SwapReservation;
-                                                    return (
-                                                        <SwapPreviewCard
-                                                        key={`reservation-${index}`}
-                                                        reservation={reservation}
-                                                        selectedInputAsset={selectedInputAsset}
-                                                        isActivityPage={true}
-                                                        />
-                                                    );
+                                                    return <SwapPreviewCard key={`reservation-${index}`} reservation={reservation} selectedInputAsset={selectedInputAsset} isActivityPage={true} />;
                                                 } else {
                                                     const vault = item.data as DepositVault;
                                                     return (
-                                                        <SwapPreviewCard key={`vault-${index}`} vault={vault} selectedInputAsset={selectedInputAsset} isActivityPage={true} />
+                                                        <SwapPreviewCard
+                                                            key={`vault-${index}`}
+                                                            vault={vault}
+                                                            selectedInputAsset={selectedInputAsset}
+                                                            isActivityPage={true}
+                                                            onClick={() => setSelectedVaultToManage(vault)}
+                                                        />
                                                     );
                                                 }
                                             });

@@ -1,16 +1,5 @@
 import { Flex, Text } from '@chakra-ui/react';
-import {
-    LineChart,
-    Line,
-    Area,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-    AreaChart,
-} from 'recharts';
+import { LineChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart } from 'recharts';
 import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
 import moment from 'moment';
@@ -72,7 +61,6 @@ const ActiveLiquidityRawChart: React.FC<ActiveLiquidityRawChartProps> = () => {
                         dataKey='date'
                         style={{ fontFamily: FONT_FAMILIES.AUX_MONO, fontSize: '0.7rem', fontWeight: '300' }}
                         tickFormatter={(unixTimestamp) => {
-                            console.log(unixTimestamp);
                             return moment(unixTimestamp).format('MMM YY');
                         }}
                     />

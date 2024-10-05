@@ -1,4 +1,4 @@
-import { Box, Button, Flex, FlexProps, Spacer, Text, Image, useClipboard, VStack } from '@chakra-ui/react';
+import { Box, Button, Flex, FlexProps, Spacer, Text, Image, useClipboard, VStack, Input } from '@chakra-ui/react';
 import { colors } from '../../utils/colors';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
@@ -14,6 +14,8 @@ import { ValidAsset } from '../../types';
 import { formatUnits } from 'ethers/lib/utils';
 import { isDismissWarning, onDismiss } from '../../utils/warningHelper';
 import GlowingShimmerText from '../other/GlowingText';
+import { getDepositVaultByIndex } from '../../utils/contractReadFunctions';
+import riftExchangeABI from '../../abis/RiftExchange.json';
 
 export const Navbar = ({}) => {
     const { isMobile, isTablet, isSmallLaptop, windowSize } = useWindowSize();
@@ -35,6 +37,11 @@ export const Navbar = ({}) => {
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
     const [formattedTotalAmount, setFormattedTotalAmount] = useState<string>('0');
     const protocolFeeAmountMicroUsdt = useStore((state) => state.protocolFeeAmountMicroUsdt);
+    const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
+    const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
+    const [localSelectedVaultToManage, setLocalSelectedVaultToManage] = useState<number | null>(null);
+    const [isLoadingVault, setIsLoadingVault] = useState(false);
+    const ethersRpcProvider = useStore.getState().ethersRpcProvider;
 
     const [displayWarning, setDisplayWarning] = useState<boolean | undefined>(undefined);
 
@@ -117,6 +124,29 @@ export const Navbar = ({}) => {
         }
     };
 
+    const handleSetVaultToManage = async () => {
+        if (localSelectedVaultToManage === null) {
+            alert('Please enter a valid number');
+            return;
+        }
+
+        setIsLoadingVault(true);
+        try {
+            const vaultData = await getDepositVaultByIndex(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress, localSelectedVaultToManage);
+            if (vaultData) {
+                setSelectedVaultToManage(vaultData);
+                alert(`Vault ${localSelectedVaultToManage} set to manage`);
+            } else {
+                alert(`No vault found with index ${localSelectedVaultToManage}`);
+            }
+        } catch (error) {
+            console.error('Error fetching vault data:', error);
+            alert('Error fetching vault data. Please try again.');
+        } finally {
+            setIsLoadingVault(false);
+        }
+    };
+
     if (isMobile) return null;
 
     return (
@@ -184,7 +214,6 @@ export const Navbar = ({}) => {
                     <a href='https://t.me/riftdex' target='_blank' rel='noopener noreferrer'>
                         <Image src='/images/social/telegram.svg' w='35px' aspectRatio={1} />
                     </a>
-                    
                 </Flex>
                 <Spacer />
                 <Flex direction='column' fontFamily={FONT_FAMILIES.AUX_MONO} align='center' fontSize='12px' position='absolute' top={0} left={0} right={0}>
@@ -220,7 +249,7 @@ export const Navbar = ({}) => {
                                 <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
                                     Vault Selection Algo VISUALIZER
                                 </Text>
-<Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
+                                <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
                                     If you found this, you're a wizard
                                 </Text>
                                 <Flex justify='center' wrap='wrap' gap={4} alignItems='center'>
@@ -295,8 +324,6 @@ export const Navbar = ({}) => {
                                     </>
                                 )}
                             </Flex>
-
-
 
                             <Flex position='absolute' top={windowSize.height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
                                 <StatCard label='Total Available Liquidity' value={`${formatUnits(availableLiquidity, selectedInputAsset.decimals)} ${selectedInputAsset.name}`} />

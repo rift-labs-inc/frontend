@@ -36,7 +36,6 @@ const generateData = () => {
 
 const MonthlyValueRawChart: React.FC<MonthlyValueRawChartProps> = () => {
     const data = generateData();
-    console.log('data', data);
 
     const barRadius = 3;
 
@@ -47,7 +46,6 @@ const MonthlyValueRawChart: React.FC<MonthlyValueRawChartProps> = () => {
                     <XAxis
                         dataKey='date'
                         tickFormatter={(unixTimestamp) => {
-                            console.log(unixTimestamp);
                             return moment(unixTimestamp).format('MMM YY');
                         }}
                         style={{ fontFamily: FONT_FAMILIES.AUX_MONO, fontSize: '0.7rem', fontWeight: '300' }}
