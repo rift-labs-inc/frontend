@@ -61,18 +61,16 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const isProved = reservation.state === ReservationState.Proved;
             const isCompleted = reservation.state === ReservationState.Completed;
             const isExpiredOnChain = reservation.state === ReservationState.Expired;
-            if (isExpiredOnChain) {
+            const isExpiredOffchain = reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp >= CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS;
+            if (isExpiredOffchain) {
                 expiredReservationIndexes.push(reservationIndex);
             }
-
-            const isExpired =
-                isExpiredOnChain || (reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp >= CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS);
 
             if (isCompleted) {
                 completedReservationsCount++;
             } else if (isProved) {
                 provedReservationsCount++;
-            } else if (isExpired) {
+            } else if (isExpiredOnChain || isExpiredOffchain) {
                 expiredReservationsCount++;
                 reservation.state = ReservationState.Expired;
             } else {
@@ -90,7 +88,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 } else if (isProved) {
                     const currentUnlocked = provedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
                     provedAmountsPerVault.set(vaultIndexKey, currentUnlocked.add(amountToAdd));
-                } else if (isExpired) {
+                } else if (isExpiredOnChain || isExpiredOffchain) {
                     const currentAdditional = additionalBalances.get(vaultIndexKey) || BigNumber.from(0);
                     additionalBalances.set(vaultIndexKey, currentAdditional.add(amountToAdd));
                 } else {
