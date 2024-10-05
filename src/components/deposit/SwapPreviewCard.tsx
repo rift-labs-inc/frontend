@@ -170,16 +170,18 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                     <Text width='110px' pr='10px' fontSize={'14px'} fontFamily={FONT_FAMILIES.AUX_MONO} fontWeight={'normal'}>
                         {timeAgo}
                     </Text>
-                    <Flex flex={1} align='center' gap='12px' direction='row'>
-                        <Flex w='100px' direction='column'>
-                            {renderAddress(vault?.owner || reservation?.owner)}
-                        </Flex>
+                    <Flex flex={1} w='100%' align='center' gap='12px' direction='row'>
+                        {isActivityPage && (
+                            <Flex w='100px' direction='column'>
+                                {renderAddress(vault?.owner || reservation?.owner)}
+                            </Flex>
+                        )}
 
                         {/* Input Section */}
                         <Flex flex={1} direction='column'>
                             <Flex
                                 h='50px'
-                                w='100%'
+                                w='300px'
                                 bg={reservation ? colors.currencyCard.btc.background : selectedInputAsset.dark_bg_color}
                                 border='2px solid'
                                 borderColor={reservation ? colors.currencyCard.btc.border : selectedInputAsset.bg_color}
@@ -208,7 +210,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                         <Flex flex={1} direction='column'>
                             <Flex
                                 h='50px'
-                                w='100%'
+                                w='300px'
                                 bg={reservation ? colors.currencyCard.usdt.background : colors.currencyCard.btc.background}
                                 border='2px solid'
                                 borderColor={reservation ? colors.currencyCard.usdt.border : colors.currencyCard.btc.border}
@@ -282,8 +284,8 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                     {!isActivityPage && <SettingsWithTooltip />}
                 </Flex>
 
-                <Flex w='100%'>
-                    {isActivityPage && (
+                {isActivityPage && (
+                    <Flex w='100%'>
                         <Flex w='100%' flexDirection='row' gap='1px' mt='16px' fontSize='12px' fontFamily={FONT_FAMILIES.AUX_MONO}>
                             {vault && (
                                 <>
@@ -315,8 +317,8 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                                 </>
                             )}
                         </Flex>
-                    )}
-                </Flex>
+                    </Flex>
+                )}
             </Flex>
         </Flex>
     );
