@@ -339,7 +339,6 @@ export const Navbar = ({}) => {
                         </>
                     )}
                 </Flex>
-                {/* TODO: Remove above */}
                 <Spacer />
                 <Flex mb='-5px' pr='5px'>
                     <ConnectWalletButton />

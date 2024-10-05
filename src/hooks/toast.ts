@@ -61,7 +61,6 @@ export const toastApiErrorDetail = (
     }
 };
 
-// bro this is literally just toastSuccess
 export const toastInfo = (details: ToastDetails = { title: 'Info', description: undefined }) => {
     const { title, description } = details;
     toaster.success(`${title};;${description}`, {

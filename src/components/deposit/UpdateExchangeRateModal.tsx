@@ -18,7 +18,6 @@ import { useContractData } from '../providers/ContractDataProvider';
 import GooSpinner from '../other/GooSpiner';
 import { toastError } from '../../hooks/toast';
 
-// Enum for update status
 enum UpdateStatus {
     Idle,
     WaitingForWalletConfirmation,
@@ -40,8 +39,6 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const usdtPriceUSD = useStore.getState().validAssets[selectedInputAsset.name].priceUSD;
     const { refreshAllDepositData, loading } = useContractData();
-
-    // New state variables for update status
     const [updateStatus, setUpdateStatus] = useState(UpdateStatus.Idle);
     const [error, setError] = useState('');
     const [txHash, setTxHash] = useState('');
@@ -68,8 +65,8 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
         setUsdtUnreservedAmountUSD(usdtDepositUnreservedUSD);
     }, [usdtUnreservedAmount]);
 
+    // calculate deposit amount in USD
     const calculateUsdValues = () => {
-        // Calculate deposit amount in USD
         const depositAmountUSD =
             usdtPriceUSD && usdtUnreservedAmount
                 ? (usdtPriceUSD * parseFloat(usdtUnreservedAmount)).toLocaleString('en-US', {
@@ -79,7 +76,7 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                 : '$0.00';
         setUsdtUnreservedAmountUSD(depositAmountUSD);
 
-        // Calculate profit amount in USD
+        // calculate profit amount in USD
         const profitAmountUSD =
             usdtPriceUSD && usdtUnreservedAmount && profitPercentage
                 ? (((parseFloat(usdtUnreservedAmount) * parseFloat(profitPercentage)) / 100) * usdtPriceUSD).toLocaleString('en-US', {
@@ -89,7 +86,7 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                 : '$0.00';
         setProfitAmountUSD(profitAmountUSD);
 
-        // Calculate Bitcoin output amount in USD
+        // calculate Bitcoin output amount in USD
         const btcOutputAmountUSD =
             bitcoinPriceUSD && btcOutputAmount
                 ? (bitcoinPriceUSD * parseFloat(btcOutputAmount)).toLocaleString('en-US', {
@@ -295,7 +292,8 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                 my='auto'
                 borderRadius='20px'
                 alignItems='center'
-                border={`2px solid ${colors.borderGray}`}animation={`breathe 3s infinite ease-in-out`}
+                border={`2px solid ${colors.borderGray}`}
+                animation={`breathe 3s infinite ease-in-out`}
                 sx={{
                     '@keyframes breathe': {
                         '0%, 100%': {
@@ -327,7 +325,11 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                             gap='0px'>
                             <Text fontSize='13px' letterSpacing='-1px' my='10px' textAlign='center'>
                                 Update your sell order by adjusting the <WhiteText>Exchange Rate</WhiteText>. If you have active reservations on this vault, the remaining unreserved liqudity will be
-                                <Text as="span" color="orange"> forked into a new vault </Text> with your updated exchange rate
+                                <Text as='span' color='orange'>
+                                    {' '}
+                                    forked into a new vault{' '}
+                                </Text>{' '}
+                                with your updated exchange rate
                             </Text>
                             <Flex mt='25px' direction='column' overflow='visible'>
                                 {/* Deposit Input */}
@@ -369,7 +371,7 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
                                     </Flex>
                                     <Spacer />
                                     <Flex mt='8px' mr='6px'>
-                        <AssetTag assetName={'ARBITRUM_USDT'} width='134px' />
+                                        <AssetTag assetName={'ARBITRUM_USDT'} width='134px' />
                                     </Flex>
                                 </Flex>
                                 {/* Profit Percentage Input */}

@@ -135,7 +135,7 @@ const ReservationDetails = () => {
                         console.log('Swap flow state:', swapFlowState);
                         console.log('Current reservation state:', currentReservationState);
 
-                        // New condition to check currentReservationState
+                        // check currentReservationState
                         if (currentReservationState && currentReservationState === 'Completed') {
                             console.log('Setting Swap status to 4-completed');
                             setSwapFlowState('4-completed');

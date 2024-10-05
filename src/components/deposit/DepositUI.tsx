@@ -61,7 +61,6 @@ export const DepositUI = () => {
     const areNewDepositsPaused = useStore((state) => state.areNewDepositsPaused);
     const [dots, setDots] = useState('');
 
-
     // update token price and available liquidity
     useEffect(() => {
         if (selectedInputAsset && validAssets[selectedInputAsset.name]) {
@@ -100,25 +99,22 @@ export const DepositUI = () => {
         };
 
         if (validateUsdtInputChange(usdtValue)) {
-            // Reset error states
             setIsAboveMaxSwapLimitUsdtDeposit(false);
             setIsBelowMinUsdtDeposit(false);
 
-            // Check if input is above max swap limit
+            // check if input is above max swap limit
             if (parseFloat(usdtValue) > parseFloat(formatUnits(MAX_SWAP_AMOUNT_MICRO_USDT, selectedInputAsset.decimals))) {
                 setIsAboveMaxSwapLimitUsdtDeposit(true);
                 setUsdtDepositAmount(usdtValue);
-                // Reset dependent values
                 setBtcOutputAmount('');
                 setBtcInputSwapAmount('');
                 return;
             }
 
-            // Check if input is below min required amount
+            // check if input is below min required amount
             if (parseFloat(usdtValue) < 1) {
                 setIsBelowMinUsdtDeposit(true);
                 setUsdtDepositAmount(usdtValue);
-                // Reset dependent values
                 setBtcOutputAmount('');
                 setBtcInputSwapAmount('');
                 return;
@@ -147,29 +143,26 @@ export const DepositUI = () => {
         const btcValue = validateBtcOutput(e.target.value);
 
         if (btcValue !== null) {
-            // Reset error states
             setIsAboveMaxSwapLimitBtcOutput(false);
             setIsBelowMinBtcOutput(false);
             setIsBelowMinUsdtDeposit(false);
 
-            // Calculate equivalent USDT deposit amount
+            // calculate equivalent USDT deposit amount
             const usdtInputValueLocal = btcValue && parseFloat(btcValue) > 0 ? parseFloat(btcValue) * useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
 
-            // Check if BTC output exceeds max swap limit
+            // check if BTC output exceeds max swap limit
             if (usdtInputValueLocal > parseFloat(formatUnits(MAX_SWAP_AMOUNT_MICRO_USDT, selectedInputAsset.decimals))) {
                 setIsAboveMaxSwapLimitBtcOutput(true);
                 setBtcOutputAmount(btcValue);
-                // Reset dependent values
                 setUsdtDepositAmount('');
                 setUsdtOutputSwapAmount('');
                 return;
             }
 
-            // Check if usdt input is below min 1
+            // check if usdt input is below min 1
             if (usdtInputValueLocal && usdtInputValueLocal < 1 && usdtInputValueLocal !== 0) {
                 setIsBelowMinBtcOutput(true);
                 setBtcOutputAmount(btcValue);
-                // Reset dependent values
                 setUsdtDepositAmount('');
                 setUsdtOutputSwapAmount('');
                 return;
@@ -204,7 +197,7 @@ export const DepositUI = () => {
 
                 const userBalance = await refreshConnectedUserBalance();
 
-                // Fetch the latest balance after refreshing
+                // fetch the latest balance after refreshing
                 const latestUserUsdtBalance = validAssets[selectedInputAsset.name].connectedUserBalanceFormatted;
 
                 if (parseFloat(usdtDepositAmount || '0') > parseFloat(latestUserUsdtBalance || '0')) {
@@ -253,8 +246,8 @@ export const DepositUI = () => {
             <Flex
                 direction='column'
                 align='center'
-            py={isMobile ? '20px': '27px'}
-                            w={isMobile ? '100%' :depositFlowState === '1-confirm-deposit' ? '800px' : '630px'}
+                py={isMobile ? '20px' : '27px'}
+                w={isMobile ? '100%' : depositFlowState === '1-confirm-deposit' ? '800px' : '630px'}
                 borderRadius='20px'
                 {...opaqueBackgroundColor}
                 borderBottom={borderColor}
@@ -279,7 +272,7 @@ export const DepositUI = () => {
                                             userSelect='none'>
                                             {loading ? `Loading contract data${dots}` : 'You Deposit'}
                                         </Text>
-                                        {loading && !isMobile ?  (
+                                        {loading && !isMobile ? (
                                             <Skeleton height='62px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#2E5F50'} endColor={'#0F4534'} />
                                         ) : (
                                             <Input
@@ -409,7 +402,7 @@ export const DepositUI = () => {
                                             userSelect='none'>
                                             {loading ? `Loading contract data${dots}` : `You Receive`}
                                         </Text>
-                                        {loading && !isMobile ?  (
+                                        {loading && !isMobile ? (
                                             <Skeleton height='62px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#795436'} endColor={'#6C4525'} />
                                         ) : (
                                             <Input
@@ -551,7 +544,7 @@ export const DepositUI = () => {
                                         ? null
                                         : isMobile
                                         ? () => toastInfo({ title: 'Hop on your laptop', description: 'This app is too cool for small screens, mobile coming soon!' })
-                                        : usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded && btcOutputAmount 
+                                        : usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded && btcOutputAmount
                                         ? () => initiateDeposit()
                                         : null
                                 }
@@ -561,7 +554,11 @@ export const DepositUI = () => {
                                 cursor={usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded && btcOutputAmount ? 'pointer' : 'not-allowed'}
                                 borderRadius={'10px'}
                                 justify={'center'}
-                                border={usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded&& btcOutputAmount  ? '3px solid #445BCB' : '3px solid #3242a8'}>
+                                border={
+                                    usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded && btcOutputAmount
+                                        ? '3px solid #445BCB'
+                                        : '3px solid #3242a8'
+                                }>
                                 <Text
                                     color={
                                         usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded && btcOutputAmount && !areNewDepositsPaused

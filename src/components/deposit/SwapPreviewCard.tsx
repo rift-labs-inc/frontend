@@ -244,7 +244,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                         {/* reservation state */}
                         {reservation && (
                             <Flex w='100%' justify='flex-starts' gap='12px' align='center'>
-                                {/* Status text */}
+                                {/* status text */}
                                 <Text
                                     fontSize={'14px'}
                                     fontFamily={FONT_FAMILIES.AUX_MONO}
@@ -257,7 +257,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                                     }>
                                     {isReservationExpired ? 'Expired' : ReservationState[reservation.stateOffChain || reservation.state]}
                                 </Text>
-                                {/* Dot indicating status color */}
+                                {/* dot indicating status color */}
                                 <Flex
                                     h='10px'
                                     w='10px'
@@ -271,14 +271,14 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                                             ? colors.greenOutline
                                             : ReservationState[reservation.stateOffChain || reservation.state] === 'Unlocked'
                                             ? colors.purpleBackground
-                                            : colors.borderGray // Fallback for 'Expired' or any other status
+                                            : colors.borderGray
                                     }
                                 />
                             </Flex>
                         )}
                     </Flex>
 
-                    {/* Settings tooltip */}
+                    {/* settings tooltip */}
                     {!isActivityPage && <SettingsWithTooltip />}
                 </Flex>
 

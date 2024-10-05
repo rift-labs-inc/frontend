@@ -5,7 +5,7 @@ import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
 export const isMainnet = true;
 export const MAX_SWAP_AMOUNT_USDT = 100; // USDT
-export const MIN_SWAP_AMOUNT_USDT = 1; // USDT
+export const MIN_SWAP_AMOUNT_USDT = 5; // USDT
 export const MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT = 100_000; // 0.1 USDT
 
 // MAINNET ARBITRUM

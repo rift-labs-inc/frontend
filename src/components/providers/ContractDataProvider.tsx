@@ -35,7 +35,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
     const setAreNewDepositsPaused = useStore((state) => state.setAreNewDepositsPaused);
 
-    // Set ethers provider when selectedInputAsset changes
+    // set ethers provider when selectedInputAsset changes
     useEffect(() => {
         if ((selectedInputAsset?.contractRpcURL && window.ethereum) || !ethersRpcProvider) {
             const provider = new ethers.providers.StaticJsonRpcProvider(selectedInputAsset.contractRpcURL, { chainId: selectedInputAsset.chainDetails.id, name: selectedInputAsset.chainDetails.name });
@@ -44,7 +44,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         }
     }, [selectedInputAsset?.contractRpcURL, address, isConnected]);
 
-    // Reference to store the interval ID
+    // reference to store the interval ID
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const fetchSelectedAssetUserBalance = async () => {
@@ -61,7 +61,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         await fetchSelectedAssetUserBalance();
     };
 
-    // Fetch price data, user balance, and check for new deposits paused
+    // fetch price data, user balance, and check for new deposits paused
     useEffect(() => {
         const fetchPriceData = async () => {
             try {
@@ -96,13 +96,12 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         fetchSelectedAssetUserBalance();
         checkIfNewDepositsArePausedFromContract();
 
-        // Set up an interval to fetch data every 5 seconds
         if (!intervalRef.current) {
             intervalRef.current = setInterval(() => {
                 fetchPriceData();
                 fetchSelectedAssetUserBalance();
                 checkIfNewDepositsArePausedFromContract();
-            }, 12000);
+            }, 12000); // get data every 12 seconds
         }
     }, [
         selectedInputAsset?.tokenAddress,
@@ -118,10 +117,10 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         selectedInputAsset,
     ]);
 
-    // Fetch deposit vaults
+    // fetch deposit vaults
     const { allFetchedDepositVaults, userActiveDepositVaults, userCompletedDepositVaults, allFetchedSwapReservations, loading, error, refreshAllDepositData } = useDepositVaults();
 
-    // New useEffect for continuous refresh
+    // continuously refresh deposit data
     useEffect(() => {
         const continuouslyRefreshDepositData = async () => {
             await refreshAllDepositData();

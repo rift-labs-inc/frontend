@@ -191,7 +191,7 @@ export const DepositConfirmation = ({}) => {
             let formattedProfitPercentage = profitPercentage;
             if (!formattedProfitPercentage.endsWith('%')) {
                 if (!formattedProfitPercentage.startsWith('-') && /^[0-9]/.test(formattedProfitPercentage)) {
-                    // Check if it's numeric and not negative
+                    // check if it's numeric and not negative
                     formattedProfitPercentage = '+' + formattedProfitPercentage;
                 }
                 formattedProfitPercentage += '%';
@@ -208,7 +208,7 @@ export const DepositConfirmation = ({}) => {
         if (validateProfitPercentage(newProfitPercentage)) {
             let formattedProfitPercentage = newProfitPercentage;
             if (!formattedProfitPercentage.startsWith('-') && /^[0-9]/.test(formattedProfitPercentage)) {
-                // Check if it's numeric and not negative
+                // check if it's numeric and not negative
                 formattedProfitPercentage = '+' + formattedProfitPercentage;
             }
             formattedProfitPercentage += '%';
@@ -244,7 +244,7 @@ export const DepositConfirmation = ({}) => {
             if (validateBitcoinOutputAmount(formattedBitcoinOutputAmount)) {
                 setBtcOutputAmount(formattedBitcoinOutputAmount === '0.0' ? '' : formattedBitcoinOutputAmount);
             }
-            // Calculate the profit amount in USD
+            // calculate the profit amount in USD
 
             const profitAmountUSD = `${(((parseFloat(usdtDepositAmount) * parseFloat(newProfitPercentage ?? profitPercentage)) / 100) * usdtPriceUSD).toLocaleString('en-US', {
                 style: 'currency',
@@ -252,7 +252,7 @@ export const DepositConfirmation = ({}) => {
             })}`;
             setProfitAmountUSD(profitAmountUSD);
 
-            // Calculate and update the deposit amount in USD
+            // calculate and update the deposit amount in USD
             console.log('tokenDepositAmount:', usdtDepositAmount);
             const usdtDepositAmountUSD =
                 usdtPriceUSD && usdtDepositAmount
@@ -279,27 +279,27 @@ export const DepositConfirmation = ({}) => {
 
     const validateBitcoinPayoutAddress = (address: string): boolean => {
         try {
-            // Attempt to decode the address
+            // attempt to decode the address
             const decoded = bitcoin.address.fromBech32(address);
 
-            // Ensure it's a mainnet address with prefix 'bc'
+            // ensure it's a mainnet address with prefix 'bc'
             if (decoded.prefix !== 'bc') {
                 return false;
             }
 
-            // Ensure it's a SegWit version 0 address (P2WPKH or P2WSH)
+            // ensure it's a segwit version 0 address (P2WPKH or P2WSH)
             if (decoded.version !== 0) {
                 return false;
             }
 
-            // Additional check for data length (per BIP 173)
+            // additional check for data length (per BIP 173)
             if (decoded.data.length !== 20 && decoded.data.length !== 32) {
                 return false;
             }
 
-            return true; // Address is valid
+            return true; // address is valid
         } catch (error) {
-            // Decoding failed, address is invalid
+            // decoding failed, address is invalid
             return false;
         }
     };
@@ -364,28 +364,28 @@ export const DepositConfirmation = ({}) => {
                 transport: custom(window.ethereum),
             });
 
-            // Convert chainId to the proper hex format
+            // convert chainId to the proper hex format
             const hexChainId = `0x${selectedInputAsset.contractChainID.toString(16)}`;
 
-            // Check if the chain is already available in MetaMask
+            // check if the chain is already available in MetaMask
             try {
-                // Attempt to switch to the target network
+                // attempt to switch to the target network
                 await window.ethereum.request({
                     method: 'wallet_switchEthereumChain',
                     params: [{ chainId: hexChainId }],
                 });
                 console.log('Switched to the existing network successfully');
             } catch (error) {
-                // Error code 4902 indicates the chain is not available
+                // error code 4902 indicates the chain is not available
                 if (error.code === 4902) {
                     console.log('Network not available in MetaMask. Attempting to add network.');
 
                     try {
-                        // Attempt to add the network if it's not found
+                        // attempt to add the network if it's not found
                         await addNetwork(selectedInputAsset.chainDetails); // Or pass the appropriate chain object
                         console.log('Network added successfully');
 
-                        // After adding, attempt to switch to the new network
+                        // after adding, attempt to switch to the new network
                         await window.ethereum.request({
                             method: 'wallet_switchEthereumChain',
                             params: [{ chainId: hexChainId }],
@@ -393,12 +393,12 @@ export const DepositConfirmation = ({}) => {
                         console.log('Switched to the newly added network successfully');
                     } catch (addNetworkError) {
                         console.log('Failed to add or switch to network:', addNetworkError);
-                        // Handle add network error (e.g., notify the user)
+                        // handle add network error (e.g., notify the user)
                         return;
                     }
                 } else {
                     console.log('Error switching network:', error);
-                    // Handle other errors (e.g., switch chain permission denied)
+                    // handle other errors (e.g., switch chain permission denied)
                     return;
                 }
             }
@@ -411,7 +411,7 @@ export const DepositConfirmation = ({}) => {
 
     const proceedWithDeposit = async () => {
         if (window.ethereum) {
-            // Reset the deposit state before starting a new deposit
+            // reset the deposit state before starting a new deposit
             resetDepositState();
             setIsModalOpen(true);
 
@@ -460,10 +460,9 @@ export const DepositConfirmation = ({}) => {
             {/* INSTRUCTIONAL TEXT  */}
             <Text mb='10px' justifyContent='center' w='100%' fontSize={'13px'} letterSpacing={'-1px'} textAlign={'center'}>
                 Create a sell order deposit vault, get paid out in
-                <OrangeText> Bitcoin</OrangeText> when your order is filled. Vaults can go stale if the price of the underlying asset diverges, however you can update or withdraw unreserved liquidity anytime.
+                <OrangeText> Bitcoin</OrangeText> when your order is filled. Vaults can go stale if the price of the underlying asset diverges, however you can update or withdraw unreserved liquidity
+                anytime.
             </Text>
-
-          
 
             <Flex mt='10px' direction={'column'} overflow={'visible'}>
                 <Flex direction='column' align='center' overflow={'visible'}>
@@ -503,39 +502,39 @@ export const DepositConfirmation = ({}) => {
                             </Flex>
                         </Flex>
 
- {/* Fees and Swap Time Estimate */}
-                <Flex w='100%' justify={'center'} mb='7px'>
-                    <Flex w='62%' justify={'center'} mt='20px'>
-                        <Flex w='100%' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='0px' mb='6px' bg={colors.borderGray} borderColor={'#212229'} borderWidth={2}>
-                            <Flex w='50%' align='center' bg={'linear-gradient(180deg, #111219 0%, #0D0E14 100%)'}>
-                                <Flex mx='13px' w='20px'>
-                                    <FaLock size={'22px'} color={colors.textGray} />
-                                </Flex>
-                                <Flex direction={'column'}>
-                                    <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
-                                        Reservation Fee
-                                    </Text>
-                                    <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
-                                        Free
-                                    </Text>
-                                </Flex>
-                            </Flex>
-                            <Flex w='50%' align='center' bg={'linear-gradient(180deg, #212229 0%, #1A1B20 100%)'}>
-                                <Flex mx='15px'>
-                                    <FaClock size={'24px'} color={colors.textGray} />
-                                </Flex>
-                                <Flex direction={'column'}>
-                                    <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
-                                        Estimated Swap Time
-                                    </Text>{' '}
-                                    <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
-                                        20-30 Minutes
-                                    </Text>
+                        {/* Fees and Swap Time Estimate */}
+                        <Flex w='100%' justify={'center'} mb='7px'>
+                            <Flex w='62%' justify={'center'} mt='20px'>
+                                <Flex w='100%' h='60px' borderRadius={'10px'} overflow={'hidden'} mt='0px' mb='6px' bg={colors.borderGray} borderColor={'#212229'} borderWidth={2}>
+                                    <Flex w='50%' align='center' bg={'linear-gradient(180deg, #111219 0%, #0D0E14 100%)'}>
+                                        <Flex mx='13px' w='20px'>
+                                            <FaLock size={'22px'} color={colors.textGray} />
+                                        </Flex>
+                                        <Flex direction={'column'}>
+                                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
+                                                Reservation Fee
+                                            </Text>
+                                            <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='10px' fontWeight='normal' color={colors.textGray}>
+                                                Free
+                                            </Text>
+                                        </Flex>
+                                    </Flex>
+                                    <Flex w='50%' align='center' bg={'linear-gradient(180deg, #212229 0%, #1A1B20 100%)'}>
+                                        <Flex mx='15px'>
+                                            <FaClock size={'24px'} color={colors.textGray} />
+                                        </Flex>
+                                        <Flex direction={'column'}>
+                                            <Text fontSize={'11px'} fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing={-0.3} color={colors.offWhite}>
+                                                Estimated Swap Time
+                                            </Text>{' '}
+                                            <Text fontSize={'10px'} fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.textGray}>
+                                                20-30 Minutes
+                                            </Text>
+                                        </Flex>
+                                    </Flex>
                                 </Flex>
                             </Flex>
                         </Flex>
-                    </Flex>
-                </Flex>
 
                         {/* Advanced Settings Modal */}
                         <Modal isOpen={isOpen} onClose={onClose}>
@@ -621,8 +620,7 @@ export const DepositConfirmation = ({}) => {
                                                         </Flex>
                                                         <Spacer />
                                                         <Flex mt='8px' mr='6px'>
-                                                                                            <AssetTag assetName='ARBITRUM_USDT' width='132px' />
-
+                                                            <AssetTag assetName='ARBITRUM_USDT' width='132px' />
                                                         </Flex>
                                                     </Flex>
                                                     {/* Profit Percentage Input */}

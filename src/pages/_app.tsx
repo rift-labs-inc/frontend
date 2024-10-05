@@ -64,7 +64,7 @@ const myCustomTheme = {
         standby: '#FFD641',
     },
     fonts: {
-        body: FONT_FAMILIES.NOSTROMO
+        body: FONT_FAMILIES.NOSTROMO,
     },
     radii: {
         actionButton: '5px',
@@ -90,14 +90,13 @@ function MyApp({ Component, pageProps }: AppProps) {
 
     useEffect(() => {
         if (!proxyWalletInjected.current) {
-            (window.rift as any) = RiftApi; // TODO: setup
+            (window.rift as any) = RiftApi;
             //@ts-ignore
             window.rift.spawn();
             proxyWalletInjected.current = true;
         }
     }, []);
 
-    
     // TODO: The offline error is here
     // const setIsOnline = useStore((state) => state.setIsOnline);
 

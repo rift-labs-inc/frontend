@@ -21,7 +21,7 @@ interface DepositStatusModalProps {
 }
 
 const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false, onClose, status = DepositStatus.WaitingForWalletConfirmation, error = null, txHash = null }) => {
-    // Add txHash here
+    // add txHash here
     const isCompleted = status === DepositStatus.Confirmed;
     const isError = status === DepositStatus.Error;
     const isLoading = !isCompleted && !isError;
