@@ -16,6 +16,7 @@ export type SwapReservation = {
     reservationTimestamp: number;
     liquidityUnlockedTimestamp: number;
     state: ReservationState;
+    stateOffChain?: ReservationState;
     ethPayoutAddress: string;
     lpReservationHash: string;
     nonce: string;

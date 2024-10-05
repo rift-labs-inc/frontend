@@ -121,7 +121,10 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
 
     const isReservationExpired =
         reservation &&
-        ((reservation.state === 1 && Date.now() / 1000 - BigNumber.from(reservation.reservationTimestamp).toNumber() > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS) || reservation.state === 4);
+        (reservation.stateOffChain ||
+            (reservation.state === 1 && Date.now() / 1000 - BigNumber.from(reservation.reservationTimestamp).toNumber() > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS) ||
+            reservation.stateOffChain ||
+            reservation.state === 4);
 
     const renderDetailRow = (label: string, value: string | number | null | undefined) => (
         <Flex mr='20px' py='4px' fontSize='13px'>
@@ -245,8 +248,14 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                                 <Text
                                     fontSize={'14px'}
                                     fontFamily={FONT_FAMILIES.AUX_MONO}
-                                    color={isReservationExpired ? colors.darkerGray : ReservationState[reservation.state] === 'Completed' ? colors.greenOutline : colors.offWhite}>
-                                    {isReservationExpired ? 'Expired' : ReservationState[reservation.state]}
+                                    color={
+                                        isReservationExpired
+                                            ? colors.darkerGray
+                                            : ReservationState[reservation.stateOffChain || reservation.state] === 'Completed'
+                                            ? colors.greenOutline
+                                            : colors.offWhite
+                                    }>
+                                    {isReservationExpired ? 'Expired' : ReservationState[reservation.stateOffChain || reservation.state]}
                                 </Text>
                                 {/* Dot indicating status color */}
                                 <Flex
@@ -256,11 +265,11 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                                     bg={
                                         isReservationExpired
                                             ? colors.darkerGray
-                                            : ReservationState[reservation.state] === 'Created'
+                                            : ReservationState[reservation.stateOffChain || reservation.state] === 'Created'
                                             ? colors.RiftOrange
-                                            : ReservationState[reservation.state] === 'Completed'
+                                            : ReservationState[reservation.stateOffChain || reservation.state] === 'Completed'
                                             ? colors.greenOutline
-                                            : ReservationState[reservation.state] === 'Unlocked'
+                                            : ReservationState[reservation.stateOffChain || reservation.state] === 'Unlocked'
                                             ? colors.purpleBackground
                                             : colors.borderGray // Fallback for 'Expired' or any other status
                                     }
@@ -296,7 +305,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                                     )}
                                     {renderDetailRow('Total Sats Input', formatUnits(reservation.totalSatsInputInlcudingProxyFee, BITCOIN_DECIMALS))}
                                     {renderDetailRow('Total Swap Output', formatUnits(reservation.totalSwapOutputAmount, selectedInputAsset.decimals))}
-                                    {renderDetailRow('State onchain', ReservationState[reservation.state])}
+                                    {renderDetailRow('State onchain', ReservationState[reservation.stateOffChain || reservation.state])}
                                     {renderArrayDetailRow('Reserved Vaults', reservation.vaultIndexes, (index) => `D-${index}`)}
                                     {renderArrayDetailRow(
                                         'Reserved Amounts',

@@ -62,6 +62,12 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const isCompleted = reservation.state === ReservationState.Completed;
             const isExpiredOnChain = reservation.state === ReservationState.Expired;
             const isExpiredOffchain = reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp >= CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS;
+
+            if (reservation.indexInContract === 12) {
+                console.log('help reservation.state from contract', reservation.state);
+                console.log('help is this expired offchain', isExpiredOffchain);
+            }
+
             if (isExpiredOffchain) {
                 expiredReservationIndexes.push(reservationIndex);
             }
@@ -72,10 +78,22 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 provedReservationsCount++;
             } else if (isExpiredOnChain || isExpiredOffchain) {
                 expiredReservationsCount++;
-                reservation.state = ReservationState.Expired;
+                reservation.stateOffChain = ReservationState.Expired;
             } else {
                 // active reservations (created and not expired, completed, or unlocked)
                 activeReservationsCount++;
+            }
+
+            if (reservation.indexInContract === 12) {
+                console.log('reservation.indexInContract === 12', reservation);
+                console.log('reservation.amountsToReserve', reservation.amountsToReserve);
+                console.log('reservation.state', reservation.state);
+                console.log('reservation.reservationTimestamp', reservation.reservationTimestamp);
+                console.log('currentTimestamp', currentTimestamp);
+                console.log('isExpiredOffchain', isExpiredOffchain);
+                console.log('isExpiredOnChain', isExpiredOnChain);
+                console.log('expiredReservationIndexes', expiredReservationIndexes);
+                console.log('completedReservationsCount', completedReservationsCount);
             }
 
             const processVaultIndex = (vaultIndex, i) => {
@@ -125,17 +143,19 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
             totalAvailableLiquidity = totalAvailableLiquidity.add(unreservedBalance);
 
-            if (vaultIndex === 7) {
-                console.log(`Vault ${vaultIndex} data:`, {
-                    unreservedBalance: unreservedBalance.toString(),
-                    additionalBalance: additionalBalance.toString(),
-                    completedAmount: completedAmount.toString(),
-                    provedAmount: provedAmount.toString(),
-                    activelyReservedAmount: activelyReservedAmount.toString(),
-                    trueUnreservedBalance: BigNumber.from(unreservedBalance).add(BigNumber.from(additionalBalance)).toString(),
-                    withdrawnAmount: vault.withdrawnAmount.toString(),
-                });
-            }
+            // if (vaultIndex === 7) {
+            //     console.log(`Vault ${vaultIndex} data:`, {
+            //         unreservedBalance: unreservedBalance.toString(),
+            //         additionalBalance: additionalBalance.toString(),
+            //         completedAmount: completedAmount.toString(),
+            //         provedAmount: provedAmount.toString(),
+            //         activelyReservedAmount: activelyReservedAmount.toString(),
+            //         trueUnreservedBalance: BigNumber.from(unreservedBalance).add(BigNumber.from(additionalBalance)).toString(),
+            //         withdrawnAmount: vault.withdrawnAmount.toString(),
+            //         isExpiredOffchain: isExpiredOffchain,
+            //         isExpiredOnChain: isExpiredOnChain,
+            //     });
+            // }
 
             return {
                 ...vault,
