@@ -5,7 +5,7 @@ import { useDepositVaults } from '../../hooks/contract/useDepositVaults';
 import { useAccount } from 'wagmi';
 import { formatUnits } from 'ethers/lib/utils';
 import { checkIfNewDepositsArePaused, getTokenBalance } from '../../utils/contractReadFunctions';
-import { ERC20ABI } from '../../utils/constants';
+import { ERC20ABI, IS_FRONTEND_PAUSED } from '../../utils/constants';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { getPrices } from '../../utils/fetchUniswapPrices';
 
@@ -82,7 +82,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             if (!ethersRpcProvider || !selectedInputAsset) return;
 
             const areNewDepositsPausedBool = await checkIfNewDepositsArePaused(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress);
-            setAreNewDepositsPaused(areNewDepositsPausedBool);
+            setAreNewDepositsPaused(areNewDepositsPausedBool || IS_FRONTEND_PAUSED);
         };
 
         if (address) {
