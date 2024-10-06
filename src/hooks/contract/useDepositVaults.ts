@@ -63,7 +63,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const isExpiredOnChain = reservation.state === ReservationState.Expired;
             const isExpiredOffchain = reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp >= CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS;
 
-            if (reservation.indexInContract === 12) {
+            if (reservation.indexInContract === 16) {
                 console.log('help reservation.state from contract', reservation.state);
                 console.log('help is this expired offchain', isExpiredOffchain);
             }
@@ -84,8 +84,8 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 activeReservationsCount++;
             }
 
-            if (reservation.indexInContract === 12) {
-                console.log('reservation.indexInContract === 12', reservation);
+            if (reservation.indexInContract === 16) {
+                console.log('reservation.indexInContract === 16', reservation);
                 console.log('reservation.amountsToReserve', reservation.amountsToReserve);
                 console.log('reservation.state', reservation.state);
                 console.log('reservation.reservationTimestamp', reservation.reservationTimestamp);
@@ -107,6 +107,8 @@ export function useDepositVaults(): UseDepositVaultsResult {
                     const currentUnlocked = provedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
                     provedAmountsPerVault.set(vaultIndexKey, currentUnlocked.add(amountToAdd));
                 } else if (isExpiredOnChain || isExpiredOffchain) {
+                    console.log('yelp vault index', vaultIndex.toString());
+                    console.log('yelp isExpiredOnChain || isExpiredOffchain', isExpiredOnChain, isExpiredOffchain);
                     const currentAdditional = additionalBalances.get(vaultIndexKey) || BigNumber.from(0);
                     additionalBalances.set(vaultIndexKey, currentAdditional.add(amountToAdd));
                 } else {
@@ -133,29 +135,27 @@ export function useDepositVaults(): UseDepositVaultsResult {
         const updatedVaults = depositVaults.map((vault, vaultIndex) => {
             const vaultIndexKey = vaultIndex.toString();
             const completedAmount = completedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
-            let additionalBalance = additionalBalances.get(vaultIndexKey) ? additionalBalances.get(vaultIndexKey).sub(vault.withdrawnAmount) : BigNumber.from(0);
+            const activelyReservedAmount = activelyReservedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
+            let additionalBalance = additionalBalances.get(vaultIndexKey) ? additionalBalances.get(vaultIndexKey).sub(vault.withdrawnAmount).sub(activelyReservedAmount) : BigNumber.from(0);
             // Ensure additional balance can never be more than vault.initialBalance - completedAmount
             const maxAdditionalBalance = BigNumber.from(vault.initialBalance).sub(completedAmount);
             additionalBalance = additionalBalance.gt(maxAdditionalBalance) ? maxAdditionalBalance : additionalBalance;
             const unreservedBalance = vault.unreservedBalanceFromContract ?? BigNumber.from(0);
             const provedAmount = provedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
-            const activelyReservedAmount = activelyReservedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
 
             totalAvailableLiquidity = totalAvailableLiquidity.add(unreservedBalance);
 
-            // if (vaultIndex === 7) {
-            //     console.log(`Vault ${vaultIndex} data:`, {
-            //         unreservedBalance: unreservedBalance.toString(),
-            //         additionalBalance: additionalBalance.toString(),
-            //         completedAmount: completedAmount.toString(),
-            //         provedAmount: provedAmount.toString(),
-            //         activelyReservedAmount: activelyReservedAmount.toString(),
-            //         trueUnreservedBalance: BigNumber.from(unreservedBalance).add(BigNumber.from(additionalBalance)).toString(),
-            //         withdrawnAmount: vault.withdrawnAmount.toString(),
-            //         isExpiredOffchain: isExpiredOffchain,
-            //         isExpiredOnChain: isExpiredOnChain,
-            //     });
-            // }
+            if (vaultIndex === 11) {
+                console.log(`Vault ${vaultIndex} data:`, {
+                    unreservedBalance: unreservedBalance.toString(),
+                    additionalBalance: additionalBalance.toString(),
+                    completedAmount: completedAmount.toString(),
+                    provedAmount: provedAmount.toString(),
+                    activelyReservedAmount: activelyReservedAmount.toString(),
+                    trueUnreservedBalance: BigNumber.from(unreservedBalance).add(BigNumber.from(additionalBalance)).toString(),
+                    withdrawnAmount: vault.withdrawnAmount.toString(),
+                });
+            }
 
             return {
                 ...vault,
