@@ -196,6 +196,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
             const updatedDepositVaults = calculateTrueUnreservedLiquidity(depositVaults, allFetchedSwapReservations);
             console.log('All Updated Deposit Vaults:', updatedDepositVaults);
+
             setAllDepositVaults(updatedDepositVaults);
 
             // [1] fetch user-specific vaults (if connected)
