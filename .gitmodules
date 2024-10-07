@@ -1,6 +1,3 @@
-[submodule "contracts"]
-	path = contracts
-	url = https://github.com/rift-labs-inc/contracts
-[submodule "data-aggregation-contracts"]
-	path = data-aggregation-contracts
-	url = https://github.com/rift-labs-inc/data-aggregation-contracts
+[submodule "protocol"]
+	path = protocol
+	url = https://github.com/rift-labs-inc/protocol

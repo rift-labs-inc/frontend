@@ -211,9 +211,11 @@ export const Navbar = ({}) => {
                     <a href='https://x.com/riftdex' target='_blank' rel='noopener noreferrer'>
                         <Image src='/images/social/x.svg' w='17px' aspectRatio={1} />
                     </a>
-                    <a href='https://t.me/riftdex' target='_blank' rel='noopener noreferrer'>
-                        <Image src='/images/social/telegram.svg' w='35px' aspectRatio={1} />
-                    </a>
+                    <Flex mt='1px'>
+                        <a href='https://t.me/riftdex' target='_blank' rel='noopener noreferrer'>
+                            <Image src='/images/social/telegram.svg' w='23px' aspectRatio={1} />
+                        </a>
+                    </Flex>
                 </Flex>
                 <Spacer />
                 <Flex direction='column' fontFamily={FONT_FAMILIES.AUX_MONO} align='center' fontSize='12px' position='absolute' top={0} left={0} right={0}>

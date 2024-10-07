@@ -107,8 +107,6 @@ export function useDepositVaults(): UseDepositVaultsResult {
                     const currentUnlocked = provedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
                     provedAmountsPerVault.set(vaultIndexKey, currentUnlocked.add(amountToAdd));
                 } else if (isExpiredOnChain || isExpiredOffchain) {
-                    console.log('yelp vault index', vaultIndex.toString());
-                    console.log('yelp isExpiredOnChain || isExpiredOffchain', isExpiredOnChain, isExpiredOffchain);
                     const currentAdditional = additionalBalances.get(vaultIndexKey) || BigNumber.from(0);
                     additionalBalances.set(vaultIndexKey, currentAdditional.add(amountToAdd));
                 } else {
@@ -137,11 +135,20 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const completedAmount = completedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
             const activelyReservedAmount = activelyReservedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
             let additionalBalance = additionalBalances.get(vaultIndexKey) ? additionalBalances.get(vaultIndexKey).sub(vault.withdrawnAmount).sub(activelyReservedAmount) : BigNumber.from(0);
+            if (vaultIndex === 11) {
+                console.log('vaultIndex === 11', vaultIndex);
+                console.log('additionalBalance', additionalBalance.toString());
+            }
             // Ensure additional balance can never be more than vault.initialBalance - completedAmount
-            const maxAdditionalBalance = BigNumber.from(vault.initialBalance).sub(completedAmount);
-            additionalBalance = additionalBalance.gt(maxAdditionalBalance) ? maxAdditionalBalance : additionalBalance;
             const unreservedBalance = vault.unreservedBalanceFromContract ?? BigNumber.from(0);
             const provedAmount = provedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
+            const maxAdditionalBalance = BigNumber.from(vault.initialBalance).sub(completedAmount).sub(unreservedBalance);
+            additionalBalance = additionalBalance.gt(maxAdditionalBalance) ? maxAdditionalBalance : additionalBalance;
+            if (vaultIndex === 11) {
+                console.log('additionalBalance', additionalBalance.toString());
+                console.log('maxAdditionalBalance', maxAdditionalBalance.toString());
+                console.log('unreservedBalance', unreservedBalance.toString());
+            }
 
             totalAvailableLiquidity = totalAvailableLiquidity.add(unreservedBalance);
 

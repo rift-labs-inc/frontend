@@ -245,6 +245,12 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
         // [0] break if we have reached the max number of LP outputs or have no more sats to spend
         if (totalLpOutputsUsed >= maxLpOutputs || satsToSpend.lte(0)) break;
 
+        // skip vaults with insufficient balance
+        if (BigNumber.from(sortedVaults[i].trueUnreservedBalance).lt(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT)) {
+            console.log(`Skipping vault ${sortedVaults[i].index} due to insufficient balance`);
+            continue;
+        }
+
         // [1] calculate amount of USDT to take from current vault based on remaining input sats
         const vault = sortedVaults[i];
         const bufferedMicroUSDTStillNeeded = vault.btcExchangeRate.mul(satsToSpend);
@@ -337,11 +343,8 @@ export function calculateOriginalAmountBeforeFee(totalAmountWithFee: BigNumber):
 
 export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputAmount, maxLpOutputs = MAX_SWAP_LP_OUTPUTS) {
     // [0] calculate the protocol fee in micro USDT and inlcude in the output amount
-    console.log('really microUsdtOutputAmount:', microUsdtOutputAmount.toString());
     const protocolFeeInMicroUsdt = calculateProtocolFeeInMicroUsdt(microUsdtOutputAmount);
-    console.log('really protocolFeeInMicroUsdt:', protocolFeeInMicroUsdt.toString());
     microUsdtOutputAmount = microUsdtOutputAmount.add(protocolFeeInMicroUsdt);
-    console.log('really microUsdtOutputAmount with fee:', microUsdtOutputAmount.toString());
 
     // [1] validate inputs
     if (!Array.isArray(depositVaults) || depositVaults.length === 0 || microUsdtOutputAmount.lte(0)) {
@@ -373,10 +376,19 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
         if (totalLpOutputsUsed >= maxLpOutputs || remainingUsdtToAchieve.lte(0)) break;
 
         const vault = sortedVaults[i];
-        console.log('jeff vault', vault.index);
-        console.log('jeff vault.unreservedBalance', vault.unreservedBalance);
         const microUsdtAvailable = BigNumber.from(vault.trueUnreservedBalance);
-        console.log('jeff microUsdtAvailable', microUsdtAvailable.toString());
+
+        // Print true unreserved balance for vault 12
+        if (vault.index === 12) {
+            console.log(`Vault 12 true unreserved balance: ${vault.trueUnreservedBalance.toString()} microUSDT`);
+        }
+
+        // [0] skip vaults with insufficient balance
+        if (microUsdtAvailable.lt(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT)) {
+            console.log(`Skipping vault ${vault.index} due to insufficient balance`);
+            continue;
+        }
+
         // [1] calculate the amount of μUSDT to take from the current vault
         const microUsdtToTake = microUsdtAvailable.lt(remainingUsdtToAchieve) ? microUsdtAvailable : remainingUsdtToAchieve;
         const bufferedMicroUsdtToTake = bufferTo18Decimals(microUsdtToTake, vault.depositAsset.decimals);

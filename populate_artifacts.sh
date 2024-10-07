@@ -1,7 +1,8 @@
 # Helper script to compile contract artifacts and move them to artifacts/ dir 
-cd contracts/ && forge compile --via-ir && cd ..
+git submodule update --remote
+(cd protocol/contracts && forge soldeer install && forge compile)
+(cd protocol/data-aggregation-contracts && forge compile)
 rm -rf artifacts/*
-mv contracts/out/RiftExchange.sol/RiftExchange.json src/abis/RiftExchange.json
-cd data-aggregation-contracts/ && forge compile && cd ..
-mv data-aggregation-contracts/out/DepositVaultsAggregator.sol/DepositVaultsAggregator.json src/abis/DepositVaultsAggregator.json
-mv data-aggregation-contracts/out/SwapReservationsAggregator.sol/SwapReservationsAggregator.json src/abis/SwapReservationsAggregator.json
+cp protocol/contracts/out/RiftExchange.sol/RiftExchange.json src/abis/
+cp protocol/data-aggregation-contracts/out/DepositVaultsAggregator.sol/DepositVaultsAggregator.json src/abis/
+cp protocol/data-aggregation-contracts/out/SwapReservationsAggregator.sol/SwapReservationsAggregator.json src/abis/

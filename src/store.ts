@@ -20,8 +20,8 @@ import {
 } from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
-import arbitrumMainnetDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/42161/run-latest.json';
-import arbitrumSepoliaDeployment from '../contracts/broadcast/DeployRiftExchange.s.sol/421614/run-latest.json';
+import arbitrumMainnetDeployment from '../protocol/contracts/broadcast/DeployRiftExchange.s.sol/42161/run-latest.json';
+import arbitrumSepoliaDeployment from '../protocol/contracts/broadcast/DeployRiftExchange.s.sol/421614/run-latest.json';
 import { arbitrumSepolia, arbitrum } from 'viem/chains';
 
 type Store = {
