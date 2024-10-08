@@ -204,7 +204,7 @@ export const Navbar = ({}) => {
                     {/* {navItem('Lending', '/lending')} */}
                     {/* {navItem('OTC', '/otc')} */}
                     {navItem('Manage', '/manage')}
-                    {/* {navItem('Activity', '/activity')} */}
+                    {navItem('Activity', '/activity')}
                     {navItem('About', '/about')}
                 </Flex>
                 <Flex ml='25px' gap='30px' align='center'>
