@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { fetchReservationDetails } from '../../utils/dappHelper';
 import { BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS } from '../../utils/constants';
 import { copyToClipboard } from '../../utils/frontendHelpers';
+import useWindowSize from '../../hooks/useWindowSize';
 
 interface SwapPreviewCardProps {
     vault?: DepositVault;
@@ -31,6 +32,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
         : reservation?.reservationTimestamp
         ? BigNumber.from(reservation.reservationTimestamp).toNumber()
         : null;
+    const { isMobile } = useWindowSize();
 
     const timeAgo = timestampUnix ? formatDistanceToNow(new Date(timestampUnix * 1000), { addSuffix: true }) : 'N/A';
     const [btcInputSwapAmount, setBtcInputSwapAmount] = useState<string | null>(null);
@@ -166,11 +168,11 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                 gap='12px'
                 flexDirection={isActivityPage ? 'column' : 'row'}
                 height={isActivityPage ? 'auto' : 'unset'}>
-                <Flex w='100%'>
+                <Flex w='100%' direction={isMobile ? 'column' : 'row'}>
                     <Text width='110px' pr='10px' fontSize={'14px'} fontFamily={FONT_FAMILIES.AUX_MONO} fontWeight={'normal'}>
                         {timeAgo}
                     </Text>
-                    <Flex flex={1} w='100%' align='center' gap='12px' direction='row'>
+                    <Flex flex={1} w='100%' align='center' gap='12px' direction={isMobile ? 'column' : 'row'}>
                         {isActivityPage && (
                             <Flex w='100px' direction='column'>
                                 {renderAddress(vault?.owner || reservation?.owner)}
@@ -178,10 +180,10 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                         )}
 
                         {/* Input Section */}
-                        <Flex flex={1} direction='column'>
+                        <Flex flex={1} direction='column' align={isMobile ? 'center' : ''} w={isMobile ? '100%' : ''}>
                             <Flex
                                 h='50px'
-                                w='300px'
+                                w={isMobile ? '100%' : '300px'}
                                 bg={reservation ? colors.currencyCard.btc.background : selectedInputAsset.dark_bg_color}
                                 border='2px solid'
                                 borderColor={reservation ? colors.currencyCard.btc.border : selectedInputAsset.bg_color}
@@ -207,10 +209,10 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                         </Flex>
 
                         {/* Output Section */}
-                        <Flex flex={1} direction='column'>
+                        <Flex flex={1} direction='column' w={isMobile ? '100%' : ''}>
                             <Flex
                                 h='50px'
-                                w='300px'
+                                w={isMobile ? '100%' : '300px'}
                                 bg={reservation ? colors.currencyCard.usdt.background : colors.currencyCard.btc.background}
                                 border='2px solid'
                                 borderColor={reservation ? colors.currencyCard.usdt.border : colors.currencyCard.btc.border}
@@ -235,7 +237,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                         </Flex>
                     </Flex>
 
-                    <Flex width='125px' ml='10px'>
+                    <Flex width={isMobile ? '100%' : '125px'} mt={isMobile ? '20px' : '0px'} ml={isMobile ? '0px' : '10px'} mb={isMobile ? '-20px' : '0px'}>
                         {/* vault status bar */}
                         {vault && (
                             <Flex w='100%'>
@@ -285,8 +287,8 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ vault, reservation, u
                 </Flex>
 
                 {isActivityPage && (
-                    <Flex w='100%'>
-                        <Flex w='100%' flexDirection='row' gap='1px' mt='16px' fontSize='12px' fontFamily={FONT_FAMILIES.AUX_MONO}>
+                    <Flex w='100%' direction={isMobile ? 'column' : 'row'}>
+                        <Flex w='100%' direction={isMobile ? 'column' : 'row'} gap='1px' mt='16px' fontSize='12px' fontFamily={FONT_FAMILIES.AUX_MONO}>
                             {vault && (
                                 <>
                                     {renderDetailRow('D-', vault.index)}

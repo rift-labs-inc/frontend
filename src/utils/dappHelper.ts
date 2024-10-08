@@ -8,6 +8,7 @@ import {
     BITCOIN_DECIMALS,
     FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS,
     MAX_SWAP_LP_OUTPUTS,
+    MIN_SWAP_AMOUNT_MICRO_USDT,
     MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT,
     PROTOCOL_FEE,
     PROTOCOL_FEE_DENOMINATOR,
@@ -221,12 +222,23 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
     }
 
     // [2] sort vaults based on exchange rate (high -> low)
-    const sortedVaults = depositVaults?.sort((a, b) => {
+    let sortedVaults = depositVaults?.sort((a, b) => {
         const diff = b.btcExchangeRate.sub(a.btcExchangeRate);
         if (diff.isZero()) return 0;
         if (diff.isNegative()) return -1;
         return 1;
     });
+
+    // [2.5] Filter out vaults with insufficient balance
+    sortedVaults = sortedVaults.filter((vault) => {
+        const microUsdtAvailable = BigNumber.from(vault.trueUnreservedBalance);
+        return microUsdtAvailable.gte(BigNumber.from(MIN_SWAP_AMOUNT_MICRO_USDT));
+    });
+
+    // If all vaults were filtered out, return null
+    if (sortedVaults.length === 0) {
+        return null;
+    }
 
     // [3] setup variables to track results
     let totalSatsUsed = BigNumber.from(0);
@@ -378,14 +390,8 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
         const vault = sortedVaults[i];
         const microUsdtAvailable = BigNumber.from(vault.trueUnreservedBalance);
 
-        // Print true unreserved balance for vault 12
-        if (vault.index === 12) {
-            console.log(`Vault 12 true unreserved balance: ${vault.trueUnreservedBalance.toString()} microUSDT`);
-        }
-
-        // [0] skip vaults with insufficient balance
-        if (microUsdtAvailable.lt(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT)) {
-            console.log(`Skipping vault ${vault.index} due to insufficient balance`);
+        // Skip vaults with less than MIN_SWAP_AMOUNT_MICRO_USDT
+        if (microUsdtAvailable.lt(BigNumber.from(MIN_SWAP_AMOUNT_MICRO_USDT))) {
             continue;
         }
 

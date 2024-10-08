@@ -4,7 +4,7 @@ import { Flex, Spacer, Text, Box, Input, Button, InputGroup, InputRightElement, 
 import { Navbar } from '../components/nav/Navbar';
 import { colors } from '../utils/colors';
 import { IoCheckbox } from 'react-icons/io5';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MdOutlineCheckBoxOutlineBlank } from 'react-icons/md';
 import { FaCheckSquare } from 'react-icons/fa';
 import { FaSearch } from 'react-icons/fa';
@@ -22,6 +22,8 @@ import { FONT_FAMILIES } from '../utils/font';
 import SwapPreviewCard from '../components/deposit/SwapPreviewCard';
 import { DepositVault, SwapReservation } from '../types';
 import { createReservationUrl } from '../utils/dappHelper';
+import { formatUnits } from 'ethers/lib/utils';
+import { BigNumber } from 'ethers';
 
 const Activity = () => {
     const { isMobile } = useWindowSize();
@@ -35,6 +37,13 @@ const Activity = () => {
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const { options: optionsButton, selected: selectedButton, setSelected: setSelectedButton } = useHorizontalSelectorInput(['Swaps', 'Deposits'] as const);
+    const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
+    const validAssets = useStore((state) => state.validAssets);
+
+    useEffect(() => {
+        const totalAvailableLiquidity = validAssets[selectedInputAsset.name]?.totalAvailableLiquidity;
+        setAvailableLiquidity(totalAvailableLiquidity ?? BigNumber.from(0));
+    }, [validAssets]);
 
     return (
         <>
@@ -73,18 +82,43 @@ const Activity = () => {
                     </Flex>
 
                     {/* CHARTS */}
-                    <Flex w='100%' maxW='1200px' gap='12px' px='20px'>
-                        <ActivityChartContainer title='Active Liquidity' value='329,343.32'>
+                    <Flex w='100%' maxW='1200px' gap='12px' px='20px' align='center' justify='center'>
+                        <Flex
+                            letterSpacing={'-2px'}
+                            bg={colors.offBlack}
+                            mb='10px'
+                            fontSize={'24px'}
+                            direction={'column'}
+                            px='36px'
+                            py={'12px'}
+                            align='center'
+                            justify='center'
+                            borderRadius={'10px'}
+                            border='2px solid '
+                            color={colors.textGray}
+                            borderColor={colors.borderGray}
+                            gap='0px'
+                            height={'120px'}>
+                            <Text fontSize={'14px'} fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.offWhite}>
+                                TOTAL AVAILABLE LIQUIDITY
+                            </Text>
+                            <Text fontSize={'29px'} color={selectedInputAsset.border_color_light} fontFamily={FONT_FAMILIES.AUX_MONO}>{`${formatUnits(
+                                availableLiquidity,
+                                selectedInputAsset.decimals,
+                            )} ${selectedInputAsset.name}`}</Text>
+                        </Flex>
+
+                        {/* <ActivityChartContainer title='Active Liquidity' value='329,343.32'>
                             <ActiveLiquidityRawChart />
                         </ActivityChartContainer>
                         <ActivityChartContainer title='Monthly Volume' value='$21.23B'>
                             <MonthlyValueRawChart />
-                        </ActivityChartContainer>
+                        </ActivityChartContainer> */}
                     </Flex>
 
                     <Flex w='100%' maxW='1200px' gap='12px' px='20px' mt='40px'>
                         <Flex w='100%' direction='column'>
-                            {(allDepositVaults && allDepositVaults.length > 0) || (allSwapReservations && allSwapReservations.length > 0) ? (
+                            {(allDepositVaults && allDepositVaults.length > 0 && !isMobile) || (allSwapReservations && allSwapReservations.length > 0 && !isMobile) ? (
                                 <Flex
                                     w='100%'
                                     h='30px'
@@ -95,27 +129,27 @@ const Activity = () => {
                                     align='center'
                                     justify='flex-start'
                                     borderRadius={'10px'}
-                                    fontSize={'14px'}
+                                    fontSize={'10px'}
                                     fontFamily={FONT_FAMILIES.NOSTROMO}
                                     borderColor={colors.borderGray}
                                     fontWeight='bold'
                                     color={colors.offWhite}
                                     gap='12px'>
-                                    <Flex gap='12px'>
-                                        <Flex width='109px'>
+                                    <Flex gap='10vw'>
+                                        <Flex width={isMobile ? '10vw' : '109px'}>
                                             <Text>TIMESTAMP</Text>
                                         </Flex>
-                                        <Flex w='105px'>
+                                        <Flex w={isMobile ? '10vw' : '105px'}>
                                             <Text>OWNER</Text>
                                         </Flex>
-                                        <Flex w='375px'>
+                                        <Flex w={isMobile ? '10vw' : '375px'}>
                                             <Text>SWAP INPUT</Text>
                                         </Flex>
-                                        <Flex w='335px'>
+                                        <Flex w={isMobile ? '10vw' : '335px'}>
                                             <Text>SWAP OUTPUT</Text>
                                         </Flex>
                                     </Flex>
-                                    <Text width='140px' ml='20px' mr='52px'>
+                                    <Text width={isMobile ? '10vw' : '140px'} ml='20px' mr='52px'>
                                         STATUS
                                     </Text>
                                 </Flex>
