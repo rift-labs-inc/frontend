@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useStore } from '../../../store';
-import { Text, Flex, Image, Center, Box, Button, color, Spinner } from '@chakra-ui/react';
+import { Text, Flex, Image, Center, Box, Button, color, Spinner, Input } from '@chakra-ui/react';
 import { Navbar } from '../../../components/nav/Navbar';
 import { colors } from '../../../utils/colors';
 import { bufferTo18Decimals, calculateBtcOutputAmountFromExchangeRate, calculateOriginalAmountBeforeFee, decodeReservationUrl, fetchReservationDetails } from '../../../utils/dappHelper';
@@ -57,6 +57,28 @@ const ReservationDetails = () => {
     const [timeLeft, setTimeLeft] = useState('');
     const setProxyWalletSwapStatus = useStore((state) => state.setProxyWalletSwapStatus);
     const [minutesLeft, setMinutesLeft] = useState(0);
+    const [dumpWalletMode, setDumpWalletMode] = useState(false);
+    const [dumpWalletAddress, setDumpWalletAddress] = useState('');
+    const [aggregateProxyBalance, setAggregateProxyBalance] = useState(0);
+    const [isWalletDumped, setIsWalletDumped] = useState(false);
+
+    useEffect(() => {
+        const fetchAggregateProxyBalance = async () => {
+            try {
+                const balance = await window.rift.getAggregateProxyBalance();
+                console.log('procbrother balance', balance);
+                setAggregateProxyBalance(balance);
+            } catch (error) {
+                console.error('Error fetching aggregate proxy balance:', error);
+            }
+        };
+
+        fetchAggregateProxyBalance();
+
+        const intervalId = setInterval(fetchAggregateProxyBalance, 5000);
+
+        return () => clearInterval(intervalId);
+    }, []);
 
     useEffect(() => {
         const calculateTimeLeft = () => {
@@ -160,6 +182,12 @@ const ReservationDetails = () => {
         const intervalId = setInterval(checkSwapStatus, 1000); // check every second
         return () => clearInterval(intervalId);
     }, [swapReservationData?.nonce]);
+
+    const dumpWallet = async () => {
+        const dumpWalletResult = await window.rift.sweepKeysToWallet(dumpWalletAddress);
+        console.log('dumpWalletResult', dumpWalletResult);
+        setIsWalletDumped(true);
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -302,11 +330,11 @@ const ReservationDetails = () => {
                                     </Flex>
                                 )
                             ) : swapFlowState === '3-receive-evm-token' ||
-                                swapFlowState === '4-completed' ||
-                                swapFlowState === '5-expired' ||
-                                currentReservationState === 'Proved' ||
-                                currentReservationState === 'Expired' ||
-                                currentReservationState === 'Completed' ? (
+                              swapFlowState === '4-completed' ||
+                              swapFlowState === '5-expired' ||
+                              currentReservationState === 'Proved' ||
+                              currentReservationState === 'Expired' ||
+                              currentReservationState === 'Completed' ? (
                                 <MainSwapFlow />
                             ) : proxyWalletSwapInternalID ? (
                                 <>
@@ -420,13 +448,48 @@ const ReservationDetails = () => {
                                             </Flex>
                                         </Flex>
                                     </Flex>
-
-                                    <Text fontWeight={'normal'} fontSize='13px' mt='32px' color={colors.RiftOrange} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                    {aggregateProxyBalance > 0 && (
+                                        <Flex mt='32px' bg={colors.offBlackLighter2} onClick={() => setDumpWalletMode(!dumpWalletMode)} _hover={{ cursor: 'pointer' }}>
+                                            <Text>Dump Proxy wallet balance: {aggregateProxyBalance} </Text>
+                                        </Flex>
+                                    )}
+                                    <Text mt={aggregateProxyBalance <= 0 ? '32px' : '0px'} fontWeight={'normal'} fontSize='13px' color={colors.RiftOrange} fontFamily={FONT_FAMILIES.AUX_MONO}>
                                         WARNING: Do not clear browser cache or cookies until the swap is complete.
                                     </Text>
                                     <Text fontWeight={'normal'} fontSize='13px' mt='0px' color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
                                         {proxyWalletSwapInternalID ? 'Internal ID - ' + proxyWalletSwapInternalID : 'Loading internal id...'}
                                     </Text>
+                                    {dumpWalletMode && (
+                                        <Flex>
+                                            <Flex alignItems='center' mt='10px'>
+                                                <Button bg='none' textColor={'white'} mr='10px' onClick={() => setDumpWalletMode(false)}>
+                                                    X
+                                                </Button>
+                                                <Input
+                                                    value={dumpWalletAddress}
+                                                    onChange={(e) => setDumpWalletAddress(e.target.value)}
+                                                    placeholder='Enter BTC Address'
+                                                    _placeholder={{ color: 'white', fontFamily: FONT_FAMILIES.NOSTROMO }}
+                                                    mr='10px'
+                                                    width='700px'
+                                                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                                                    bg={colors.offBlackLighter2}
+                                                    color={colors.offWhite}
+                                                    borderColor={colors.RiftOrange}
+                                                    _hover={{ borderColor: colors.purpleHover }}
+                                                    _focus={{ borderColor: colors.purpleHover }}
+                                                />
+                                                <Button
+                                                    onClick={dumpWallet}
+                                                    bg={isWalletDumped ? colors.greenOutline : colors.RiftOrange}
+                                                    color={colors.offWhite}
+                                                    _hover={{ bg: colors.purpleHover }}
+                                                    borderColor={colors.borderGray}>
+                                                    {isWalletDumped ? 'Wallet Dumped!' : 'Dump Wallet'}
+                                                </Button>
+                                            </Flex>
+                                        </Flex>
+                                    )}
                                 </>
                             ) : (
                                 <Flex direction='column'>
