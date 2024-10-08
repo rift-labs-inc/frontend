@@ -30,6 +30,7 @@ import { listenForLiquidityReservedEvent, validateReserveLiquidity } from '../..
 import { useContractData } from '../../components/providers/ContractDataProvider';
 import { bufferTo18Decimals, createReservationUrl } from '../../utils/dappHelper';
 import { ProxyWalletLiquidityProvider, ReservationByPaymasterRequest, ReservationByPaymasterResponse } from '../../types';
+import { CreateRiftSwapArgs, GetProxyWalletArgs, GetProxyWalletResponse, GetRiftSwapFeesArgs, GetRiftSwapStatusArgs, ProxyWalletStatus, RiftSwapFees } from '../../proxy-wallet/types';
 
 export const ReserveLiquidity = ({}) => {
     const { isMobile } = useWindowSize();
@@ -191,8 +192,8 @@ export const ReserveLiquidity = ({}) => {
 
             if (!result.status) {
                 console.error('Error reserving liquidity:', result);
-                    toastError('', { title: 'Liquidity Unavailable', description: 'Someone else reserved your liquidity from under your feet :(' });
-                    setSwapFlowState('0-not-started');
+                toastError('', { title: 'Liquidity Unavailable', description: 'Someone else reserved your liquidity from under your feet :(' });
+                setSwapFlowState('0-not-started');
                 setLoadingReservation(false);
                 return;
             }
@@ -340,7 +341,6 @@ export const ReserveLiquidity = ({}) => {
                     hour to send BTC to complete the swap.
                 </Text>
 
-
                 {/* USDT Payout Address */}
                 <Text ml='8px' mt='24px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                     USDT Payout Address
@@ -416,12 +416,10 @@ export const ReserveLiquidity = ({}) => {
                 _hover={{ bg: colors.purpleHover }}
                 w='400px'
                 transition={'0.2s'}
-
                 px='20px'
-                                py='4px'
-                                mt={'22px'}
-                                h={'50px'}
-
+                py='4px'
+                mt={'22px'}
+                h={'50px'}
                 onClick={ethPayoutAddress && isEthereumPayoutAddressValid ? () => (isPayingFeesInBTC ? proceedWithReservationPayingFeesUsingBtc() : initiateReservationPayingFeesInEth()) : null}
                 fontSize={'16px'}
                 align={'center'}

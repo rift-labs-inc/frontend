@@ -40,6 +40,7 @@ export const MainSwapFlow = () => {
             if (!swapReservationData || !swapReservationData.nonce) return;
 
             try {
+                // @ts-ignore
                 const status = await window.rift.getRiftSwapStatus({ internalId: swapReservationData.nonce });
                 console.log('Swap status from proxy wallet:', status);
 
