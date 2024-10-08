@@ -179,7 +179,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                                                     <Flex
                                                         fontFamily={'Aux'}
                                                         h='100%'
-                                                        // pt='5px'
+                                                    // pt='5px'
                                                     >
                                                         {icon}
                                                     </Flex>

@@ -30,6 +30,7 @@ export type BitcoinWallet = {
     hdKey: HDKey;
 };
 
+
 function normalizeHexStr(hex: string): string {
     return hex.startsWith('0x') ? hex.slice(2) : hex;
 }
@@ -197,28 +198,97 @@ async function executeRiftSwapOnAvailableUTXO(swapData: CreateRiftSwapArgs, rece
     for (let i = 0; i < MAX_RESERVATION_DURATION / UTXO_POLLING_INTERVAL; i++) {
         // show minutes remaining
         console.log(`Polling for UTXO, ${MAX_RESERVATION_DURATION / 60 - (i * UTXO_POLLING_INTERVAL) / 60} minutes remaining`);
-        try {   
+        try {
             const utxos = await fetchAddressUTXOs(wallet.address, mempoolApiHostname);
-        
-        const utilizedUtxo = utxos.find((utxo) => utxo.value >= swappedBtc);
-        if (utilizedUtxo) {
-            console.log('Found available UTXO', utilizedUtxo);
-            const allocatedFees = utilizedUtxo.value - swappedBtc;
-            console.log('Available UTXO Bal', utilizedUtxo.value);
-            console.log('Allocated fees in sats:', allocatedFees);
-            console.log('Swapped BTC in sats:', swappedBtc);
-            const vinSats = await fetchFundingTxAmount(utilizedUtxo.txid, utilizedUtxo.vout, mempoolApiHostname);
-            const txDetails = await buildRiftPaymentTransaction(orderNonceHex, liquidityProviders, utilizedUtxo.txid, utilizedUtxo.vout, wallet, vinSats, allocatedFees);
-            console.log('Built Rift Payment Transaction:', txDetails);
-            await broadcastTransaction(txDetails.txSerialized, mempoolApiHostname);
-            await storage.updateSwapStatus(internalSwapId, SwapStatus.PAYMENT_TRANSACTION_SENT, txDetails.txid);
-            console.log('Transaction broadcasted successfully');
-            return;
-        }} catch (e) {
+
+            const utilizedUtxo = utxos.find((utxo) => utxo.value >= swappedBtc);
+            if (utilizedUtxo) {
+                console.log('Found available UTXO', utilizedUtxo);
+                const allocatedFees = utilizedUtxo.value - swappedBtc;
+                console.log('Available UTXO Bal', utilizedUtxo.value);
+                console.log('Allocated fees in sats:', allocatedFees);
+                console.log('Swapped BTC in sats:', swappedBtc);
+                const vinSats = await fetchFundingTxAmount(utilizedUtxo.txid, utilizedUtxo.vout, mempoolApiHostname);
+                const txDetails = await buildRiftPaymentTransaction(orderNonceHex, liquidityProviders, utilizedUtxo.txid, utilizedUtxo.vout, wallet, vinSats, allocatedFees);
+                console.log('Built Rift Payment Transaction:', txDetails);
+                await broadcastTransaction(txDetails.txSerialized, mempoolApiHostname);
+                await storage.updateSwapStatus(internalSwapId, SwapStatus.PAYMENT_TRANSACTION_SENT, txDetails.txid);
+                console.log('Transaction broadcasted successfully');
+                return;
+            }
+        } catch (e) {
             console.error(e);
         }
         await new Promise((resolve) => setTimeout(resolve, UTXO_POLLING_INTERVAL * 1000));
     }
 }
+async function buildSweepTransaction(
+    utxos: { txid: string; vout: number; value: number; signer_wallet: BitcoinWallet }[],
+    outputAddress: string,
+    satPerVbyte: number
+): Promise<{
+    txSerializedNoSegwit: string;
+    txid: string;
+    txSerialized: string;
+}> {
+    try {
+        const network = bitcoin.networks.bitcoin;
+        const psbt = new bitcoin.Psbt({ network });
 
-export { buildRiftPaymentTransaction, weiToSatoshi, satsToWei, executeRiftSwapOnAvailableUTXO, estimateRiftPaymentTransactionFees };
+        // Add inputs
+        utxos.forEach((utxo) => {
+            psbt.addInput({
+                hash: utxo.txid,
+                index: utxo.vout,
+                witnessUtxo: {
+                    script: bitcoin.payments.p2wpkh({
+                        pubkey: Buffer.from(utxo.signer_wallet.publicKey, 'hex'),
+                        network,
+                    }).output!,
+                    value: utxo.value,
+                },
+            });
+        });
+
+        // Calculate total input amount
+        const totalInputSats = utxos.reduce((sum, utxo) => sum + utxo.value, 0);
+
+        // Estimate the transaction size and calculate the fee
+        const estimatedVsize = psbt.extractTransaction(true).virtualSize();
+        const feeSats = Math.ceil(estimatedVsize * satPerVbyte);
+
+        // Add output (sweep to the output wallet)
+        const outputAmount = totalInputSats - feeSats;
+        if (outputAmount <= 0) {
+            throw new Error('Insufficient funds to cover the fee');
+        }
+        psbt.addOutput({
+            address: outputAddress,
+            value: outputAmount,
+        });
+
+        // Sign inputs
+        utxos.forEach((utxo, index) => {
+            psbt.signInput(index, {
+                publicKey: Buffer.from(utxo.signer_wallet.publicKey, 'hex'),
+                sign: (hash: Buffer) => Buffer.from(utxo.signer_wallet.hdKey.sign(hash)),
+            });
+        });
+
+        psbt.finalizeAllInputs();
+
+        const tx = psbt.extractTransaction();
+        const txid = tx.getId();
+        const txHex = tx.toHex();
+
+        return {
+            txSerializedNoSegwit: reserializeNoSegwit(txHex),
+            txid,
+            txSerialized: txHex,
+        };
+    } catch (e) {
+        console.error(e);
+        throw e;
+    }
+}
+export { buildRiftPaymentTransaction, weiToSatoshi, satsToWei, executeRiftSwapOnAvailableUTXO, estimateRiftPaymentTransactionFees, buildSweepTransaction };

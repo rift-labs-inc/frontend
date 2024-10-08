@@ -111,6 +111,7 @@ const ReservationDetails = () => {
     useEffect(() => {
         const checkSwapStatus = async () => {
             console.log('checkSwapStatus called');
+            // @ts-ignore
             if (typeof window === 'undefined' || !window.rift || !window.rift.getRiftSwapStatus || !swapReservationData) {
                 setError('Rift wallet not detected or getRiftSwapStatus not available.');
                 return;
@@ -119,6 +120,7 @@ const ReservationDetails = () => {
             setError(null);
 
             if (swapReservationData) {
+                // @ts-ignore
                 const walletInfo = await window.rift.getProxyWallet({ orderNonceHex: swapReservationData.nonce });
                 if (walletInfo && walletInfo.address) {
                     setAddress(walletInfo.address);
@@ -128,6 +130,7 @@ const ReservationDetails = () => {
             }
 
             if (typeof window !== 'undefined') {
+                // @ts-ignore
                 window.rift
                     .getRiftSwapStatus({ internalId: swapReservationData.nonce })
                     .then((status) => {
@@ -299,11 +302,11 @@ const ReservationDetails = () => {
                                     </Flex>
                                 )
                             ) : swapFlowState === '3-receive-evm-token' ||
-                              swapFlowState === '4-completed' ||
-                              swapFlowState === '5-expired' ||
-                              currentReservationState === 'Proved' ||
-                              currentReservationState === 'Expired' ||
-                              currentReservationState === 'Completed' ? (
+                                swapFlowState === '4-completed' ||
+                                swapFlowState === '5-expired' ||
+                                currentReservationState === 'Proved' ||
+                                currentReservationState === 'Expired' ||
+                                currentReservationState === 'Completed' ? (
                                 <MainSwapFlow />
                             ) : proxyWalletSwapInternalID ? (
                                 <>

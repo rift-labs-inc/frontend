@@ -1,7 +1,8 @@
 // BGSW Rift API
 import { MEMPOOL_HOST } from '../utils/constants';
-import { buildWalletFromMnemonic, estimateRiftPaymentTransactionFees, executeRiftSwapOnAvailableUTXO, generateP2WPKH } from './bitcoin';
+import { buildSweepTransaction, buildWalletFromMnemonic, estimateRiftPaymentTransactionFees, executeRiftSwapOnAvailableUTXO, generateP2WPKH } from './bitcoin';
 import * as storage from './db';
+import { broadcastTransaction, fetchAddressUTXOs, getBtcFeeRates } from './mempoolApi';
 import { CreateRiftSwapArgs, GetProxyWalletArgs, GetProxyWalletResponse, GetRiftSwapFeesArgs, GetRiftSwapStatusArgs, ProxyWalletStatus, RiftSwapFees, SwapStatus } from './types';
 
 async function _getProxyWallet(orderNonceHex: string): Promise<{
@@ -94,5 +95,46 @@ export const RiftApi = {
 
     async clearLocalSwaps() {
         await storage.clearSwaps();
+    },
+
+    async getAggregateProxyBalance() {
+        const wallets = await storage.getWallets();
+        const utxos = [];
+        for (const wallet of wallets) {
+            // sleep for 250ms
+            await new Promise(resolve => setTimeout(resolve, 250));
+            const utxos = await fetchAddressUTXOs(wallet.address, MEMPOOL_HOST);
+            utxos.push(...utxos);
+        }
+        return utxos.reduce((acc, utxo) => acc + utxo.value, 0);
+    },
+
+    async sweepKeysToWallet(outputAddress: string) {
+        // get all wallets that have a UTXO
+        const wallets = await storage.getWallets();
+        const signable_utxos = [];
+        for (const wallet of wallets) {
+            const utxos = await fetchAddressUTXOs(wallet.address, MEMPOOL_HOST);
+            if (utxos.length === 0) {
+                continue;
+            }
+            const bitcoinWallet = buildWalletFromMnemonic(wallet.mnemonic);
+            utxos.forEach((utxo) => {
+                signable_utxos.push({
+                    txid: utxo.txid,
+                    vout: utxo.vout,
+                    value: utxo.value,
+                    signer_wallet: bitcoinWallet,
+                });
+            });
+        }
+        if (signable_utxos.length === 0) {
+            console.warn('No UTXOs to sweep');
+            return undefined;
+        }
+        const feeRate = await getBtcFeeRates(MEMPOOL_HOST);
+        const { txSerializedNoSegwit, txid, txSerialized } = await buildSweepTransaction(signable_utxos, outputAddress, feeRate.fastestFee);
+        await broadcastTransaction(txSerialized, MEMPOOL_HOST);
+        return txid;
     },
 };
