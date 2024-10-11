@@ -103,6 +103,8 @@ export function findVaultIndexWithSameExchangeRate(): number {
     return -1;
 }
 
+console.log('bruhbruh', convertLockingScriptToBitcoinAddress('0x0014ed6b2eebf34cb27da01207b119e01902f1d20993'));
+
 export function convertLockingScriptToBitcoinAddress(lockingScript: string): string {
     // Remove '0x' prefix if present
     const script = lockingScript.startsWith('0x') ? lockingScript.slice(2) : lockingScript;

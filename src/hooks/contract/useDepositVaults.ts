@@ -63,12 +63,13 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const isExpiredOnChain = reservation.state === ReservationState.Expired;
             const isExpiredOffchain = reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp >= CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS;
 
-            if (reservation.indexInContract === 16) {
+            if (reservation.indexInContract === 28) {
                 console.log('help reservation.state from contract', reservation.state);
                 console.log('help is this expired offchain', isExpiredOffchain);
             }
 
-            if (isExpiredOffchain) {
+            if (isExpiredOffchain && !isExpiredOnChain) {
+                console.log('isExpiredOffchain && !isExpiredOnChain', reservationIndex);
                 expiredReservationIndexes.push(reservationIndex);
             }
 
