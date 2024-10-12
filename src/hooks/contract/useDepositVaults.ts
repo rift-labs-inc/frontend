@@ -43,6 +43,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
     const { allSwapReservations: allFetchedSwapReservations, loading: swapReservationsLoading, error: swapReservationsError, refreshSwapReservations } = useSwapReservations();
 
     const calculateTrueUnreservedLiquidity = (depositVaults: DepositVault[], swapReservations: SwapReservation[]): DepositVault[] => {
+        // [0] initialize variables
         const currentTimestamp = Math.floor(Date.now() / 1000);
         const additionalBalances = new Map<string, BigNumber>();
         const completedAmountsPerVault = new Map<string, BigNumber>();
@@ -55,52 +56,38 @@ export function useDepositVaults(): UseDepositVaultsResult {
         let completedReservationsCount = 0;
         let provedReservationsCount = 0;
 
-        // Process all reservations first (completed, expired, unlocked, active)
+        // [1] process all reservations
         swapReservations.forEach((reservation, reservationIndex) => {
-            const isCreated = reservation.state === ReservationState.Created;
             const isProved = reservation.state === ReservationState.Proved;
             const isCompleted = reservation.state === ReservationState.Completed;
             const isExpiredOnChain = reservation.state === ReservationState.Expired;
             const isExpiredOffchain = reservation.state === ReservationState.Created && currentTimestamp - reservation.reservationTimestamp >= CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS;
 
-            if (reservation.indexInContract === 28) {
-                console.log('help reservation.state from contract', reservation.state);
-                console.log('help is this expired offchain', isExpiredOffchain);
-            }
-
+            // [2] track expired reservations that are not expired on chain
             if (isExpiredOffchain && !isExpiredOnChain) {
                 console.log('isExpiredOffchain && !isExpiredOnChain', reservationIndex);
                 expiredReservationIndexes.push(reservationIndex);
             }
 
+            // [3] update counters
             if (isCompleted) {
                 completedReservationsCount++;
             } else if (isProved) {
                 provedReservationsCount++;
             } else if (isExpiredOnChain || isExpiredOffchain) {
                 expiredReservationsCount++;
-                reservation.stateOffChain = ReservationState.Expired;
+                reservation.stateOffChain = ReservationState.Expired; // stateOffChain for frontend purposes
             } else {
                 // active reservations (created and not expired, completed, or unlocked)
                 activeReservationsCount++;
             }
 
-            if (reservation.indexInContract === 16) {
-                console.log('reservation.indexInContract === 16', reservation);
-                console.log('reservation.amountsToReserve', reservation.amountsToReserve);
-                console.log('reservation.state', reservation.state);
-                console.log('reservation.reservationTimestamp', reservation.reservationTimestamp);
-                console.log('currentTimestamp', currentTimestamp);
-                console.log('isExpiredOffchain', isExpiredOffchain);
-                console.log('isExpiredOnChain', isExpiredOnChain);
-                console.log('expiredReservationIndexes', expiredReservationIndexes);
-                console.log('completedReservationsCount', completedReservationsCount);
-            }
-
+            // [4] process the reserved vaults for each reservation
             const processVaultIndex = (vaultIndex, i) => {
                 const vaultIndexKey = vaultIndex.toString();
                 const amountToAdd = reservation.amountsToReserve[i];
 
+                // [5] add the amounts to the appropriate map
                 if (isCompleted) {
                     const currentCompleted = completedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
                     completedAmountsPerVault.set(vaultIndexKey, currentCompleted.add(amountToAdd));
