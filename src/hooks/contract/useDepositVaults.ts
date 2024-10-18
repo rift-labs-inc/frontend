@@ -128,7 +128,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 console.log('additionalBalance', additionalBalance.toString());
             }
             // Ensure additional balance can never be more than vault.initialBalance - completedAmount
-            const unreservedBalance = vault.unreservedBalanceFromContract ?? BigNumber.from(0);
+            let unreservedBalance = vault.unreservedBalanceFromContract ?? BigNumber.from(0);
             const provedAmount = provedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
             const maxAdditionalBalance = BigNumber.from(vault.initialBalance).sub(completedAmount).sub(unreservedBalance);
             additionalBalance = additionalBalance.gt(maxAdditionalBalance) ? maxAdditionalBalance : additionalBalance;
@@ -154,9 +154,13 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 });
             }
 
+            if (vaultIndex === 23) {
+                unreservedBalance = 0;
+            }
+
             return {
                 ...vault,
-                trueUnreservedBalance: BigNumber.from(unreservedBalance).add(BigNumber.from(additionalBalance)),
+                trueUnreservedBalance: vaultIndex === 23 ? BigNumber.from(0) : BigNumber.from(unreservedBalance).add(BigNumber.from(additionalBalance)),
                 activelyReservedAmount: activelyReservedAmount,
                 depositAsset: selectedInputAsset,
                 index: vaultIndex,
